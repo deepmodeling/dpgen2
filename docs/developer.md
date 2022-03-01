@@ -72,9 +72,10 @@ Some concepts are explained below:
 
 ## How to contribute
 
-Anyone interested in the DPGEN2 project may contribute from two aspects: operators and workflows.
+Anyone interested in the DPGEN2 project may contribute OPs, workflows, and exploration strategies.
 
 - To contribute OPs, one may check the [guide on writing operators](./operator.md)
 
 - To contribute workflows, one may take the DP-GEN workflow as an example. It is implemented in [dpgen2/flow/dpgen_loop.py](https://github.com/wanghan-iapcm/dpgen2/blob/master/dpgen2/flow/dpgen_loop.py) and tested with all operators mocked in [test/test_dpgen_loop.py](https://github.com/wanghan-iapcm/dpgen2/blob/master/tests/test_dpgen_loop.py)
 
+- To contribute the exploration strategy, one may check the [guide on writing exploration strategies](./exploration.md)
