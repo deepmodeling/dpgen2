@@ -1,3 +1,4 @@
+import dpdata
 from dflow.python import (
     OP,
     OPIO,
@@ -5,9 +6,23 @@ from dflow.python import (
     Artifact
 )
 import os, json
-from typing import Tuple, List, Set, Dict
+from typing import (
+    Tuple, 
+    List, 
+    Set, 
+    Dict,
+    Union,
+)
 from pathlib import Path
 from dpgen2.fp.vasp import VaspInputs
+from dpgen2.utils.chdir import set_directory
+from dpgen2.constants import (
+    vasp_task_pattern,
+    vasp_conf_name,
+    vasp_input_name,
+    vasp_pot_name,
+    vasp_kp_name,
+)
 
 class PrepVasp(OP):
     r"""Prepares the working directories for VASP tasks.
@@ -34,6 +49,7 @@ class PrepVasp(OP):
             "task_paths" : Artifact(List[Path]),
         })
 
+
     @OP.exec_sign_check
     def execute(
             self,
@@ -47,7 +63,7 @@ class PrepVasp(OP):
             Input dict with components:
 
             - `inputs` : (`VaspInputs`) Definitions for the VASP inputs
-            - `confs` : (`Artifact(List[Path])`) Configuration files for the VASP tasks. 
+            - `confs` : (`Artifact(List[Path])`) Configurations for the VASP tasks. Stored in folders as deepmd/npy format. Can be parsed as dpdata.MultiSystems. 
         
         Returns
         -------
@@ -57,4 +73,49 @@ class PrepVasp(OP):
             - `task_names`: (`List[str]`) The name of tasks. Will be used as the identities of the tasks. The names of different tasks are different.
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the VASP. The order fo the Paths should be consistent with `op["task_names"]`
         """
-        raise NotImplementedError
+
+        inputs = ip['inputs']
+        confs = ip['confs']
+
+        task_names = []
+        task_paths = []
+        counter=0
+        # loop over list of MultiSystems
+        for mm in confs:
+            ms = dpdata.MultiSystems()
+            ms.from_deepmd_npy(mm, labeled=False)
+            # loop over Systems in MultiSystems
+            for ii in range(len(ms)):
+                ss = ms[ii]
+                # loop over frames
+                for ff in range(ss.get_nframes()):
+                    nn, pp = self._exec_one_frame(counter, inputs, ss[ff])
+                    task_names.append(nn)
+                    task_paths.append(pp)
+                    counter += 1
+        return OPIO({
+            'task_names' : task_names,
+            'task_paths' : task_paths,
+        })
+
+
+    def _exec_one_frame(
+            self,
+            idx,
+            vasp_inputs : VaspInputs,
+            conf_frame : dpdata.System,
+    ) -> str:
+        task_name = vasp_task_pattern % idx
+        task_path = Path(task_name)
+        with set_directory(task_path):
+            conf_frame.to('vasp/poscar', vasp_conf_name)
+            Path(vasp_input_name).write_text(
+                vasp_inputs.incar_template
+            )
+            Path(vasp_pot_name).write_text(
+                vasp_inputs.make_potcar(conf_frame['atom_names'])
+            )
+            Path(vasp_kp_name).write_text(
+                vasp_inputs.make_kpoints(conf_frame['cells'][0])
+            )
+        return task_name, task_path

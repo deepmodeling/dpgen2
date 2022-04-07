@@ -56,7 +56,7 @@ class ConfSelectorLammpsFrames(ConfSelector):
         Returns
         -------
         confs : List[Path]
-                The selected confgurations, stored in a folder that can be parsed as dpdata.MultiSystems. The `list` only has one item.
+                The selected confgurations, stored in a folder in deepmd/npy format, can be parsed as dpdata.MultiSystems. The `list` only has one item.
         report : ExplorationReport
                 The exploration report recoding the status of the exploration. 
 

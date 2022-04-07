@@ -15,4 +15,5 @@ vasp_task_pattern = 'task.' + vasp_index_pattern
 vasp_conf_name = 'POSCAR'
 vasp_input_name = 'INCAR'
 vasp_pot_name = 'POTCAR'
+vasp_kp_name = 'KPOINTS'
 
