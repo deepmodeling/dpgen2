@@ -59,7 +59,7 @@ class TestRunLmp(unittest.TestCase):
         self.assertEqual(out['model_devi'], work_dir/lmp_model_devi_name)
         # check call
         calls = [
-            call(['mylmp', '-i', lmp_input_name]),
+            call(['mylmp', '-i', lmp_input_name, '-log', lmp_log_name]),
         ]
         mocked_run.assert_has_calls(calls)
         # check input files are correctly linked
@@ -83,7 +83,7 @@ class TestRunLmp(unittest.TestCase):
                 }))
         # check call
         calls = [
-            call(['mylmp', '-i', lmp_input_name]),
+            call(['mylmp', '-i', lmp_input_name, '-log', lmp_log_name]),
         ]
         mocked_run.assert_has_calls(calls)
                         
