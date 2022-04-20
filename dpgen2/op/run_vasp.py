@@ -2,11 +2,33 @@ from dflow.python import (
     OP,
     OPIO,
     OPIOSign,
-    Artifact
+    Artifact,
+    TransientError,
+    FatalError,
 )
-import os, json
-from typing import Tuple, List, Set
+import os, json, dpdata
 from pathlib import Path
+from typing import (
+    Tuple, 
+    List, 
+    Set,
+)
+from dpgen2.utils.run_command import run_command
+from dpgen2.utils.chdir import set_directory
+from dpgen2.constants import(
+    vasp_conf_name,
+    vasp_input_name,
+    vasp_pot_name,
+    vasp_kp_name,
+    vasp_default_log_name,
+    vasp_default_out_data_name,
+)
+from dargs import (
+    dargs, 
+    Argument, 
+    Variant, 
+    ArgumentEncoder,
+)
 
 class RunVasp(OP):
     r"""Execute a VASP task.
@@ -22,9 +44,9 @@ class RunVasp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
+            "config" : dict,
             "task_name": str,
             "task_path" : Artifact(Path),
-            "config" : dict,
         })
 
     @classmethod
@@ -46,6 +68,7 @@ class RunVasp(OP):
         ip : dict
             Input dict with components:
         
+            - `config`: (`dict`) The config of vasp task. Check `RunVasp.vasp_args` for definitions.
             - `task_name`: (`str`) The name of task.
             - `task_path`: (`Artifact(Path)`) The path that contains all input files prepareed by `PrepVasp`.
 
@@ -61,5 +84,54 @@ class RunVasp(OP):
         TransientError
             On the failure of VASP execution. 
         """
-        raise NotImplementedError
+        config = ip['config'] if ip['config'] is not None else {}
+        config = RunVasp.normalize_config(config)
+        command = config['command']
+        log_name = config['log']
+        out_name = config['out']
+        task_name = ip['task_name']
+        task_path = ip['task_path']
+        input_files = [vasp_conf_name, vasp_input_name, vasp_pot_name, vasp_kp_name]
+        input_files = [(Path(task_path)/ii).resolve() for ii in input_files]
+        work_dir = Path(task_name)
 
+        with set_directory(work_dir):
+            # link input files
+            for ii in input_files:
+                iname = ii.name
+                Path(iname).symlink_to(ii)
+            # run vasp
+            command = [command, '>', log_name]
+            ret, out, err = run_command(command)
+            if ret != 0:
+                raise TransientError('vasp failed')
+            # convert the output to deepmd/npy format
+            sys = dpdata.LabeledSystem('OUTCAR')
+            sys.to('deepmd/npy', out_name)
+
+        return OPIO({
+            "log": work_dir / log_name,
+            "labeled_data": work_dir / out_name,
+        })
+
+
+    @staticmethod
+    def vasp_args():
+        doc_vasp_cmd = "The command of VASP"
+        doc_vasp_log = "The log file name of VASP"
+        doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
+        return [
+            Argument("command", str, optional=True, default='vasp', doc=doc_vasp_cmd),
+            Argument("log", str, optional=True, default=vasp_default_log_name, doc=doc_vasp_log),
+            Argument("out", str, optional=True, default=vasp_default_out_data_name, doc=doc_vasp_out),
+        ]
+
+    @staticmethod
+    def normalize_config(data = {}):
+        ta = RunVasp.vasp_args()
+        base = Argument("base", dict, ta)
+        data = base.normalize_value(data, trim_pattern="_*")
+        base.check_value(data, strict=True)
+        return data
+
+    

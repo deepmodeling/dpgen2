@@ -16,4 +16,6 @@ vasp_conf_name = 'POSCAR'
 vasp_input_name = 'INCAR'
 vasp_pot_name = 'POTCAR'
 vasp_kp_name = 'KPOINTS'
+vasp_default_log_name = 'vasp.log'
+vasp_default_out_data_name = 'data'
 
