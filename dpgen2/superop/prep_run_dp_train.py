@@ -35,8 +35,8 @@ class PrepRunDPTrain(Steps):
             name : str,
             prep_train_op : OP,
             run_train_op : OP,
-            prep_train_image : str = "dflow:v1.0",
-            run_train_image : str = "dflow:v1.0",
+            prep_image : str = "dflow:v1.0",
+            run_image : str = "dflow:v1.0",
             upload_python_package : str = None,
     ):
         self._input_parameters = {
@@ -85,8 +85,8 @@ class PrepRunDPTrain(Steps):
             self.step_keys,
             prep_train_op,
             run_train_op,
-            prep_train_image = prep_train_image,
-            run_train_image = run_train_image,
+            prep_image = prep_image,
+            run_image = run_image,
             upload_python_package = upload_python_package,
         )            
 
@@ -116,15 +116,15 @@ def _prep_run_dp_train(
         step_keys,
         prep_train_op : OP,
         run_train_op : OP,
-        prep_train_image : str = "dflow:v1.0",
-        run_train_image : str = "dflow:v1.0",
+        prep_image : str = "dflow:v1.0",
+        run_image : str = "dflow:v1.0",
         upload_python_package : str = None,
 ):
     prep_train = Step(
         'prep-train',
         template=PythonOPTemplate(
             prep_train_op,
-            image=prep_train_image,
+            image=prep_image,
             output_artifact_archive={
                 "task_paths": None
             },
@@ -144,7 +144,7 @@ def _prep_run_dp_train(
         'run-train',
         template=PythonOPTemplate(
             run_train_op,
-            image=run_train_image,
+            image=run_image,
             slices = Slices(
                 "int('{{item}}')",
                 input_parameter = ["task_name"],

@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from os import path
+from pathlib import Path
 import setuptools
 
-readme_file = path.join(path.dirname(path.abspath(__file__)), 'README.md')
-try:
-    from m2r import parse_from_file
-    readme = parse_from_file(readme_file)
-except ImportError:
-    with open(readme_file) as f:
-        readme = f.read()
+# define constants
+INSTALL_REQUIRES = (Path(__file__).parent / "requirements.txt").read_text().splitlines()
+setup_requires = ["setuptools_scm"]
 
-# install_requires = ['xml']
-install_requires=[
-    'numpy', 
-    'dpdata',
-    # 'dflow',
-]
+readme_file = Path(__file__).parent / "README.md"
+readme = readme_file.read_text(encoding="utf-8")
 
 setuptools.setup(
     name="dpgen2",
@@ -24,15 +17,24 @@ setuptools.setup(
     setup_requires=['setuptools_scm'],
     author="Han Wang",
     author_email="wang_han@iapcm.ac.cn",
-    description="Deep potential generator, version 2",
+    description="DPGEN2: concurrent learning workflow generating the machine learning potential energy models.",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/deepmodeling/dpgen2",
-    packages=['dpgen2',
-              'dpgen2/op',
-              'dpgen2/superop',
-              'dpgen2/utils',
-              'dpgen2/fp',
+    packages=[
+        "dpgen2",
+        "dpgen2/entrypoint",
+        "dpgen2/op",
+        "dpgen2/superop",
+        "dpgen2/flow",
+        "dpgen2/fp",
+        "dpgen2/utils",
+        "dpgen2/exploration",
+        "dpgen2/exploration/report",
+        "dpgen2/exploration/scheduler",
+        "dpgen2/exploration/task",
+        "dpgen2/exploration/task/lmp",
+        "dpgen2/exploration/selector",
     ],
     package_data={'dpgen2':['*.json']},
     classifiers=[
@@ -40,7 +42,12 @@ setuptools.setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     ],
     keywords='deep potential concurrent learning',
-    install_requires=install_requires,
+    install_requires=INSTALL_REQUIRES,
+    entry_points={
+        "console_scripts": [
+            "dpgen2 = dpgen2.entrypoint.main:main"
+        ]
+    },
     extras_require={
         'docs': ['sphinx', 'recommonmark', 'sphinx_rtd_theme>=1.0.0rc1', 'numpydoc', 'm2r2'],
     }

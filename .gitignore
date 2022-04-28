@@ -1,5 +1,6 @@
 POTCAR
 *.pb
+*.bk
 *~
 *.d
 *.o

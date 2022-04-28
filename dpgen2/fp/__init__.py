@@ -1,0 +1,1 @@
+from .vasp import VaspInputs
