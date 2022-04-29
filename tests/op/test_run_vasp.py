@@ -25,8 +25,6 @@ class TestRunVasp(unittest.TestCase):
     def setUp(self):
         self.task_path = Path('task/path')
         self.task_path.mkdir(parents=True, exist_ok=True)
-        self.model_path = Path('models/path')
-        self.model_path.mkdir(parents=True, exist_ok=True)
         (self.task_path/vasp_conf_name).write_text('foo')
         (self.task_path/vasp_input_name).write_text('bar')
         (self.task_path/vasp_pot_name).write_text('dee')
