@@ -1,4 +1,4 @@
-FROM dflow:v1.0
+FROM dflow:latest
 
 WORKDIR /data/dpgen2
 ADD requirements.txt ./
