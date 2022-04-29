@@ -98,22 +98,24 @@ Gamma
         ms0.from_deepmd_npy(self.confs[0])
         ms1 = dpdata.MultiSystems()
         ms1.from_deepmd_npy(self.confs[1])
-        self.check_sys(dpdata.System(task_paths[0]/vasp_conf_name), ms0[0][0])
-        self.check_sys(dpdata.System(task_paths[1]/vasp_conf_name), ms0[0][1])
-        self.check_sys(dpdata.System(task_paths[2]/vasp_conf_name), ms0[0][2])
-        self.check_sys(dpdata.System(task_paths[3]/vasp_conf_name), ms0[0][3])
-        self.check_sys(dpdata.System(task_paths[4]/vasp_conf_name), ms0[0][4])
-        self.check_sys(dpdata.System(task_paths[5]/vasp_conf_name), ms0[1][0])
-        self.check_sys(dpdata.System(task_paths[6]/vasp_conf_name), ms0[1][1])
-        self.check_sys(dpdata.System(task_paths[7]/vasp_conf_name), ms0[1][2])
-        self.check_sys(dpdata.System(task_paths[8]/vasp_conf_name), ms0[1][3])
-        self.check_sys(dpdata.System(task_paths[9]/vasp_conf_name), ms0[1][4])
-        self.check_sys(dpdata.System(task_paths[10]/vasp_conf_name), ms1[0][0])
-        self.check_sys(dpdata.System(task_paths[11]/vasp_conf_name), ms1[0][1])
-        self.check_sys(dpdata.System(task_paths[12]/vasp_conf_name), ms1[1][0])
-        self.check_sys(dpdata.System(task_paths[13]/vasp_conf_name), ms1[1][1])
-        self.check_sys(dpdata.System(task_paths[14]/vasp_conf_name), ms1[1][2])
-        self.check_sys(dpdata.System(task_paths[15]/vasp_conf_name), ms1[1][3])
-        self.check_sys(dpdata.System(task_paths[16]/vasp_conf_name), ms1[2][0])
-        self.check_sys(dpdata.System(task_paths[17]/vasp_conf_name), ms1[2][1])
-        self.check_sys(dpdata.System(task_paths[18]/vasp_conf_name), ms1[2][2])
+        # natoms : number of frames
+        sys_record_0 = {
+            3: 0,
+            4: 0,
+        }
+        sys_record_1 = {
+            2: 0,
+            3: 0,
+            5: 0,
+        }
+        for ii in range(0, 10):
+            ss = dpdata.System(task_paths[ii]/vasp_conf_name)
+            sys_record_0[sum(ss['atom_numbs'])] += 1
+        for ii in range(10, 19):
+            ss = dpdata.System(task_paths[ii]/vasp_conf_name)
+            sys_record_1[sum(ss['atom_numbs'])] += 1
+        self.assertEqual(sys_record_0[3], 5)
+        self.assertEqual(sys_record_0[4], 5)
+        self.assertEqual(sys_record_1[2], 2)
+        self.assertEqual(sys_record_1[3], 4)
+        self.assertEqual(sys_record_1[5], 3)        
