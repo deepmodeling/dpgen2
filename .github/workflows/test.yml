@@ -1,4 +1,4 @@
-name: Python package
+name: Python unit-tests
 
 on:
   - push
