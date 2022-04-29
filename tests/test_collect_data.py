@@ -34,7 +34,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from mocked_ops import (
     MockedCollectData,
 )
@@ -83,6 +87,7 @@ class TestMockedCollectData(unittest.TestCase):
         self.assertTrue((path/'data').read_text(), 'data of iter1')
         
         
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestMockedCollectDataArgo(unittest.TestCase):
     def setUp(self):
         self.iter_data = set(('foo/iter0', 'bar/iter1'))

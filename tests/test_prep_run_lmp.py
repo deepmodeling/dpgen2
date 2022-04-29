@@ -33,7 +33,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup
@@ -179,6 +183,7 @@ class TestMockedRunLmp(unittest.TestCase):
             self.check_run_lmp_output(self.task_list_str[ii], self.model_list)
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestPrepRunLmp(unittest.TestCase):
     def setUp(self):
         self.ngrp = 2

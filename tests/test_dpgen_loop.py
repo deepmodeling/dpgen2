@@ -35,7 +35,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from dflow.python import (
     FatalError,
 )
@@ -99,6 +103,7 @@ from mocked_ops import (
 )
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestLoop(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -160,12 +165,15 @@ class TestLoop(unittest.TestCase):
 
         self.type_map = []
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': 'potcar'},
         )
-
 
         self.scheduler = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -201,6 +209,9 @@ class TestLoop(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         self.assertEqual(
@@ -290,6 +301,7 @@ class TestLoop(unittest.TestCase):
 
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestLoopRestart(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -410,10 +422,14 @@ class TestLoopRestart(unittest.TestCase):
 
         self.type_map = []
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': self.potcar},
         )
 
         self.scheduler_0 = ExplorationScheduler()        
@@ -470,6 +486,9 @@ class TestLoopRestart(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def get_restart_step(
             self,

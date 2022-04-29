@@ -34,7 +34,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
@@ -75,7 +79,7 @@ from mocked_ops import (
     MockedExplorationTaskGroup,
 )
 
-
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestBlockCL(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -126,10 +130,14 @@ class TestBlockCL(unittest.TestCase):
         self.conf_selector = MockedConfSelector()
         self.type_map = []
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': self.potcar},
         )
         
 
@@ -156,6 +164,9 @@ class TestBlockCL(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         self.assertEqual(

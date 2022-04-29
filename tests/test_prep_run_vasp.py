@@ -33,7 +33,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from dpgen2.superop.prep_run_fp import PrepRunFp
 from mocked_ops import (
     mocked_incar_template,
@@ -73,7 +77,10 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
             fname = Path(f'conf.{ii}')
             fname.write_text(f'conf {ii}')
             self.confs.append(fname)
-        self.incar = 'incar template'
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -82,6 +89,9 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         op = MockedPrepVasp()
@@ -89,8 +99,10 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
             'confs' : self.confs,
             'inputs' : \
             VaspInputs(
+                0.16,
+                True,
                 self.incar,
-                {'foo': 'bar'}
+                {'foo': self.potcar}
             ),
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
@@ -147,6 +159,7 @@ class TestMockedRunVasp(unittest.TestCase):
             self.check_run_lmp_output(self.task_list_str[ii])
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestPrepRunVasp(unittest.TestCase):
     def setUp(self):
         self.ntasks = 6
@@ -155,8 +168,11 @@ class TestPrepRunVasp(unittest.TestCase):
             fname = Path(f'conf.{ii}')
             fname.write_text(f'conf {ii}')
             self.confs.append(fname)
-        self.incar = 'incar template'
         self.confs = upload_artifact(self.confs)
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
 
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -165,6 +181,9 @@ class TestPrepRunVasp(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)        
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def check_run_vasp_output(
             self,
@@ -194,8 +213,10 @@ class TestPrepRunVasp(unittest.TestCase):
             parameters = {
                 'inputs' : \
                 VaspInputs(
+                    0.16,
+                    True,
                     self.incar,
-                    {'foo': 'bar'}
+                    {'foo': self.potcar}
                 ),
                 "fp_config": {},
             },

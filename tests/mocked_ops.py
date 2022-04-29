@@ -270,12 +270,12 @@ class MockedPrepVasp(PrepVasp):
         # incar_temp = ip['incar_temp']
         # potcars = ip['potcars']
         vasp_input = ip['inputs']
-        incar_temp = vasp_input.incar_temp
+        incar_temp = vasp_input.incar_template
         potcars = vasp_input.potcars
 
         for ii in confs:
             assert(ii.is_file())
-        assert(vasp_input.incar_temp == mocked_incar_template)
+        assert(vasp_input.incar_template == mocked_incar_template)
 
         nconfs = len(confs)
         task_paths = []

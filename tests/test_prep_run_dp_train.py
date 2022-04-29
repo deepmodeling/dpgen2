@@ -33,7 +33,11 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+)
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
 from dpgen2.constants import train_task_pattern
 from mocked_ops import (
@@ -217,6 +221,7 @@ class TestMockedRunDPTrain(unittest.TestCase):
             )
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestTrainDp(unittest.TestCase):
     def setUp (self) :
         self.numb_models = mocked_numb_models
