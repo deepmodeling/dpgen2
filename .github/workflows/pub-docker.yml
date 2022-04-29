@@ -11,11 +11,10 @@ on:
   push:
     branches:
       - 'master'
-      - 'debug-docker'
 
 jobs:
   push_to_registries:
-    # if: github.repository_owner == 'deepmodeling'
+    if: github.repository_owner == 'deepmodeling'
     name: Push Docker image to Docker Hub and ghcr
     runs-on: ubuntu-latest
     permissions:
