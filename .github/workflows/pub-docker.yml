@@ -10,10 +10,11 @@ on:
     types: [published]
   push:
     branches:
-      - add-dockerfile
+      - 'master'
 
 jobs:
   push_to_registry:
+    if: github.repository_owner == 'deepmodeling'
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
