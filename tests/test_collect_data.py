@@ -38,6 +38,7 @@ from context import (
     upload_python_package,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
+    default_image,
 )
 from mocked_ops import (
     MockedCollectData,
@@ -115,7 +116,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             'coll-data', 
             template = PythonOPTemplate(
                 MockedCollectData,
-                image = 'dflow:v1.0',
+                image = default_image,
                 output_artifact_archive={
                     "iter_data" : None,
                 },

@@ -37,6 +37,7 @@ from context import (
     upload_python_package,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
+    default_image,
 )
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
 from dpgen2.constants import train_task_pattern
@@ -268,6 +269,8 @@ class TestTrainDp(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         train_step = Step(
             'train-step', 

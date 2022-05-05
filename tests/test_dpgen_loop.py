@@ -39,6 +39,7 @@ from context import (
     upload_python_package,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
+    default_image,
 )
 from dflow.python import (
     FatalError,
@@ -111,18 +112,24 @@ class TestLoop(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.block_cl_op = ConcurrentLearningBlock(
             self.name+'-block', 
@@ -132,11 +139,14 @@ class TestLoop(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )        
         self.dpgen_op = ConcurrentLearning(
             self.name,
             self.block_cl_op,
             upload_python_package = upload_python_package,
+            image = default_image,
         )
 
     def _setUp_data(self):
@@ -309,30 +319,40 @@ class TestLoopRestart(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_fp_op_f1 = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspFail1,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_fp_op_res = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspRestart,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         # failed collect data
         self.block_cl_op_0 = ConcurrentLearningBlock(
@@ -343,11 +363,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectDataFailed,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )        
         self.dpgen_op_0 = ConcurrentLearning(
             self.name,
             self.block_cl_op_0,
             upload_python_package = upload_python_package,
+            image = default_image,
         )
         # restart collect data
         self.block_cl_op_1 = ConcurrentLearningBlock(
@@ -358,11 +381,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectDataRestart,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )        
         self.dpgen_op_1 = ConcurrentLearning(
             self.name,
             self.block_cl_op_1,
             upload_python_package = upload_python_package,
+            image = default_image,
         )
         # failed vasp 1
         self.block_cl_op_2 = ConcurrentLearningBlock(
@@ -373,11 +399,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op_f1,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )        
         self.dpgen_op_2 = ConcurrentLearning(
             self.name,
             self.block_cl_op_2,
             upload_python_package = upload_python_package,
+            image = default_image,
         )
         # restart vasp
         self.block_cl_op_3 = ConcurrentLearningBlock(
@@ -388,11 +417,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op_res,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )        
         self.dpgen_op_3 = ConcurrentLearning(
             self.name,
             self.block_cl_op_3,
             upload_python_package = upload_python_package,
+            image = default_image,
         )
 
 

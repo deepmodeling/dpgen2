@@ -38,6 +38,7 @@ from context import (
     upload_python_package,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
+    default_image,
 )
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
@@ -87,18 +88,24 @@ class TestBlockCL(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )
 
     def _setUp_data(self):
@@ -153,6 +160,8 @@ class TestBlockCL(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_image = default_image,
+            collect_data_image = default_image,
         )
 
     def tearDown(self):

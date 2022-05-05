@@ -37,6 +37,7 @@ from context import (
     upload_python_package,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
+    default_image,
 )
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
@@ -241,6 +242,8 @@ class TestPrepRunLmp(unittest.TestCase):
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
         )        
         prep_run_step = Step(
             'prep-run-step', 
