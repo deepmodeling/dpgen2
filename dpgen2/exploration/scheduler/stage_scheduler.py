@@ -9,7 +9,7 @@ from typing import (
 from pathlib import Path
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import ConfSelector, TrustLevelConfSelector, TrustLevel
+from dpgen2.exploration.selector import ConfSelector, TrustLevel
 
 class StageScheduler(ABC):
     """
@@ -21,7 +21,7 @@ class StageScheduler(ABC):
             self,
             hist_reports : List[ExplorationReport],
             report : ExplorationReport,
-            confs : List[Path],
+            trajs : List[Path],
     ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
         """
         Make the plan for the next iteration of the stage.

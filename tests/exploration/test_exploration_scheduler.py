@@ -13,12 +13,12 @@ from dflow.python import (
     FatalError,
 )
 from dpgen2.exploration.scheduler import (
-    ConstTrustLevelStageScheduler,
+    ConvergenceCheckStageScheduler,
     ExplorationScheduler,
 )
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import TrustLevel, TrustLevelConfSelector
+from dpgen2.exploration.selector import TrustLevel, ConfSelectorLammpsFrames
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,
@@ -27,13 +27,14 @@ from mocked_ops import (
     MockedStage1,
 )
 
-class TestConstTrustLevelStageScheduler(unittest.TestCase):
+class TestConvergenceCheckStageScheduler(unittest.TestCase):
     def test_success(self):
         self.trust_level = TrustLevel(0.1, 0.3)
-        self.scheduler = ConstTrustLevelStageScheduler(
+        self.selector = ConfSelectorLammpsFrames(self.trust_level)
+        self.scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            self.trust_level,
-        )    
+            self.selector,
+        )
         foo_report = MockedExplorationReport()
         foo_report.accurate = 1.
         foo_report.failed = 0.
@@ -41,7 +42,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         conv, ltg, sel = self.scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -51,18 +52,14 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         self.assertEqual(conv, True)
         self.assertTrue(ltg is None)
         self.assertTrue(sel is None)
-        # self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
-        # self.assertEqual(sel.trust_level.level_f_lo, 0.1)
-        # self.assertEqual(sel.trust_level.level_f_hi, 0.3)
-        # self.assertTrue(sel.trust_level.level_v_lo is None)
-        # self.assertTrue(sel.trust_level.level_v_hi is None)
 
     def test_step1(self):
         self.trust_level = TrustLevel(0.1, 0.3)
-        self.scheduler = ConstTrustLevelStageScheduler(
+        self.selector = ConfSelectorLammpsFrames(self.trust_level)
+        self.scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            self.trust_level,
-        )    
+            self.selector,
+        )
 
         foo_report = MockedExplorationReport()
         foo_report.accurate = 0.5
@@ -74,7 +71,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         conv, ltg, sel = self.scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))        
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -83,7 +80,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         conv, ltg, sel = self.scheduler.plan_next_iteration([], foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))        
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -93,7 +90,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         self.assertEqual(conv, True)
         self.assertTrue(ltg is None)
         self.assertTrue(sel is None)
-        # self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        # self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))        
         # self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         # self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         # self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -102,11 +99,12 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         
     def test_max_numb_iter(self):
         self.trust_level = TrustLevel(0.1, 0.3)
-        self.scheduler = ConstTrustLevelStageScheduler(
+        self.selector = ConfSelectorLammpsFrames(self.trust_level)
+        self.scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            self.trust_level,
-            max_numb_iter = 2
-        )    
+            self.selector,
+            max_numb_iter = 2,
+        )
 
         foo_report = MockedExplorationReport()
         foo_report.accurate = 0.5
@@ -118,7 +116,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         conv, ltg, sel = self.scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))        
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -127,7 +125,7 @@ class TestConstTrustLevelStageScheduler(unittest.TestCase):
         conv, ltg, sel = self.scheduler.plan_next_iteration([], foo_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))        
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))        
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -141,16 +139,18 @@ class TestExplorationScheduler(unittest.TestCase):
     def test_success(self):
         scheduler = ExplorationScheduler()        
         trust_level = TrustLevel(0.1, 0.3)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         trust_level = TrustLevel(0.2, 0.4)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -165,7 +165,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -175,7 +175,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -185,7 +185,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -203,9 +203,10 @@ class TestExplorationScheduler(unittest.TestCase):
     def test_continue_adding_success(self):
         scheduler = ExplorationScheduler()        
         trust_level = TrustLevel(0.1, 0.3)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -220,7 +221,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -235,9 +236,10 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 0)
 
         trust_level = TrustLevel(0.2, 0.4)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -245,7 +247,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -255,7 +257,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -274,16 +276,18 @@ class TestExplorationScheduler(unittest.TestCase):
     def test_failed_stage0(self):
         scheduler = ExplorationScheduler()        
         trust_level = TrustLevel(0.1, 0.3)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         trust_level = TrustLevel(0.2, 0.4)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -298,7 +302,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -308,7 +312,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -322,16 +326,18 @@ class TestExplorationScheduler(unittest.TestCase):
     def test_failed_stage1(self):
         scheduler = ExplorationScheduler()        
         trust_level = TrustLevel(0.1, 0.3)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         trust_level = TrustLevel(0.2, 0.4)
-        stage_scheduler = ConstTrustLevelStageScheduler(
+        selector = ConfSelectorLammpsFrames(trust_level)
+        stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
-            trust_level,
+            selector,
             max_numb_iter = 2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -346,7 +352,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.1)
         self.assertEqual(sel.trust_level.level_f_hi, 0.3)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -356,7 +362,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)
@@ -366,7 +372,7 @@ class TestExplorationScheduler(unittest.TestCase):
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
-        self.assertTrue(isinstance(sel, TrustLevelConfSelector))
+        self.assertTrue(isinstance(sel, ConfSelectorLammpsFrames))
         self.assertEqual(sel.trust_level.level_f_lo, 0.2)
         self.assertEqual(sel.trust_level.level_f_hi, 0.4)
         self.assertTrue(sel.trust_level.level_v_lo is None)

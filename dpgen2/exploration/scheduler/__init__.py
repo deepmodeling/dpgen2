@@ -1,8 +1,8 @@
 from .stage_scheduler import (
     StageScheduler,
 )
-from .const_trust_level_stage_scheduler import (
-    ConstTrustLevelStageScheduler,
+from .convergence_check_stage_scheduler import (
+    ConvergenceCheckStageScheduler,
 )
 from .scheduler import (
     ExplorationScheduler,

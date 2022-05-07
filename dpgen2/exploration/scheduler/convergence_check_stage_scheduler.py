@@ -8,32 +8,31 @@ from dflow.python import (
 from pathlib import Path
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import ConfSelector, TrustLevelConfSelector, TrustLevel
+from dpgen2.exploration.selector import ConfSelector
 from . import StageScheduler
 
-class ConstTrustLevelStageScheduler(StageScheduler):    
+class ConvergenceCheckStageScheduler(StageScheduler):    
     def __init__(
             self,
             stage : ExplorationStage,
-            trust_level : TrustLevel,
+            selector : ConfSelector,
             conv_accuracy : float = 0.9,
             max_numb_iter : int = None,
             fatal_at_max : bool = True,
     ):
         self.stage = stage
-        self.trust_level = trust_level
+        self.selector = selector
         self.conv_accuracy = conv_accuracy
-        self.selector = TrustLevelConfSelector(self.trust_level)
-        self.nxt_iter = 0
         self.max_numb_iter = max_numb_iter
         self.fatal_at_max = fatal_at_max
+        self.nxt_iter = 0
 
     def plan_next_iteration(
             self,
             hist_reports : List[ExplorationReport] = [],
             report : ExplorationReport = None,
             trajs : List[Path] = None,
-    ) -> Tuple[bool, ExplorationTaskGroup, TrustLevelConfSelector] :
+    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
         if report is None:
             converged = False
             lmp_task_grp = self.stage.make_task()
@@ -57,3 +56,4 @@ class ConstTrustLevelStageScheduler(StageScheduler):
                 ret_selector = self.selector
         self.nxt_iter += 1
         return converged, lmp_task_grp, ret_selector
+

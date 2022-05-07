@@ -8,9 +8,6 @@ from .conf_filter import (
 from .conf_selector import (
     ConfSelector,
 )
-from .trust_level_conf_selector import (
-    TrustLevelConfSelector,
-)
 from .conf_selector_frame import (
     ConfSelectorLammpsFrames,
 )

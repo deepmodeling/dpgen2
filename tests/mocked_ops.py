@@ -43,7 +43,7 @@ from dpgen2.op.select_confs import SelectConfs
 from dpgen2.exploration.selector import TrustLevel, ConfSelector
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.report import ExplorationReport
-from dpgen2.exploration.scheduler import ConstTrustLevelStageScheduler
+from dpgen2.exploration.scheduler import ConvergenceCheckStageScheduler
 
 mocked_template_script = { 'seed' : 1024, 'data': [] }
 mocked_numb_models = 3
@@ -665,7 +665,7 @@ class MockedSelectConfs(SelectConfs):
         })
 
 
-class MockedConstTrustLevelStageScheduler(ConstTrustLevelStageScheduler):
+class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
     def __init__(
             self,
             stage : ExplorationStage,
@@ -673,5 +673,5 @@ class MockedConstTrustLevelStageScheduler(ConstTrustLevelStageScheduler):
             conv_accuracy : float = 0.9,
             max_numb_iter : int = None,
     ):
-        super().__init__(stage, trust_level, conv_accuracy, max_numb_iter)
-        self.selector = MockedConfSelector(trust_level)                
+        self.selector = MockedConfSelector(trust_level)
+        super().__init__(stage, self.selector, conv_accuracy, max_numb_iter)

@@ -11,7 +11,7 @@ from . import (
 )
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import ConfSelector, TrustLevelConfSelector, TrustLevel
+from dpgen2.exploration.selector import ConfSelector, TrustLevel
 
 
 class ExplorationScheduler():

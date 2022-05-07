@@ -45,7 +45,6 @@ from dflow.python import (
     FatalError,
 )
 from dpgen2.exploration.scheduler import (
-    ConstTrustLevelStageScheduler,
     ExplorationScheduler,
 )
 from dpgen2.op.prep_lmp import PrepLmp
@@ -58,7 +57,7 @@ from dpgen2.fp.vasp import VaspInputs
 from dpgen2.flow.dpgen_loop import ConcurrentLearning
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import TrustLevelConfSelector, TrustLevel
+from dpgen2.exploration.selector import TrustLevel
 
 from dpgen2.constants import (
     train_task_pattern,
