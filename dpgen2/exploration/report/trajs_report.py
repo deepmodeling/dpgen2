@@ -73,44 +73,48 @@ class TrajsExplorationReport(ExplorationReport):
             tag = None,
     ):
         traj_nf = [len(ii) for ii in self.traj_fail]
-        return float(traj_nf) / float(sum(self.traj_nframes))
+        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
     def accurate_ratio(
             self,
             tag = None,
     ):
         traj_nf = [len(ii) for ii in self.traj_accu]
-        return float(traj_nf) / float(sum(self.traj_nframes))
+        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
     def candidate_ratio(
             self,
             tag = None,
     ):
         traj_nf = [len(ii) for ii in self.traj_cand]
-        return float(traj_nf) / float(sum(self.traj_nframes))
+        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
-    def random_pick(
+    def get_candidates(
             self,
-            pick_nframes : int,
+            max_nframes : int = None,
     )->List[Tuple[int,int]]:
         """
-        Randomly pick `pick_nframes` frames from the candidates. 
+        Get candidates. If number of candidates is larger than `max_nframes`, 
+        then randomly pick `max_nframes` frames from the candidates. 
 
         Parameters
         ----------
-        pick_nframes    int
-                The number of frames to pick
+        max_nframes    int
+                The maximal number of frames of candidates.
 
         Returns
         -------
-        picked_frames   List[Tuple[int,int]]
-                Picked frames. A list of tuples: [(traj_idx, frame_idx), ...]
+        cand_frames   List[Tuple[int,int]]
+                Candidate frames. A list of tuples: [(traj_idx, frame_idx), ...]
         """
         self.traj_cand_picked = []
         for tidx,tt in enumerate(self.traj_cand):
             for ff in tt:
                 self.traj_cand_picked.append((tidx, ff))
-        random.shuffle(self.traj_cand_picked)
-        return self.traj_cand_picked[:pick_nframes]
-
+        if max_nframes and max_nframes < len(self.traj_cand_picked):
+            random.shuffle(self.traj_cand_picked)
+            ret = sorted(self.traj_cand_picked[:max_nframes])
+        else:
+            ret = self.traj_cand_picked
+        return ret
         
