@@ -38,6 +38,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
 from dpgen2.constants import train_task_pattern
@@ -286,7 +287,7 @@ class TestTrainDp(unittest.TestCase):
                 "iter_data" : self.iter_data,
             },
         )
-        wf = Workflow(name="dp-train")
+        wf = Workflow(name="dp-train", host=default_host)
         wf.add(train_step)
         wf.submit()
         

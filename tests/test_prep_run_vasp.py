@@ -38,6 +38,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from dpgen2.superop.prep_run_fp import PrepRunFp
 from mocked_ops import (
@@ -228,7 +229,7 @@ class TestPrepRunVasp(unittest.TestCase):
             },
         )
 
-        wf = Workflow(name="dp-train")
+        wf = Workflow(name="dp-train", host=default_host)
         wf.add(prep_run_step)
         wf.submit()
         

@@ -39,6 +39,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
@@ -206,7 +207,7 @@ class TestBlockCL(unittest.TestCase):
                 "iter_data" : self.iter_data,
             },
         )
-        wf = Workflow(name="block")
+        wf = Workflow(name="block", host=default_host)
         wf.add(block_step)
         wf.submit()
         

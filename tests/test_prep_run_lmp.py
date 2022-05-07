@@ -38,6 +38,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
@@ -257,7 +258,7 @@ class TestPrepRunLmp(unittest.TestCase):
             },
         )
 
-        wf = Workflow(name="dp-train")
+        wf = Workflow(name="dp-train", host=default_host)
         wf.add(prep_run_step)
         wf.submit()
         

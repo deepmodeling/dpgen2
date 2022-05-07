@@ -39,6 +39,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from mocked_ops import (
     MockedCollectData,
@@ -131,7 +132,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             },
         )        
 
-        wf = Workflow(name="coll")
+        wf = Workflow(name="coll", host=default_host)
         wf.add(coll_data)
         wf.submit()
 

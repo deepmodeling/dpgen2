@@ -40,6 +40,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
+    default_host,
 )
 from dflow.python import (
     FatalError,
@@ -260,7 +261,7 @@ class TestLoop(unittest.TestCase):
             },
         )
         
-        wf = Workflow(name="dpgen")
+        wf = Workflow(name="dpgen", host=default_host)
         wf.add(dpgen_step)
         wf.submit()
         

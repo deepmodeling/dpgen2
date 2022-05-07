@@ -9,3 +9,4 @@ else:
     skip_ut_with_dflow_reason = ''
 upload_python_package = None
 default_image = 'dptechnology/dpgen2:latest'
+default_host = '127.0.0.1:2746'
