@@ -60,17 +60,23 @@ from dpgen2.exploration.selector import (
     ConfSelectorLammpsFrames,
     TrustLevel,
 )
+from dpgen2.constants import (
+    default_image,
+    default_host,
+)
 
 def make_concurrent_learning_op (
         train_style : str = 'dp',
         explore_style : str = 'lmp',
         fp_style : str = 'vasp',
-        prep_train_image : str = 'dflow:v1.0',
-        run_train_image : str = 'dflow:v1.0',
-        prep_explore_image : str = 'dflow:v1.0',
-        run_explore_image : str = 'dflow:v1.0',
-        prep_fp_image : str = 'dflow:v1.0',
-        run_fp_image : str = 'dflow:v1.0',
+        prep_train_image : str = default_image,
+        run_train_image : str = default_image,
+        prep_explore_image : str = default_image,
+        run_explore_image : str = default_image,
+        prep_fp_image : str = default_image,
+        run_fp_image : str = default_image,
+        select_confs_image : str = default_image,
+        collect_data_image : str = default_image,
         upload_python_package : bool = False,
 ):
     if train_style == 'dp':
@@ -115,6 +121,8 @@ def make_concurrent_learning_op (
         SelectConfs,
         prep_run_fp_op,
         CollectData,
+        select_confs_image = select_confs_image,
+        collect_data_image = collect_data_image,
         upload_python_package = upload_python_package,
     )    
     # dpgen
@@ -122,6 +130,7 @@ def make_concurrent_learning_op (
         "concurrent-learning",
         block_cl_op,
         upload_python_package = upload_python_package,
+        image = default_image,
     )
         
     return dpgen_op
@@ -152,7 +161,10 @@ def make_naive_exploration_scheduler(
             for jj in sys_configs[ii]:                
                 confs = glob.glob(jj)
                 conf_list = conf_list + confs
-        tgroup.set_conf(conf_list)
+        tgroup.set_conf(
+            conf_list,
+            n_sample = 3,
+        )
         temps = job['temps']
         trj_freq = job['trj_freq']
         nsteps = job['nsteps']
@@ -173,7 +185,7 @@ def make_naive_exploration_scheduler(
             stage,
             trust_level,
             conv_accuracy = 0.9,
-            max_numb_iter = 10,
+            max_numb_iter = 3,
         )
         # scheduler
         scheduler.add_stage_scheduler(stage_scheduler)
@@ -267,7 +279,7 @@ def workflow_concurrent_learning(
         },
     )
         
-    wf = Workflow(name="dpgen")
+    wf = Workflow(name="dpgen", host=default_host)
     wf.add(dpgen_step)
     
     return wf

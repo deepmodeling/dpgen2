@@ -11,7 +11,7 @@ from typing import (
     Optional,
     List,
 )
-from .work_flow import (
+from .submit import (
     make_concurrent_learning_op,
     make_naive_exploration_scheduler,
     workflow_concurrent_learning,
