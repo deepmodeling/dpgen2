@@ -90,9 +90,12 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         self.assertAlmostEqual(ss['coords'][3][0][1], 2.87, places=2)
         self.assertAlmostEqual(ss['coords'][4][0][1], 3.87, places=2)
         self.assertAlmostEqual(ss['coords'][5][0][1], 4.87, places=2)
-        self.assertAlmostEqual(report.ratio('force', 'candidate'), 1.)
-        self.assertAlmostEqual(report.ratio('force', 'accurate'), 0.)
-        self.assertAlmostEqual(report.ratio('force', 'failed'), 0.)
+        # self.assertAlmostEqual(report.ratio('force', 'candidate'), 1.)
+        # self.assertAlmostEqual(report.ratio('force', 'accurate'), 0.)
+        # self.assertAlmostEqual(report.ratio('force', 'failed'), 0.)
+        self.assertAlmostEqual(report.candidate_ratio(), 1.)
+        self.assertAlmostEqual(report.accurate_ratio(), 0.)
+        self.assertAlmostEqual(report.failed_ratio(), 0.)
 
     def test_f_1(self):
         conf_selector = ConfSelectorLammpsFrames(
@@ -107,9 +110,13 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         self.assertEqual(ss.get_nframes(), 2)
         self.assertAlmostEqual(ss['coords'][0][0][1], 3.87, places=2)
         self.assertAlmostEqual(ss['coords'][1][0][1], 3.87, places=2)
-        self.assertAlmostEqual(report.ratio('force', 'candidate'), 1./3.)
-        self.assertAlmostEqual(report.ratio('force', 'accurate'), 1./3.)
-        self.assertAlmostEqual(report.ratio('force', 'failed'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('force', 'candidate'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('force', 'accurate'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('force', 'failed'), 1./3.)
+        self.assertAlmostEqual(report.candidate_ratio(), 1./3.)
+        self.assertAlmostEqual(report.accurate_ratio(), 1./3.)
+        self.assertAlmostEqual(report.failed_ratio(), 1./3.)
+        
 
     def test_fv_0(self):
         conf_selector = ConfSelectorLammpsFrames(
@@ -121,16 +128,33 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
         ss = ms[0]
-        self.assertEqual(ss.get_nframes(), 4)
+        self.assertEqual(ss.get_nframes(), 2)
         self.assertAlmostEqual(ss['coords'][0][0][1], 2.87, places=2)
-        self.assertAlmostEqual(ss['coords'][1][0][1], 3.87, places=2)
-        self.assertAlmostEqual(ss['coords'][2][0][1], 2.87, places=2)
-        self.assertAlmostEqual(ss['coords'][3][0][1], 3.87, places=2)
-        self.assertAlmostEqual(report.ratio('force', 'candidate'), 1./3.)
-        self.assertAlmostEqual(report.ratio('force', 'accurate'), 1./3.)
-        self.assertAlmostEqual(report.ratio('force', 'failed'), 1./3.)
-        self.assertAlmostEqual(report.ratio('virial', 'candidate'), 1./3.)
-        self.assertAlmostEqual(report.ratio('virial', 'accurate'), 0.)
-        self.assertAlmostEqual(report.ratio('virial', 'failed'), 2./3.)
-
+        self.assertAlmostEqual(ss['coords'][1][0][1], 2.87, places=2)
+        # self.assertAlmostEqual(report.ratio('force', 'candidate'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('force', 'accurate'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('force', 'failed'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('virial', 'candidate'), 1./3.)
+        # self.assertAlmostEqual(report.ratio('virial', 'accurate'), 0.)
+        # self.assertAlmostEqual(report.ratio('virial', 'failed'), 2./3.)
+        self.assertAlmostEqual(report.candidate_ratio(), 1./3.)
+        self.assertAlmostEqual(report.accurate_ratio(), 0./3.)
+        self.assertAlmostEqual(report.failed_ratio(), 2./3.)
+        
+    def test_fv_1(self):
+        conf_selector = ConfSelectorLammpsFrames(
+            TrustLevel(0.25, 0.35, 0.05, 0.15),
+            max_numb_sel = 1,
+        )
+        confs, report = conf_selector.select(
+            self.trajs, self.model_devis, self.traj_fmt, self.type_map)
+        ms = dpdata.MultiSystems()
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(len(ms), 1)
+        ss = ms[0]
+        self.assertEqual(ss.get_nframes(), 1)
+        self.assertAlmostEqual(ss['coords'][0][0][1], 2.87, places=2)
+        self.assertAlmostEqual(report.candidate_ratio(), 1./3.)
+        self.assertAlmostEqual(report.accurate_ratio(), 0./3.)
+        self.assertAlmostEqual(report.failed_ratio(), 2./3.)
         

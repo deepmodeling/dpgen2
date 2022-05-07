@@ -10,7 +10,7 @@ from . import (
     ConfSelector,
     ConfFilters,
 )
-from dpgen2.exploration.report import ExplorationReport, NaiveExplorationReport
+from dpgen2.exploration.report import ExplorationReport, TrajsExplorationReport
 
 class ConfSelectorLammpsFrames(ConfSelector):
     """Select frames from trajectories as confs.
@@ -25,10 +25,13 @@ class ConfSelectorLammpsFrames(ConfSelector):
     def __init__(
             self,
             trust_level,
+            max_numb_sel : int = None,
             conf_filters : ConfFilters = None,
     ):
         self.trust_level = trust_level
+        self.max_numb_sel = max_numb_sel
         self.conf_filters = conf_filters
+        self.report = TrajsExplorationReport()
     
     def select (
             self,
@@ -65,57 +68,48 @@ class ConfSelectorLammpsFrames(ConfSelector):
         assert(ntraj == len(model_devis))
         self.v_level = ( (self.trust_level.level_v_lo is not None) and \
                          (self.trust_level.level_v_hi is not None) )
-
-        cf = Counter()
-        cv = Counter()
-        cf['candidate'] = cf['accurate'] = cf['failed'] = 0
-        cv['candidate'] = cv['accurate'] = cv['failed'] = 0
-        ms = dpdata.MultiSystems()
+        self.report.clear()
 
         for ii in range(ntraj):
-            ss, icf, icv = \
-                self.select_one_traj(trajs[ii], model_devis[ii], traj_fmt, type_map)
+            self.record_one_traj(trajs[ii], model_devis[ii], traj_fmt, type_map)
+
+        id_cand = self.report.get_candidates(self.max_numb_sel)
+        id_cand_list = [[] for ii in range(ntraj)]
+        for ii in id_cand:
+            id_cand_list[ii[0]].append(ii[1])
+
+        ms = dpdata.MultiSystems()
+        for ii in range(ntraj):
+            ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
+            ss = ss.sub_system(id_cand_list[ii])        
             ms.append(ss)
-            cf = cf + icf
-            cv = cv + icv
             
         out_path = Path('confs')
         ms.to_deepmd_npy(out_path)
-        report = NaiveExplorationReport(cf, cv)
 
-        return [out_path], report
+        return [out_path], self.report
         
 
-    def select_one_traj(
+    def record_one_traj(
             self,
             traj, 
             model_devi,
             traj_fmt, 
             type_map,
-    ) -> Tuple[dpdata.System, Counter, Counter ]:
-        cf = Counter()
-        cv = Counter()
-        cf['candidate'] = cf['accurate'] = cf['failed'] = 0
-        cv['candidate'] = cv['accurate'] = cv['failed'] = 0
+    )->None:
         ss = ConfSelectorLammpsFrames._load_traj(traj, traj_fmt, type_map)
         mdf, mdv = ConfSelectorLammpsFrames._load_model_devi(model_devi)
         id_f_cand, id_f_accu, id_f_fail = ConfSelectorLammpsFrames._get_indexes(
             mdf, self.trust_level.level_f_lo, self.trust_level.level_f_hi)
-        cf['candidate'] += np.size(id_f_cand)
-        cf['accurate'] += np.size(id_f_accu)
-        cf['failed'] += np.size(id_f_fail)
         if self.v_level:
             id_v_cand, id_v_accu, id_v_fail = ConfSelectorLammpsFrames._get_indexes(
                 mdv, self.trust_level.level_v_lo, self.trust_level.level_v_hi)
-            cv['candidate'] += np.size(id_v_cand)
-            cv['accurate'] += np.size(id_v_accu)
-            cv['failed'] += np.size(id_v_fail)
         else :
-            id_v_cand = id_v_accu = id_v_fail = np.array([], dtype=int)
-        id_cand = np.unique(np.concatenate((id_f_cand, id_v_cand)))        
-        ss = dpdata.System(traj, fmt=traj_fmt, type_map=type_map)
-        ss = ss.sub_system(id_cand)        
-        return ss, cf, cv
+            id_v_cand = id_v_accu = id_v_fail = None
+        self.report.record_traj(
+            id_f_accu, id_f_cand, id_f_fail,
+            id_v_accu, id_v_cand, id_v_fail,
+        )
 
                 
     @staticmethod
