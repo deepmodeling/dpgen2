@@ -16,6 +16,7 @@ from dpgen2.constants import (
     lmp_log_name,
     lmp_traj_name,
     lmp_model_devi_name,
+    model_name_pattern,
 )
 from dpgen2.op.run_lmp import RunLmp
 
@@ -66,7 +67,7 @@ class TestRunLmp(unittest.TestCase):
         self.assertEqual((work_dir/lmp_conf_name).read_text(), 'foo')
         self.assertEqual((work_dir/lmp_input_name).read_text(), 'bar')
         for ii in range(4):
-            self.assertEqual((work_dir/f'model_{ii}.pb').read_text(), f'model{ii}')
+            self.assertEqual((work_dir/(model_name_pattern%ii)).read_text(), f'model{ii}')
 
     
     @patch('dpgen2.op.run_lmp.run_command')
