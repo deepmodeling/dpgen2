@@ -1,4 +1,4 @@
-import os, textwrap
+import os, textwrap, pickle
 import numpy as np
 import unittest
 
@@ -203,7 +203,9 @@ class TestLoop(unittest.TestCase):
             max_numb_iter = 2,
         )
         self.scheduler.add_stage_scheduler(stage_scheduler)        
-        
+        with open('in_scheduler.dat', 'wb') as fp:
+            pickle.dump(self.scheduler, fp)
+        self.scheduler_artifact = upload_artifact('in_scheduler.dat')
         
     def setUp(self):
         self.name = 'dpgen'
@@ -219,7 +221,7 @@ class TestLoop(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
-        for ii in [self.incar, self.potcar]:
+        for ii in [self.incar, self.potcar, Path('scheduler.dat'), Path('in_scheduler.dat')]:
             if ii.is_file():
                 os.remove(ii)
 
@@ -251,9 +253,9 @@ class TestLoop(unittest.TestCase):
                 "lmp_config" : {},
                 'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
-                "exploration_scheduler" : self.scheduler,
             },
             artifacts = {
+                "exploration_scheduler" : self.scheduler_artifact,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -270,7 +272,10 @@ class TestLoop(unittest.TestCase):
         step = wf.query_step(name='dpgen-step')[0]
         self.assertEqual(step.phase, "Succeeded")        
         
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        download_artifact(step.outputs.artifacts["exploration_scheduler"])
+        with open('scheduler.dat', 'rb') as fp:
+            scheduler = pickle.load(fp)
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         self.assertEqual(scheduler.get_stage(), 2)
