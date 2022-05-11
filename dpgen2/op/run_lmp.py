@@ -21,6 +21,7 @@ from dpgen2.constants import (
     lmp_log_name,
     lmp_traj_name,
     lmp_model_devi_name,
+    model_name_pattern,
 )
 from dargs import (
     dargs, 
@@ -104,14 +105,18 @@ class RunLmp(OP):
                 iname = ii.name
                 Path(iname).symlink_to(ii)
             # link models
-            for mm in model_files:
-                mname = mm.name
+            for idx,mm in enumerate(model_files):
+                mname = model_name_pattern % (idx)
                 Path(mname).symlink_to(mm)
             # run lmp
             command = [command, '-i', lmp_input_name, '-log', lmp_log_name]
             ret, out, err = run_command(command)
             if ret != 0:
-                raise TransientError('lmp failed')
+                raise TransientError(
+                    'lmp failed\n',
+                    'out msg', out, '\n',
+                    'err msg', err, '\n'
+                )
             
         return OPIO({
             "log" : work_dir / lmp_log_name,

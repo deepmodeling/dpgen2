@@ -1,4 +1,5 @@
-import glob
+import glob, dpdata, os
+from pathlib import Path
 from dflow import (
     InputParameter,
     OutputParameter,
@@ -49,7 +50,7 @@ from dpgen2.fp import (
 )
 from dpgen2.exploration.scheduler import (
     ExplorationScheduler,
-    ConstTrustLevelStageScheduler,
+    ConvergenceCheckStageScheduler,
 )
 from dpgen2.exploration.task import (
     ExplorationStage,
@@ -77,7 +78,7 @@ def make_concurrent_learning_op (
         run_fp_image : str = default_image,
         select_confs_image : str = default_image,
         collect_data_image : str = default_image,
-        upload_python_package : bool = False,
+        upload_python_package : bool = None,
 ):
     if train_style == 'dp':
         prep_run_train_op = PrepRunDPTrain(
@@ -145,34 +146,44 @@ def make_naive_exploration_scheduler(
     mass_map = config['mass_map']
     type_map = config['type_map']
     numb_models = config['numb_models']
-    trust_level = TrustLevel(
-        config['model_devi_f_trust_lo'],
-        config['model_devi_f_trust_hi'],
-    )
+    fp_task_max = config['fp_task_max']
     scheduler = ExplorationScheduler()
 
     for job in model_devi_jobs:
         # task group
         tgroup = NPTTaskGroup()
-        # ignore the expansion of sys_idx
+        ##  ignore the expansion of sys_idx
+        # get all file names of md initial configuraitons
         sys_idx = job['sys_idx']
-        conf_list = []        
+        conf_list_fname = []        
         for ii in sys_idx:
             for jj in sys_configs[ii]:                
-                confs = glob.glob(jj)
-                conf_list = conf_list + confs
+                confs = sorted(glob.glob(jj))
+                conf_list_fname = conf_list_fname + confs
+        # make list of configuration file content
+        conf_list = []
+        for ii in conf_list_fname:
+            ss = dpdata.System(ii)
+            ss.to('lammps/lmp', 'tmp.lmp')
+            conf_list.append(Path('tmp.lmp').read_text())
+        if Path('tmp.lmp').is_file():
+            os.remove('tmp.lmp')
+        # add the list to task group
         tgroup.set_conf(
             conf_list,
             n_sample = 3,
         )
         temps = job['temps']
+        press = job['press']
         trj_freq = job['trj_freq']
         nsteps = job['nsteps']
         ensemble = job['ensemble']
+        # add md settings
         tgroup.set_md(
             numb_models,
             mass_map,
             temps = temps,
+            press = press,
             ens = ensemble,
             nsteps = nsteps,
         )
@@ -180,10 +191,20 @@ def make_naive_exploration_scheduler(
         # stage
         stage = ExplorationStage()
         stage.add_task_group(tasks)
-        # stage_scheduler
-        stage_scheduler = ConstTrustLevelStageScheduler(
-            stage,
+        # trust level
+        trust_level = TrustLevel(
+            config['model_devi_f_trust_lo'],
+            config['model_devi_f_trust_hi'],
+        )
+        # selector
+        selector = ConfSelectorLammpsFrames(
             trust_level,
+            fp_task_max,
+        )
+        # stage_scheduler
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            stage,
+            selector,
             conv_accuracy = 0.9,
             max_numb_iter = 3,
         )
@@ -218,24 +239,24 @@ def workflow_concurrent_learning(
     explore_style = config['explore_style']
     fp_style = config['fp_style']
     prep_train_image = config['prep_train_image']
-    run_train_image = config['prep_train_image']
+    run_train_image = config['run_train_image']
     prep_explore_image = config['prep_explore_image']
-    run_explore_image = config['prep_explore_image']
+    run_explore_image = config['run_explore_image']
     prep_fp_image = config['prep_fp_image']
-    run_fp_image = config['prep_fp_image']
+    run_fp_image = config['run_fp_image']
     upload_python_package = config.get('upload_python_package', None)
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
         explore_style,
         fp_style,
-        prep_train_image,
-        run_train_image,
-        prep_explore_image,
-        run_explore_image,
-        prep_fp_image,
-        run_fp_image,
-        upload_python_package,
+        prep_train_image = prep_train_image,
+        run_train_image = run_train_image,
+        prep_explore_image = prep_explore_image,
+        run_explore_image = run_explore_image,
+        prep_fp_image = prep_fp_image,
+        run_fp_image = run_fp_image,
+        upload_python_package = upload_python_package,
     )
     scheduler = make_naive_exploration_scheduler(config)
 
@@ -244,10 +265,11 @@ def workflow_concurrent_learning(
     template_script = config['default_training_param']
     train_config = {}
     lmp_config = {}
-    fp_config = {}
+    fp_config = {'command': 'vasp_std'}
     kspacing, kgamma = get_kspacing_kgamma_from_incar(config['fp_incar'])
-    potcar_names = config['fp_pp_files']
-    for kk,vv in potcar_names.items():
+    fp_pp_files = config['fp_pp_files']
+    potcar_names = {}
+    for kk,vv in zip(type_map, fp_pp_files):
         potcar_names[kk] = f"{config['fp_pp_path']}/{vv}"
     fp_inputs = VaspInputs(
         kspacing = kspacing,
@@ -255,10 +277,11 @@ def workflow_concurrent_learning(
         incar_template_name = config['fp_incar'],
         potcar_names = potcar_names,
     )
-    init_data = upload_artifact(config['init_data'])
+    init_data = upload_artifact(config['init_data_sys'])
     iter_data = upload_artifact([])
-    init_models = None
+    init_models = upload_artifact(['init.model/0', 'init.model/1', 'init.model/2', 'init.model/3'])
     
+    # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
         'dpgen-step',
         template = concurrent_learning_op,
