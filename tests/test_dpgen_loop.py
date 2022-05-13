@@ -273,8 +273,8 @@ class TestLoop(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")        
         
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts["exploration_scheduler"])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
@@ -666,8 +666,8 @@ class TestLoopRestart(unittest.TestCase):
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts['exploration_scheduler'])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
@@ -826,8 +826,8 @@ class TestLoopRestart(unittest.TestCase):
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts['exploration_scheduler'])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
@@ -968,8 +968,8 @@ class TestLoopRestart(unittest.TestCase):
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts['exploration_scheduler'])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
@@ -1120,8 +1120,8 @@ class TestLoopRestart(unittest.TestCase):
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts['exploration_scheduler'])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
@@ -1273,8 +1273,8 @@ class TestLoopRestart(unittest.TestCase):
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        download_artifact(step.outputs.artifacts['exploration_scheduler'])
-        with open('scheduler.dat', 'rb') as fp:
+        scheduler_fname = download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
+        with open(scheduler_fname, 'rb') as fp:
             scheduler = pickle.load(fp)
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
