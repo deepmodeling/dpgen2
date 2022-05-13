@@ -6,7 +6,9 @@ from typing import (
 from distutils.version import (
     LooseVersion,
 )
-
+from dpgen2.constants import (
+    lmp_traj_name,
+)
 
 def _sample_sphere() :
     while True:
@@ -96,14 +98,14 @@ def make_lmp_input(
         if ele_temp_a is not None:
             keywords += "aparam ${ELE_TEMP}"
         ret+= "pair_style      deepmd %s out_freq ${THERMO_FREQ} out_file model_devi.out %s\n" % (graph_list, keywords)
-    ret+= "pair_coeff      \n"
+    ret+= "pair_coeff      * *\n"
     ret+= "\n"
     ret+= "thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz\n"
     ret+= "thermo          ${THERMO_FREQ}\n"
     if trj_seperate_files:        
         ret+= "dump            1 all custom ${DUMP_FREQ} traj/*.lammpstrj id type x y z fx fy fz\n"
     else:
-        ret+= "dump            1 all custom ${DUMP_FREQ} dump.traj id type x y z fx fy fz\n"
+        ret+= "dump            1 all custom ${DUMP_FREQ} %s id type x y z fx fy fz\n" % lmp_traj_name
     ret+= "restart         10000 dpgen.restart\n"
     ret+= "\n"
     if pka_e is None :

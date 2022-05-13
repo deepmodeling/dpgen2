@@ -30,6 +30,7 @@ from dargs import (
     ArgumentEncoder,
 )
 
+
 class RunLmp(OP):
     r"""Execute a LAMMPS task.
 
@@ -109,8 +110,8 @@ class RunLmp(OP):
                 mname = model_name_pattern % (idx)
                 Path(mname).symlink_to(mm)
             # run lmp
-            command = [command, '-i', lmp_input_name, '-log', lmp_log_name]
-            ret, out, err = run_command(command)
+            command = ' '.join([command, '-i', lmp_input_name, '-log', lmp_log_name])
+            ret, out, err = run_command(command, shell=True)
             if ret != 0:
                 raise TransientError(
                     'lmp failed\n',
