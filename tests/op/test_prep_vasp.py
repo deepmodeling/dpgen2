@@ -22,7 +22,9 @@ from dflow.python import (
     TransientError,
     FatalError,
 )
-
+from dpgen2.utils import (
+    dump_object_to_file,
+)
 
 class TestPrepVasp(unittest.TestCase):
     def setUp(self):
@@ -39,6 +41,7 @@ class TestPrepVasp(unittest.TestCase):
         ms_1.to_deepmd_npy('data-1')
         self.confs = ['data-0', 'data-1']
         self.confs = [Path(ii) for ii in self.confs]    
+        self.vi_fname = Path('vasp_inputs.dat')
         
     def tearDown(self):
         os.remove('template.incar')
@@ -54,7 +57,10 @@ class TestPrepVasp(unittest.TestCase):
             tname = Path(vasp_task_pattern%ii)
             if tname.is_dir():
                 shutil.rmtree(tname)
-        
+        for ii in [self.vi_fname]:
+            if ii.is_file():
+                os.remove(ii)
+
     def check_sys(self, ss0, ss1):
         self.assertEqual(ss0['atom_numbs'], ss1['atom_numbs'])
         self.assertEqual(ss0['atom_names'], ss1['atom_names'])
@@ -71,9 +77,10 @@ Gamma
         iincar = 'template.incar'
         ipotcar = {'H' : 'POTCAR_H', 'O' : 'POTCAR_O'}
         vi = VaspInputs(0.1, True, iincar, ipotcar)
+        dump_object_to_file(vi, self.vi_fname)
         op = PrepVasp()
         opout = op.execute(OPIO({
-            'inputs': vi,
+            'inputs': self.vi_fname,
             'confs' : self.confs,
         }))
         task_names = opout['task_names']

@@ -14,7 +14,9 @@ from typing import (
     Set,
 )
 from dpgen2.utils.run_command import run_command
-from dpgen2.utils.chdir import set_directory
+from dpgen2.utils import (
+    set_directory,
+)
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,

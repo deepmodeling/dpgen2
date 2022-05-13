@@ -53,6 +53,10 @@ from dpgen2.constants import (
     vasp_input_name,
     vasp_pot_name,
 )
+from dpgen2.utils import (
+    load_object_from_file,
+    dump_object_to_file,
+)
 
 def check_vasp_tasks(tcase, ntasks):
     cc = 0
@@ -83,6 +87,7 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
         self.incar.write_text(mocked_incar_template)
         self.potcar = Path('potcar')
         self.potcar.write_text('bar')
+        self.inputs_fname = Path('inputs.dat')
         
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -91,21 +96,22 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)
-        for ii in [self.incar, self.potcar]:
+        for ii in [self.incar, self.potcar, self.inputs_fname]:
             if ii.is_file():
                 os.remove(ii)
 
     def test(self):
         op = MockedPrepVasp()
-        out = op.execute( OPIO({
-            'confs' : self.confs,
-            'inputs' : \
-            VaspInputs(
+        vasp_inputs = VaspInputs(
                 0.16,
                 True,
                 self.incar,
                 {'foo': self.potcar}
-            ),
+            )
+        dump_object_to_file(vasp_inputs, self.inputs_fname)
+        out = op.execute( OPIO({
+            'confs' : self.confs,
+            'inputs' : self.inputs_fname\
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
         tdirs = [str(ii) for ii in tdirs]
@@ -175,6 +181,7 @@ class TestPrepRunVasp(unittest.TestCase):
         self.incar.write_text(mocked_incar_template)
         self.potcar = Path('potcar')
         self.potcar.write_text('bar')
+        self.inputs_fname = Path('inputs.dat')
 
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -183,7 +190,7 @@ class TestPrepRunVasp(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)        
-        for ii in [self.incar, self.potcar]:
+        for ii in [self.incar, self.potcar, self.inputs_fname]:
             if ii.is_file():
                 os.remove(ii)
 
@@ -211,20 +218,21 @@ class TestPrepRunVasp(unittest.TestCase):
             prep_image = default_image,
             run_image = default_image,
         )
+        vasp_inputs = VaspInputs(
+            0.16,
+            True,
+            self.incar,
+            {'foo': self.potcar}
+        )
+        inputs_arti = upload_artifact(dump_object_to_file(vasp_inputs, self.inputs_fname))
         prep_run_step = Step(
             'prep-run-step', 
             template = steps,
             parameters = {
-                'inputs' : \
-                VaspInputs(
-                    0.16,
-                    True,
-                    self.incar,
-                    {'foo': self.potcar}
-                ),
                 "fp_config": {},
             },
             artifacts = {
+                'inputs' : inputs_arti,
                 "confs" : self.confs,
             },
         )

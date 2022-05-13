@@ -48,6 +48,10 @@ from dpgen2.superop.prep_run_fp import PrepRunFp
 from dpgen2.superop.block import ConcurrentLearningBlock
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup
 from dpgen2.fp.vasp import VaspInputs
+from dpgen2.utils import(
+    dump_object_to_file,
+    load_object_from_file,
+)
 
 from mock import patch
 
@@ -131,8 +135,7 @@ class TestBlockCL(unittest.TestCase):
         self.template_script = mocked_template_script
         
         self.task_group_list = MockedExplorationTaskGroup()
-        with open('lmp_task_grp.dat', 'wb') as fp:
-            pickle.dump(self.task_group_list, fp)
+        dump_object_to_file(self.task_group_list, 'lmp_task_grp.dat')
         self.task_group_list = upload_artifact('lmp_task_grp.dat')
 
         self.conf_selector = MockedConfSelector()
@@ -147,7 +150,9 @@ class TestBlockCL(unittest.TestCase):
             self.incar,
             {'foo': self.potcar},
         )
-        
+        self.vasp_inputs_fname = Path('vasp_inputs.dat')
+        self.vasp_inputs_arti = upload_artifact(
+            dump_object_to_file(self.vasp_inputs, self.vasp_inputs_fname))
 
     def setUp(self):
         self.name = 'iter-002'
@@ -174,7 +179,7 @@ class TestBlockCL(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
-        for ii in [self.incar, self.potcar]:
+        for ii in [self.incar, self.potcar, self.vasp_inputs_fname]:
             if ii.is_file():
                 os.remove(ii)
 
@@ -197,10 +202,10 @@ class TestBlockCL(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "conf_selector" : self.conf_selector,
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
             },
             artifacts = {
+                'fp_inputs' : self.vasp_inputs_arti,
                 "lmp_task_grp" : self.task_group_list,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,

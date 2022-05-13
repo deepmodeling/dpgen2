@@ -42,10 +42,10 @@ class PrepRunFp(Steps):
     ):
         self._input_parameters = {
             "block_id" : InputParameter(type=str, value=""),
-            "inputs": InputParameter(),
             "fp_config" : InputParameter(),
         }
         self._input_artifacts = {
+            "inputs": InputArtifact(),
             "confs" : InputArtifact()
         }
         self._output_parameters = {
@@ -131,9 +131,9 @@ def _prep_run_fp(
             python_packages = upload_python_package,
         ),
         parameters={
-            "inputs": prep_run_steps.inputs.parameters['inputs'],
         },
         artifacts={
+            "inputs": prep_run_steps.inputs.artifacts['inputs'],
             "confs" : prep_run_steps.inputs.artifacts['confs'],
         },
         key = step_keys['prep-fp'],

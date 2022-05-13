@@ -12,6 +12,10 @@ from dpgen2.exploration.task import ExplorationTaskGroup
 from dpgen2.constants import (
     lmp_task_pattern,
 )
+from dpgen2.utils import (
+    load_object_from_file,
+    dump_object_to_file,
+)
 
 class PrepLmp(OP):
     r"""Prepare the working directories for LAMMPS tasks.
@@ -59,8 +63,7 @@ class PrepLmp(OP):
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the LAMMPS simulation. The order fo the Paths should be consistent with `op["task_names"]`
         """
 
-        with open(ip['lmp_task_grp'], 'rb') as fp:
-            lmp_task_grp = pickle.load(fp)
+        lmp_task_grp = load_object_from_file(ip['lmp_task_grp'])
         cc = 0
         task_paths = []
         for tt in lmp_task_grp:

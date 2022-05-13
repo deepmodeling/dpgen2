@@ -49,11 +49,11 @@ class ConcurrentLearningBlock(Steps):
             "train_config" : InputParameter(),
             "lmp_config" : InputParameter(),
             "conf_selector" : InputParameter(),
-            "fp_inputs" : InputParameter(),
             "fp_config" : InputParameter(),
         }
         self._input_artifacts={
             "lmp_task_grp" : InputArtifact(),
+            "fp_inputs" : InputArtifact(),
             "init_models" : InputArtifact(),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
@@ -202,10 +202,10 @@ def _block_cl(
         template = prep_run_fp_op,
         parameters={
             "block_id" : block_steps.inputs.parameters['block_id'],
-            "inputs": block_steps.inputs.parameters['fp_inputs'],            
             "fp_config": block_steps.inputs.parameters['fp_config'],            
         },
         artifacts={
+            "inputs": block_steps.inputs.artifacts['fp_inputs'],            
             "confs" : select_confs.outputs.artifacts['confs'],
         },
         key = '--'.join(["%s"%block_steps.inputs.parameters["block_id"], "prep-run-fp"]),

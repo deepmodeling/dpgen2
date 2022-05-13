@@ -33,6 +33,10 @@ from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup
 from dpgen2.exploration.selector import ConfSelector
 from dpgen2.superop.block import ConcurrentLearningBlock
+from dpgen2.utils import (
+    load_object_from_file,
+    dump_object_to_file,
+)
 
 class SchedulerWrapper(OP):
 
@@ -64,16 +68,12 @@ class SchedulerWrapper(OP):
         lmp_task_grp_file = Path('lmp_task_grp.dat')
         scheduler_file = Path('scheduler.dat')
 
-        with open(scheduler_in, 'rb') as fp:
-            scheduler = pickle.load(fp)
+        scheduler = load_object_from_file(scheduler_in)
 
         conv, lmp_task_grp, selector = scheduler.plan_next_iteration(report, trajs)
 
-        with open(lmp_task_grp_file, 'wb') as fp:
-            pickle.dump(lmp_task_grp, fp)
-
-        with open(scheduler_file, 'wb') as fp:
-            pickle.dump(scheduler, fp)
+        dump_object_to_file(lmp_task_grp, lmp_task_grp_file)
+        dump_object_to_file(scheduler, scheduler_file)
 
         return OPIO({
             "exploration_scheduler" : scheduler_file,
@@ -101,10 +101,8 @@ class MakeBlockId(OP):
             self,
             ip : OPIO,
     ) -> OPIO:
-        scheduler_in = ip['exploration_scheduler']
-        
-        with open(scheduler_in, 'rb') as fp:
-            scheduler = pickle.load(fp)
+        scheduler_in = ip['exploration_scheduler']        
+        scheduler = load_object_from_file(scheduler_in)
 
         stage = scheduler.get_stage()
         iteration = scheduler.get_iteration()
@@ -130,7 +128,6 @@ class ConcurrentLearningLoop(Steps):
             "train_config" : InputParameter(),
             "lmp_config" : InputParameter(),
             "conf_selector" : InputParameter(),
-            "fp_inputs" : InputParameter(),
             "fp_config" : InputParameter(),
         }
         self._input_artifacts={
@@ -139,6 +136,7 @@ class ConcurrentLearningLoop(Steps):
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
             "lmp_task_grp" : InputArtifact(),
+            "fp_inputs" : InputArtifact(),
         }
         self._output_parameters={
         }
@@ -222,7 +220,6 @@ class ConcurrentLearning(Steps):
             "template_script" : InputParameter(),
             "train_config" : InputParameter(),
             "lmp_config" : InputParameter(),
-            "fp_inputs" : InputParameter(),
             "fp_config" : InputParameter(),
         }
         self._input_artifacts={
@@ -230,6 +227,7 @@ class ConcurrentLearning(Steps):
             "init_models" : InputArtifact(),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
+            "fp_inputs" : InputArtifact(),
         }
         self._output_parameters={
         }
@@ -311,11 +309,11 @@ def _loop (
             "train_config" : steps.inputs.parameters["train_config"],
             "lmp_config" : steps.inputs.parameters["lmp_config"],
             "conf_selector" : steps.inputs.parameters["conf_selector"],
-            "fp_inputs" : steps.inputs.parameters["fp_inputs"],            
             "fp_config" : steps.inputs.parameters["fp_config"],
         },
         artifacts={
             "lmp_task_grp" : steps.inputs.artifacts["lmp_task_grp"],
+            "fp_inputs" : steps.inputs.artifacts["fp_inputs"],            
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],
@@ -369,12 +367,12 @@ def _loop (
             "train_config" : steps.inputs.parameters["train_config"],
             "lmp_config" : steps.inputs.parameters["lmp_config"],
             "conf_selector" : scheduler_step.outputs.parameters["conf_selector"],
-            "fp_inputs" : steps.inputs.parameters["fp_inputs"],
             "fp_config" : steps.inputs.parameters["fp_config"],
         },
         artifacts={
             "exploration_scheduler" : scheduler_step.outputs.artifacts["exploration_scheduler"],
             "lmp_task_grp" : scheduler_step.outputs.artifacts["lmp_task_grp"],
+            "fp_inputs" : steps.inputs.artifacts["fp_inputs"],
             "init_models" : block_step.outputs.artifacts['models'],
             "init_data" : steps.inputs.artifacts['init_data'],
             "iter_data" : block_step.outputs.artifacts['iter_data'],
@@ -459,12 +457,12 @@ def _dpgen(
             "train_config" : steps.inputs.parameters['train_config'],
             "conf_selector" : scheduler_step.outputs.parameters['conf_selector'],
             "lmp_config" : steps.inputs.parameters['lmp_config'],
-            "fp_inputs" : steps.inputs.parameters['fp_inputs'],
             "fp_config" : steps.inputs.parameters['fp_config'],
         },
         artifacts={
             "exploration_scheduler" : scheduler_step.outputs.artifacts['exploration_scheduler'],
             "lmp_task_grp" : scheduler_step.outputs.artifacts['lmp_task_grp'],
+            "fp_inputs" : steps.inputs.artifacts['fp_inputs'],
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],

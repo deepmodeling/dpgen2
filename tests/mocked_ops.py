@@ -9,7 +9,7 @@ from dflow.python import (
 
 upload_packages.append(__file__)
 
-import os, json, shutil, re
+import os, json, shutil, re, pickle
 from pathlib import Path
 from typing import Tuple, List
 try:
@@ -44,6 +44,11 @@ from dpgen2.exploration.selector import TrustLevel, ConfSelector
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.scheduler import ConvergenceCheckStageScheduler
+from dpgen2.fp.vasp import VaspInputs
+from dpgen2.utils import (
+    load_object_from_file,
+    dump_object_to_file,
+)
 
 mocked_template_script = { 'seed' : 1024, 'data': [] }
 mocked_numb_models = 3
@@ -269,7 +274,9 @@ class MockedPrepVasp(PrepVasp):
         confs = ip['confs']
         # incar_temp = ip['incar_temp']
         # potcars = ip['potcars']
-        vasp_input = ip['inputs']
+        vasp_input_fname = ip['inputs']
+        vasp_input = load_object_from_file(vasp_input_fname)
+
         incar_temp = vasp_input.incar_template
         potcars = vasp_input.potcars
 
