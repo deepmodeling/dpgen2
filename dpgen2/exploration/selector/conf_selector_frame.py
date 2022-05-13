@@ -80,9 +80,10 @@ class ConfSelectorLammpsFrames(ConfSelector):
 
         ms = dpdata.MultiSystems()
         for ii in range(ntraj):
-            ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
-            ss = ss.sub_system(id_cand_list[ii])        
-            ms.append(ss)
+            if len(id_cand_list[ii]) > 0:
+                ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
+                ss = ss.sub_system(id_cand_list[ii])        
+                ms.append(ss)
             
         out_path = Path('confs')
         ms.to_deepmd_npy(out_path)
