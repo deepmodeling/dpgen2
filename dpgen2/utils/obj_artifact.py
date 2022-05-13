@@ -17,7 +17,7 @@ def load_object_from_file(
         fname,
 ):
     """
-    pickle dump object to a file
+    pickle load object from a file
 
     """
     with open(fname, 'rb') as fp:
