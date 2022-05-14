@@ -101,10 +101,14 @@ class RunVasp(OP):
                 iname = ii.name
                 Path(iname).symlink_to(ii)
             # run vasp
-            command = [command, '>', log_name]
-            ret, out, err = run_command(command)
+            command = ' '.join([command, '>', log_name])
+            ret, out, err = run_command(command, shell=True)
             if ret != 0:
-                raise TransientError('vasp failed')
+                raise TransientError(
+                    'vasp failed\n',
+                    'out msg', out, '\n',
+                    'err msg', err, '\n'
+                )                    
             # convert the output to deepmd/npy format
             sys = dpdata.LabeledSystem('OUTCAR')
             sys.to('deepmd/npy', out_name)

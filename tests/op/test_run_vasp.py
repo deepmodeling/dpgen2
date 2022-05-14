@@ -68,7 +68,7 @@ class TestRunVasp(unittest.TestCase):
         self.assertEqual(out['labeled_data'], work_dir/'data')
         # check call
         calls = [
-            call(['myvasp', '>', 'foo.log']),
+            call(' '.join(['myvasp', '>', 'foo.log']), shell=True),
         ]
         mocked_run.assert_has_calls(calls)
         # check input files are correctly linked
@@ -109,7 +109,7 @@ class TestRunVasp(unittest.TestCase):
         self.assertEqual(out['labeled_data'], work_dir/vasp_default_out_data_name)
         # check call
         calls = [
-            call(['myvasp', '>', vasp_default_log_name]),
+            call(' '.join(['myvasp', '>', vasp_default_log_name]), shell=True),
         ]
         mocked_run.assert_has_calls(calls)
         # check input files are correctly linked
@@ -134,7 +134,7 @@ class TestRunVasp(unittest.TestCase):
                 }))
         # check call
         calls = [
-            call(['myvasp', '>', vasp_default_log_name]),
+            call(' '.join(['myvasp', '>', vasp_default_log_name]), shell=True),
         ]
         mocked_run.assert_has_calls(calls)
                         
