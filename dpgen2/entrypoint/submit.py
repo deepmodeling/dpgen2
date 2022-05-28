@@ -1,4 +1,4 @@
-import glob, dpdata, os
+import glob, dpdata, os, pickle
 from pathlib import Path
 from dflow import (
     InputParameter,
@@ -64,6 +64,10 @@ from dpgen2.exploration.selector import (
 from dpgen2.constants import (
     default_image,
     default_host,
+)
+from dpgen2.utils import (
+    dump_object_to_file,
+    load_object_from_file,
 )
 
 def make_concurrent_learning_op (
@@ -163,7 +167,7 @@ def make_naive_exploration_scheduler(
         # make list of configuration file content
         conf_list = []
         for ii in conf_list_fname:
-            ss = dpdata.System(ii)
+            ss = dpdata.System(ii, type_map=type_map)
             ss.to('lammps/lmp', 'tmp.lmp')
             conf_list.append(Path('tmp.lmp').read_text())
         if Path('tmp.lmp').is_file():
@@ -259,13 +263,17 @@ def workflow_concurrent_learning(
         upload_python_package = upload_python_package,
     )
     scheduler = make_naive_exploration_scheduler(config)
+    scheduler_file = Path('in_scheduler.dat')
+    with open(scheduler_file, 'wb') as fp:
+        pickle.dump(scheduler, fp)
+    scheduler_arti = upload_artifact(scheduler_file)
 
     type_map = config['type_map']
     numb_models = config['numb_models']
     template_script = config['default_training_param']
     train_config = {}
-    lmp_config = {}
-    fp_config = {'command': 'vasp_std'}
+    lmp_config = config.get('lmp_config', {})
+    fp_config = config.get('fp_config', {})
     kspacing, kgamma = get_kspacing_kgamma_from_incar(config['fp_incar'])
     fp_pp_files = config['fp_pp_files']
     potcar_names = {}
@@ -277,6 +285,8 @@ def workflow_concurrent_learning(
         incar_template_name = config['fp_incar'],
         potcar_names = potcar_names,
     )
+    fp_arti = upload_artifact(
+        dump_object_to_file(fp_inputs, 'vasp_inputs.dat'))        
     init_data = upload_artifact(config['init_data_sys'])
     iter_data = upload_artifact([])
     init_models = upload_artifact(['init.model/0', 'init.model/1', 'init.model/2', 'init.model/3'])
@@ -291,11 +301,11 @@ def workflow_concurrent_learning(
             "template_script" : template_script,
             "train_config" : train_config,
             "lmp_config" : lmp_config,
-            'fp_inputs' : fp_inputs,
             "fp_config" : fp_config,
-            "exploration_scheduler" : scheduler,
         },
         artifacts = {
+            "exploration_scheduler" : scheduler_arti,
+            'fp_inputs' : fp_arti,
             "init_models" : init_models,
             "init_data" : init_data,
             "iter_data" : iter_data,
