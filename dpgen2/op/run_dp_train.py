@@ -143,14 +143,22 @@ class RunDPTrain(OP):
             ret, out, err = run_command(command)
             if ret != 0:
                 clean_before_quit()
-                raise FatalError('dp train failed')
+                raise FatalError(
+                    'dp train failed\n',
+                    'out msg', out, '\n',
+                    'err msg', err, '\n'
+                )
             fplog.write(out)
 
             # freeze model
             ret, out, err = run_command(['dp', 'freeze', '-o', 'frozen_model.pb'])
             if ret != 0:
                 clean_before_quit()
-                raise FatalError('dp freeze failed')
+                raise FatalError(
+                    'dp freeze failed\n',
+                    'out msg', out, '\n',
+                    'err msg', err, '\n'
+                )
             fplog.write(out)
 
             clean_before_quit()
