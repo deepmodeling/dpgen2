@@ -84,6 +84,14 @@ from mocked_ops import (
     MockedCollectData,
     MockedExplorationTaskGroup,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestBlockCL(unittest.TestCase):
@@ -93,24 +101,24 @@ class TestBlockCL(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )
 
     def _setUp_data(self):
@@ -166,8 +174,8 @@ class TestBlockCL(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectData,
             upload_python_package = upload_python_package,
-            select_confs_image = default_image,
-            collect_data_image = default_image,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )
 
     def tearDown(self):

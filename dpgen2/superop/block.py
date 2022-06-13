@@ -22,11 +22,12 @@ from dflow.python import(
     Artifact,
     Slices,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 import os
 from typing import Set, List
 from pathlib import Path
-
+from copy import deepcopy
 
 class ConcurrentLearningBlock(Steps):
     def __init__(
@@ -37,8 +38,8 @@ class ConcurrentLearningBlock(Steps):
             select_confs_op : OP,
             prep_run_fp_op : OP,
             collect_data_op : OP,
-            select_confs_image : str = "dflow:v1.0",
-            collect_data_image : str = "dflow:v1.0",
+            select_confs_config : dict = normalize_step_dict({}),
+            collect_data_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
         self._input_parameters={
@@ -101,8 +102,8 @@ class ConcurrentLearningBlock(Steps):
             select_confs_op,
             prep_run_fp_op,
             collect_data_op,
-            select_confs_image = select_confs_image,
-            collect_data_image = collect_data_image,
+            select_confs_config = select_confs_config,
+            collect_data_config = collect_data_config,
             upload_python_package = upload_python_package,
         )
 
@@ -136,10 +137,14 @@ def _block_cl(
         select_confs_op : OP,
         prep_run_fp_op : OP,
         collect_data_op : OP,
-        select_confs_image : str = "dflow:v1.0",
-        collect_data_image : str = "dflow:v1.0",
+        select_confs_config : dict = normalize_step_dict({}),
+        collect_data_config : dict = normalize_step_dict({}),
         upload_python_package : str = None,
 ):
+    select_confs_config = deepcopy(select_confs_config)
+    collect_data_config = deepcopy(collect_data_config)
+    select_confs_template_config = select_confs_config.pop('template_config')
+    collect_data_template_config = collect_data_config.pop('template_config')
 
     prep_run_dp_train = Step(
         name + '-prep-run-dp-train',
@@ -178,11 +183,11 @@ def _block_cl(
         name = name + '-select-confs',
         template=PythonOPTemplate(
             select_confs_op,
-            image=select_confs_image,
             output_artifact_archive={
                 "confs": None
             },
             python_packages = upload_python_package,
+            **select_confs_template_config,
         ),
         parameters={
             "conf_selector": block_steps.inputs.parameters['conf_selector'],
@@ -194,6 +199,7 @@ def _block_cl(
             "model_devis" : prep_run_lmp.outputs.artifacts['model_devis'],
         },
         key = step_keys['select-confs'],
+        **select_confs_config,
     )
     block_steps.add(select_confs)
         
@@ -216,11 +222,11 @@ def _block_cl(
         name = name + '-collect-data',
         template=PythonOPTemplate(
             collect_data_op,
-            image=collect_data_image,
             output_artifact_archive={
                 "iter_data": None
             },
             python_packages = upload_python_package,
+            **select_confs_template_config,
         ),
         parameters={
             "name": block_steps.inputs.parameters["block_id"],
@@ -230,6 +236,7 @@ def _block_cl(
             "labeled_data" : prep_run_fp.outputs.artifacts['labeled_data'],
         },
         key = step_keys['collect-data'],
+        **select_confs_config,
     )
     block_steps.add(collect_data)
 

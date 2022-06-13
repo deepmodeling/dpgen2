@@ -51,6 +51,14 @@ from mocked_ops import (
     MockedRunDPTrain,
     MockedRunDPTrainNoneInitModel,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
 def _check_log(
         tcase,
@@ -271,8 +279,8 @@ class TestTrainDp(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )
         train_step = Step(
             'train-step', 
@@ -321,8 +329,8 @@ class TestTrainDp(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrainNoneInitModel,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )
         train_step = Step(
             'train-step', 

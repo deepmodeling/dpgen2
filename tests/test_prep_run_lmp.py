@@ -59,6 +59,14 @@ from dpgen2.constants import (
     lmp_log_name,
     lmp_model_devi_name,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
 def make_task_group_list(ngrp, ntask_per_grp):
     tgrp = ExplorationTaskGroup()
@@ -243,8 +251,8 @@ class TestPrepRunLmp(unittest.TestCase):
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
-            prep_image = default_image,
-            run_image = default_image,
+            prep_config = default_config,
+            run_config = default_config,
         )        
         prep_run_step = Step(
             'prep-run-step', 

@@ -25,9 +25,12 @@ from dflow.python import(
 from dpgen2.constants import (
     train_index_pattern,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+
 import os
 from typing import Set, List
 from pathlib import Path
+from copy import deepcopy
 
 class PrepRunDPTrain(Steps):
     def __init__(
@@ -35,8 +38,8 @@ class PrepRunDPTrain(Steps):
             name : str,
             prep_train_op : OP,
             run_train_op : OP,
-            prep_image : str = "dflow:v1.0",
-            run_image : str = "dflow:v1.0",
+            prep_config : dict = normalize_step_dict({}),
+            run_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
         self._input_parameters = {
@@ -85,8 +88,8 @@ class PrepRunDPTrain(Steps):
             self.step_keys,
             prep_train_op,
             run_train_op,
-            prep_image = prep_image,
-            run_image = run_image,
+            prep_config = prep_config,
+            run_config = run_config,
             upload_python_package = upload_python_package,
         )            
 
@@ -116,19 +119,24 @@ def _prep_run_dp_train(
         step_keys,
         prep_train_op : OP,
         run_train_op : OP,
-        prep_image : str = "dflow:v1.0",
-        run_image : str = "dflow:v1.0",
+        prep_config : dict = normalize_step_dict({}),
+        run_config : dict = normalize_step_dict({}),
         upload_python_package : str = None,
 ):
+    prep_config = deepcopy(prep_config)
+    run_config = deepcopy(run_config)
+    prep_template_config = prep_config.pop('template_config')
+    run_template_config = run_config.pop('template_config')
+
     prep_train = Step(
         'prep-train',
         template=PythonOPTemplate(
             prep_train_op,
-            image=prep_image,
             output_artifact_archive={
                 "task_paths": None
             },
             python_packages = upload_python_package,
+            **prep_template_config,
         ),
         parameters={
             "numb_models": train_steps.inputs.parameters['numb_models'],
@@ -137,6 +145,7 @@ def _prep_run_dp_train(
         artifacts={
         },
         key = step_keys['prep-train'],
+        **prep_config,
     )
     train_steps.add(prep_train)
 
@@ -144,7 +153,6 @@ def _prep_run_dp_train(
         'run-train',
         template=PythonOPTemplate(
             run_train_op,
-            image=run_image,
             slices = Slices(
                 "int('{{item}}')",
                 input_parameter = ["task_name"],
@@ -152,6 +160,7 @@ def _prep_run_dp_train(
                 output_artifact = ["model", "lcurve", "log", "script"],
             ),
             python_packages = upload_python_package,
+            **run_template_config,
         ),
         parameters={
             "config" : train_steps.inputs.parameters["train_config"],
@@ -166,6 +175,7 @@ def _prep_run_dp_train(
         with_sequence=argo_sequence(argo_len(prep_train.outputs.parameters["task_names"]), format=train_index_pattern),
         # with_param=argo_range(train_steps.inputs.parameters["numb_models"]),
         key = step_keys['run-train'],
+        **run_config,
     )
     train_steps.add(run_train)
 

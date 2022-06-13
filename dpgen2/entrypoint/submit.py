@@ -69,19 +69,27 @@ from dpgen2.utils import (
     dump_object_to_file,
     load_object_from_file,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
 def make_concurrent_learning_op (
         train_style : str = 'dp',
         explore_style : str = 'lmp',
         fp_style : str = 'vasp',
-        prep_train_image : str = default_image,
-        run_train_image : str = default_image,
-        prep_explore_image : str = default_image,
-        run_explore_image : str = default_image,
-        prep_fp_image : str = default_image,
-        run_fp_image : str = default_image,
-        select_confs_image : str = default_image,
-        collect_data_image : str = default_image,
+        prep_train_config : str = default_config,
+        run_train_config : str = default_config,
+        prep_explore_config : str = default_config,
+        run_explore_config : str = default_config,
+        prep_fp_config : str = default_config,
+        run_fp_config : str = default_config,
+        select_confs_config : str = default_config,
+        collect_data_config : str = default_config,
         upload_python_package : bool = None,
 ):
     if train_style == 'dp':
@@ -89,8 +97,8 @@ def make_concurrent_learning_op (
             "prep-run-dp-train",
             PrepDPTrain,
             RunDPTrain,
-            prep_image = prep_train_image,
-            run_image = run_train_image,
+            prep_config = prep_train_config,
+            run_config = run_train_config,
             upload_python_package = upload_python_package,
         )
     else:
@@ -100,8 +108,8 @@ def make_concurrent_learning_op (
             "prep-run-lmp",
             PrepLmp,
             RunLmp,
-            prep_image = prep_explore_image,
-            run_image = run_explore_image,
+            prep_config = prep_explore_config,
+            run_config = run_explore_config,
             upload_python_package = upload_python_package,
         )
     else:
@@ -111,8 +119,8 @@ def make_concurrent_learning_op (
             "prep-run-vasp",
             PrepVasp,
             RunVasp,
-            prep_image = prep_fp_image,
-            run_image = run_fp_image,
+            prep_config = prep_fp_config,
+            run_config = run_fp_config,
             upload_python_package = upload_python_package,
         )
     else:
@@ -126,8 +134,8 @@ def make_concurrent_learning_op (
         SelectConfs,
         prep_run_fp_op,
         CollectData,
-        select_confs_image = select_confs_image,
-        collect_data_image = collect_data_image,
+        select_confs_config = select_confs_config,
+        collect_data_config = collect_data_config,
         upload_python_package = upload_python_package,
     )    
     # dpgen
@@ -135,7 +143,7 @@ def make_concurrent_learning_op (
         "concurrent-learning",
         block_cl_op,
         upload_python_package = upload_python_package,
-        image = default_image,
+        step_config = default_config,
     )
         
     return dpgen_op
@@ -242,12 +250,12 @@ def workflow_concurrent_learning(
     train_style = config['train_style']
     explore_style = config['explore_style']
     fp_style = config['fp_style']
-    prep_train_image = config['prep_train_image']
-    run_train_image = config['run_train_image']
-    prep_explore_image = config['prep_explore_image']
-    run_explore_image = config['run_explore_image']
-    prep_fp_image = config['prep_fp_image']
-    run_fp_image = config['run_fp_image']
+    prep_train_config = normalize_step_dict(config.get('prep_train_config', {}))
+    run_train_config = normalize_step_dict(config.get('run_train_config', {}))
+    prep_explore_config = normalize_step_dict(config.get('prep_explore_config', {}))
+    run_explore_config = normalize_step_dict(config.get('run_explore_config', {}))
+    prep_fp_config = normalize_step_dict(config.get('prep_fp_config', {}))
+    run_fp_config = normalize_step_dict(config.get('run_fp_config', {}))
     upload_python_package = config.get('upload_python_package', None)
     init_models_paths = config.get('training_iter0_model_path')
 
@@ -255,12 +263,12 @@ def workflow_concurrent_learning(
         train_style,
         explore_style,
         fp_style,
-        prep_train_image = prep_train_image,
-        run_train_image = run_train_image,
-        prep_explore_image = prep_explore_image,
-        run_explore_image = run_explore_image,
-        prep_fp_image = prep_fp_image,
-        run_fp_image = run_fp_image,
+        prep_train_config = prep_train_config,
+        run_train_config = run_train_config,
+        prep_explore_config = prep_explore_config,
+        run_explore_config = run_explore_config,
+        prep_fp_config = prep_fp_config,
+        run_fp_config = run_fp_config,
         upload_python_package = upload_python_package,
     )
     scheduler = make_naive_exploration_scheduler(config)
@@ -315,15 +323,39 @@ def workflow_concurrent_learning(
             "iter_data" : iter_data,
         },
     )
-        
-    wf = Workflow(name="dpgen", host=default_host)
-    wf.add(dpgen_step)
-    
-    return wf
+    return dpgen_step
 
 def submit_concurrent_learning(
-        config,
+        wf_config,
 ):
-    wf = workflow_concurrent_learning(config)
+    # set global config
+    from dflow import config, s3_config
+    dflow_config = wf_config.get('dflow_config', None)
+    if dflow_config :
+        config["host"] = dflow_config.get('host', None)
+        s3_config["endpoint"] = dflow_config.get('s3_endpoint', None)
+        config["k8s_api_server"] = dflow_config.get('k8s_api_server', None)
+        config["token"] = dflow_config.get('token', None)    
+
+    # lebesque context
+    from dflow.plugins.lebesgue import LebesgueContext
+    lb_context_config = wf_config.get("lebesque_context_config", None)
+    if lb_context_config:
+        lebesgue_context = LebesgueContext(
+            **lb_context_config,
+        )
+    else :
+        lebesgue_context = None
+
+    # print('config:', config)
+    # print('s3_config:',s3_config)
+    # print('lebsque context:', lb_context_config)
+
+    dpgen_step = workflow_concurrent_learning(wf_config)
+
+    wf = Workflow(name="dpgen", context=lebesgue_context)
+    wf.add(dpgen_step)
+
     wf.submit()
+
     return wf

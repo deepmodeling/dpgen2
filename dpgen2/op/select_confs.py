@@ -2,7 +2,8 @@ from dflow.python import (
     OP,
     OPIO,
     OPIOSign,
-    Artifact
+    Artifact,
+    BigParameter,
 )
 import os, json
 from typing import Tuple, List, Set

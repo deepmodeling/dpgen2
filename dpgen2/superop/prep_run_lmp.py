@@ -25,10 +25,12 @@ from dflow.python import(
 from dpgen2.constants import (
     lmp_index_pattern,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+
 import os
 from typing import Set, List
 from pathlib import Path
-
+from copy import deepcopy
 
 class PrepRunLmp(Steps):
     def __init__(
@@ -36,8 +38,8 @@ class PrepRunLmp(Steps):
             name : str,
             prep_op : OP,
             run_op : OP,
-            prep_image : str = "dflow:v1.0",
-            run_image : str = "dflow:v1.0",
+            prep_config : dict = normalize_step_dict({}),
+            run_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
         self._input_parameters = {
@@ -85,8 +87,8 @@ class PrepRunLmp(Steps):
             self.step_keys,
             prep_op,
             run_op,
-            prep_image = prep_image,
-            run_image = run_image,
+            prep_config = prep_config,
+            run_config = run_config,
             upload_python_package = upload_python_package,
         )            
         
@@ -116,20 +118,24 @@ def _prep_run_lmp(
         step_keys,
         prep_op : OP,
         run_op : OP,
-        prep_image : str = "dflow:v1.0",
-        run_image : str = "dflow:v1.0",
+        prep_config : dict = normalize_step_dict({}),
+        run_config : dict = normalize_step_dict({}),
         upload_python_package : str = None,
 ):
+    prep_config = deepcopy(prep_config)
+    run_config = deepcopy(run_config)
+    prep_template_config = prep_config.pop('template_config')
+    run_template_config = run_config.pop('template_config')
 
     prep_lmp = Step(
         'prep-lmp',
         template=PythonOPTemplate(
             prep_op,
-            image=prep_image,
             output_artifact_archive={
                 "task_paths": None
             },
             python_packages = upload_python_package,
+            **prep_template_config,
         ),
         parameters={
         },
@@ -137,6 +143,7 @@ def _prep_run_lmp(
             "lmp_task_grp": prep_run_steps.inputs.artifacts['lmp_task_grp'],
         },
         key = step_keys['prep-lmp'],
+        **prep_config,
     )
     prep_run_steps.add(prep_lmp)
 
@@ -144,7 +151,6 @@ def _prep_run_lmp(
         'run-lmp',
         template=PythonOPTemplate(
             run_op,
-            image=run_image,
             slices = Slices(
                 "int('{{item}}')",
                 input_parameter = ["task_name"],
@@ -152,6 +158,7 @@ def _prep_run_lmp(
                 output_artifact = ["log", "traj", "model_devi"],
             ),
             python_packages = upload_python_package,
+            **run_template_config,
         ),
         parameters={
             "task_name" : prep_lmp.outputs.parameters["task_names"],
@@ -164,6 +171,7 @@ def _prep_run_lmp(
         with_sequence=argo_sequence(argo_len(prep_lmp.outputs.parameters["task_names"]), format=lmp_index_pattern),
         # with_param=argo_range(argo_len(prep_lmp.outputs.parameters["task_names"])),
         key = step_keys['run-lmp'],
+        **run_config,
     )
     prep_run_steps.add(run_lmp)
 

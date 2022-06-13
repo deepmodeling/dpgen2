@@ -37,6 +37,9 @@ from dpgen2.utils import (
     load_object_from_file,
     dump_object_to_file,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+from copy import deepcopy
+
 
 class SchedulerWrapper(OP):
 
@@ -117,7 +120,7 @@ class ConcurrentLearningLoop(Steps):
             self,
             name : str,
             block_op : Steps,
-            image : str = "dflow:v1.0",
+            step_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
         self._input_parameters={
@@ -174,7 +177,7 @@ class ConcurrentLearningLoop(Steps):
             self.step_keys,
             name,
             block_op,
-            image = image,
+            step_config = step_config,
             upload_python_package = upload_python_package,
         )
 
@@ -204,13 +207,13 @@ class ConcurrentLearning(Steps):
             self,
             name : str,
             block_op : Steps,
-            image : str = "dflow:v1.0",
+            step_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
         self.loop = ConcurrentLearningLoop(
             name+'-loop',
             block_op,
-            image = image,
+            step_config = step_config,
             upload_python_package = upload_python_package,
         )
         
@@ -261,7 +264,7 @@ class ConcurrentLearning(Steps):
             name, 
             self.loop,
             self.loop_key,
-            image = image,
+            step_config = step_config,
             upload_python_package = upload_python_package,
         )
 
@@ -295,9 +298,12 @@ def _loop (
         step_keys,
         name : str,
         block_op : OP,
-        image : str = "dflow:v1.0",
+        step_config : dict = normalize_step_dict({}),
         upload_python_package : str = None,
 ):    
+    step_config = deepcopy(step_config)
+    step_template_config = step_config.pop('template_config')
+
     block_step = Step(
         name = name + '-block',
         template = block_op,
@@ -326,8 +332,8 @@ def _loop (
         name = name + '-scheduler',
         template=PythonOPTemplate(
             SchedulerWrapper,
-            image=image,
             python_packages = upload_python_package,
+            **step_template_config,
         ),
         parameters={
             "exploration_report": block_step.outputs.parameters['exploration_report'],
@@ -337,6 +343,7 @@ def _loop (
             "trajs" : block_step.outputs.artifacts['trajs'],
         },
         key = step_keys['scheduler'],
+        **step_config,
     )
     steps.add(scheduler_step)
 
@@ -344,8 +351,8 @@ def _loop (
         name = name + '-make-block-id',
         template=PythonOPTemplate(
             MakeBlockId,
-            image=image,
             python_packages = upload_python_package,
+            **step_template_config,
         ),
         parameters={
         },
@@ -353,6 +360,7 @@ def _loop (
             "exploration_scheduler": scheduler_step.outputs.artifacts['exploration_scheduler'],
         },
         key = step_keys['id'],
+        **step_config,
     )
     steps.add(id_step)
 
@@ -409,15 +417,18 @@ def _dpgen(
         name,
         loop_op,
         loop_key,
-        image = "dflow:v1.0",
+        step_config : dict = normalize_step_dict({}),
         upload_python_package : str = None
 ):    
+    step_config = deepcopy(step_config)
+    step_template_config = step_config.pop('template_config')
+
     scheduler_step = Step(
         name = name + '-scheduler',
         template=PythonOPTemplate(
             SchedulerWrapper,
-            image=image,
             python_packages = upload_python_package,
+            **step_template_config,
         ),
         parameters={
             "exploration_report": None,
@@ -427,6 +438,7 @@ def _dpgen(
             "trajs" : None,
         },
         key = step_keys['scheduler'],
+        **step_config,
     )
     steps.add(scheduler_step)
 
@@ -434,8 +446,8 @@ def _dpgen(
         name = name + '-make-block-id',
         template=PythonOPTemplate(
             MakeBlockId,
-            image=image,
             python_packages = upload_python_package,
+            **step_template_config,
         ),
         parameters={
         },
@@ -443,6 +455,7 @@ def _dpgen(
             "exploration_scheduler": scheduler_step.outputs.artifacts['exploration_scheduler'],
         },
         key = step_keys['id'],
+        **step_config,
     )
     steps.add(id_step)
 
