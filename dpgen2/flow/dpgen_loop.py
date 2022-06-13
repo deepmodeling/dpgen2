@@ -132,7 +132,7 @@ class ConcurrentLearningLoop(Steps):
         }
         self._input_artifacts={
             "exploration_scheduler" : InputArtifact(),
-            "init_models" : InputArtifact(),
+            "init_models" : InputArtifact(optional=True),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
             "lmp_task_grp" : InputArtifact(),
