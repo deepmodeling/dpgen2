@@ -42,7 +42,7 @@ class RunDPTrain(OP):
             "config" : dict,
             "task_name" : str,
             "task_path" : Artifact(Path),
-            "init_model" : Artifact(Path),
+            "init_model" : Artifact(Path, optional=True),
             "init_data" : Artifact(List[Path]),
             "iter_data" : Artifact(List[Path]),
         })

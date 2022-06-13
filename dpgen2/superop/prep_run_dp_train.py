@@ -46,7 +46,7 @@ class PrepRunDPTrain(Steps):
             "train_config" : InputParameter(),
         }        
         self._input_artifacts = {
-            "init_models" : InputArtifact(),
+            "init_models" : InputArtifact(optional=True),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
         }

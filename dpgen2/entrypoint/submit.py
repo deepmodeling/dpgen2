@@ -249,6 +249,7 @@ def workflow_concurrent_learning(
     prep_fp_image = config['prep_fp_image']
     run_fp_image = config['run_fp_image']
     upload_python_package = config.get('upload_python_package', None)
+    init_models_paths = config.get('training_iter0_model_path')
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
@@ -289,8 +290,11 @@ def workflow_concurrent_learning(
         dump_object_to_file(fp_inputs, 'vasp_inputs.dat'))        
     init_data = upload_artifact(config['init_data_sys'])
     iter_data = upload_artifact([])
-    init_models = upload_artifact(['init.model/0', 'init.model/1', 'init.model/2', 'init.model/3'])
-    
+    if init_models_paths is not None:
+        init_models = upload_artifact(init_models_paths)
+    else:
+        init_models = None
+
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
         'dpgen-step',

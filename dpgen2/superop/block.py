@@ -54,7 +54,7 @@ class ConcurrentLearningBlock(Steps):
         self._input_artifacts={
             "lmp_task_grp" : InputArtifact(),
             "fp_inputs" : InputArtifact(),
-            "init_models" : InputArtifact(),
+            "init_models" : InputArtifact(optional=True),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
         }

@@ -49,6 +49,7 @@ from mocked_ops import (
     make_mocked_init_data,
     MockedPrepDPTrain,
     MockedRunDPTrain,
+    MockedRunDPTrainNoneInitModel,
 )
 
 def _check_log(
@@ -313,5 +314,40 @@ class TestTrainDp(unittest.TestCase):
                 self.path_iter_data,
                 only_check_name = True
             )
+
+    def test_train_no_init_model(self):
+        steps = PrepRunDPTrain(
+            "train-steps",
+            MockedPrepDPTrain,
+            MockedRunDPTrainNoneInitModel,
+            upload_python_package = upload_python_package,
+            prep_image = default_image,
+            run_image = default_image,
+        )
+        train_step = Step(
+            'train-step', 
+            template = steps,
+            parameters = {
+                "numb_models" : self.numb_models,
+                "template_script" : self.template_script,
+                "train_config" : {},
+            },
+            artifacts = {
+                "init_models" : None,
+                "init_data" : self.init_data,
+                "iter_data" : self.iter_data,
+            },
+        )
+        wf = Workflow(name="dp-train", host=default_host)
+        wf.add(train_step)
+        wf.submit()
+        
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="train-step")[0]
+        self.assertEqual(step.phase, "Succeeded")
+
 
         
