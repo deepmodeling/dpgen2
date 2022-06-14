@@ -281,6 +281,6 @@ class TestPrepRunLmp(unittest.TestCase):
         download_artifact(step.outputs.artifacts["trajs"])
         download_artifact(step.outputs.artifacts["logs"])
 
-        for ii in jsonpickle.decode(step.outputs.parameters['task_names'].value):
+        for ii in step.outputs.parameters['task_names'].value:
             self.check_run_lmp_output(ii, self.model_list)
             

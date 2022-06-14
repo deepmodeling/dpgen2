@@ -22,6 +22,7 @@ from dflow.python import(
     OPIOSign,
     Artifact,
     Slices,
+    BigParameter,
 )
 import pickle, jsonpickle, os
 from typing import (
@@ -47,7 +48,7 @@ class SchedulerWrapper(OP):
     def get_input_sign(cls):
         return OPIOSign({
             "exploration_scheduler" : Artifact(Path),
-            "exploration_report": ExplorationReport,
+            "exploration_report": BigParameter(ExplorationReport),
             "trajs": Artifact(List[Path]),
         })
 

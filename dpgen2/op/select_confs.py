@@ -30,7 +30,7 @@ class SelectConfs(OP):
     @classmethod
     def get_output_sign(cls):
         return OPIOSign({
-            "report" : ExplorationReport,
+            "report" : BigParameter(ExplorationReport),
 
             "confs" : Artifact(List[Path]),
         })

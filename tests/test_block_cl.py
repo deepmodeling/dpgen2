@@ -230,7 +230,7 @@ class TestBlockCL(unittest.TestCase):
         step = wf.query_step(name='step')[0]
         self.assertEqual(step.phase, "Succeeded")        
 
-        report = jsonpickle.decode(step.outputs.parameters['exploration_report'].value)
+        report = step.outputs.parameters['exploration_report'].value
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         
