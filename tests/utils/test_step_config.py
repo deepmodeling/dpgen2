@@ -12,7 +12,7 @@ class TestStepConfig(unittest.TestCase):
                 "image" : "bula",
             },
             "executor" : {
-                "type" : "lebesque",
+                "type" : "lebesgue",
                 "extra" : {
                     "scass_type" : "foo",
                     "program_id" : "bar",
@@ -30,7 +30,7 @@ class TestStepConfig(unittest.TestCase):
             "continue_on_num_success" : None,
             "continue_on_success_ratio" : None,
             "executor" : {
-                "type" : "lebesque",
+                "type" : "lebesgue",
                 "extra" : {
                     "scass_type" : "foo",
                     "program_id" : "bar",

@@ -5,7 +5,7 @@ from dargs import (
 )
 from dpgen2.constants import default_image
 
-def lebesque_extra_args():
+def lebesgue_extra_args():
     doc_scass_type = "The machine configuraiton."
     doc_program_id = "The ID of the program."
     doc_job_type = "The type of job."
@@ -18,16 +18,16 @@ def lebesque_extra_args():
         Argument("template_cover_cmd_escape_bug", bool, optional=True, default=True, doc=doc_template_cover),
     ]
 
-def lebesque_executor_args():
-    doc_extra = "The 'extra' key in the lebesque executor. Note that we do not check if 'the `dict` provided to the 'extra' key is valid or not."
+def lebesgue_executor_args():
+    doc_extra = "The 'extra' key in the lebesgue executor. Note that we do not check if 'the `dict` provided to the 'extra' key is valid or not."
     return [
-        Argument("extra", dict, lebesque_extra_args(), optional = True, doc = doc_extra),
+        Argument("extra", dict, lebesgue_extra_args(), optional = True, doc = doc_extra),
     ]
 
 def variant_executor():
     doc = f'The type of the executor.'
     return Variant("type", [
-        Argument("lebesque", dict, lebesque_executor_args()),
+        Argument("lebesgue", dict, lebesgue_executor_args()),
     ], doc = doc)
 
 def template_conf_args():

@@ -337,9 +337,9 @@ def submit_concurrent_learning(
         config["k8s_api_server"] = dflow_config.get('k8s_api_server', None)
         config["token"] = dflow_config.get('token', None)    
 
-    # lebesque context
+    # lebesgue context
     from dflow.plugins.lebesgue import LebesgueContext
-    lb_context_config = wf_config.get("lebesque_context_config", None)
+    lb_context_config = wf_config.get("lebesgue_context_config", None)
     if lb_context_config:
         lebesgue_context = LebesgueContext(
             **lb_context_config,
