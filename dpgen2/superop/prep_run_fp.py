@@ -26,6 +26,7 @@ from dpgen2.constants import (
     vasp_index_pattern,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.utils.step_config import init_executor
 
 import os
 from typing import Set, List
@@ -126,6 +127,8 @@ def _prep_run_fp(
     run_config = deepcopy(run_config)
     prep_template_config = prep_config.pop('template_config')
     run_template_config = run_config.pop('template_config')
+    prep_executor = init_executor(prep_config.pop('executor'))
+    run_executor = init_executor(run_config.pop('executor'))
 
     prep_fp = Step(
         'prep-fp',
@@ -144,7 +147,8 @@ def _prep_run_fp(
             "confs" : prep_run_steps.inputs.artifacts['confs'],
         },
         key = step_keys['prep-fp'],
-        **prep_config
+        executor = prep_executor,
+        **prep_config,        
     )
     prep_run_steps.add(prep_fp)
 
@@ -171,6 +175,7 @@ def _prep_run_fp(
         with_sequence=argo_sequence(argo_len(prep_fp.outputs.parameters["task_names"]), format=vasp_index_pattern),
         # with_param=argo_range(argo_len(prep_fp.outputs.parameters["task_names"])),
         key = step_keys['run-fp'],
+        executor = run_executor,
         **run_config,
     )
     prep_run_steps.add(run_fp)

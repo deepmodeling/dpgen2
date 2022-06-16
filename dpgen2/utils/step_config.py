@@ -4,6 +4,7 @@ from dargs import (
     Variant,
 )
 from dpgen2.constants import default_image
+from dflow.plugins.lebesgue import LebesgueExecutor
 
 def lebesgue_extra_args():
     doc_scass_type = "The machine configuraiton."
@@ -27,7 +28,7 @@ def lebesgue_executor_args():
 def variant_executor():
     doc = f'The type of the executor.'
     return Variant("type", [
-        Argument("lebesgue", dict, lebesgue_executor_args()),
+        Argument("lebesgue_v2", dict, lebesgue_executor_args()),
     ], doc = doc)
 
 def template_conf_args():
@@ -78,3 +79,15 @@ def gen_doc(*, make_anchor=True, make_link=True, **kwargs):
             key_words.append(ii.split(':')[1].replace('`','').strip())
     return "\n\n".join(ptr)
 
+
+def init_executor(
+        executor_dict,
+):
+    if executor_dict is None:
+        return None
+    etype = executor_dict.pop('type')
+    if etype == "lebesgue_v2":
+        return LebesgueExecutor(**executor_dict)
+    else:
+        raise RuntimeError('unknown executor type', etype)    
+    

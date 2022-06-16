@@ -26,6 +26,7 @@ from dpgen2.constants import (
     lmp_index_pattern,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.utils.step_config import init_executor
 
 import os
 from typing import Set, List
@@ -126,6 +127,8 @@ def _prep_run_lmp(
     run_config = deepcopy(run_config)
     prep_template_config = prep_config.pop('template_config')
     run_template_config = run_config.pop('template_config')
+    prep_executor = init_executor(prep_config.pop('executor'))
+    run_executor = init_executor(run_config.pop('executor'))
 
     prep_lmp = Step(
         'prep-lmp',
@@ -143,6 +146,7 @@ def _prep_run_lmp(
             "lmp_task_grp": prep_run_steps.inputs.artifacts['lmp_task_grp'],
         },
         key = step_keys['prep-lmp'],
+        executor = prep_executor,
         **prep_config,
     )
     prep_run_steps.add(prep_lmp)
@@ -171,6 +175,7 @@ def _prep_run_lmp(
         with_sequence=argo_sequence(argo_len(prep_lmp.outputs.parameters["task_names"]), format=lmp_index_pattern),
         # with_param=argo_range(argo_len(prep_lmp.outputs.parameters["task_names"])),
         key = step_keys['run-lmp'],
+        executor = run_executor,
         **run_config,
     )
     prep_run_steps.add(run_lmp)

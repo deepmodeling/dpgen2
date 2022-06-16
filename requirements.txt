@@ -1,5 +1,5 @@
 numpy
 dpdata
-pydflow
+pydflow>=1.0.20
 dargs
 

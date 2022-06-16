@@ -23,6 +23,7 @@ from dflow.python import(
     Slices,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.utils.step_config import init_executor
 
 import os
 from typing import Set, List
@@ -145,6 +146,8 @@ def _block_cl(
     collect_data_config = deepcopy(collect_data_config)
     select_confs_template_config = select_confs_config.pop('template_config')
     collect_data_template_config = collect_data_config.pop('template_config')
+    select_confs_executor = init_executor(select_confs_config.pop('executor'))
+    collect_data_executor = init_executor(collect_data_config.pop('executor'))
 
     prep_run_dp_train = Step(
         name + '-prep-run-dp-train',
@@ -199,6 +202,7 @@ def _block_cl(
             "model_devis" : prep_run_lmp.outputs.artifacts['model_devis'],
         },
         key = step_keys['select-confs'],
+        executor = select_confs_executor,
         **select_confs_config,
     )
     block_steps.add(select_confs)
@@ -226,7 +230,7 @@ def _block_cl(
                 "iter_data": None
             },
             python_packages = upload_python_package,
-            **select_confs_template_config,
+            **collect_data_template_config,
         ),
         parameters={
             "name": block_steps.inputs.parameters["block_id"],
@@ -236,7 +240,8 @@ def _block_cl(
             "labeled_data" : prep_run_fp.outputs.artifacts['labeled_data'],
         },
         key = step_keys['collect-data'],
-        **select_confs_config,
+        executor = collect_data_executor,
+        **collect_data_config,
     )
     block_steps.add(collect_data)
 

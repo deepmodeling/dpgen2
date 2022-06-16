@@ -39,6 +39,8 @@ from dpgen2.utils import (
     dump_object_to_file,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.utils.step_config import init_executor
+
 from copy import deepcopy
 
 
@@ -304,6 +306,7 @@ def _loop (
 ):    
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop('template_config')
+    step_executor = init_executor(step_config.pop('executor'))
 
     block_step = Step(
         name = name + '-block',
@@ -344,6 +347,7 @@ def _loop (
             "trajs" : block_step.outputs.artifacts['trajs'],
         },
         key = step_keys['scheduler'],
+        executor = step_executor,
         **step_config,
     )
     steps.add(scheduler_step)
@@ -361,6 +365,7 @@ def _loop (
             "exploration_scheduler": scheduler_step.outputs.artifacts['exploration_scheduler'],
         },
         key = step_keys['id'],
+        executor = step_executor,
         **step_config,
     )
     steps.add(id_step)
@@ -423,6 +428,7 @@ def _dpgen(
 ):    
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop('template_config')
+    step_executor = init_executor(step_config.pop('executor'))
 
     scheduler_step = Step(
         name = name + '-scheduler',
@@ -439,6 +445,7 @@ def _dpgen(
             "trajs" : None,
         },
         key = step_keys['scheduler'],
+        executor = step_executor,
         **step_config,
     )
     steps.add(scheduler_step)
@@ -456,6 +463,7 @@ def _dpgen(
             "exploration_scheduler": scheduler_step.outputs.artifacts['exploration_scheduler'],
         },
         key = step_keys['id'],
+        executor = step_executor,
         **step_config,
     )
     steps.add(id_step)

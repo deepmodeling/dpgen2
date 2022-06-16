@@ -3,7 +3,8 @@ import numpy as np
 import unittest, json, shutil, os
 from pathlib import Path
 from dpgen2.constants import default_image
-from dpgen2.utils.step_config import normalize, gen_doc
+from dpgen2.utils.step_config import normalize, gen_doc, init_executor
+import dflow
 
 class TestStepConfig(unittest.TestCase):
     def test_success(self):
@@ -12,7 +13,7 @@ class TestStepConfig(unittest.TestCase):
                 "image" : "bula",
             },
             "executor" : {
-                "type" : "lebesgue",
+                "type" : "lebesgue_v2",
                 "extra" : {
                     "scass_type" : "foo",
                     "program_id" : "bar",
@@ -30,7 +31,7 @@ class TestStepConfig(unittest.TestCase):
             "continue_on_num_success" : None,
             "continue_on_success_ratio" : None,
             "executor" : {
-                "type" : "lebesgue",
+                "type" : "lebesgue_v2",
                 "extra" : {
                     "scass_type" : "foo",
                     "program_id" : "bar",
@@ -59,3 +60,31 @@ class TestStepConfig(unittest.TestCase):
         odict = normalize(idict)
         self.assertEqual(odict, expected_odict)
 
+
+    def test_init_executor(self):
+        idict = {
+            "template_config":{
+                "image" : "bula",
+            },
+            "executor" : {
+                "type" : "lebesgue_v2",
+                "extra" : {
+                    "scass_type" : "foo",
+                    "program_id" : "bar",
+                },
+            },
+        }
+        odict = normalize(idict)
+        ret = init_executor(odict.pop('executor'))
+        self.assertEqual(type(ret), dflow.plugins.lebesgue.LebesgueExecutor)
+
+
+    def test_init_executor_notype(self):
+        idict = {
+            "template_config":{
+                "image" : "bula",
+            },
+        }
+        odict = normalize(idict)
+        ret = init_executor(odict.pop('executor'))
+        self.assertEqual(ret, None)

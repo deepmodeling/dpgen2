@@ -26,6 +26,7 @@ from dpgen2.constants import (
     train_index_pattern,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.utils.step_config import init_executor
 
 import os
 from typing import Set, List
@@ -127,6 +128,8 @@ def _prep_run_dp_train(
     run_config = deepcopy(run_config)
     prep_template_config = prep_config.pop('template_config')
     run_template_config = run_config.pop('template_config')
+    prep_executor = init_executor(prep_config.pop('executor'))
+    run_executor = init_executor(run_config.pop('executor'))
 
     prep_train = Step(
         'prep-train',
@@ -145,6 +148,7 @@ def _prep_run_dp_train(
         artifacts={
         },
         key = step_keys['prep-train'],
+        executor = prep_executor,
         **prep_config,
     )
     train_steps.add(prep_train)
@@ -175,6 +179,7 @@ def _prep_run_dp_train(
         with_sequence=argo_sequence(argo_len(prep_train.outputs.parameters["task_names"]), format=train_index_pattern),
         # with_param=argo_range(train_steps.inputs.parameters["numb_models"]),
         key = step_keys['run-train'],
+        executor = run_executor,
         **run_config,
     )
     train_steps.add(run_train)
