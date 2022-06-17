@@ -159,6 +159,9 @@ def make_naive_exploration_scheduler(
     type_map = config['type_map']
     numb_models = config['numb_models']
     fp_task_max = config['fp_task_max']
+    conv_accuracy = config['conv_accuracy']
+    max_numb_iter = config['max_numb_iter']
+    fatal_at_max = config.get('fatal_at_max', True)
     scheduler = ExplorationScheduler()
 
     for job in model_devi_jobs:
@@ -217,8 +220,9 @@ def make_naive_exploration_scheduler(
         stage_scheduler = ConvergenceCheckStageScheduler(
             stage,
             selector,
-            conv_accuracy = 0.9,
-            max_numb_iter = 3,
+            conv_accuracy = conv_accuracy,
+            max_numb_iter = max_numb_iter,
+            fatal_at_max = fatal_at_max,
         )
         # scheduler
         scheduler.add_stage_scheduler(stage_scheduler)
