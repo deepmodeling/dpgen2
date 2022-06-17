@@ -23,6 +23,7 @@ class CollectData(OP):
     def get_input_sign(cls):
         return OPIOSign({
             "name" : str,
+            "type_map" : List[str],
             "labeled_data" : Artifact(List[Path]),
             "iter_data" : Artifact(List[Path]),
         })
@@ -59,10 +60,11 @@ class CollectData(OP):
         
         """
         name = ip['name']
+        type_map = ip['type_map']
         labeled_data = ip['labeled_data']
         iter_data = ip['iter_data']
 
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=type_map)
         for ii in labeled_data:
             ss = dpdata.LabeledSystem(ii, fmt='deepmd/npy')
             ms.append(ss)

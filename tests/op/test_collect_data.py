@@ -53,17 +53,47 @@ class TestRunLmp(unittest.TestCase):
 
     def test_success(self):
         op = CollectData()
+        self.type_map = ['bar', 'foo']
         out = op.execute(
             OPIO({
                 'name' : 'iter1',
+                'type_map' : self.type_map,
                 'iter_data' : self.iter_data,
                 'labeled_data' : self.labeled_data,
             }))
         self.assertTrue(Path('iter1').is_dir())
         self.assertEqual(out['iter_data'], [Path('iter0'), Path('iter1')])
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(out['iter_data'][1])
-        self.assertEqual(sorted(ms.systems.keys()), ['bar3', 'bar4'])
-        self.assertEqual(ms.systems['bar3'].get_nframes(), 6)
-        self.assertEqual(ms.systems['bar4'].get_nframes(), 5)
+        self.assertEqual(sorted(ms.systems.keys()), ['bar3foo0', 'bar4foo0'])
+        self.assertEqual(ms.systems['bar3foo0'].get_nframes(), 6)
+        self.assertEqual(ms.systems['bar4foo0'].get_nframes(), 5)
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(out['iter_data'][0])
+        self.assertEqual(sorted(ms.systems.keys()), ['bar0foo1', 'bar0foo2'])
+        self.assertEqual(ms.systems['bar0foo1'].get_nframes(), 3)
+        self.assertEqual(ms.systems['bar0foo2'].get_nframes(), 4)
+        
+    def test_success_other_type(self):
+        op = CollectData()
+        self.type_map = ['foo', 'bar']
+        out = op.execute(
+            OPIO({
+                'name' : 'iter1',
+                'type_map' : self.type_map,
+                'iter_data' : self.iter_data,
+                'labeled_data' : self.labeled_data,
+            }))
+        self.assertTrue(Path('iter1').is_dir())
+        self.assertEqual(out['iter_data'], [Path('iter0'), Path('iter1')])
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(out['iter_data'][1])
+        self.assertEqual(sorted(ms.systems.keys()), ['foo0bar3', 'foo0bar4'])
+        self.assertEqual(ms.systems['foo0bar3'].get_nframes(), 6)
+        self.assertEqual(ms.systems['foo0bar4'].get_nframes(), 5)
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(out['iter_data'][0])
+        self.assertEqual(sorted(ms.systems.keys()), ['foo1bar0', 'foo2bar0'])
+        self.assertEqual(ms.systems['foo1bar0'].get_nframes(), 3)
+        self.assertEqual(ms.systems['foo2bar0'].get_nframes(), 4)
         

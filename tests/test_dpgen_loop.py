@@ -185,7 +185,7 @@ class TestLoop(unittest.TestCase):
         
         self.template_script = mocked_template_script
 
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
         self.incar = Path('incar')
         self.incar.write_text(mocked_incar_template)
@@ -472,7 +472,7 @@ class TestLoopRestart(unittest.TestCase):
         
         self.template_script = mocked_template_script
 
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
         self.incar = Path('incar')
         self.incar.write_text(mocked_incar_template)

@@ -42,6 +42,7 @@ class PrepVasp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
+            "type_map": List[str],
             "inputs": Artifact(Path),
             "confs" : Artifact(List[Path]),
         })
@@ -81,13 +82,14 @@ class PrepVasp(OP):
         inputs_fname = ip['inputs']        
         inputs = load_object_from_file(inputs_fname)
         confs = ip['confs']
+        type_map = ip['type_map']
 
         task_names = []
         task_paths = []
         counter=0
         # loop over list of MultiSystems
         for mm in confs:
-            ms = dpdata.MultiSystems()
+            ms = dpdata.MultiSystems(type_map=type_map)
             ms.from_deepmd_npy(mm, labeled=False)
             # loop over Systems in MultiSystems
             for ii in range(len(ms)):
@@ -117,8 +119,10 @@ class PrepVasp(OP):
             Path(vasp_input_name).write_text(
                 vasp_inputs.incar_template
             )
+            # fix the case when some element have 0 atom, e.g. H0O2
+            tmp_frame = dpdata.System(vasp_conf_name, fmt='vasp/poscar')
             Path(vasp_pot_name).write_text(
-                vasp_inputs.make_potcar(conf_frame['atom_names'])
+                vasp_inputs.make_potcar(tmp_frame['atom_names'])
             )
             Path(vasp_kp_name).write_text(
                 vasp_inputs.make_kpoints(conf_frame['cells'][0])

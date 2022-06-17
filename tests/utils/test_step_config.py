@@ -3,7 +3,12 @@ import numpy as np
 import unittest, json, shutil, os
 from pathlib import Path
 from dpgen2.constants import default_image
-from dpgen2.utils.step_config import normalize, gen_doc, init_executor
+# from dpgen2.utils.step_config import normalize, gen_doc, init_executor
+from dpgen2.utils import (
+    normalize_step_dict as normalize,
+    gen_doc_step_dict as gen_doc,
+    init_executor,
+)
 import dflow
 
 class TestStepConfig(unittest.TestCase):

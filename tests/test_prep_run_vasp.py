@@ -96,6 +96,7 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
         self.potcar = Path('potcar')
         self.potcar.write_text('bar')
         self.inputs_fname = Path('inputs.dat')
+        self.type_map = ['H', 'O']
         
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -119,7 +120,8 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
         dump_object_to_file(vasp_inputs, self.inputs_fname)
         out = op.execute( OPIO({
             'confs' : self.confs,
-            'inputs' : self.inputs_fname\
+            'inputs' : self.inputs_fname,
+            'type_map' : self.type_map,
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
         tdirs = [str(ii) for ii in tdirs]
@@ -190,6 +192,7 @@ class TestPrepRunVasp(unittest.TestCase):
         self.potcar = Path('potcar')
         self.potcar.write_text('bar')
         self.inputs_fname = Path('inputs.dat')
+        self.type_map = ['H', 'O']
 
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -238,6 +241,7 @@ class TestPrepRunVasp(unittest.TestCase):
             template = steps,
             parameters = {
                 "fp_config": {},
+                'type_map' : self.type_map,
             },
             artifacts = {
                 'inputs' : inputs_arti,

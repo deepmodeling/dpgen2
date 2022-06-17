@@ -147,7 +147,7 @@ class TestBlockCL(unittest.TestCase):
         self.task_group_list = upload_artifact('lmp_task_grp.dat')
 
         self.conf_selector = MockedConfSelector()
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
         self.incar = Path('incar')
         self.incar.write_text(mocked_incar_template)

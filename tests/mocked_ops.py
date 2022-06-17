@@ -355,6 +355,9 @@ class MockedPrepVasp(PrepVasp):
         # potcars = ip['potcars']
         vasp_input_fname = ip['inputs']
         vasp_input = load_object_from_file(vasp_input_fname)
+        type_map = ip['type_map']
+        if not (type_map == ['H', 'O']):
+            raise FatalError
 
         incar_temp = vasp_input.incar_template
         potcars = vasp_input.potcars

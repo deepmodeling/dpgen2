@@ -194,7 +194,7 @@ def _block_cl(
         ),
         parameters={
             "conf_selector": block_steps.inputs.parameters['conf_selector'],
-            "type_map": block_steps.inputs.parameters['type_map'],
+            "type_map": block_steps.inputs.parameters["type_map"],
             "traj_fmt": 'lammps/dump',
         },
         artifacts={
@@ -213,6 +213,7 @@ def _block_cl(
         parameters={
             "block_id" : block_steps.inputs.parameters['block_id'],
             "fp_config": block_steps.inputs.parameters['fp_config'],            
+            "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
             "inputs": block_steps.inputs.artifacts['fp_inputs'],            
@@ -234,6 +235,7 @@ def _block_cl(
         ),
         parameters={
             "name": block_steps.inputs.parameters["block_id"],
+            "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
             "iter_data" : block_steps.inputs.artifacts['iter_data'],

@@ -42,6 +42,7 @@ class TestPrepVasp(unittest.TestCase):
         self.confs = ['data-0', 'data-1']
         self.confs = [Path(ii) for ii in self.confs]    
         self.vi_fname = Path('vasp_inputs.dat')
+        self.type_map = ['H', 'O']
         
     def tearDown(self):
         os.remove('template.incar')
@@ -82,6 +83,7 @@ Gamma
         opout = op.execute(OPIO({
             'inputs': self.vi_fname,
             'confs' : self.confs,
+            'type_map' : self.type_map,
         }))
         task_names = opout['task_names']
         task_paths = opout['task_paths']
@@ -101,9 +103,9 @@ Gamma
             self.assertEqual('foo', (ipath/vasp_input_name).read_text())
             self.assertEqual('bar H\n', (ipath/vasp_pot_name).read_text())
             self.assertEqual(refkp, (ipath/vasp_kp_name).read_text())
-        ms0 = dpdata.MultiSystems()
+        ms0 = dpdata.MultiSystems(type_map = self.type_map)
         ms0.from_deepmd_npy(self.confs[0])
-        ms1 = dpdata.MultiSystems()
+        ms1 = dpdata.MultiSystems(type_map = self.type_map)
         ms1.from_deepmd_npy(self.confs[1])
         # natoms : number of frames
         sys_record_0 = {

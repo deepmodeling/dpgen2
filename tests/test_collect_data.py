@@ -59,6 +59,7 @@ class TestMockedCollectData(unittest.TestCase):
         for ii in self.labeled_data:
             (ii).mkdir(exist_ok=True, parents=True)
             (ii/'data').write_text(f'data of {str(ii)}')
+        self.type_map = []
 
     def tearDown(self):
         for ii in ['d0', 'd1', 'outdata', 'foo', 'bar', 'iter0', 'iter1'] :
@@ -72,6 +73,7 @@ class TestMockedCollectData(unittest.TestCase):
             'name': self.name,
             'labeled_data' : self.labeled_data,
             'iter_data' : self.iter_data,
+            'type_map' : self.type_map,
         }))
         iter_data = out['iter_data']
         
@@ -105,6 +107,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             (ii/'data').write_text(f'data of {str(ii)}')
         self.iter_data = upload_artifact(list(self.iter_data))
         self.labeled_data = upload_artifact(self.labeled_data)
+        self.type_map = []
 
     def tearDown(self):
         for ii in ['d0', 'd1', 'outdata', 'foo', 'bar', 'iter0', 'iter1'] :
@@ -125,6 +128,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             ),
             parameters = {
                 "name" : self.name,
+                "type_map" : self.type_map,
             },
             artifacts = {
                 "iter_data" : self.iter_data,

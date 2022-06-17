@@ -78,10 +78,10 @@ class ConfSelectorLammpsFrames(ConfSelector):
         for ii in id_cand:
             id_cand_list[ii[0]].append(ii[1])
 
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=type_map)
         for ii in range(ntraj):
             if len(id_cand_list[ii]) > 0:
-                ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
+                ss = dpdata.System(trajs[ii], fmt=traj_fmt)
                 ss = ss.sub_system(id_cand_list[ii])        
                 ms.append(ss)
             

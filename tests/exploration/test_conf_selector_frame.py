@@ -79,7 +79,7 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         )
         confs, report = conf_selector.select(
             self.trajs, self.model_devis, self.traj_fmt, self.type_map)
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
         ss = ms[0]
@@ -103,7 +103,7 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         )
         confs, report = conf_selector.select(
             self.trajs, self.model_devis, self.traj_fmt, self.type_map)
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
         ss = ms[0]
@@ -124,7 +124,7 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         )
         confs, report = conf_selector.select(
             self.trajs, self.model_devis, self.traj_fmt, self.type_map)
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
         ss = ms[0]
@@ -148,7 +148,7 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         )
         confs, report = conf_selector.select(
             self.trajs, self.model_devis, self.traj_fmt, self.type_map)
-        ms = dpdata.MultiSystems()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
         ss = ms[0]
