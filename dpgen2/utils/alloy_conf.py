@@ -9,6 +9,20 @@ from typing import (
 from .unit_cells import generate_unit_cell
 
 class AlloyConf():
+    """
+    Parameters
+    ----------
+    lattice     Union[dpdata.System, Tuple[str,float]]
+                Lattice of the alloy confs. can be 
+                `dpdata.System`: lattice in `dpdata.System`
+                `Tuple[str, float]`: pair of lattice type and lattice constant.
+                lattice type can be "bcc", "fcc", "hcp", "sc" or "diamond"
+    replicate   Union[List[int], Tuple[int], int]
+                replicate of the lattice
+    type_map    List[str]
+                The type map
+    """
+
     def __init__(
             self,
             lattice : Union[dpdata.System, Tuple[str,float]],
@@ -103,8 +117,8 @@ class AlloyConf():
 
         Returns
         -------
-        conf_list       List[str]
-                        A list of file content of configurations in format of `dpdata_fmt`.
+        conf_list       List[dpdata.System]
+                        A list of generated confs in `dpdata.System`.
         """
         ret = [self._generate_one_sys(
                 concentration, cell_pert_frac, atom_pert_dist)
