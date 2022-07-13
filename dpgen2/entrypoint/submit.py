@@ -90,6 +90,7 @@ def make_concurrent_learning_op (
         run_fp_config : str = default_config,
         select_confs_config : str = default_config,
         collect_data_config : str = default_config,
+        cl_step_config : str = default_config,
         upload_python_package : bool = None,
 ):
     if train_style == 'dp':
@@ -143,7 +144,7 @@ def make_concurrent_learning_op (
         "concurrent-learning",
         block_cl_op,
         upload_python_package = upload_python_package,
-        step_config = default_config,
+        step_config = cl_step_config,
     )
         
     return dpgen_op
@@ -251,15 +252,20 @@ def get_kspacing_kgamma_from_incar(
 def workflow_concurrent_learning(
         config,
 ):
+    default_config = normalize_step_dict(config.get('default_config', {}))
+
     train_style = config['train_style']
     explore_style = config['explore_style']
     fp_style = config['fp_style']
-    prep_train_config = normalize_step_dict(config.get('prep_train_config', {}))
-    run_train_config = normalize_step_dict(config.get('run_train_config', {}))
-    prep_explore_config = normalize_step_dict(config.get('prep_explore_config', {}))
-    run_explore_config = normalize_step_dict(config.get('run_explore_config', {}))
-    prep_fp_config = normalize_step_dict(config.get('prep_fp_config', {}))
-    run_fp_config = normalize_step_dict(config.get('run_fp_config', {}))
+    prep_train_config = normalize_step_dict(config.get('prep_train_config', default_config))
+    run_train_config = normalize_step_dict(config.get('run_train_config', default_config))
+    prep_explore_config = normalize_step_dict(config.get('prep_explore_config', default_config))
+    run_explore_config = normalize_step_dict(config.get('run_explore_config', default_config))
+    prep_fp_config = normalize_step_dict(config.get('prep_fp_config', default_config))
+    run_fp_config = normalize_step_dict(config.get('run_fp_config', default_config))
+    select_confs_config = normalize_step_dict(config.get('select_confs_config', default_config))
+    collect_data_config = normalize_step_dict(config.get('collect_data_config', default_config))
+    cl_step_config = normalize_step_dict(config.get('cl_step_config', default_config))
     upload_python_package = config.get('upload_python_package', None)
     init_models_paths = config.get('training_iter0_model_path')
 
@@ -273,6 +279,9 @@ def workflow_concurrent_learning(
         run_explore_config = run_explore_config,
         prep_fp_config = prep_fp_config,
         run_fp_config = run_fp_config,
+        select_confs_config = select_confs_config,
+        collect_data_config = collect_data_config,
+        cl_step_config = cl_step_config,
         upload_python_package = upload_python_package,
     )
     scheduler = make_naive_exploration_scheduler(config)
