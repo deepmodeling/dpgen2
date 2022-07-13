@@ -7,14 +7,15 @@ from dpgen2.constants import default_image
 from dflow.plugins.lebesgue import LebesgueExecutor
 
 def lebesgue_extra_args():
+    # It is not possible to strictly check the keys in this section....
     doc_scass_type = "The machine configuraiton."
     doc_program_id = "The ID of the program."
     doc_job_type = "The type of job."
     doc_template_cover = "The key for hacking around a bug in Lebesgue."
 
     return [
-        Argument("scass_type", str, optional=False, doc=doc_scass_type),
-        Argument("program_id", str, optional=False, doc=doc_program_id),
+        Argument("scass_type", str, optional=True, doc=doc_scass_type),
+        Argument("program_id", str, optional=True, doc=doc_program_id),
         Argument("job_type", str, optional=True, default="container", doc=doc_job_type),
         Argument("template_cover_cmd_escape_bug", bool, optional=True, default=True, doc=doc_template_cover),
     ]
@@ -62,7 +63,8 @@ def normalize(data):
     sca = step_conf_args()
     base = Argument("base", dict, sca)
     data = base.normalize_value(data, trim_pattern="_*")
-    base.check_value(data, strict=True)
+    # not possible to strictly check Lebesgue_executor_args, dirty hack!
+    base.check_value(data, strict=False)
     return data
 
 def gen_doc(*, make_anchor=True, make_link=True, **kwargs):
