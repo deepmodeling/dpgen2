@@ -68,8 +68,11 @@ from dpgen2.constants import (
 from dpgen2.utils import (
     dump_object_to_file,
     load_object_from_file,
+    normalize_alloy_conf_dict,
+    generate_alloy_conf_file_content,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+
 default_config = normalize_step_dict(
     {
         "template_config" : {
@@ -150,6 +153,34 @@ def make_concurrent_learning_op (
     return dpgen_op
 
 
+def make_conf_list(
+        conf_list,
+        type_map,
+        fmt='vasp/poscar'
+):
+    # load confs from files
+    if type(conf_list) is list:
+        conf_list_fname = []
+        for jj in conf_list:
+            confs = sorted(glob.glob(jj))
+            conf_list_fname = conf_list_fname + confs
+        conf_list = []
+        for ii in conf_list_fname:
+            ss = dpdata.System(ii, type_map=type_map, fmt=fmt)
+            ss.to('lammps/lmp', 'tmp.lmp')
+            conf_list.append(Path('tmp.lmp').read_text())
+        if Path('tmp.lmp').is_file():
+            os.remove('tmp.lmp')
+    # generate alloy confs
+    elif type(conf_list) is dict:
+        conf_list['type_map'] = type_map
+        i_dict = normalize_alloy_conf_dict(conf_list)
+        conf_list = generate_alloy_conf_file_content(**i_dict)
+    else:
+        raise RuntimeError('unknown input format of conf_list: ', type(conf_list))
+    return conf_list
+
+
 def make_naive_exploration_scheduler(
         config,
 ):
@@ -171,19 +202,9 @@ def make_naive_exploration_scheduler(
         ##  ignore the expansion of sys_idx
         # get all file names of md initial configuraitons
         sys_idx = job['sys_idx']
-        conf_list_fname = []        
+        conf_list = []        
         for ii in sys_idx:
-            for jj in sys_configs[ii]:                
-                confs = sorted(glob.glob(jj))
-                conf_list_fname = conf_list_fname + confs
-        # make list of configuration file content
-        conf_list = []
-        for ii in conf_list_fname:
-            ss = dpdata.System(ii, type_map=type_map)
-            ss.to('lammps/lmp', 'tmp.lmp')
-            conf_list.append(Path('tmp.lmp').read_text())
-        if Path('tmp.lmp').is_file():
-            os.remove('tmp.lmp')
+            conf_list += make_conf_list(sys_configs[ii], type_map)
         # add the list to task group
         tgroup.set_conf(
             conf_list,

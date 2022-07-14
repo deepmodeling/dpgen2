@@ -205,6 +205,7 @@ class TestAlloyConf(unittest.TestCase):
             "numb_confs" : 1,
             "cell_pert_frac" : 0.,
             "atom_pert_dist" : 0.,
+            'concentration' : None,
             "fmt" : "lammps/lmp",
         }
         out_data = normalize(

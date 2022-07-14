@@ -164,6 +164,7 @@ def generate_alloy_conf_args():
     doc_replicate = 'The number of replicates in each direction'
     doc_type_map = 'The type map of the system'
     doc_numb_confs = 'The number of configurations to generate'
+    doc_concentration = 'The concentration of each element. If None all elements have the same concentration'
     doc_cell_pert_frac = 'The faction of cell perturbation'
     doc_atom_pert_dist = 'The distance of atomic position perturbation'
     doc_fmt = 'The format of file content'
@@ -173,6 +174,7 @@ def generate_alloy_conf_args():
         Argument("type_map", list, doc=doc_type_map),
         Argument("replicate", list, optional=True, default=None, doc=doc_replicate),
         Argument("numb_confs", int, optional=True, default=1, doc=doc_numb_confs),
+        Argument("concentration", list, optional=True, default=None, doc=doc_concentration),
         Argument("cell_pert_frac", float, optional=True, default=0.0, doc=doc_cell_pert_frac),
         Argument("atom_pert_dist", float, optional=True, default=0.0, doc=doc_atom_pert_dist),
         Argument("fmt", str, optional=True, default="lammps/lmp", doc=doc_fmt),        
