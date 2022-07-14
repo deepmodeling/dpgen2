@@ -206,9 +206,10 @@ def make_naive_exploration_scheduler(
         for ii in sys_idx:
             conf_list += make_conf_list(sys_configs[ii], type_map)
         # add the list to task group
+        n_sample = job.get('n_sample')
         tgroup.set_conf(
             conf_list,
-            n_sample = 3,
+            n_sample=n_sample,
         )
         temps = job['temps']
         press = job['press']
