@@ -40,6 +40,15 @@ class ConvergenceCheckStageScheduler(StageScheduler):
         else :
             converged = report.accurate_ratio() >= self.conv_accuracy
             if not converged:
+                # check if we have any candidate to improve the quality of the model
+                if report.candidate_ratio() == 0.0:
+                    raise FatalError(
+                        'The iteration is not converted, but we find that '
+                        'it does not selected any candidate configuration. '
+                        'This means the quality of the model would not be '
+                        'improved and the iteraction would not end. '
+                        'Please try to increase the higher trust levels. '
+                    )
                 # if not converged, check max iter
                 if self.max_numb_iter is not None and self.nxt_iter == self.max_numb_iter:
                     if self.fatal_at_max:
