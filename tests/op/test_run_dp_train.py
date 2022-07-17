@@ -312,7 +312,14 @@ class TestRunDPTrain(unittest.TestCase):
         
         self.assertTrue(work_dir.is_dir())
         self.assertTrue(out['log'].is_file())
-        self.assertEqual(out['log'].read_text(), 'foo\nbar\n')
+        self.assertEqual(out['log'].read_text(), 
+                         '#=================== train std out ===================\n'
+                         'foo\n'
+                         '#=================== train std err ===================\n'
+                         '#=================== freeze std out ===================\n'
+                         'bar\n'
+                         '#=================== freeze std err ===================\n'
+                         )
         with open(out['script']) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v1)
@@ -356,7 +363,14 @@ class TestRunDPTrain(unittest.TestCase):
         
         self.assertTrue(work_dir.is_dir())
         self.assertTrue(out['log'].is_file())
-        self.assertEqual(out['log'].read_text(), 'foo\nbar\n')
+        self.assertEqual(out['log'].read_text(), 
+                         '#=================== train std out ===================\n'
+                         'foo\n'
+                         '#=================== train std err ===================\n'
+                         '#=================== freeze std out ===================\n'
+                         'bar\n'
+                         '#=================== freeze std err ===================\n'
+                         )
         with open(out['script']) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
@@ -400,7 +414,14 @@ class TestRunDPTrain(unittest.TestCase):
         
         self.assertTrue(work_dir.is_dir())
         self.assertTrue(out['log'].is_file())
-        self.assertEqual(out['log'].read_text(), 'foo\nbar\n')
+        self.assertEqual(out['log'].read_text(),
+                         '#=================== train std out ===================\n'
+                         'foo\n'
+                         '#=================== train std err ===================\n'
+                         '#=================== freeze std out ===================\n'
+                         'bar\n'
+                         '#=================== freeze std err ===================\n'
+                         )
         with open(out['script']) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
