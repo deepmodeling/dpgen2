@@ -148,9 +148,9 @@ class RunDPTrain(OP):
                     'out msg', out, '\n',
                     'err msg', err, '\n'
                 )
-            fplog.write('#=================== train std out ===================')
+            fplog.write('#=================== train std out ===================\n')
             fplog.write(out)
-            fplog.write('#=================== train std err ===================')
+            fplog.write('#=================== train std err ===================\n')
             fplog.write(err)
 
             # freeze model
@@ -162,9 +162,9 @@ class RunDPTrain(OP):
                     'out msg', out, '\n',
                     'err msg', err, '\n'
                 )
-            fplog.write('#=================== freeze std out ===================')
+            fplog.write('#=================== freeze std out ===================\n')
             fplog.write(out)
-            fplog.write('#=================== freeze std err ===================')
+            fplog.write('#=================== freeze std err ===================\n')
             fplog.write(err)
 
             clean_before_quit()
