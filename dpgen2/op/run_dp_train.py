@@ -148,7 +148,10 @@ class RunDPTrain(OP):
                     'out msg', out, '\n',
                     'err msg', err, '\n'
                 )
+            fplog.write('#=================== train std out ===================')
             fplog.write(out)
+            fplog.write('#=================== train std err ===================')
+            fplog.write(err)
 
             # freeze model
             ret, out, err = run_command(['dp', 'freeze', '-o', 'frozen_model.pb'])
@@ -159,7 +162,10 @@ class RunDPTrain(OP):
                     'out msg', out, '\n',
                     'err msg', err, '\n'
                 )
+            fplog.write('#=================== freeze std out ===================')
             fplog.write(out)
+            fplog.write('#=================== freeze std err ===================')
+            fplog.write(err)
 
             clean_before_quit()
         
