@@ -320,14 +320,12 @@ def workflow_concurrent_learning(
     fp_config = config.get('fp_config', {})
     kspacing, kgamma = get_kspacing_kgamma_from_incar(config['fp_incar'])
     fp_pp_files = config['fp_pp_files']
-    potcar_names = {}
-    for kk,vv in zip(type_map, fp_pp_files):
-        potcar_names[kk] = f"{config['fp_pp_path']}/{vv}"
+    incar_file = config['fp_incar']    
     fp_inputs = VaspInputs(
         kspacing = kspacing,
         kgamma = kgamma,
-        incar_template_name = config['fp_incar'],
-        potcar_names = potcar_names,
+        incar_template_name = incar_file,
+        potcar_names = fp_pp_files,
     )
     fp_arti = upload_artifact(
         dump_object_to_file(fp_inputs, 'vasp_inputs.dat'))        
