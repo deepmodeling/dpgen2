@@ -170,7 +170,7 @@ def generate_alloy_conf_args():
     doc_fmt = 'The format of file content'
 
     return [
-        Argument("lattice", tuple, doc=doc_lattice),
+        Argument("lattice", [list,tuple], doc=doc_lattice),
         Argument("type_map", list, doc=doc_type_map),
         Argument("replicate", list, optional=True, default=None, doc=doc_replicate),
         Argument("numb_confs", int, optional=True, default=1, doc=doc_numb_confs),
