@@ -81,6 +81,13 @@ default_config = normalize_step_dict(
     }
 )
 
+def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
+    root_dir = Path(root_dir)
+    matches = [str(d) for d in root_dir.rglob("*") if (d / "type.raw").is_file()]
+    if (root_dir / "type.raw").is_file():
+        matches.append(str(root_dir))
+    return matches
+
 def make_concurrent_learning_op (
         train_style : str = 'dp',
         explore_style : str = 'lmp',
@@ -329,7 +336,10 @@ def workflow_concurrent_learning(
     )
     fp_arti = upload_artifact(
         dump_object_to_file(fp_inputs, 'vasp_inputs.dat'))        
-    init_data = upload_artifact(config['init_data_sys'])
+    init_data = config['init_data_sys']
+    if isinstance(init_data,str):
+        init_data = expand_sys_str(init_data)
+    init_data = upload_artifact(init_data)
     iter_data = upload_artifact([])
     if init_models_paths is not None:
         init_models = upload_artifact(init_models_paths)
