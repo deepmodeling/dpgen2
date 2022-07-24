@@ -69,6 +69,9 @@ class CollectData(OP):
             ss = dpdata.LabeledSystem(ii, fmt='deepmd/npy')
             ms.append(ss)
         
+        # NOTICE:
+        # if ms.get_nframes() == 0, ms.to_deepmd_npy would not make the dir Path(name)
+        Path(name).mkdir()
         ms.to_deepmd_npy(name)
         iter_data.append(Path(name))
 
