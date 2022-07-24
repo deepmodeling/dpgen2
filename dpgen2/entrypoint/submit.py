@@ -72,6 +72,9 @@ from dpgen2.utils import (
     generate_alloy_conf_file_content,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from typing import (
+    Union, List,
+)
 
 default_config = normalize_step_dict(
     {
