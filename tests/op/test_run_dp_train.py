@@ -502,3 +502,145 @@ class TestRunDPTrain(unittest.TestCase):
         with open(work_dir/train_script_name) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
+
+
+
+
+class TestRunDPTrainNullIterData(unittest.TestCase):
+    def setUp(self):
+        self.atom_name = 'foo'
+        self.init_nframs_0 = 3
+        self.init_natoms_0 = 5
+        self.init_nframs_1 = 4
+        self.init_natoms_1 = 2
+        ss_0 = fake_system(self.init_nframs_0, self.init_natoms_0, self.atom_name)
+        ss_1 = fake_system(self.init_nframs_1, self.init_natoms_1, self.atom_name)
+        ss_0.to_deepmd_npy('init/data-0')
+        ss_1.to_deepmd_npy('init/data-1')
+        self.init_data = [Path('init/data-0'), Path('init/data-1')]
+        self.init_data = sorted(list(self.init_data))
+
+        self.init_model = Path('bar.pb')
+
+        self.config = {
+            "init_model_policy" : "no",
+            "init_model_old_ratio" : 0.9,
+            "init_model_numb_steps" : 400000,
+            "init_model_start_lr" : 1e-4,
+            "init_model_start_pref_e" : 0.1,
+            "init_model_start_pref_f" : 100,
+            "init_model_start_pref_v" : 0.0,
+        }
+        self.config = RunDPTrain.normalize_config(self.config)
+
+        self.task_name = 'task-000'
+        self.task_path = 'input-000'
+
+        self.idict_v2 = {
+            'training' : {
+                'training_data':{
+                    "systems" : [],
+                },
+                'validation_data':{
+                    "systems" : [],
+                },
+            },
+            "learning_rate" : {
+                "start_lr" : 1.,
+            },
+            "loss" : {
+                "start_pref_e" : 1.,
+                "start_pref_f" : 1.,
+                "start_pref_v" : 1.,
+            },
+        }
+        self.expected_odict_v2 = {
+            'training' : {
+                'training_data':{
+                    "systems" : [
+                        'init/data-0', 'init/data-1'
+                    ],
+                    "batch_size" : "auto",
+                    "auto_prob" : "prob_sys_size",
+                },
+                "disp_file" : "lcurve.out",
+            },
+            "learning_rate" : {
+                "start_lr" : 1.,
+            },
+            "loss" : {
+                "start_pref_e" : 1.,
+                "start_pref_f" : 1.,
+                "start_pref_v" : 1.,
+            },
+        }
+
+
+    def tearDown(self):
+        for ii in ['init', self.task_path, self.task_name ]:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+
+
+    def test_update_input_dict_v2_empty_list(self):
+        idict = self.idict_v2
+        odict = RunDPTrain.write_data_to_input_script(
+            idict, self.init_data, [], auto_prob_str = "prob_sys_size", major_version = "2")
+        config = self.config.copy()
+        config['init_model_policy'] = 'no'
+        odict = RunDPTrain.write_other_to_input_script(
+            odict, config, False, major_version = "2")
+        self.assertDictEqual(odict, self.expected_odict_v2)
+
+
+    @patch('dpgen2.op.run_dp_train.run_command')
+    def test_exec_v2_empty_list(self, mocked_run):
+        mocked_run.side_effect = [ (0, 'foo\n', ''), (0, 'bar\n', '') ]
+
+        config = self.config.copy()
+        config['init_model_policy'] = 'no'
+
+        task_path = self.task_path
+        Path(task_path).mkdir(exist_ok=True)
+        with open(Path(task_path)/train_script_name, 'w') as fp:
+            json.dump(self.idict_v2, fp, indent=4)
+        task_name = self.task_name
+        work_dir = Path(task_name)
+
+        ptrain = RunDPTrain()
+        out = ptrain.execute(
+            OPIO({
+                "config" : config,
+                "task_name" : task_name,
+                "task_path" : Path(task_path),
+                "init_model" : Path(self.init_model),
+                "init_data" : [Path(ii) for ii in self.init_data],
+                "iter_data" : [],
+            })
+        )
+        self.assertEqual(out['script'], work_dir/train_script_name)
+        self.assertEqual(out['model'], work_dir/'frozen_model.pb')
+        self.assertEqual(out['lcurve'], work_dir/'lcurve.out')
+        self.assertEqual(out['log'], work_dir/'train.log')
+        
+        calls = [
+            call(['dp', 'train', train_script_name]),
+            call(['dp', 'freeze', '-o', 'frozen_model.pb']),
+        ]
+        mocked_run.assert_has_calls(calls)
+        
+        self.assertTrue(work_dir.is_dir())
+        self.assertTrue(out['log'].is_file())
+        self.assertEqual(out['log'].read_text(), 
+                         '#=================== train std out ===================\n'
+                         'foo\n'
+                         '#=================== train std err ===================\n'
+                         '#=================== freeze std out ===================\n'
+                         'bar\n'
+                         '#=================== freeze std err ===================\n'
+                         )
+        with open(out['script']) as fp:
+            jdata = json.load(fp)
+            self.assertDictEqual(jdata, self.expected_odict_v2)
+
+
