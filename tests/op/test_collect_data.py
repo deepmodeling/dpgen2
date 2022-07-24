@@ -97,3 +97,30 @@ class TestRunLmp(unittest.TestCase):
         self.assertEqual(ms.systems['foo1bar0'].get_nframes(), 3)
         self.assertEqual(ms.systems['foo2bar0'].get_nframes(), 4)
         
+
+class TestRunLmpEmpty(unittest.TestCase):
+    def setUp(self):
+        self.iter_data = []
+        self.labeled_data = []
+
+    def tearDown(self):
+        for ii in ['iter1']:
+            if Path(ii).is_dir():
+                shutil.rmtree(ii)        
+
+    def test_success(self):
+        op = CollectData()
+        self.type_map = ['bar', 'foo']
+        out = op.execute(
+            OPIO({
+                'name' : 'iter1',
+                'type_map' : self.type_map,
+                'iter_data' : self.iter_data,
+                'labeled_data' : self.labeled_data,
+            }))
+        self.assertTrue(Path('iter1').is_dir())
+        self.assertEqual(out['iter_data'], [Path('iter1')])
+        ms = dpdata.MultiSystems(type_map=self.type_map)        
+        ms.from_deepmd_npy(out['iter_data'][0])
+        self.assertEqual(ms.get_nframes(), 0)
+
