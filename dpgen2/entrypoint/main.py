@@ -16,6 +16,7 @@ from .submit import (
     make_naive_exploration_scheduler,
     workflow_concurrent_learning,
     submit_concurrent_learning,
+    resubmit_concurrent_learning,
 )
 from dpgen2 import (
     __version__
@@ -48,6 +49,24 @@ def main_parser() -> argparse.ArgumentParser:
     )
     parser_run.add_argument(
         "INPUT", help="the input file in json format defining the workflow."
+    )
+
+    parser_resubmit = subparsers.add_parser(
+        "resubmit",
+        help="Submit DPGEN2 workflow resuing steps from an existing workflow",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_resubmit.add_argument(
+        "INPUT", help="the input file in json format defining the workflow."
+    )
+    parser_resubmit.add_argument(
+        "ID", help="the ID of the existing workflow."
+    )
+    parser_resubmit.add_argument(
+        "--list", action='store_true', help="list the Steps of the existing workflow."
+    )
+    parser_resubmit.add_argument(
+        "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
     )
 
     # --version
@@ -86,6 +105,13 @@ def main():
         with open(args.INPUT) as fp:
             config = json.load(fp)
         submit_concurrent_learning(config)
+    elif args.command == "resubmit":
+        with open(args.INPUT) as fp:
+            config = json.load(fp)
+        wfid = args.ID
+        resubmit_concurrent_learning(
+            config, wfid, list_steps=args.list, reuse=args.reuse,
+        )
     else:
         raise RuntimeError(f"unknown command {args.command}")
         

@@ -371,8 +371,10 @@ def workflow_concurrent_learning(
     )
     return dpgen_step
 
+
 def submit_concurrent_learning(
         wf_config,
+        reuse_step = None,
 ):
     # set global config
     from dflow import config, s3_config
@@ -402,6 +404,82 @@ def submit_concurrent_learning(
     wf = Workflow(name="dpgen", context=lebesgue_context)
     wf.add(dpgen_step)
 
-    wf.submit()
+    wf.submit(reuse_step=reuse_step)
+
+    return wf
+
+
+def print_list_steps(
+        steps,
+):
+    ret = []
+    for idx,ii in enumerate(steps):
+        ret.append(f'{idx:8d}    {ii}')
+    return '\n'.join(ret)
+
+
+def expand_idx (in_list) :
+    ret = []
+    for ii in in_list :
+        if type(ii) == int :
+            ret.append(ii)
+        elif type(ii) == str:
+            step_str = ii.split(':')
+            if len(step_str) > 1 :
+                step = int(step_str[1])
+            else :
+                step = 1
+            range_str = step_str[0].split('-')
+            if len(range_str) == 2:
+                ret += range(int(range_str[0]), int(range_str[1]), step)
+            elif len(range_str) == 1 :
+                ret += [int(range_str[0])]
+            else:
+                raise RuntimeError('not expected range string', step_str[0])
+    ret = sorted(list(set(ret)))
+    return ret
+
+
+def successful_step_keys(wf):
+    all_step_keys_ = wf.query_keys_of_steps()
+    wf_info = wf.query()
+    all_step_keys = []
+    for ii in all_step_keys_:
+        if wf_info.get_step(key=ii)[0]['phase'] == 'Succeeded':
+            all_step_keys.append(ii)
+    return all_step_keys
+    
+
+def resubmit_concurrent_learning(
+        wf_config,
+        wfid,
+        list_steps = False,
+        reuse = None,
+):
+    # set global config
+    from dflow import config, s3_config
+    dflow_config = wf_config.get('dflow_config', None)
+    if dflow_config :
+        config["host"] = dflow_config.get('host', None)
+        s3_config["endpoint"] = dflow_config.get('s3_endpoint', None)
+        config["k8s_api_server"] = dflow_config.get('k8s_api_server', None)
+        config["token"] = dflow_config.get('token', None)    
+
+    old_wf = Workflow(id=wfid)
+
+    all_step_keys = successful_step_keys(old_wf)
+    if list_steps:
+        prt_str = print_list_steps(all_step_keys)
+        print(prt_str)
+
+    if reuse is None:
+        return None
+    reuse_idx = expand_idx(reuse)
+    reuse_step = []
+    old_wf_info = old_wf.query()
+    for ii in reuse_idx:
+        reuse_step += old_wf_info.get_step(key=all_step_keys[ii])
+
+    wf = submit_concurrent_learning(wf_config, reuse_step=reuse_step)
 
     return wf

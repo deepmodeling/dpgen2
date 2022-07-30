@@ -7,6 +7,8 @@ import dpdata
 from pathlib import Path
 from dpgen2.entrypoint.submit import (
     make_conf_list,
+    expand_idx,
+    print_list_steps,
 )
 
 ifc0 = """Al1 
@@ -68,3 +70,17 @@ class TestSubmit(unittest.TestCase):
         }
         ret = make_conf_list(idict, type_map=['Al', 'Mg'])
         self.assertEqual(ret, [ofc1, ofc1, ofc1])
+
+
+    def test_expand_idx(self):
+        ilist = ['1', '3-5', '10-20:2']
+        olist = expand_idx(ilist)
+        expected_olist = [1, 3, 4, 10, 12, 14, 16, 18]
+        self.assertEqual(olist, expected_olist)
+
+
+    def test_print_list_steps(self):
+        ilist = ['foo', 'bar']
+        ostr = print_list_steps(ilist)
+        expected_ostr = '       0    foo\n       1    bar'
+        self.assertEqual(ostr, expected_ostr)
