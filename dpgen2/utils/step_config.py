@@ -37,11 +37,13 @@ def template_conf_args():
     doc_timeout = 'The time limit of the OP. Unit is second.'
     doc_retry_on_transient_error = 'Retry the step if a TransientError is raised.'
     doc_timeout_as_transient_error = 'Treat the timeout as TransientError.'
+    doc_envs = 'The environmental variables.'
     return [
         Argument("image", str, optional=True, default=default_image, doc=doc_image),
         Argument("timeout", int, optional=True, default=None, doc=doc_timeout),
         Argument("retry_on_transient_error", bool, optional=True, default=None, doc=doc_retry_on_transient_error),
         Argument("timeout_as_transient_error", bool, optional=True, default=False, doc=doc_timeout_as_transient_error),
+        Argument("envs", dict, optional=True, default=None, doc=doc_envs),
     ]
 
 def step_conf_args():
