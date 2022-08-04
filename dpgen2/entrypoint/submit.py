@@ -169,7 +169,7 @@ def make_conf_list(
         fmt='vasp/poscar'
 ):
     # load confs from files
-    if type(conf_list) is list:
+    if isinstance(conf_list, list):
         conf_list_fname = []
         for jj in conf_list:
             confs = sorted(glob.glob(jj))
@@ -182,7 +182,7 @@ def make_conf_list(
         if Path('tmp.lmp').is_file():
             os.remove('tmp.lmp')
     # generate alloy confs
-    elif type(conf_list) is dict:
+    elif isinstance(conf_list, dict):
         conf_list['type_map'] = type_map
         i_dict = normalize_alloy_conf_dict(conf_list)
         conf_list = generate_alloy_conf_file_content(**i_dict)
@@ -421,9 +421,9 @@ def print_list_steps(
 def expand_idx (in_list) :
     ret = []
     for ii in in_list :
-        if type(ii) == int :
+        if isinstance(ii, int) :
             ret.append(ii)
-        elif type(ii) == str:
+        elif isinstance(ii, str):
             step_str = ii.split(':')
             if len(step_str) > 1 :
                 step = int(step_str[1])
