@@ -1,0 +1,206 @@
+{
+    "train_style" : "dp",
+    "explore_style" : "lmp",
+    "fp_style" : "vasp",
+    
+    "prep_train_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/dflow:v1.0",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
+    },
+    "prep_explore_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/dflow:v1.0",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
+    },
+    "prep_fp_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/dflow:v1.0",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
+    },
+    
+    "run_train_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/deepmd-kit-native:2.1.1_cpu",
+        "_comment" : "all"
+    },
+    "executor" : {
+        "type" : "lebesgue_v2",
+        "extra" : {
+        "scass_type": "c4_m15_1 * NVIDIA T4",
+		"machine_type": "c4_m15_1 * NVIDIA T4",
+        "program_id": "xxxx",
+        "job_type": "container"
+        }
+    },
+    "_comment" : "all"
+    },
+    "run_explore_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/deepmd-kit-native:2.1.1_cpu",
+        "_comment" : "all"
+    },
+    "executor" : {
+        "type" : "lebesgue_v2",
+        "extra" : {
+        "scass_type": "c4_m15_1 * NVIDIA T4",
+		"machine_type": "c4_m15_1 * NVIDIA T4",
+        "program_id": "xxxx",
+        "job_type": "container"
+        }
+    },
+    "_comment" : "all"
+    },
+    "run_fp_config" : {
+    "template_config" : {
+        "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/vasp-native:v1",
+        "_comment" : "all"
+    },
+    "executor" : {
+        "type" : "lebesgue_v2",
+        "extra" : {
+        "scass_type": "c16_m32_cpu",
+		"machine_type": "c16_m32_cpu",
+        "program_id": "xxxx",
+        "job_type": "container"
+        }
+    },
+    "_comment" : "all"
+    },
+    "default_config" : {
+	"template_config" : {
+	    "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/dflow:v1.0",
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "lmp_config": {
+	"command": "lmp -var restart 0"
+    },
+    "fp_config": {
+	"command": "ulimit -s unlimited && source /opt/intel/oneapi/setvars.sh && mpirun -n 4 vasp_std"
+    },
+    "dflow_config" : {
+	"host" : "http://60.205.112.9:2746",
+	"s3_endpoint" : "60.205.112.9:9000", 
+	"_catalog_file_name" : "dflow"
+    },
+    "lebesgue_context_config": {
+	"executor" : "lebesgue_v2",
+        "extra" : {
+            "job_name" : "dpgen2-ch4",
+            "scass_type": "c16_m32_cpu",
+            "program_id": "xxxx",
+            "job_type": "container"
+        },        
+        "app_name" : "Default",
+        "org_id" : "xxx",
+        "user_id" : "xxx",
+        "tag" : ""
+    },   
+    
+    "_comment" : "upload the dpgen2 package if it is not in the images",
+    "upload_python_package" : "/path/to/dpgen2", 
+    "max_numb_iter" :	100,
+    "conv_accuracy" :	0.9,
+    "fatal_at_max" :	true,
+
+    "type_map":		["H", "C"],
+    "mass_map":		[1, 12],
+
+    "init_data_prefix":	"",
+    "init_data_sys":	[
+	"CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+    ],
+    "sys_configs_prefix": "", 
+    "sys_configs":	[
+	 ["CH4.POSCAR.01x01x01/01.scale_pert/sys-0004-0001/scale*/00000*/POSCAR"],
+     ["CH4.POSCAR.01x01x01/01.scale_pert/sys-0004-0001/scale*/00001*/POSCAR"]
+    ],
+
+    "_comment":		" 00.train ",
+    "numb_models":	4,
+    "default_training_param" : {
+    "model" : {
+	    "type_map":		["H", "C"],
+        "descriptor": {
+        "type":     "se_a",
+        "sel":      [16, 4],
+        "rcut_smth":    0.5,
+        "rcut":     5.0,
+        "neuron":   [10, 20, 40],
+        "resnet_dt":    false,
+        "axis_neuron":  4,
+        "seed":     1
+        },
+        "fitting_net" : {
+        "neuron":   [64, 64, 64],
+        "resnet_dt":    true,
+        "seed":     1
+        }
+    },
+
+    "loss" : {
+        "start_pref_e": 0.02,
+        "limit_pref_e": 1,
+        "start_pref_f": 1000,
+        "limit_pref_f": 1,
+        "start_pref_v": 0,
+        "limit_pref_v": 0
+    },
+
+    "learning_rate" : {
+        "start_lr":     0.001,
+        "stop_lr":      1e-8,
+            "decay_steps":  100
+    },
+
+    "training" : {
+        "training_data": {
+        "systems": [],
+        "batch_size":"auto"
+        },
+        "numb_steps":20000,
+        "seed":10,
+        "disp_file":"lcurve.out",
+        "disp_freq":100,
+        "save_freq":1000
+    }
+    },
+    
+    "_comment":		" 01.model_devi ",
+    "_comment": "model_devi_skip: the first x of the recorded frames",
+    "model_devi_dt":		0.002,
+    "model_devi_skip":		0,
+    "model_devi_f_trust_lo":	0.05,
+    "model_devi_f_trust_hi":	0.15,
+    "model_devi_clean_traj":	false,
+    "model_devi_jobs":	[
+	{ "_idx": 0, "ensemble": "nvt", "nsteps": 300, "press": [1.0], "sys_idx": [0], "temps": [100], "trj_freq": 10 },
+    { "_idx": 1, "ensemble": "nvt", "nsteps": 3000, "press": [1.0], "sys_idx": [1], "temps": [100], "trj_freq": 10 }
+    ],
+  
+
+    "_comment":		" 02.fp ",    
+    "fp_style":		"vasp",
+    "_fp_accurate_threshold":		0.99,
+    "_fp_accurate_soft_threshold":	0.95,
+    "_shuffle_poscar":	false,
+    "fp_task_max":	10,
+    "_fp_task_min":	5,
+    "_fp_pp_path":	"./",
+    "fp_pp_files":	{
+        "H": "POTCAR_H", 
+        "C": "POTCAR_C"
+    },
+    "fp_incar":         "./INCAR_methane",
+    "_comment":		" that's all "
+}
+
