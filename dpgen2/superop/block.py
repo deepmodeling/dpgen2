@@ -52,10 +52,10 @@ class ConcurrentLearningBlock(Steps):
             "lmp_config" : InputParameter(),
             "conf_selector" : InputParameter(),
             "fp_config" : InputParameter(),
+            "lmp_task_grp" : InputParameter(),
+            "fp_inputs" : InputParameter(),
         }
         self._input_artifacts={
-            "lmp_task_grp" : InputArtifact(),
-            "fp_inputs" : InputArtifact(),
             "init_models" : InputArtifact(optional=True),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
@@ -173,9 +173,9 @@ def _block_cl(
         parameters={
             "block_id" : block_steps.inputs.parameters['block_id'],
             "lmp_config": block_steps.inputs.parameters['lmp_config'],
+            "lmp_task_grp": block_steps.inputs.parameters['lmp_task_grp'],
         },
         artifacts={
-            "lmp_task_grp": block_steps.inputs.artifacts['lmp_task_grp'],
             "models" : prep_run_dp_train.outputs.artifacts['models'],
         },
         key = '--'.join(["%s"%block_steps.inputs.parameters["block_id"], "prep-run-lmp"]),
@@ -213,10 +213,10 @@ def _block_cl(
         parameters={
             "block_id" : block_steps.inputs.parameters['block_id'],
             "fp_config": block_steps.inputs.parameters['fp_config'],            
+            "inputs": block_steps.inputs.parameters['fp_inputs'],            
             "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
-            "inputs": block_steps.inputs.artifacts['fp_inputs'],            
             "confs" : select_confs.outputs.artifacts['confs'],
         },
         key = '--'.join(["%s"%block_steps.inputs.parameters["block_id"], "prep-run-fp"]),

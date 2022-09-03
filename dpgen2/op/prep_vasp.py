@@ -43,7 +43,7 @@ class PrepVasp(OP):
     def get_input_sign(cls):
         return OPIOSign({
             "type_map": List[str],
-            "inputs": Artifact(Path),
+            "inputs": VaspInputs,
             "confs" : Artifact(List[Path]),
         })
 
@@ -79,8 +79,7 @@ class PrepVasp(OP):
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the VASP. The order fo the Paths should be consistent with `op["task_names"]`
         """
 
-        inputs_fname = ip['inputs']        
-        inputs = load_object_from_file(inputs_fname)
+        inputs = ip['inputs']        
         confs = ip['confs']
         type_map = ip['type_map']
 

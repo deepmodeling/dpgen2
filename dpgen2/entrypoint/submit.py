@@ -317,10 +317,6 @@ def workflow_concurrent_learning(
         upload_python_package = upload_python_package,
     )
     scheduler = make_naive_exploration_scheduler(config)
-    scheduler_file = Path('in_scheduler.dat')
-    with open(scheduler_file, 'wb') as fp:
-        pickle.dump(scheduler, fp)
-    scheduler_arti = upload_artifact(scheduler_file)
 
     type_map = config['type_map']
     numb_models = config['numb_models']
@@ -337,8 +333,6 @@ def workflow_concurrent_learning(
         incar_template_name = incar_file,
         potcar_names = fp_pp_files,
     )
-    fp_arti = upload_artifact(
-        dump_object_to_file(fp_inputs, 'vasp_inputs.dat'))        
     init_data = config['init_data_sys']
     if isinstance(init_data,str):
         init_data = expand_sys_str(init_data)
@@ -360,10 +354,10 @@ def workflow_concurrent_learning(
             "train_config" : train_config,
             "lmp_config" : lmp_config,
             "fp_config" : fp_config,
+            'fp_inputs' : fp_inputs,
+            "exploration_scheduler" : scheduler,
         },
         artifacts = {
-            "exploration_scheduler" : scheduler_arti,
-            'fp_inputs' : fp_arti,
             "init_models" : init_models,
             "init_data" : init_data,
             "iter_data" : iter_data,
@@ -376,14 +370,8 @@ def submit_concurrent_learning(
         wf_config,
         reuse_step = None,
 ):
-    # set global config
-    from dflow import config, s3_config
-    dflow_config = wf_config.get('dflow_config', None)
-    if dflow_config :
-        config["host"] = dflow_config.get('host', None)
-        s3_config["endpoint"] = dflow_config.get('s3_endpoint', None)
-        config["k8s_api_server"] = dflow_config.get('k8s_api_server', None)
-        config["token"] = dflow_config.get('token', None)    
+    dflow_config_data = wf_config.get('dflow_config', None)
+    dflow_config(dflow_config_data)
 
     # lebesgue context
     from dflow.plugins.lebesgue import LebesgueContext
@@ -394,10 +382,6 @@ def submit_concurrent_learning(
         )
     else :
         lebesgue_context = None
-
-    # print('config:', config)
-    # print('s3_config:',s3_config)
-    # print('lebsque context:', lb_context_config)
 
     dpgen_step = workflow_concurrent_learning(wf_config)
 
