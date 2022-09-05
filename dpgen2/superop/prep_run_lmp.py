@@ -45,11 +45,11 @@ class PrepRunLmp(Steps):
     ):
         self._input_parameters = {
             "block_id" : InputParameter(type=str, value=""),
-            "lmp_config" : InputParameter()
+            "lmp_config" : InputParameter(),
+            "lmp_task_grp": InputParameter(),
         }
         self._input_artifacts = {
-            "lmp_task_grp": InputArtifact(),
-            "models" : InputArtifact()
+            "models" : InputArtifact(),
         }
         self._output_parameters={
             "task_names": OutputParameter(),
@@ -141,9 +141,9 @@ def _prep_run_lmp(
             **prep_template_config,
         ),
         parameters={
+            "lmp_task_grp": prep_run_steps.inputs.parameters['lmp_task_grp'],
         },
         artifacts={
-            "lmp_task_grp": prep_run_steps.inputs.artifacts['lmp_task_grp'],
         },
         key = step_keys['prep-lmp'],
         executor = prep_executor,

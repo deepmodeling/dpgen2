@@ -220,17 +220,17 @@ class ConcurrentLearning(Steps):
             "lmp_config" : InputParameter(),
             "fp_config" : InputParameter(),
             "fp_inputs" : InputParameter(),
+            "exploration_scheduler" : InputParameter(),
         }
         self._input_artifacts={
-            "exploration_scheduler" : InputArtifact(),
             "init_models" : InputArtifact(optional=True),
             "init_data" : InputArtifact(),
             "iter_data" : InputArtifact(),
         }
         self._output_parameters={
+            "exploration_scheduler": OutputParameter(),
         }
         self._output_artifacts={
-            "exploration_scheduler": OutputArtifact(),
             "models": OutputArtifact(),
             "iter_data" : OutputArtifact(),
         }        

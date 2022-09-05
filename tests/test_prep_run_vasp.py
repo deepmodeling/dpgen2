@@ -53,10 +53,6 @@ from dpgen2.constants import (
     vasp_input_name,
     vasp_pot_name,
 )
-from dpgen2.utils import (
-    load_object_from_file,
-    dump_object_to_file,
-)
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 default_config = normalize_step_dict(
     {
@@ -117,10 +113,9 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
                 self.incar,
                 {'foo': self.potcar}
             )
-        dump_object_to_file(vasp_inputs, self.inputs_fname)
         out = op.execute( OPIO({
             'confs' : self.confs,
-            'inputs' : self.inputs_fname,
+            'inputs' : vasp_inputs,
             'type_map' : self.type_map,
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
@@ -235,16 +230,15 @@ class TestPrepRunVasp(unittest.TestCase):
             self.incar,
             {'foo': self.potcar}
         )
-        inputs_arti = upload_artifact(dump_object_to_file(vasp_inputs, self.inputs_fname))
         prep_run_step = Step(
             'prep-run-step', 
             template = steps,
             parameters = {
                 "fp_config": {},
                 'type_map' : self.type_map,
+                'inputs' : vasp_inputs,
             },
             artifacts = {
-                'inputs' : inputs_arti,
                 "confs" : self.confs,
             },
         )

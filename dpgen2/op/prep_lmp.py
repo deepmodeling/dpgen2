@@ -2,7 +2,8 @@ from dflow.python import (
     OP,
     OPIO,
     OPIOSign,
-    Artifact
+    Artifact,
+    BigParameter,
 )
 
 import json, pickle
@@ -11,10 +12,6 @@ from pathlib import Path
 from dpgen2.exploration.task import ExplorationTaskGroup
 from dpgen2.constants import (
     lmp_task_pattern,
-)
-from dpgen2.utils import (
-    load_object_from_file,
-    dump_object_to_file,
 )
 
 class PrepLmp(OP):
@@ -31,7 +28,7 @@ class PrepLmp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
-            "lmp_task_grp": Artifact(Path),
+            "lmp_task_grp": BigParameter(Path),
         })
 
     @classmethod
@@ -63,7 +60,7 @@ class PrepLmp(OP):
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the LAMMPS simulation. The order fo the Paths should be consistent with `op["task_names"]`
         """
 
-        lmp_task_grp = load_object_from_file(ip['lmp_task_grp'])
+        lmp_task_grp = ip['lmp_task_grp']
         cc = 0
         task_paths = []
         for tt in lmp_task_grp:

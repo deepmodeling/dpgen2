@@ -17,8 +17,6 @@ from pathlib import Path
 from dpgen2.fp.vasp import VaspInputs
 from dpgen2.utils import (
     set_directory,
-    load_object_from_file,
-    dump_object_to_file,
 )
 from dpgen2.constants import (
     vasp_task_pattern,

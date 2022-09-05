@@ -40,7 +40,7 @@ from context import (
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
-    default_host,
+    default_host
 )
 from dflow.python import (
     FatalError,
@@ -59,10 +59,6 @@ from dpgen2.flow.dpgen_loop import ConcurrentLearning
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.selector import TrustLevel
-from dpgen2.utils import(
-    dump_object_to_file,
-    load_object_from_file,
-)
 
 from dpgen2.constants import (
     train_task_pattern,
@@ -196,9 +192,6 @@ class TestLoop(unittest.TestCase):
             self.incar,
             {'foo': 'potcar'},
         )
-        self.vasp_inputs_fname = Path('vasp_inputs.dat')
-        self.vasp_inputs_arti = upload_artifact(
-            dump_object_to_file(self.vasp_inputs, self.vasp_inputs_fname))
 
         self.scheduler = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -218,9 +211,6 @@ class TestLoop(unittest.TestCase):
             max_numb_iter = 2,
         )
         self.scheduler.add_stage_scheduler(stage_scheduler)        
-        self.scheduler_artifact = upload_artifact(
-            dump_object_to_file(self.scheduler, 'in_scheduler.dat')
-        )
         
     def setUp(self):
         self.name = 'dpgen'
@@ -236,7 +226,7 @@ class TestLoop(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
-        for ii in [self.incar, self.potcar, Path('scheduler.dat'), Path('in_scheduler.dat'), self.vasp_inputs_fname]:
+        for ii in [self.incar, self.potcar, ]:
             if ii.is_file():
                 os.remove(ii)
 
@@ -267,17 +257,18 @@ class TestLoop(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
             },
         )
         
-        wf = Workflow(name="dpgen", host=default_host)
+        # wf = Workflow(name="dpgen", host=default_host)
+        wf = Workflow(name="dpgen")
         wf.add(dpgen_step)
         wf.submit()
         
@@ -287,10 +278,7 @@ class TestLoop(unittest.TestCase):
         step = wf.query_step(name='dpgen-step')[0]
         self.assertEqual(step.phase, "Succeeded")        
         
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0]
-        )
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         self.assertEqual(scheduler.get_stage(), 2)
@@ -483,9 +471,6 @@ class TestLoopRestart(unittest.TestCase):
             self.incar,
             {'foo': self.potcar},
         )
-        self.vasp_inputs_fname = Path('vasp_inputs.dat')
-        self.vasp_inputs_arti = upload_artifact(
-            dump_object_to_file(self.vasp_inputs, self.vasp_inputs_fname))
 
         self.scheduler_0 = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -505,8 +490,6 @@ class TestLoopRestart(unittest.TestCase):
             max_numb_iter = 2,
         )
         self.scheduler_0.add_stage_scheduler(stage_scheduler)
-        self.scheduler_0_artifact = upload_artifact(
-            dump_object_to_file(self.scheduler_0, 'in_scheduler_0.dat'))
 
         self.scheduler_1 = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -527,8 +510,6 @@ class TestLoopRestart(unittest.TestCase):
         )
         self.scheduler_1.add_stage_scheduler(stage_scheduler)        
         self.scheduler_1.add_stage_scheduler(stage_scheduler)
-        self.scheduler_1_artifact = upload_artifact(
-            dump_object_to_file(self.scheduler_1, 'in_scheduler_1.dat'))
         
         
     def setUp(self):
@@ -555,9 +536,6 @@ class TestLoopRestart(unittest.TestCase):
             if ii.is_file():
                 os.remove(ii)
         for ii in [Path('scheduler.dat'), Path('scheduler_new.dat')]:
-            if ii.is_file():
-                os.remove(ii)
-        for ii in [self.vasp_inputs_fname]:
             if ii.is_file():
                 os.remove(ii)
 
@@ -589,10 +567,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -661,10 +639,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_1,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_1_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -684,9 +662,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0])
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -735,10 +711,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -796,16 +772,14 @@ class TestLoopRestart(unittest.TestCase):
         self.assertTrue(scheduler_idx is not None)
         step_scheduler = steps_0.pop(scheduler_idx)
         self.assertEqual(step_scheduler['phase'], 'Succeeded')
-        # old_scheduler = jsonpickle.decode(step_scheduler.outputs.parameters['exploration_scheduler'].value)
-        old_scheduler = load_object_from_file(            
-            download_artifact(step_scheduler.outputs.artifacts['exploration_scheduler'])[0])
+        old_scheduler = step_scheduler.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(old_scheduler.get_stage(), 0)
         # update a stage scheduler
         old_scheduler.stage_schedulers[1] = self.scheduler_1.stage_schedulers[1]        
-        # step_scheduler.modify_output_parameter("exploration_scheduler", old_scheduler)
-        old_scheduler_artifact = upload_artifact(
-            dump_object_to_file(old_scheduler, 'scheduler_new.dat'))
-        step_scheduler.modify_output_artifact("exploration_scheduler", old_scheduler_artifact)
+        step_scheduler.modify_output_parameter("exploration_scheduler", old_scheduler)
+        # old_scheduler_artifact = upload_artifact(
+        #     dump_object_to_file(old_scheduler, 'scheduler_new.dat'))
+        # step_scheduler.modify_output_artifact("exploration_scheduler", old_scheduler_artifact)
         steps_0.append(step_scheduler)
 
         dpgen_step_1 = Step(
@@ -818,10 +792,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -841,9 +815,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0])
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -891,10 +863,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -959,10 +931,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -982,9 +954,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0])
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -1044,10 +1014,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -1110,10 +1080,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -1133,9 +1103,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0])
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -1197,10 +1165,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -1262,10 +1230,10 @@ class TestLoopRestart(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
-                "exploration_scheduler" : self.scheduler_0_artifact,
-                'fp_inputs' : self.vasp_inputs_arti,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
@@ -1285,9 +1253,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        # scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
-        scheduler = load_object_from_file(
-            download_artifact(step.outputs.artifacts["exploration_scheduler"])[0])
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
