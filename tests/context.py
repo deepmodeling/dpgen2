@@ -11,6 +11,6 @@ else:
     skip_ut_with_dflow_reason = ''
 upload_python_package = os.path.join(dpgen_path, 'dpgen2')
 # one needs to set proper values for the following variable.
-default_image = None
+default_image = 'dptechnology/dpgen2:latest'
 default_host = None
 dflow_config({})
