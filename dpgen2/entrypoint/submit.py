@@ -367,9 +367,8 @@ def workflow_concurrent_learning(
     return dpgen_step
 
 
-def submit_concurrent_learning(
+def wf_global_workflow(
         wf_config,
-        reuse_step = None,
 ):
     dflow_config_data = wf_config.get('dflow_config', None)
     dflow_config(dflow_config_data)
@@ -384,9 +383,18 @@ def submit_concurrent_learning(
     else :
         lebesgue_context = None
 
+    return lebesgue_context
+
+
+def submit_concurrent_learning(
+        wf_config,
+        reuse_step = None,
+):
+    context = wf_global_workflow(wf_config)
+    
     dpgen_step = workflow_concurrent_learning(wf_config)
 
-    wf = Workflow(name="dpgen", context=lebesgue_context)
+    wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)
 
     wf.submit(reuse_step=reuse_step)
@@ -441,20 +449,16 @@ def resubmit_concurrent_learning(
         list_steps = False,
         reuse = None,
 ):
-    # set global config
-    from dflow import config, s3_config
-    dflow_config = wf_config.get('dflow_config', None)
-    if dflow_config :
-        config["host"] = dflow_config.get('host', None)
-        s3_config["endpoint"] = dflow_config.get('s3_endpoint', None)
-        config["k8s_api_server"] = dflow_config.get('k8s_api_server', None)
-        config["token"] = dflow_config.get('token', None)    
+    context = wf_global_workflow(wf_config)
 
     old_wf = Workflow(id=wfid)
 
     all_step_keys = successful_step_keys(old_wf)
+    all_step_keys = sort_slice_ops(
+        all_step_keys, ['run-train', 'run-lmp', 'run-fp'],)
     if list_steps:
-        prt_str = print_list_steps(all_step_keys)
+        prt_str = print_keys_in_nice_format(
+            all_step_keys, ['run-train', 'run-lmp', 'run-fp'],)
         print(prt_str)
 
     if reuse is None:
@@ -465,6 +469,10 @@ def resubmit_concurrent_learning(
     for ii in reuse_idx:
         reuse_step += old_wf_info.get_step(key=all_step_keys[ii])
 
-    wf = submit_concurrent_learning(wf_config, reuse_step=reuse_step)
+    wf = submit_concurrent_learning(
+        wf_config, 
+        context=context,
+        reuse_step=reuse_step,
+    )
 
     return wf
