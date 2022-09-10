@@ -174,7 +174,9 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 0)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
+        self.assertFalse(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
@@ -187,7 +189,9 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 1)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
@@ -200,7 +204,10 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 2)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])
         self.assertEqual(conv, True)
         self.assertTrue(ltg is None)
@@ -210,10 +217,13 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertTrue(scheduler.stage_schedulers[1].converged())
+        self.assertTrue(scheduler.stage_schedulers[1].complete())
+        self.assertTrue(scheduler.complete())
 
 
-    def test_success(self):
+    def test_print_scheduler(self):
         scheduler = ExplorationScheduler()        
         trust_level = TrustLevel(0.1, 0.3)
         selector = ConfSelectorLammpsFrames(trust_level)
@@ -392,6 +402,8 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 0)
         self.assertEqual(len(scheduler.stage_schedulers), 1)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
+        self.assertTrue(scheduler.complete())
 
         trust_level = TrustLevel(0.2, 0.4)
         selector = ConfSelectorLammpsFrames(trust_level)
@@ -404,7 +416,10 @@ class TestExplorationScheduler(unittest.TestCase):
 
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
@@ -417,7 +432,9 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 1)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
@@ -430,7 +447,10 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 2)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])
         self.assertEqual(conv, True)
         self.assertTrue(ltg is None)
@@ -439,7 +459,10 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 2)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertTrue(scheduler.stage_schedulers[1].converged())
+        self.assertTrue(scheduler.stage_schedulers[1].complete())
+        self.assertTrue(scheduler.complete())
 
 
     def test_failed_stage0(self):
@@ -494,6 +517,7 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.complete())
         with self.assertRaisesRegex(FatalError, 'stage 0: reached maximal number of iterations'):
             conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
 
@@ -552,7 +576,9 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
         self.assertFalse(scheduler.stage_schedulers[0].reached_max_iteration())
+        self.assertFalse(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
@@ -566,7 +592,10 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
         self.assertTrue(scheduler.stage_schedulers[0].reached_max_iteration())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
 
 
     def test_failed_stage1(self):

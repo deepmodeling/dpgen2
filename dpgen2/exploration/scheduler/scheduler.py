@@ -28,7 +28,7 @@ class ExplorationScheduler():
         self.stage_schedulers = []
         self.cur_stage = 0
         self.iteration = -1
-        self.conv = False
+        self.complete_ = False
         
     def add_stage_scheduler(
             self,
@@ -46,6 +46,7 @@ class ExplorationScheduler():
         
         """
         self.stage_schedulers.append(stage_scheduler)
+        self.complete_ = False
         return self
 
     def get_stage(self):
@@ -66,12 +67,12 @@ class ExplorationScheduler():
         """
         return self.iteration
 
-    def converged(self):
+    def complete(self):
         """
         Tell if all stages are converged.
 
         """
-        return self.conv
+        return self.complete_
 
     def plan_next_iteration(
             self,
@@ -90,8 +91,8 @@ class ExplorationScheduler():
 
         Returns
         -------
-        converged: bool
-            If DPGEN converges.
+        complete: bool
+            If all the DPGEN stages complete.
         task: ExplorationTaskGroup
             A `ExplorationTaskGroup` defining the exploration of the next iteration. Should be `None` if converged.
         conf_selector: ConfSelector
@@ -100,7 +101,7 @@ class ExplorationScheduler():
         """
 
         try:
-            converged, lmp_task_grp, conf_selector = \
+            stg_complete, lmp_task_grp, conf_selector = \
                 self.stage_schedulers[self.cur_stage].plan_next_iteration(
                     report,
                     trajs,
@@ -108,18 +109,18 @@ class ExplorationScheduler():
         except FatalError as e:
             raise FatalError(f'stage {self.cur_stage}: ' + str(e))
         
-        if converged:
+        if stg_complete:
             self.cur_stage += 1
             if self.cur_stage < len(self.stage_schedulers):
                 # goes to next stage
                 return self.plan_next_iteration()
             else:
-                # all stages converged
-                self.conv = True
+                # all stages complete
+                self.complete_ = True
                 return True, None, None,
         else :
             self.iteration += 1
-            return converged, lmp_task_grp, conf_selector
+            return stg_complete, lmp_task_grp, conf_selector
 
 
     def get_stage_of_iterations(self):
@@ -135,7 +136,7 @@ class ExplorationScheduler():
         cumsum_stage_iters = np.cumsum(n_stage_iters)
 
         max_iter = self.get_iteration()
-        if self.converged() or max_iter == -1:
+        if self.complete() or max_iter == -1:
             max_iter += 1
         stage_idx = []
         idx_in_stage = []
@@ -210,7 +211,7 @@ class ExplorationScheduler():
                 fmt_flt%(cand[iidx]*1),
                 fmt_flt%(fail[iidx]*1),
             ))
-        if self.converged():
+        if self.complete():
             if prev_stg_idx >= 0:
                 ret.append(self._print_prev_summary(prev_stg_idx))
                 ret.append(f'# All stages converged')

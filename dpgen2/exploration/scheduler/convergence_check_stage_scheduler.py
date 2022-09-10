@@ -28,7 +28,11 @@ class ConvergenceCheckStageScheduler(StageScheduler):
         self.nxt_iter = 0
         self.conv = False
         self.reached_max_iter = False
+        self.complete_ = False
         self.reports = []
+
+    def complete(self):
+        return self.complete_
 
     def converged(self):
         return self.conv
@@ -76,5 +80,6 @@ class ConvergenceCheckStageScheduler(StageScheduler):
                 ret_selector = self.selector
             self.reports.append(report)
         self.nxt_iter += 1
+        self.complete_ = stg_complete
         return stg_complete, lmp_task_grp, ret_selector
 
