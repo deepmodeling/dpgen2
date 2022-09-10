@@ -25,7 +25,7 @@ def get_last_scheduler(
         return None
     else:
         skey = sorted(scheduler_keys)[-1]
-        step = wf.query_step(key=skey)
+        step = wf.query_step(key=skey)[0]
         return step.outputs.parameters['exploration_scheduler'].value
 
         

@@ -99,7 +99,7 @@ class MockedBar:
 class MockedWF:
     def query_step(self,key=None):
         assert(key == 'iter1--scheduler')
-        return MockedBar()
+        return [MockedBar()]
 
 class TestDflowQuery(unittest.TestCase):
     def test_get_subkey(self):
@@ -115,7 +115,7 @@ class TestDflowQuery(unittest.TestCase):
     def test_get_last_scheduler(self):
         value = get_last_scheduler(
             MockedWF(), 
-            ['iter1--scheduler', 'foo', 'bar', 'iter0--scheduler'],
+            ['iter1--scheduler', 'foo', 'bar', 'iter0--scheduler', 'init--scheduler'],
         )
         self.assertEqual(value, 10)
 

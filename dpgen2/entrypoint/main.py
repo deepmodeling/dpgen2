@@ -77,10 +77,10 @@ def main_parser() -> argparse.ArgumentParser:
         help="Print the status (stage, iteration, convergence) of the  DPGEN2 workflow",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_resubmit.add_argument(
+    parser_status.add_argument(
         "CONFIG", help="the config file in json format."
     )
-    parser_resubmit.add_argument(
+    parser_status.add_argument(
         "ID", help="the ID of the existing workflow."
     )
 
@@ -131,9 +131,11 @@ def main():
         with open(args.CONFIG) as fp:
             config = json.load(fp)
         wfid = args.ID
-        resubmit_concurrent_learning(
+        status(
             wfid, config,
         )        
+    elif args.command == None:
+        pass
     else:
         raise RuntimeError(f"unknown command {args.command}")
         
