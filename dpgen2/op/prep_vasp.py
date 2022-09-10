@@ -3,7 +3,8 @@ from dflow.python import (
     OP,
     OPIO,
     OPIOSign,
-    Artifact
+    Artifact,
+    BigParameter,
 )
 import os, json
 from typing import (
@@ -41,7 +42,7 @@ class PrepVasp(OP):
     def get_input_sign(cls):
         return OPIOSign({
             "type_map": List[str],
-            "inputs": VaspInputs,
+            "inputs": BigParameter(VaspInputs),
             "confs" : Artifact(List[Path]),
         })
 
