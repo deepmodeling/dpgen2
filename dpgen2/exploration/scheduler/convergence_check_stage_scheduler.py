@@ -26,20 +26,30 @@ class ConvergenceCheckStageScheduler(StageScheduler):
         self.max_numb_iter = max_numb_iter
         self.fatal_at_max = fatal_at_max
         self.nxt_iter = 0
+        self.conv = False
+        self.reached_max_iter = False
+        self.reports = []
+
+    def converged(self):
+        return self.conv
+
+    def reached_max_iteration(self):
+        return self.reached_max_iter
 
     def plan_next_iteration(
             self,
-            hist_reports : List[ExplorationReport] = [],
             report : ExplorationReport = None,
             trajs : List[Path] = None,
     ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
         if report is None:
-            converged = False
+            stg_complete = False
+            self.conv = stg_complete
             lmp_task_grp = self.stage.make_task()
             ret_selector = self.selector
         else :
-            converged = report.accurate_ratio() >= self.conv_accuracy
-            if not converged:
+            stg_complete = report.accurate_ratio() >= self.conv_accuracy
+            self.conv = stg_complete
+            if not stg_complete:
                 # check if we have any candidate to improve the quality of the model
                 if report.candidate_ratio() == 0.0:
                     raise FatalError(
@@ -49,20 +59,22 @@ class ConvergenceCheckStageScheduler(StageScheduler):
                         'improved and the iteraction would not end. '
                         'Please try to increase the higher trust levels. '
                     )
-                # if not converged, check max iter
+                # if not stg_complete, check max iter
                 if self.max_numb_iter is not None and self.nxt_iter == self.max_numb_iter:
+                    self.reached_max_iter = True
                     if self.fatal_at_max:
                         raise FatalError('reached maximal number of iterations')
                     else:
-                        converged = True
+                        stg_complete = True
             # make lmp tasks
-            if converged:
-                # if converged, no more lmp task
+            if stg_complete:
+                # if stg_complete, no more lmp task
                 lmp_task_grp = None
                 ret_selector = None
             else :                        
                 lmp_task_grp = self.stage.make_task()
                 ret_selector = self.selector
+            self.reports.append(report)
         self.nxt_iter += 1
-        return converged, lmp_task_grp, ret_selector
+        return stg_complete, lmp_task_grp, ret_selector
 

@@ -18,6 +18,9 @@ from .submit import (
     submit_concurrent_learning,
     resubmit_concurrent_learning,
 )
+from .status import (
+    status,
+)
 from dpgen2 import (
     __version__
 )
@@ -48,7 +51,7 @@ def main_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_run.add_argument(
-        "INPUT", help="the input file in json format defining the workflow."
+        "CONFIG", help="the config file in json format defining the workflow."
     )
 
     parser_resubmit = subparsers.add_parser(
@@ -57,7 +60,7 @@ def main_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_resubmit.add_argument(
-        "INPUT", help="the input file in json format defining the workflow."
+        "CONFIG", help="the config file in json format defining the workflow."
     )
     parser_resubmit.add_argument(
         "ID", help="the ID of the existing workflow."
@@ -67,6 +70,18 @@ def main_parser() -> argparse.ArgumentParser:
     )
     parser_resubmit.add_argument(
         "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
+    )
+
+    parser_status = subparsers.add_parser(
+        "status",
+        help="Print the status (stage, iteration, convergence) of the  DPGEN2 workflow",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_resubmit.add_argument(
+        "CONFIG", help="the config file in json format."
+    )
+    parser_resubmit.add_argument(
+        "ID", help="the ID of the existing workflow."
     )
 
     # --version
@@ -102,16 +117,23 @@ def main():
     dict_args = vars(args)
 
     if args.command == "submit":
-        with open(args.INPUT) as fp:
+        with open(args.CONFIG) as fp:
             config = json.load(fp)
         submit_concurrent_learning(config)
     elif args.command == "resubmit":
-        with open(args.INPUT) as fp:
+        with open(args.CONFIG) as fp:
             config = json.load(fp)
         wfid = args.ID
         resubmit_concurrent_learning(
             config, wfid, list_steps=args.list, reuse=args.reuse,
         )
+    elif args.command == "status":
+        with open(args.CONFIG) as fp:
+            config = json.load(fp)
+        wfid = args.ID
+        resubmit_concurrent_learning(
+            wfid, config,
+        )        
     else:
         raise RuntimeError(f"unknown command {args.command}")
         

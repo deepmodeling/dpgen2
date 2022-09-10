@@ -17,9 +17,20 @@ class StageScheduler(ABC):
     """
 
     @abstractmethod
+    def converged(self):
+        """
+        Tell if the stage is converged
+
+        Returns
+        -------
+        converged  bool
+                   the convergence
+        """
+        pass
+
+    @abstractmethod
     def plan_next_iteration(
             self,
-            hist_reports : List[ExplorationReport],
             report : ExplorationReport,
             trajs : List[Path],
     ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
@@ -39,8 +50,10 @@ class StageScheduler(ABC):
 
         Returns
         -------
-        converged: bool
-            If the stage converged.
+        stg_complete: bool
+            If the stage completed. Two cases may happen:
+            1. converged.
+            2. when not fatal_at_max, not converged but reached max number of iterations.
         task: ExplorationTaskGroup
             A `ExplorationTaskGroup` defining the exploration of the next iteration. Should be `None` if the stage is converged.
         conf_selector: ConfSelector
