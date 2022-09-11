@@ -134,7 +134,7 @@ def main():
         status(
             wfid, config,
         )        
-    elif args.command == None:
+    elif args.command is None:
         pass
     else:
         raise RuntimeError(f"unknown command {args.command}")
