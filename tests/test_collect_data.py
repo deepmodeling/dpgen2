@@ -139,27 +139,46 @@ class TestMockedCollectDataArgo(unittest.TestCase):
         wf = Workflow(name="coll", host=default_host)
         wf.add(coll_data)
         wf.submit()
+        from dflow import config
+        if config["mode"] == "debug":
+            step = coll_data
+        else:
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(2)
 
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(2)
-
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name="coll-data")[0]
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name="coll-data")[0]
         self.assertEqual(step.phase, "Succeeded")
 
         download_artifact(step.outputs.artifacts["iter_data"])
 
         out_data = Path(self.name)
+        if config["mode"] == "debug":
+            out_data = Path(wf.id)
+            lis = list(out_data.glob("coll-data*"))
+            assert(len(lis) == 1)
+            out_data = lis[0] / 'workdir' / 'outdata'
         self.assertTrue(out_data.is_dir())
         self.assertTrue((out_data/'d0').is_dir())
         self.assertTrue((out_data/'d1').is_dir())
         self.assertTrue((out_data/'d0'/'data').read_text(), 'data of d0')
         self.assertTrue((out_data/'d1'/'data').read_text(), 'data of d1')
         path = Path('iter0')
+        if config["mode"] == "debug":
+            path = Path(wf.id)
+            lis = list(path.glob("coll-data*"))
+            path = lis[0] / 'workdir' / 'iter0'
         self.assertTrue(path.is_dir())
         self.assertTrue((path/'data').read_text(), 'data of iter0')
         path = Path('iter1')
+        if config["mode"] == "debug":
+            path = Path(wf.id)
+            lis = list(path.glob("coll-data*"))
+            path = lis[0] / 'workdir' / 'iter1'
         self.assertTrue(path.is_dir())
         self.assertTrue((path/'data').read_text(), 'data of iter1')
         
-        
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()
