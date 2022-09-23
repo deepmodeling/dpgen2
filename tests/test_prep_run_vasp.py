@@ -207,11 +207,22 @@ class TestPrepRunVasp(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(task_name)
         fc = []
-        ii = int(task_name.split('.')[1])
+        ii = int(task_name.split('.')[-1])
         fc.append(f'conf {ii}')
         fc.append(f'incar template')
-        self.assertEqual(fc, Path('log').read_text().strip().split('\n'))
-        self.assertEqual(f'labeled_data of {task_name}\nconf {ii}', (Path('data_'+task_name) / 'data').read_text())
+        from dflow import config
+        if config["mode"] == "debug":
+            pos = task_name.find("labeled_data")
+            name = task_name.split('/')[-1]
+            path = task_name[:pos] + 'log/' + name + '/log'
+            self.assertEqual(fc,Path(path).read_text().strip().split('\n'))
+        else:
+            self.assertEqual(fc, Path('log').read_text().strip().split('\n'))
+        if config["mode"] == "debug":
+            name = task_name.split('/')[-1]
+            self.assertEqual(f'labeled_data of {name}\nconf {ii}', (Path(task_name) / ('data_' + name) / 'data').read_text())
+        else:
+            self.assertEqual(f'labeled_data of {task_name}\nconf {ii}', (Path('data_'+task_name) / 'data').read_text())
         # self.assertEqual(f'labeled_data of {task_name}', Path('labeled_data').read_text())
         os.chdir(cwd)
 
@@ -246,20 +257,28 @@ class TestPrepRunVasp(unittest.TestCase):
         wf = Workflow(name="dp-train", host=default_host)
         wf.add(prep_run_step)
         wf.submit()
-        
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(4)
+        from dflow import config
+        if config["mode"] == "debug":
+            step = prep_run_step
+        else:
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(4)
 
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name="prep-run-step")[0]
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name="prep-run-step")[0]
         self.assertEqual(step.phase, "Succeeded")
 
         download_artifact(step.outputs.artifacts["labeled_data"])
         download_artifact(step.outputs.artifacts["logs"])
 
         for ii in step.outputs.parameters['task_names'].value:
-            self.check_run_vasp_output(ii)
+            _path = step.outputs.artifacts["labeled_data"].local_path + '/' + ii
+            self.check_run_vasp_output(_path)
 
         # for ii in range(6):
         #     self.check_run_vasp_output(f'task.{ii:06d}')
             
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()

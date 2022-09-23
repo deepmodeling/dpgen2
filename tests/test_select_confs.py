@@ -106,4 +106,8 @@ class TestSelectConfs(unittest.TestCase):
         self.assertTrue(confs[1].read_text(), 'conf of conf.1')
         
         
-        
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()
+       
