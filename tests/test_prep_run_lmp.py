@@ -1,65 +1,38 @@
+import json
 import os
-import numpy as np
+import pickle
+import shutil
+import time
 import unittest
-
-from dflow import (
-    InputParameter,
-    OutputParameter,
-    Inputs,
-    InputArtifact,
-    Outputs,
-    OutputArtifact,
-    Workflow,
-    Step,
-    Steps,
-    upload_artifact,
-    download_artifact,
-    S3Artifact,
-    argo_range
-)
-from dflow.python import (
-    PythonOPTemplate,
-    OP,
-    OPIO,
-    OPIOSign,
-    Artifact,
-)
-
-import time, shutil, json, jsonpickle, pickle
-from typing import Set, List
 from pathlib import Path
+from typing import List, Set
+
+import jsonpickle
+import numpy as np
+from dflow import (InputArtifact, Inputs, OutputArtifact, OutputParameter,
+                   Outputs, S3Artifact, Step, Steps, Workflow,
+                   download_artifact, upload_artifact)
+from dflow.python import OP, OPIO, Artifact, OPIOSign, PythonOPTemplate
+
 try:
     from context import dpgen2
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import (
-    upload_python_package,
-    skip_ut_with_dflow,
-    skip_ut_with_dflow_reason,
-    default_image,
-    default_host,
-)
+from dpgen2.constants import (lmp_conf_name, lmp_input_name, lmp_log_name,
+                              lmp_model_devi_name, lmp_task_pattern,
+                              lmp_traj_name, model_name_pattern,
+                              train_log_name, train_script_name,
+                              train_task_pattern)
+from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
-from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup
-from mocked_ops import (
-    mocked_numb_models,
-    MockedRunLmp,
-)
-from dpgen2.constants import (
-    train_task_pattern,
-    train_script_name,
-    train_log_name,
-    model_name_pattern,
-    lmp_task_pattern,
-    lmp_conf_name,
-    lmp_input_name,
-    lmp_traj_name,
-    lmp_log_name,
-    lmp_model_devi_name,
-)
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+
+from context import (default_host, default_image, skip_ut_with_dflow,
+                     skip_ut_with_dflow_reason, upload_python_package)
+from mocked_ops import MockedRunLmp, mocked_numb_models
+
 default_config = normalize_step_dict(
     {
         "template_config" : {
@@ -221,16 +194,26 @@ class TestPrepRunLmp(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(task_name)
         fc = []
-        idx = int(task_name.split('.')[1])
+        idx = int(task_name.split('.')[-1])
         ii = idx // self.ntask_per_grp
         jj = idx - ii * self.ntask_per_grp
         fc.append(f'group{ii} task{jj} conf')
         fc.append(f'group{ii} task{jj} input')
         for ii in [ii.name for ii in models]:
-            fc.append((Path('..')/Path(ii)).read_text())    
-        self.assertEqual(fc, Path(lmp_log_name).read_text().strip().split('\n'))
-        self.assertEqual(f'traj of {task_name}', Path(lmp_traj_name).read_text().split('\n')[0])
-        self.assertEqual(f'model_devi of {task_name}', Path(lmp_model_devi_name).read_text())
+            fc.append((Path(cwd) / ii).read_text())
+        if config["mode"] == "debug":
+            os.chdir(cwd)
+            log_path = Path(task_name) / "../../log/" / task_name.split('/')[-1] / lmp_log_name
+            self.assertEqual(fc,log_path.read_text().strip().split("\n"))
+            traj_path = Path(task_name) / "../../traj/" / task_name.split('/')[-1] / lmp_traj_name
+            name = task_name.split('/')[-1]
+            self.assertEqual(f'traj of {name}', traj_path.read_text().split('\n')[0])
+            model_devi_path = Path(task_name) / "../../model_devi" / task_name.split('/')[-1] / lmp_model_devi_name
+            self.assertEqual(f'model_devi of {name}', Path(model_devi_path).read_text())
+        else:  
+            self.assertEqual(fc, Path(lmp_log_name).read_text().strip().split('\n'))
+            self.assertEqual(f'traj of {task_name}', Path(lmp_traj_name).read_text().split('\n')[0])
+            self.assertEqual(f'model_devi of {task_name}', Path(lmp_model_devi_name).read_text())
         os.chdir(cwd)
 
 
@@ -258,12 +241,14 @@ class TestPrepRunLmp(unittest.TestCase):
         wf = Workflow(name="dp-train", host=default_host)
         wf.add(prep_run_step)
         wf.submit()
-        
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(4)
+        if config["mode"] == "debug":
+            step = prep_run_step
+        else:
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(4)
 
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name="prep-run-step")[0]
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name="prep-run-step")[0]
         self.assertEqual(step.phase, "Succeeded")
 
         download_artifact(step.outputs.artifacts["model_devis"])
@@ -271,5 +256,12 @@ class TestPrepRunLmp(unittest.TestCase):
         download_artifact(step.outputs.artifacts["logs"])
 
         for ii in step.outputs.parameters['task_names'].value:
-            self.check_run_lmp_output(ii, self.model_list)
-            
+            path = wf.id + '/--run-lmp-group/model_devi/' + ii
+            if config["mode"] == "debug":
+                self.check_run_lmp_output(path, self.model_list)
+            else:
+                self.check_run_lmp_output(ii, self.model_list)        
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()
