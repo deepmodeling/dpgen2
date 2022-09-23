@@ -219,12 +219,16 @@ class TestBlockCL(unittest.TestCase):
         wf.add(block_step)
         wf.submit()
         
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(4)
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name='step')[0]
-        self.assertEqual(step.phase, "Succeeded")        
+        if config["mode"] == "debug":
+            step = block_step
+        else:
 
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(4)
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name='step')[0]
+        
+        self.assertEqual(step.phase, "Succeeded")        
         report = step.outputs.parameters['exploration_report'].value
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
@@ -233,22 +237,37 @@ class TestBlockCL(unittest.TestCase):
         # by MockedConfSelector
         for ii in range(mocked_numb_select):
             task_name = vasp_task_pattern % ii
-            self.assertEqual(
-                '\n'.join([f'labeled_data of {task_name}',
-                           f'select conf.{ii}',
-                           f'mocked conf {ii}',
-                           f'mocked input {ii}',
-                           ]),
-                (Path('iter_data')/self.name/('data_'+task_name)/'data').read_text()
-            )
+            if config["mode"] == "debug":
+                self.assertEqual(
+                    '\n'.join([
+                        f'labeled_data of {task_name}',
+                        f'select conf.{ii}',
+                        f'mocked conf {ii}',
+                        f'mocked input {ii}',
+                    ]),
+                    (Path(block_step.outputs.artifacts["iter_data"].local_path)
+                     / self.name / ('data_' + task_name) / 'data').read_text())
+            else:
+                self.assertEqual(
+                    '\n'.join([f'labeled_data of {task_name}',
+                               f'select conf.{ii}',
+                               f'mocked conf {ii}',
+                               f'mocked input {ii}',
+                            ]),
+                            (Path('iter_data') / self.name / ('data_'+task_name) / 'data').read_text())
         for ii in self.path_iter_data:
             dname = Path('iter_data')/ii
+            if config["mode"] == "debug":
+                dname = Path(step.outputs.artifacts["iter_data"].local_path) / ii
             self.assertEqual((dname/'a').read_text(), 'data a')
             self.assertEqual((dname/'b').read_text(), 'data b')
 
         # new model is read from init model
         for ii in range(self.numb_models):
             model = Path('models')/self.name/(train_task_pattern%ii)/'model.pb'
+            if config["mode"] == "debug":
+                model = Path(block_step.outputs.artifacts["models"].local_path) / (
+                        train_task_pattern % ii) / 'model.pb'
             flines = model.read_text().strip().split('\n')
             self.assertEqual(flines[0], "read from init model: ")
             self.assertEqual(flines[1], f"This is init model {ii}")
@@ -257,3 +276,8 @@ class TestBlockCL(unittest.TestCase):
         self.assertEqual(report.accurate_ratio(), .8)
         self.assertEqual(report.failed_ratio(), 0.1)
         self.assertEqual(report.candidate_ratio(), 0.1)
+
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()
