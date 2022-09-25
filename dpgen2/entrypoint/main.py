@@ -21,6 +21,9 @@ from .submit import (
 from .status import (
     status,
 )
+from .download import (
+    download,
+)
 from dpgen2 import (
     __version__
 )
@@ -81,6 +84,18 @@ def main_parser() -> argparse.ArgumentParser:
         "CONFIG", help="the config file in json format."
     )
     parser_status.add_argument(
+        "ID", help="the ID of the existing workflow."
+    )
+
+    parser_download = subparsers.add_parser(
+        "download",
+        help="Download the artifacts of dpgen2 steps",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_download.add_argument(
+        "CONFIG", help="the config file in json format."
+    )
+    parser_download.add_argument(
         "ID", help="the ID of the existing workflow."
     )
 
