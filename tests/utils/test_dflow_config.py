@@ -40,6 +40,10 @@ class TestDflowConfig(unittest.TestCase):
 
     def test_empty(self):
         config_data = {
+	    "host" : None,
+	    "s3_endpoint" : None,
+	    "k8s_api_server" : None,
+            "token" : None,
         }
         dflow_config(config_data)
         self.assertEqual(config['host'], None)
