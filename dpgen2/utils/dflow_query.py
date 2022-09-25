@@ -10,6 +10,11 @@ def get_subkey(
 ):
     return key.split('--')[idx]
 
+def get_iteration(
+        key : str, 
+):
+    return key.split('--')[0]
+
 def get_last_scheduler(
         wf : Any, 
         keys : List[str],
