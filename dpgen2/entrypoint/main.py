@@ -48,6 +48,8 @@ def main_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(title="Valid subcommands", dest="command")
     
+    ##########################################
+    # submit
     parser_run = subparsers.add_parser(
         "submit",
         help="Submit DPGEN2 workflow",
@@ -57,6 +59,8 @@ def main_parser() -> argparse.ArgumentParser:
         "CONFIG", help="the config file in json format defining the workflow."
     )
 
+    ##########################################
+    # resubmit
     parser_resubmit = subparsers.add_parser(
         "resubmit",
         help="Submit DPGEN2 workflow resuing steps from an existing workflow",
@@ -75,6 +79,8 @@ def main_parser() -> argparse.ArgumentParser:
         "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
     )
 
+    ##########################################
+    # status
     parser_status = subparsers.add_parser(
         "status",
         help="Print the status (stage, iteration, convergence) of the  DPGEN2 workflow",
@@ -87,6 +93,8 @@ def main_parser() -> argparse.ArgumentParser:
         "ID", help="the ID of the existing workflow."
     )
 
+    ##########################################
+    # download
     parser_download = subparsers.add_parser(
         "download",
         help="Download the artifacts of dpgen2 steps",
@@ -97,6 +105,35 @@ def main_parser() -> argparse.ArgumentParser:
     )
     parser_download.add_argument(
         "ID", help="the ID of the existing workflow."
+    )
+    parser_download.add_argument(
+        "-k,--keys", type=str, nargs='+', help="the keys of the downloaded steps."
+    )
+
+    ##########################################
+    # watch
+    parser_watch = subparsers.add_parser(
+        "download",
+        help="Download the artifacts of dpgen2 steps",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_watch.add_argument(
+        "CONFIG", help="the config file in json format."
+    )
+    parser_watch.add_argument(
+        "ID", help="the ID of the existing workflow."
+    )
+    parser_download.add_argument(
+        "-k,--keys", type=str, nargs='+', 
+        help="the subkey to watch. For example, 'prep-run-train' 'prep-run-lmp'"
+    )
+    parser_download.add_argument(
+        "-f,--frequency", type=float, default=600.,
+        help="the frequency of workflow status query. In unit of second"
+    )
+    parser_download.add_argument(
+        "-d,--download", type=bool, action='store_true',
+        help="whether to download artifacts of a step when it finishes"
     )
 
     # --version
@@ -149,6 +186,23 @@ def main():
         status(
             wfid, config,
         )        
+    elif args.command == "download":
+        with open(args.CONFIG) as fp:
+            config = json.load(fp)
+        wfid = args.ID
+        download(
+            wfid, config, args.KEYS,
+        )
+    elif args.command == "watch":
+        with open(args.CONFIG) as fp:
+            config = json.load(fp)
+        wfid = args.ID
+        watch(
+            wfid, config, 
+            watching_keys=args.KEYS,
+            frequency=args.FREQUENCY,
+            download=args.DOWNLOAD,
+        )
     elif args.command is None:
         pass
     else:
