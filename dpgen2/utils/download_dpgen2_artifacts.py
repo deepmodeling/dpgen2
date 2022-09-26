@@ -109,7 +109,7 @@ def download_dpgen2_artifacts(
             )
         except (NotImplementedError, FileNotFoundError):
             # NotImplementedError to be compatible with old versions of dflow
-            logging.warn(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
+            logging.warning(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
 
     for kk in output_def.keys():
         pref = mypath / subkey / 'outputs'
@@ -124,6 +124,6 @@ def download_dpgen2_artifacts(
             )
         except (NotImplementedError, FileNotFoundError):
             # NotImplementedError to be compatible with old versions of dflow
-            logging.warn(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
+            logging.warning(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
 
     return
