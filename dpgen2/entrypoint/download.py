@@ -14,8 +14,8 @@ from typing import (
 
 def download(
         workflow_id,
-        wf_keys : Optional[List] = None,
         wf_config : Optional[Dict] = {}, 
+        wf_keys : Optional[List] = None,
 ):
     dflow_config_data = wf_config.get('dflow_config', None)
     dflow_config(dflow_config_data)
@@ -27,3 +27,4 @@ def download(
     
     for kk in wf_keys:
         download_dpgen2_artifacts(wf, kk)
+        logging.info(f'step {kk} downloaded')
