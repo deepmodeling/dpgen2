@@ -115,7 +115,10 @@ def main_parser() -> argparse.ArgumentParser:
         "ID", help="the ID of the existing workflow."
     )
     parser_download.add_argument(
-        "-k","--keys", type=str, nargs='+', help="the keys of the downloaded steps."
+        "-k","--keys", type=str, nargs='+', help="the keys of the downloaded steps. If not provided download all artifacts"
+    )
+    parser_download.add_argument(
+        "-p","--prefix", type=str, help="the prefix of the path storing the download artifacts"
     )
 
     ##########################################
@@ -142,6 +145,9 @@ def main_parser() -> argparse.ArgumentParser:
     parser_watch.add_argument(
         "-d","--download", action='store_true',
         help="whether to download artifacts of a step when it finishes"
+    )
+    parser_watch.add_argument(
+        "-p","--prefix", type=str, help="the prefix of the path storing the download artifacts"
     )
 
     # --version
@@ -201,6 +207,7 @@ def main():
         download(
             wfid, config,
             wf_keys=args.keys,
+            prefix=args.prefix,
         )
     elif args.command == "watch":
         with open(args.CONFIG) as fp:
@@ -211,6 +218,7 @@ def main():
             watching_keys=args.keys,
             frequency=args.frequency,
             download=args.download,
+            prefix=args.prefix,
         )
     elif args.command is None:
         pass

@@ -19,6 +19,7 @@ def download(
         workflow_id,
         wf_config : Optional[Dict] = {}, 
         wf_keys : Optional[List] = None,
+        prefix : Optional[str] = None,
 ):
     dflow_config_data = wf_config.get('dflow_config', None)
     dflow_config(dflow_config_data)
@@ -29,5 +30,5 @@ def download(
         wf_keys = wf.query_keys_of_steps()
     
     for kk in wf_keys:
-        download_dpgen2_artifacts(wf, kk)
+        download_dpgen2_artifacts(wf, kk, prefix=prefix)
         logging.info(f'step {kk} downloaded')
