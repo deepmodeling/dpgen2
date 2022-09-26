@@ -5,6 +5,9 @@ from dflow import (
 from dpgen2.utils import (
     dflow_config,
 )
+from dpgen2.utils.dflow_query import (
+    matched_step_key,
+)
 from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,
 )
@@ -16,14 +19,17 @@ default_watching_keys = [
     "prep-run-train",
     "prep-run-lmp",
     "prep-run-fp",
+    "collect-data",
 ]
 
 def update_finished_steps(
         wf,
         finished_keys : List[str] = None,
         download : Optional[bool] = False,
+        watching_keys : Optional[List[str]] = None,
 ):
     wf_keys = wf.query_keys_of_steps()
+    wf_keys = matched_step_key(wf_keys, watching_keys)
     if finished_keys is not None:
         diff_keys = []
         for kk in wf_keys:
@@ -32,10 +38,10 @@ def update_finished_steps(
     else :
         diff_keys = wf_keys
     for kk in diff_keys:
-        logging.info(f'steps {kk} finished')
+        logging.info(f'steps {kk.ljust(50,"-")} finished')
         if download :
             download_dpgen2_artifacts(wf, kk)
-            logging.info(f'steps {kk} downloaded')
+            logging.info(f'steps {kk.ljust(50,"-")} downloaded')
     finished_keys = wf_keys
     return finished_keys
                 
@@ -44,7 +50,7 @@ def watch(
         workflow_id,
         wf_config : Optional[Dict] = {},
         watching_keys : Optional[List] = default_watching_keys,
-        frequence : Optional[float] = 600.,
+        frequency : Optional[float] = 600.,
         download : Optional[bool] = False,
 ):
     dflow_config_data = wf_config.get('dflow_config', None)
@@ -55,11 +61,22 @@ def watch(
     finished_keys = None
 
     while wf.query_status() in ["Pending", "Running"]:
-        finished_keys = update_finished_steps(wf, finished_keys, download)
-        time.sleep(frequence)
+        finished_keys = update_finished_steps(
+            wf,
+            finished_keys,
+            download=download,
+            watching_keys=watching_keys,
+        )
+        time.sleep(frequency)
 
     status = wf.query_status()
     if status == "Succeeded":
+        finished_keys = update_finished_steps(
+            wf,
+            finished_keys,
+            download=download,
+            watching_keys=watching_keys,
+        )
         logging.info("well done")
     elif status in ["Failed", "Error"]:
         logging.error("failed or error workflow")

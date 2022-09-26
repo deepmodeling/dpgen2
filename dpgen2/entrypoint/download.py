@@ -5,6 +5,9 @@ from dflow import (
 from dpgen2.utils import (
     dflow_config,
 )
+from dpgen2.utils.dflow_query import (
+    matched_step_key,
+)
 from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,
 )
@@ -22,7 +25,7 @@ def download(
 
     wf = Workflow(id=workflow_id)
 
-    if steps is None:
+    if wf_keys is None:
         wf_keys = wf.query_keys_of_steps()
     
     for kk in wf_keys:

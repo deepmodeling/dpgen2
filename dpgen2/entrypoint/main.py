@@ -1,4 +1,4 @@
-import argparse, os, json
+import argparse, os, json, logging
 
 from dflow import (
     Workflow,
@@ -24,9 +24,17 @@ from .status import (
 from .download import (
     download,
 )
+from .watch import (
+    watch,
+    default_watching_keys,
+)
 from dpgen2 import (
     __version__
 )
+
+#####################################
+# logging
+logging.basicConfig(level=logging.INFO)
 
 
 def main_parser() -> argparse.ArgumentParser:
@@ -97,7 +105,7 @@ def main_parser() -> argparse.ArgumentParser:
     # download
     parser_download = subparsers.add_parser(
         "download",
-        help="Download the artifacts of dpgen2 steps",
+        help="Download the artifacts of DPGEN2 steps",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_download.add_argument(
@@ -107,14 +115,14 @@ def main_parser() -> argparse.ArgumentParser:
         "ID", help="the ID of the existing workflow."
     )
     parser_download.add_argument(
-        "-k,--keys", type=str, nargs='+', help="the keys of the downloaded steps."
+        "-k","--keys", type=str, nargs='+', help="the keys of the downloaded steps."
     )
 
     ##########################################
     # watch
     parser_watch = subparsers.add_parser(
-        "download",
-        help="Download the artifacts of dpgen2 steps",
+        "watch",
+        help="Watch a DPGEN2 workflow",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_watch.add_argument(
@@ -123,16 +131,16 @@ def main_parser() -> argparse.ArgumentParser:
     parser_watch.add_argument(
         "ID", help="the ID of the existing workflow."
     )
-    parser_download.add_argument(
-        "-k,--keys", type=str, nargs='+', 
+    parser_watch.add_argument(
+        "-k","--keys", type=str, nargs='+', default=default_watching_keys,
         help="the subkey to watch. For example, 'prep-run-train' 'prep-run-lmp'"
     )
-    parser_download.add_argument(
-        "-f,--frequency", type=float, default=600.,
+    parser_watch.add_argument(
+        "-f","--frequency", type=float, default=600.,
         help="the frequency of workflow status query. In unit of second"
     )
-    parser_download.add_argument(
-        "-d,--download", type=bool, action='store_true',
+    parser_watch.add_argument(
+        "-d","--download", action='store_true',
         help="whether to download artifacts of a step when it finishes"
     )
 
@@ -191,7 +199,8 @@ def main():
             config = json.load(fp)
         wfid = args.ID
         download(
-            wfid, config, args.KEYS,
+            wfid, config,
+            wf_keys=args.keys,
         )
     elif args.command == "watch":
         with open(args.CONFIG) as fp:
@@ -199,9 +208,9 @@ def main():
         wfid = args.ID
         watch(
             wfid, config, 
-            watching_keys=args.KEYS,
-            frequency=args.FREQUENCY,
-            download=args.DOWNLOAD,
+            watching_keys=args.keys,
+            frequency=args.frequency,
+            download=args.download,
         )
     elif args.command is None:
         pass

@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from pathlib import Path
 
@@ -84,6 +85,7 @@ def download_dpgen2_artifacts(
     
     dsetting = op_download_setting.get(subkey)
     if dsetting is None:
+        logging.warning(f'cannot find download settings for {key}')
         return 
 
     input_def = dsetting.input_def
@@ -99,21 +101,28 @@ def download_dpgen2_artifacts(
         ksuff = input_def[kk]
         if ksuff is not None:
             pref = pref / ksuff
-        download_artifact(
-            step.inputs.artifacts[kk], 
-            path=pref,
-            skip_exists=True,
-        )
+        try:
+            download_artifact(
+                step.inputs.artifacts[kk], 
+                path=pref,
+                skip_exists=True,
+            )
+        except (NotImplementedError, FileNotFoundError):
+            # NotImplementedError to be compatible with old versions of dflow
+            logging.warn(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
 
     for kk in output_def.keys():
         pref = mypath / subkey / 'outputs'
         ksuff = output_def[kk]
         if ksuff is not None:
             pref = pref / ksuff
-        download_artifact(
-            step.outputs.artifacts[kk], 
-            path=pref,
-            skip_exists=True,
-        )
+        try:
+             download_artifact(
+                step.outputs.artifacts[kk], 
+                path=pref,
+                skip_exists=True,
+            )
+        except (NotImplementedError, FileNotFoundError):
+            logging.warn(f'cannot download input artifact {kk}, it may be empty')
 
     return
