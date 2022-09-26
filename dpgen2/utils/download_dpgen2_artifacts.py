@@ -123,6 +123,7 @@ def download_dpgen2_artifacts(
                 skip_exists=True,
             )
         except (NotImplementedError, FileNotFoundError):
-            logging.warn(f'cannot download input artifact {kk}, it may be empty')
+            # NotImplementedError to be compatible with old versions of dflow
+            logging.warn(f'cannot download input artifact  {kk}  of  {key}, it may be empty')
 
     return
