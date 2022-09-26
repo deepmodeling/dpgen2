@@ -99,13 +99,21 @@ def download_dpgen2_artifacts(
         ksuff = input_def[kk]
         if ksuff is not None:
             pref = pref / ksuff
-        download_artifact(step.inputs.artifacts[kk], path=pref)
+        download_artifact(
+            step.inputs.artifacts[kk], 
+            path=pref,
+            skip_exists=True,
+        )
 
     for kk in output_def.keys():
         pref = mypath / subkey / 'outputs'
         ksuff = output_def[kk]
         if ksuff is not None:
             pref = pref / ksuff
-        download_artifact(step.outputs.artifacts[kk], path=pref)
+        download_artifact(
+            step.outputs.artifacts[kk], 
+            path=pref,
+            skip_exists=True,
+        )
 
     return
