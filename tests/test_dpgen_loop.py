@@ -1299,3 +1299,7 @@ class TestLoopRestart(unittest.TestCase):
             )
                            
 
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] ="debug"
+    unittest.main()

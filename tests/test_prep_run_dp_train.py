@@ -300,11 +300,14 @@ class TestTrainDp(unittest.TestCase):
         wf.add(train_step)
         wf.submit()
         
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(4)
+        if config["mode"] == "debug":
+            step = train_step
+        else:
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(4)
 
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name="train-step")[0]
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name="train-step")[0]
         self.assertEqual(step.phase, "Succeeded")
 
         download_artifact(step.outputs.artifacts["scripts"])
@@ -349,13 +352,17 @@ class TestTrainDp(unittest.TestCase):
         wf = Workflow(name="dp-train", host=default_host)
         wf.add(train_step)
         wf.submit()
-        
-        while wf.query_status() in ["Pending", "Running"]:
-            time.sleep(4)
+        if config["mode"] == "debug":
+            step = train_step
+        else:
+            while wf.query_status() in ["Pending", "Running"]:
+                time.sleep(4)
 
-        self.assertEqual(wf.query_status(), "Succeeded")
-        step = wf.query_step(name="train-step")[0]
+            self.assertEqual(wf.query_status(), "Succeeded")
+            step = wf.query_step(name="train-step")[0]
         self.assertEqual(step.phase, "Succeeded")
 
-
-        
+if __name__ == "__main__":
+    from dflow import config
+    config["mode"] = "debug"
+    unittest.main()
