@@ -52,12 +52,14 @@ def step_conf_args():
     doc_continue_on_failed = 'If continue the the step is failed (FatalError, TransientError, A certain number of retrial is reached...).'
     doc_continue_on_num_success = 'Only in the sliced OP case. Continue the workflow if a certain number of the sliced jobs are successful.'
     doc_continue_on_success_ratio = 'Only in the sliced OP case. Continue the workflow if a certain ratio of the sliced jobs are successful.'
+    doc_parallelism = 'The parallelism for the step'
 
     return [
         Argument("template_config", dict, template_conf_args(), optional=True, default={'image':default_image}, doc=doc_template),
         Argument("continue_on_failed", bool, optional=True, default=False, doc=doc_continue_on_failed),
         Argument("continue_on_num_success", int, optional=True, default=None, doc=doc_continue_on_num_success),
         Argument("continue_on_success_ratio", float, optional=True, default=None, doc=doc_continue_on_success_ratio),
+        Argument("parallelism", int, optional=True, default=None, doc=doc_parallelism),
         Argument("executor", dict, [], [variant_executor()], optional=True, default=None, doc = doc_executor),
     ]
 
