@@ -45,6 +45,7 @@ class TestStepConfig(unittest.TestCase):
                     "template_cover_cmd_escape_bug" : True,
                 },
             },
+            "parallelism" : None,
         }
         odict = normalize(idict)
         self.assertEqual(odict, expected_odict)
@@ -63,6 +64,7 @@ class TestStepConfig(unittest.TestCase):
             "continue_on_num_success" : None,
             "continue_on_success_ratio" : None,
             "executor" : None,
+            "parallelism" : None,
         }
         odict = normalize(idict)
         self.assertEqual(odict, expected_odict)
