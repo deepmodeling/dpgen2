@@ -71,6 +71,8 @@ from dpgen2.utils import (
     normalize_alloy_conf_dict,
     generate_alloy_conf_file_content,
     dflow_config,
+    sort_slice_ops,
+    print_keys_in_nice_format,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from typing import (

@@ -22,3 +22,13 @@ from .alloy_conf import (
     gen_doc as gen_doc_alloy_conf_dict,
     generate_alloy_conf_file_content,
 )
+from .dflow_query import (
+    get_subkey,
+    get_iteration,
+    matched_step_key,
+    get_last_scheduler,
+    get_last_iteration,
+    find_slice_ranges,
+    sort_slice_ops,
+    print_keys_in_nice_format,
+)
