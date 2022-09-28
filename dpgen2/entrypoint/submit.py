@@ -473,7 +473,6 @@ def resubmit_concurrent_learning(
 
     wf = submit_concurrent_learning(
         wf_config, 
-        context=context,
         reuse_step=reuse_step,
     )
 
