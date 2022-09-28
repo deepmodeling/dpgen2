@@ -14,6 +14,7 @@ from dflow import (
     argo_len,
     argo_sequence,
     if_expression,
+    OPTemplate,
 )
 from dflow.python import(
     PythonOPTemplate,
@@ -114,7 +115,7 @@ class ConcurrentLearningLoop(Steps):
     def __init__(
             self,
             name : str,
-            block_op : Steps,
+            block_op : OPTemplate,
             step_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
@@ -201,7 +202,7 @@ class ConcurrentLearning(Steps):
     def __init__(
             self,
             name : str,
-            block_op : Steps,
+            block_op : OPTemplate,
             step_config : dict = normalize_step_dict({}),
             upload_python_package : str = None,
     ):
@@ -292,7 +293,7 @@ def _loop (
         steps, 
         step_keys,
         name : str,
-        block_op : OP,
+        block_op : OPTemplate,
         step_config : dict = normalize_step_dict({}),
         upload_python_package : str = None,
 ):    
