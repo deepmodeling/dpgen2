@@ -1,0 +1,191 @@
+{
+    "dflow_config" : {
+	"host" : "http://address.of.the.host:port"
+    },
+    "dflow_s3_config" : {
+	"s3_endpoint" : "address.of.the.s3.sever:port"
+    },
+
+    "lebesgue_context_config": {
+	"executor" : "lebesgue_v2",
+        "extra" : {
+	    "scass_type": "c8_m32_cpu",
+	    "machine_type": "c8_m32_cpu",
+            "platform": "xxxx",
+            "program_id": "xxxx",
+            "job_type": "container",
+	    "region" : "default"
+        },
+        "app_name" : "Default",
+        "org_id" : "xxx",
+        "user_id" : "xxx",
+        "tag" : ""
+    },
+
+    "default_step_config" : {
+	"template_config" : {
+	    "image" : "dflow:1.1.4",
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "step_configs":{
+	"run_train_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c6_m64_1 * NVIDIA 3090",
+		    "machine_type": "c6_m64_1 * NVIDIA 3090",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"run_explore_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c8_m32_cpu",
+		    "machine_type": "c8_m32_cpu",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"run_fp_config" : {
+	    "template_config" : {
+		"image" : "vasp:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c16_m64_cpu",
+		    "machine_type": "c16_m64_cpu",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "upload_python_package" : "/path/to/dpgen2",
+
+    "inputs": {
+	"type_map":		["Al", "Mg"],
+	"mass_map":		[27, 24],
+	"init_data_prefix":	"",
+	"init_data_sys":	[
+	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+	],
+	"_comment" : "all"
+    },
+    "train":{
+	"type" :	"dp",
+	"numb_models" : 4,
+	"config" : {},
+	"template_script" : {
+	    "model" : {
+		"type_map":		["Al", "Mg"],
+		"descriptor": {
+		    "type":		"se_a",
+		    "sel":		[90, 90],
+		    "rcut_smth":	1.80,
+		    "rcut":		6.00,
+		    "neuron":	[25, 50, 100],
+		    "resnet_dt":	false,
+		    "axis_neuron":	4,
+		    "seed":		1
+		},
+		"fitting_net" : {
+		    "neuron":	[128, 128, 128],
+		    "resnet_dt":	true,
+		    "seed":		1
+		}
+	    },
+	    "loss" : {
+		"start_pref_e":	0.02,
+		"limit_pref_e":	1,
+		"start_pref_f":	1000,
+		"limit_pref_f":	1,
+		"start_pref_v":	0,
+		"limit_pref_v":	0
+	    },
+	    "learning_rate" : {
+		"start_lr":		0.001,
+		"stop_lr":		1e-8,
+		"decay_steps":	100
+	    },
+	    "training" : {
+		"training_data": {
+		    "systems": [],
+		    "batch_size":"auto"
+		},
+		"numb_steps":1000,
+		"seed":10,
+		"disp_file":"lcurve.out",
+		"disp_freq":100,
+		"save_freq":1000
+	    },
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "explore" : {
+	"type" : "lmp",
+	"config" : {
+	    "command": "lmp -var restart 0"
+	},
+	"max_numb_iter" :	5,
+	"conv_accuracy" :	0.9,
+	"fatal_at_max" :	false,
+	"f_trust_lo":		0.05,
+	"f_trust_hi":		0.50,
+	"configuration_prefix": null, 
+	"configurations":	[
+	    {
+		"lattice" : ["fcc", 4.57],
+		"replicate" : [2, 2, 2],
+		"numb_confs" : 30,
+		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+	    }
+	],
+	"stages":	[
+	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
+	    }
+	],
+	"_comment" : "all"
+    },
+    "fp" : {
+	"type" :	"vasp",
+	"config" : {
+	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+	},
+	"task_max":	2,
+	"pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+	"incar":         "vasp/INCAR",
+	"_comment" : "all"
+    }
+}
+
