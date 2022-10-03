@@ -70,10 +70,9 @@ from dpgen2.utils import (
     load_object_from_file,
     normalize_alloy_conf_dict,
     generate_alloy_conf_file_content,
-    dflow_config,
-    dflow_s3_config,
     sort_slice_ops,
     print_keys_in_nice_format,
+    workflow_config_from_dict,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from dpgen2.entrypoint.submit_args import normalize as normalize_submit_args
@@ -202,7 +201,7 @@ def make_naive_exploration_scheduler(
 ):
     # use npt task group
     model_devi_jobs = config['model_devi_jobs'] if old_style else config['explore']['stages']
-    sys_configs = config['sys_configs'] if old_style else config['explore']['configuraitons']
+    sys_configs = config['sys_configs'] if old_style else config['explore']['configurations']
     sys_prefix = config.get('sys_prefix')
     if sys_prefix is not None:
         for ii in range(len(sys_configs)):
@@ -221,7 +220,7 @@ def make_naive_exploration_scheduler(
         # task group
         tgroup = NPTTaskGroup()
         ##  ignore the expansion of sys_idx
-        # get all file names of md initial configuraitons
+        # get all file names of md initial configurations
         sys_idx = job['sys_idx']
         conf_list = []        
         for ii in sys_idx:
@@ -386,10 +385,7 @@ def workflow_concurrent_learning(
 def wf_global_workflow(
         wf_config,
 ):
-    dflow_config_data = wf_config.get('dflow_config', None)
-    dflow_config(dflow_config_data)
-    dflow_s3_config_data = wf_config.get('dflow_s3_config', None)
-    dflow_s3_config(dflow_s3_config_data)
+    workflow_config_from_dict(wf_config)
 
     # lebesgue context
     from dflow.plugins.lebesgue import LebesgueContext

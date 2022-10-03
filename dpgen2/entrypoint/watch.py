@@ -3,7 +3,7 @@ from dflow import (
     Workflow,
 )
 from dpgen2.utils import (
-    dflow_config,
+    workflow_config_from_dict,
 )
 from dpgen2.utils.dflow_query import (
     matched_step_key,
@@ -55,8 +55,7 @@ def watch(
         download : Optional[bool] = False,
         prefix : Optional[str] = None,
 ):
-    dflow_config_data = wf_config.get('dflow_config', None)
-    dflow_config(dflow_config_data)
+    workflow_config_from_dict(wf_config)
 
     wf = Workflow(id=workflow_id)
 

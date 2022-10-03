@@ -18,6 +18,7 @@ from .step_config import (
 from .dflow_config import (
     dflow_config,
     dflow_s3_config,
+    workflow_config_from_dict,
 )
 from .alloy_conf import (
     normalize as normalize_alloy_conf_dict,
