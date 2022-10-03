@@ -15,12 +15,11 @@ def showkey(
         wf_config,
 ):
     workflow_config_from_dict(wf_config)    
-    wf = Workflow(id=workflow_id)
+    wf = Workflow(id=wf_id)
     all_step_keys = successful_step_keys(wf)
     all_step_keys = sort_slice_ops(
         all_step_keys, ['run-train', 'run-lmp', 'run-fp'],)
     prt_str = print_keys_in_nice_format(
         all_step_keys, ['run-train', 'run-lmp', 'run-fp'],)
     print(prt_str)
-
 
