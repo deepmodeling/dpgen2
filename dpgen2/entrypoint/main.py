@@ -66,6 +66,9 @@ def main_parser() -> argparse.ArgumentParser:
     parser_run.add_argument(
         "CONFIG", help="the config file in json format defining the workflow."
     )
+    parser_run.add_argument(
+        "-o", "--old-compatible", action='store_true', help="compatible with old-style input script used in dpgen2 < 0.0.6."
+    )
 
     ##########################################
     # resubmit
@@ -81,10 +84,13 @@ def main_parser() -> argparse.ArgumentParser:
         "ID", help="the ID of the existing workflow."
     )
     parser_resubmit.add_argument(
-        "--list", action='store_true', help="list the Steps of the existing workflow."
+        "-l", "--list", action='store_true', help="list the Steps of the existing workflow."
     )
     parser_resubmit.add_argument(
         "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
+    )
+    parser_resubmit.add_argument(
+        "-o", "--old-compatible", action='store_true', help="compatible with old-style input script used in dpgen2 < 0.0.6."
     )
 
     ##########################################
@@ -185,13 +191,20 @@ def main():
     if args.command == "submit":
         with open(args.CONFIG) as fp:
             config = json.load(fp)
-        submit_concurrent_learning(config)
+        submit_concurrent_learning(
+            config,
+            old_style=args.old_compatible,
+        )
     elif args.command == "resubmit":
         with open(args.CONFIG) as fp:
             config = json.load(fp)
         wfid = args.ID
         resubmit_concurrent_learning(
-            config, wfid, list_steps=args.list, reuse=args.reuse,
+            config, 
+            wfid, 
+            list_steps=args.list, 
+            reuse=args.reuse,
+            old_style=args.old_compatible,
         )
     elif args.command == "status":
         with open(args.CONFIG) as fp:

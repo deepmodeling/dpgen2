@@ -71,10 +71,12 @@ from dpgen2.utils import (
     normalize_alloy_conf_dict,
     generate_alloy_conf_file_content,
     dflow_config,
+    dflow_s3_config,
     sort_slice_ops,
     print_keys_in_nice_format,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.entrypoint.submit_args import normalize as normalize_submit_args
 from typing import (
     Union, List, Dict, Optional,
 )
@@ -328,7 +330,7 @@ def workflow_concurrent_learning(
         cl_step_config = cl_step_config,
         upload_python_package = upload_python_package,
     )
-    scheduler = make_naive_exploration_scheduler(config)
+    scheduler = make_naive_exploration_scheduler(config, old_style=old_style)
 
     type_map = config['type_map'] if old_style else config['inputs']['type_map']
     numb_models = config['numb_models'] if old_style else config['train']['numb_models']
@@ -405,10 +407,13 @@ def wf_global_workflow(
 def submit_concurrent_learning(
         wf_config,
         reuse_step = None,
+        old_style = False,
 ):
+    wf_config = normalize_submit_args(wf_config)
+
     context = wf_global_workflow(wf_config)
     
-    dpgen_step = workflow_concurrent_learning(wf_config)
+    dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
 
     wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)
@@ -464,7 +469,10 @@ def resubmit_concurrent_learning(
         wfid,
         list_steps = False,
         reuse = None,
+        old_style = False,
 ):
+    wf_config = normalize_submit_args(wf_config)
+
     context = wf_global_workflow(wf_config)
 
     old_wf = Workflow(id=wfid)
@@ -488,6 +496,7 @@ def resubmit_concurrent_learning(
     wf = submit_concurrent_learning(
         wf_config, 
         reuse_step=reuse_step,
+        old_style=old_style,
     )
 
     return wf
