@@ -144,7 +144,7 @@ def dpgen_step_config_args(default_config):
     ]
 
 
-def submit_args(default_step_config):
+def submit_args(default_step_config = normalize_step_dict({})):
     doc_step_configs = "Configurations for executing dflow steps"
     doc_upload_python_package = "Upload python package, for debug purpose"
     doc_inputs = "The input parameter and artifacts for dpgen2"

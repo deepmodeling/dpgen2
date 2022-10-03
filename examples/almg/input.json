@@ -172,7 +172,7 @@
 	    }
 	],
 	"stages":	[
-	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
+	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "conf_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
 	    }
 	],
 	"_comment" : "all"

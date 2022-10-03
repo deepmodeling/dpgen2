@@ -221,7 +221,10 @@ def make_naive_exploration_scheduler(
         tgroup = NPTTaskGroup()
         ##  ignore the expansion of sys_idx
         # get all file names of md initial configurations
-        sys_idx = job['sys_idx']
+        try:
+            sys_idx = job['sys_idx']
+        except KeyError:
+            sys_idx = job['conf_idx']
         conf_list = []        
         for ii in sys_idx:
             conf_list += make_conf_list(sys_configs[ii], type_map)
@@ -458,7 +461,7 @@ def successful_step_keys(wf):
         if wf_info.get_step(key=ii)[0]['phase'] == 'Succeeded':
             all_step_keys.append(ii)
     return all_step_keys
-    
+
 
 def resubmit_concurrent_learning(
         wf_config,

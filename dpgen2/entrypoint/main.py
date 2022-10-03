@@ -21,6 +21,9 @@ from .submit import (
 from .status import (
     status,
 )
+from .showkey import (
+    showkey,
+)
 from .download import (
     download,
 )
@@ -91,6 +94,20 @@ def main_parser() -> argparse.ArgumentParser:
     )
     parser_resubmit.add_argument(
         "-o", "--old-compatible", action='store_true', help="compatible with old-style input script used in dpgen2 < 0.0.6."
+    )
+
+    ##########################################
+    # show key
+    parser_showkey = subparsers.add_parser(
+        "showkey",
+        help="Print the keys of the successful DPGEN2 steps",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_showkey.add_argument(
+        "CONFIG", help="the config file in json format."
+    )
+    parser_showkey.add_argument(
+        "ID", help="the ID of the existing workflow."
     )
 
     ##########################################
@@ -211,6 +228,13 @@ def main():
             config = json.load(fp)
         wfid = args.ID
         status(
+            wfid, config,
+        )        
+    elif args.command == "showkey":
+        with open(args.CONFIG) as fp:
+            config = json.load(fp)
+        wfid = args.ID
+        showkey(
             wfid, config,
         )        
     elif args.command == "download":
