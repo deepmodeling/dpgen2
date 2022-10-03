@@ -14,6 +14,12 @@ def dflow_config_lower(
     for kk in dflow_s3_config.keys():
         s3_config[kk] = dflow_s3_config[kk]
 
+def dflow_s3_config_lower(
+        dflow_s3_config_data,
+):
+    for kk in dflow_s3_config_data.keys():
+        s3_config[kk] = dflow_s3_config_data[kk]
+
 def dflow_config(
         config_data,
 ):
@@ -26,4 +32,14 @@ def dflow_config(
     """
     if config_data is not None:
         dflow_config_lower(config_data)
+        
+def dflow_s3_config(
+        config_data,
+):
+    """
+    set the s3 config by `config_data`
+
+    """
+    if config_data is not None:
+        dflow_s3_config_lower(config_data)
         

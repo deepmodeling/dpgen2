@@ -7,7 +7,8 @@ import dpdata
 from pathlib import Path
 
 from dpgen2.utils import (
-    dflow_config
+    dflow_config, 
+    dflow_s3_config,
 )
 from dflow import config, s3_config
 
@@ -51,3 +52,17 @@ class TestDflowConfig(unittest.TestCase):
         self.assertEqual(config['k8s_api_server'], None)
         self.assertEqual(config['token'], None)
         
+    def test_s3_config(self):
+        config_data = {
+	    "endpoint" : "bar",
+        }
+        dflow_s3_config(config_data)
+        self.assertEqual(s3_config['endpoint'], 'bar')
+        
+    def test_none(self):
+        config_data = {
+	    "endpoint" : None,
+        }
+        dflow_s3_config(config_data)
+        self.assertEqual(s3_config['endpoint'], None)
+
