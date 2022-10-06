@@ -36,7 +36,7 @@ INFO:root:steps iter-000001--prep-run-train----------------------- finished
 INFO:root:steps iter-000001--prep-run-lmp------------------------- finished
 ...
 ```
-The artifacts can be downloaded on-the-fly with `-d` flag.
+The artifacts can be downloaded on-the-fly with `-d` flag. Note that the existing files are automatically skipped if one sets `dflow_config["archive_mode"] = None`.
 
 
 ## Show the keys of steps
