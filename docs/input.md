@@ -16,7 +16,7 @@ For all the dpgen2 commands, one need to provide `dflow2` global configurations.
 	"endpoint" : "address.of.the.s3.sever:port"
     },
 ```
-The `dpgen` simply pass all keys of `"dflow_config"` to `dflow.config` and all keys of `"dflow_s3_config"` to `dflow.s3_config`. 
+The `dpgen` simply pass all keys of `"dflow_config"` to [`dflow.config`](https://deepmodeling.com/dflow/dflow.html#dflow.config.set_config) and all keys of `"dflow_s3_config"` to [`dflow.s3_config`](https://deepmodeling.com/dflow/dflow.html#dflow.utils.set_s3_config). 
 
 
 ## The input script for `submit` and `resubmit`
