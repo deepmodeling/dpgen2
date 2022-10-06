@@ -3,7 +3,7 @@
 	"host" : "http://address.of.the.host:port"
     },
     "dflow_s3_config" : {
-	"s3_endpoint" : "address.of.the.s3.sever:port"
+	"endpoint" : "address.of.the.s3.sever:port"
     },
 
     "lebesgue_context_config": {

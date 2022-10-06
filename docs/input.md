@@ -13,7 +13,7 @@ For all the dpgen2 commands, one need to provide `dflow2` global configurations.
 	"host" : "http://address.of.the.host:port"
     },
     "dflow_s3_config" : {
-	"s3_endpoint" : "address.of.the.s3.sever:port"
+	"endpoint" : "address.of.the.s3.sever:port"
     },
 ```
 The `dpgen` simply pass all keys of `"dflow_config"` to `dflow.config` and all keys of `"dflow_s3_config"` to `dflow.s3_config`. 
