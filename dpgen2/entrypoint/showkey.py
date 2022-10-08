@@ -4,6 +4,9 @@ from dflow import (
     Workflow,
 )
 from dpgen2.entrypoint.submit import get_resubmit_keys
+from dpgen2.utils import (
+    workflow_config_from_dict,
+)
 
 
 def showkey(
