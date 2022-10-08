@@ -73,6 +73,7 @@ from dpgen2.utils import (
     sort_slice_ops,
     print_keys_in_nice_format,
     workflow_config_from_dict,
+    matched_step_key,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from dpgen2.entrypoint.submit_args import normalize as normalize_submit_args
