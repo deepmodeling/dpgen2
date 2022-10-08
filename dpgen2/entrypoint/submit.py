@@ -463,6 +463,7 @@ def successful_step_keys(wf):
     return all_step_keys
 
 
+
 def resubmit_concurrent_learning(
         wf_config,
         wfid,
@@ -477,6 +478,11 @@ def resubmit_concurrent_learning(
     old_wf = Workflow(id=wfid)
 
     all_step_keys = successful_step_keys(old_wf)
+    all_step_keys = matched_step_key(
+        all_step_keys,
+        ['prep-train', 'run-train', 'prep-lmp', 'run-lmp', 'select-confs', 
+         'prep-fp', 'run-fp', 'collect-data', 'scheduler', 'id'],
+    )
     all_step_keys = sort_slice_ops(
         all_step_keys, ['run-train', 'run-lmp', 'run-fp'],)
     if list_steps:
