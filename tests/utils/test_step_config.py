@@ -85,7 +85,7 @@ class TestStepConfig(unittest.TestCase):
         }
         odict = normalize(idict)
         ret = init_executor(odict.pop('executor'))
-        self.assertEqual(type(ret), dflow.plugins.lebesgue.LebesgueExecutor)
+        self.assertTrue(isinstance(ret, dflow.plugins.lebesgue.LebesgueExecutor))
 
 
     def test_init_executor_notype(self):
@@ -109,4 +109,4 @@ class TestStepConfig(unittest.TestCase):
         odict = normalize(idict)
         self.assertEqual(odict['executor'], idict['executor'])
         ret = init_executor(odict.pop('executor'))
-        self.assertEqual(type(ret), dflow.plugins.dispatcher.DispatcherExecutor)
+        self.assertTrue(isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor))
