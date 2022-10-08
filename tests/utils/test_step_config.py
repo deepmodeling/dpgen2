@@ -97,3 +97,16 @@ class TestStepConfig(unittest.TestCase):
         odict = normalize(idict)
         ret = init_executor(odict.pop('executor'))
         self.assertEqual(ret, None)
+
+
+    def test_init_executor_dispatcher(self):
+        idict = {
+            "executor":{
+                "type" : "dispatcher",
+                "username" : "foo",
+            },
+        }
+        odict = normalize(idict)
+        self.assertEqual(odict['executor'], idict['executor'])
+        ret = init_executor(odict.pop('executor'))
+        self.assertEqual(type(ret), dflow.plugins.dispatcher.DispatcherExecutor)

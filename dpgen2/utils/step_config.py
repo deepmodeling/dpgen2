@@ -5,6 +5,7 @@ from dargs import (
 )
 from dpgen2.constants import default_image
 from dflow.plugins.lebesgue import LebesgueExecutor
+from dflow.plugins.dispatcher import DispatcherExecutor
 
 def lebesgue_extra_args():
     # It is not possible to strictly check the keys in this section....
@@ -26,10 +27,15 @@ def lebesgue_executor_args():
         Argument("extra", dict, lebesgue_extra_args(), optional = True, doc = doc_extra),
     ]
 
+def dispatcher_args():
+    """free style dispatcher args"""
+    return []
+
 def variant_executor():
     doc = f'The type of the executor.'
     return Variant("type", [
         Argument("lebesgue_v2", dict, lebesgue_executor_args()),
+        Argument("dispatcher", dict, dispatcher_args()),
     ], doc = doc)
 
 def template_conf_args():
@@ -94,6 +100,8 @@ def init_executor(
     etype = executor_dict.pop('type')
     if etype == "lebesgue_v2":
         return LebesgueExecutor(**executor_dict)
+    if etype == "dispatcher":
+        return DispatcherExecutor(**executor_dict)
     else:
         raise RuntimeError('unknown executor type', etype)    
     
