@@ -45,6 +45,7 @@ class TestStepConfig(unittest.TestCase):
                     "template_cover_cmd_escape_bug" : True,
                 },
             },
+            "parallelism" : None,
         }
         odict = normalize(idict)
         self.assertEqual(odict, expected_odict)
@@ -63,6 +64,7 @@ class TestStepConfig(unittest.TestCase):
             "continue_on_num_success" : None,
             "continue_on_success_ratio" : None,
             "executor" : None,
+            "parallelism" : None,
         }
         odict = normalize(idict)
         self.assertEqual(odict, expected_odict)
@@ -83,7 +85,7 @@ class TestStepConfig(unittest.TestCase):
         }
         odict = normalize(idict)
         ret = init_executor(odict.pop('executor'))
-        self.assertEqual(type(ret), dflow.plugins.lebesgue.LebesgueExecutor)
+        self.assertTrue(isinstance(ret, dflow.plugins.lebesgue.LebesgueExecutor))
 
 
     def test_init_executor_notype(self):
@@ -95,3 +97,16 @@ class TestStepConfig(unittest.TestCase):
         odict = normalize(idict)
         ret = init_executor(odict.pop('executor'))
         self.assertEqual(ret, None)
+
+
+    def test_init_executor_dispatcher(self):
+        idict = {
+            "executor":{
+                "type" : "dispatcher",
+                "username" : "foo",
+            },
+        }
+        odict = normalize(idict)
+        self.assertEqual(odict['executor'], idict['executor'])
+        ret = init_executor(odict.pop('executor'))
+        self.assertTrue(isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor))
