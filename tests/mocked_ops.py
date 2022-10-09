@@ -9,7 +9,7 @@ from dflow.python import (
 
 upload_packages.append(__file__)
 
-import os, json, shutil, re
+import os, json, shutil, re, pickle
 from pathlib import Path
 from typing import Tuple, List
 try:
@@ -43,7 +43,8 @@ from dpgen2.op.select_confs import SelectConfs
 from dpgen2.exploration.selector import TrustLevel, ConfSelector
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.report import ExplorationReport
-from dpgen2.exploration.scheduler import ConstTrustLevelStageScheduler
+from dpgen2.exploration.scheduler import ConvergenceCheckStageScheduler
+from dpgen2.fp.vasp import VaspInputs
 
 mocked_template_script = { 'seed' : 1024, 'data': [] }
 mocked_numb_models = 3
@@ -188,6 +189,85 @@ class MockedRunDPTrain(RunDPTrain):
         })
 
 
+class MockedRunDPTrainNoneInitModel(RunDPTrain):
+    @OP.exec_sign_check
+    def execute(
+            self,
+            ip : OPIO,
+    ) -> OPIO:
+        work_dir = Path(ip['task_name'])
+        script = ip['task_path'] / 'input.json'
+        if ip['init_model'] is not None:
+            raise FatalError('init model is not None')
+        init_data = ip['init_data']
+        iter_data = ip['iter_data']
+
+        assert(script.is_file())
+        assert(ip['task_path'].is_dir())
+        assert(len(init_data) == 2)
+        assert(re.match('task.[0-9][0-9][0-9][0-9]', ip['task_name']))
+        task_id = int(ip['task_name'].split('.')[1])
+        assert(ip['task_name'] in str(ip['task_path']))
+        list_init_data = sorted([str(ii) for ii in init_data] )
+        assert('init_data/bar' in list_init_data[0])
+        assert('init_data/foo' in list_init_data[1])        
+        assert(Path(list_init_data[0]).is_dir())
+        assert(Path(list_init_data[1]).is_dir())
+
+        script = Path(script).resolve()
+        init_data = [ii.resolve() for ii in init_data]
+        iter_data = [ii.resolve() for ii in iter_data]
+        init_data_str = [str(ii) for ii in init_data]
+        iter_data_str = [str(ii) for ii in iter_data]
+
+        with open(script) as fp:
+            jtmp = json.load(fp)        
+        data = []
+        for ii in sorted(init_data_str):
+            data.append(ii)
+        for ii in sorted(iter_data_str):
+            data.append(ii)
+        jtmp['data'] = data
+        with open(script, 'w') as fp:
+            json.dump(jtmp, fp, indent=4)
+
+        cwd = os.getcwd()
+        work_dir.mkdir(exist_ok=True, parents=True)
+        os.chdir(work_dir)
+
+        oscript = Path('input.json')
+        if not oscript.exists():
+            from shutil import copyfile
+            copyfile(script, oscript)
+        model = Path('model.pb')
+        lcurve = Path('lcurve.out')
+        log = Path('log')
+
+        for ii in jtmp['data']:
+            assert(Path(ii).exists())
+            assert((ii in init_data_str) or (ii in iter_data_str))
+            with log.open("a") as f:
+                f.write(f'data {str(ii)} OK\n')
+        assert(script.exists())
+        with log.open("a") as f:
+            f.write(f'script {str(script)} OK\n')
+
+        with model.open("w") as f:
+            f.write('read from init model: \n')
+        with lcurve.open("w") as f:
+            f.write('read from train_script: \n')
+            f.write(script.read_text() + '\n')
+
+        os.chdir(cwd)
+        
+        return OPIO({
+            'script' : work_dir/oscript,
+            'model' : work_dir/model,
+            'lcurve' : work_dir/lcurve,
+            'log' : work_dir/log
+        })
+
+
 class MockedRunLmp(RunLmp):
     @OP.exec_sign_check
     def execute(
@@ -270,12 +350,16 @@ class MockedPrepVasp(PrepVasp):
         # incar_temp = ip['incar_temp']
         # potcars = ip['potcars']
         vasp_input = ip['inputs']
-        incar_temp = vasp_input.incar_temp
+        type_map = ip['type_map']
+        if not (type_map == ['H', 'O']):
+            raise FatalError
+
+        incar_temp = vasp_input.incar_template
         potcars = vasp_input.potcars
 
         for ii in confs:
             assert(ii.is_file())
-        assert(vasp_input.incar_temp == mocked_incar_template)
+        assert(vasp_input.incar_template == mocked_incar_template)
 
         nconfs = len(confs)
         task_paths = []
@@ -665,7 +749,7 @@ class MockedSelectConfs(SelectConfs):
         })
 
 
-class MockedConstTrustLevelStageScheduler(ConstTrustLevelStageScheduler):
+class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
     def __init__(
             self,
             stage : ExplorationStage,
@@ -673,5 +757,5 @@ class MockedConstTrustLevelStageScheduler(ConstTrustLevelStageScheduler):
             conv_accuracy : float = 0.9,
             max_numb_iter : int = None,
     ):
-        super().__init__(stage, trust_level, conv_accuracy, max_numb_iter)
-        self.selector = MockedConfSelector(trust_level)                
+        self.selector = MockedConfSelector(trust_level)
+        super().__init__(stage, self.selector, conv_accuracy, max_numb_iter)

@@ -1,4 +1,4 @@
-import os, textwrap
+import os, textwrap, pickle
 import numpy as np
 import unittest
 
@@ -35,12 +35,17 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+    default_image,
+    default_host
+)
 from dflow.python import (
     FatalError,
 )
 from dpgen2.exploration.scheduler import (
-    ConstTrustLevelStageScheduler,
     ExplorationScheduler,
 )
 from dpgen2.op.prep_lmp import PrepLmp
@@ -53,7 +58,7 @@ from dpgen2.fp.vasp import VaspInputs
 from dpgen2.flow.dpgen_loop import ConcurrentLearning
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import TrustLevelConfSelector, TrustLevel
+from dpgen2.exploration.selector import TrustLevel
 
 from dpgen2.constants import (
     train_task_pattern,
@@ -97,8 +102,17 @@ from mocked_ops import (
     MockedStage2,
     MockedConstTrustLevelStageScheduler,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestLoop(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -106,18 +120,24 @@ class TestLoop(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.block_cl_op = ConcurrentLearningBlock(
             self.name+'-block', 
@@ -127,11 +147,14 @@ class TestLoop(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )        
         self.dpgen_op = ConcurrentLearning(
             self.name,
             self.block_cl_op,
             upload_python_package = upload_python_package,
+            step_config = default_config,
         )
 
     def _setUp_data(self):
@@ -158,14 +181,17 @@ class TestLoop(unittest.TestCase):
         
         self.template_script = mocked_template_script
 
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': 'potcar'},
         )
-
 
         self.scheduler = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -186,7 +212,6 @@ class TestLoop(unittest.TestCase):
         )
         self.scheduler.add_stage_scheduler(stage_scheduler)        
         
-        
     def setUp(self):
         self.name = 'dpgen'
         self._setUp_ops()
@@ -201,6 +226,9 @@ class TestLoop(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar, ]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         self.assertEqual(
@@ -228,8 +256,8 @@ class TestLoop(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler,
             },
             artifacts = {
@@ -239,6 +267,7 @@ class TestLoop(unittest.TestCase):
             },
         )
         
+        # wf = Workflow(name="dpgen", host=default_host)
         wf = Workflow(name="dpgen")
         wf.add(dpgen_step)
         wf.submit()
@@ -249,7 +278,7 @@ class TestLoop(unittest.TestCase):
         step = wf.query_step(name='dpgen-step')[0]
         self.assertEqual(step.phase, "Succeeded")        
         
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         self.assertEqual(scheduler.get_stage(), 2)
@@ -290,6 +319,7 @@ class TestLoop(unittest.TestCase):
 
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestLoopRestart(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -297,30 +327,40 @@ class TestLoopRestart(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op_f1 = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspFail1,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op_res = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspRestart,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         # failed collect data
         self.block_cl_op_0 = ConcurrentLearningBlock(
@@ -331,11 +371,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectDataFailed,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )        
         self.dpgen_op_0 = ConcurrentLearning(
             self.name,
             self.block_cl_op_0,
             upload_python_package = upload_python_package,
+            step_config = default_config,
         )
         # restart collect data
         self.block_cl_op_1 = ConcurrentLearningBlock(
@@ -346,11 +389,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectDataRestart,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )        
         self.dpgen_op_1 = ConcurrentLearning(
             self.name,
             self.block_cl_op_1,
             upload_python_package = upload_python_package,
+            step_config = default_config,
         )
         # failed vasp 1
         self.block_cl_op_2 = ConcurrentLearningBlock(
@@ -361,11 +407,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op_f1,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )        
         self.dpgen_op_2 = ConcurrentLearning(
             self.name,
             self.block_cl_op_2,
             upload_python_package = upload_python_package,
+            step_config = default_config,
         )
         # restart vasp
         self.block_cl_op_3 = ConcurrentLearningBlock(
@@ -376,11 +425,14 @@ class TestLoopRestart(unittest.TestCase):
             self.prep_run_fp_op_res,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )        
         self.dpgen_op_3 = ConcurrentLearning(
             self.name,
             self.block_cl_op_3,
             upload_python_package = upload_python_package,
+            step_config = default_config,
         )
 
 
@@ -408,12 +460,16 @@ class TestLoopRestart(unittest.TestCase):
         
         self.template_script = mocked_template_script
 
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': self.potcar},
         )
 
         self.scheduler_0 = ExplorationScheduler()        
@@ -433,8 +489,7 @@ class TestLoopRestart(unittest.TestCase):
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
-        self.scheduler_0.add_stage_scheduler(stage_scheduler)        
-
+        self.scheduler_0.add_stage_scheduler(stage_scheduler)
 
         self.scheduler_1 = ExplorationScheduler()        
         self.trust_level = TrustLevel(0.1, 0.3)
@@ -454,6 +509,7 @@ class TestLoopRestart(unittest.TestCase):
             max_numb_iter = 2,
         )
         self.scheduler_1.add_stage_scheduler(stage_scheduler)        
+        self.scheduler_1.add_stage_scheduler(stage_scheduler)
         
         
     def setUp(self):
@@ -470,6 +526,18 @@ class TestLoopRestart(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
+        for ii in [Path('scheduler_0.dat'), Path('in_scheduler_0.dat')]:
+            if ii.is_file():
+                os.remove(ii)
+        for ii in [Path('scheduler_1.dat'), Path('in_scheduler_1.dat')]:
+            if ii.is_file():
+                os.remove(ii)
+        for ii in [Path('scheduler.dat'), Path('scheduler_new.dat')]:
+            if ii.is_file():
+                os.remove(ii)
 
     def get_restart_step(
             self,
@@ -498,8 +566,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -570,8 +638,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_1,
             },
             artifacts = {
@@ -594,7 +662,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -642,8 +710,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -704,11 +772,14 @@ class TestLoopRestart(unittest.TestCase):
         self.assertTrue(scheduler_idx is not None)
         step_scheduler = steps_0.pop(scheduler_idx)
         self.assertEqual(step_scheduler['phase'], 'Succeeded')
-        old_scheduler = jsonpickle.decode(step_scheduler.outputs.parameters['exploration_scheduler'].value)
+        old_scheduler = step_scheduler.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(old_scheduler.get_stage(), 0)
         # update a stage scheduler
         old_scheduler.stage_schedulers[1] = self.scheduler_1.stage_schedulers[1]        
         step_scheduler.modify_output_parameter("exploration_scheduler", old_scheduler)
+        # old_scheduler_artifact = upload_artifact(
+        #     dump_object_to_file(old_scheduler, 'scheduler_new.dat'))
+        # step_scheduler.modify_output_artifact("exploration_scheduler", old_scheduler_artifact)
         steps_0.append(step_scheduler)
 
         dpgen_step_1 = Step(
@@ -720,8 +791,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -744,7 +815,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -791,8 +862,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -859,8 +930,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -883,7 +954,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -942,8 +1013,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1008,8 +1079,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1032,7 +1103,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         
@@ -1093,8 +1164,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1158,8 +1229,8 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1182,7 +1253,7 @@ class TestLoopRestart(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
-        scheduler = jsonpickle.decode(step.outputs.parameters['exploration_scheduler'].value)
+        scheduler = step.outputs.parameters['exploration_scheduler'].value
         self.assertEqual(scheduler.get_stage(), 2)
         self.assertEqual(scheduler.get_iteration(), 1)
         

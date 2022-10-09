@@ -34,7 +34,13 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+    default_image,
+    default_host,
+)
 from dpgen2.op.prep_lmp import PrepLmp
 from dpgen2.superop.prep_run_dp_train import PrepRunDPTrain
 from dpgen2.superop.prep_run_lmp import PrepRunLmp
@@ -42,6 +48,10 @@ from dpgen2.superop.prep_run_fp import PrepRunFp
 from dpgen2.superop.block import ConcurrentLearningBlock
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup
 from dpgen2.fp.vasp import VaspInputs
+from dpgen2.utils import(
+    dump_object_to_file,
+    load_object_from_file,
+)
 
 from mock import patch
 
@@ -74,8 +84,16 @@ from mocked_ops import (
     MockedCollectData,
     MockedExplorationTaskGroup,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
+)
 
-
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestBlockCL(unittest.TestCase):
     def _setUp_ops(self):
         self.prep_run_dp_train_op = PrepRunDPTrain(
@@ -83,18 +101,24 @@ class TestBlockCL(unittest.TestCase):
             MockedPrepDPTrain,
             MockedRunDPTrain,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_lmp_op = PrepRunLmp(
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
         self.prep_run_fp_op = PrepRunFp(
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
         )
 
     def _setUp_data(self):
@@ -119,19 +143,19 @@ class TestBlockCL(unittest.TestCase):
         self.template_script = mocked_template_script
         
         self.task_group_list = MockedExplorationTaskGroup()
-        with open('lmp_task_grp.dat', 'wb') as fp:
-            pickle.dump(self.task_group_list, fp)
-        self.task_group_list = upload_artifact('lmp_task_grp.dat')
 
         self.conf_selector = MockedConfSelector()
-        self.type_map = []
+        self.type_map = ['H', 'O']
 
-        self.incar = mocked_incar_template
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
         self.vasp_inputs = VaspInputs(
+            0.16, True,
             self.incar,
-            {'foo': 'bar'},
+            {'foo': self.potcar},
         )
-        
 
     def setUp(self):
         self.name = 'iter-002'
@@ -145,6 +169,8 @@ class TestBlockCL(unittest.TestCase):
             self.prep_run_fp_op,
             MockedCollectData,
             upload_python_package = upload_python_package,
+            select_confs_config = default_config,
+            collect_data_config = default_config,
         )
 
     def tearDown(self):
@@ -156,6 +182,9 @@ class TestBlockCL(unittest.TestCase):
             name = Path(model_name_pattern % ii)
             if name.is_file():
                 os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         self.assertEqual(
@@ -176,17 +205,17 @@ class TestBlockCL(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "conf_selector" : self.conf_selector,
-                'fp_inputs' : self.vasp_inputs,
                 "fp_config" : {},
+                'fp_inputs' : self.vasp_inputs,
+                "lmp_task_grp" : self.task_group_list,
             },
             artifacts = {
-                "lmp_task_grp" : self.task_group_list,
                 "init_models" : self.init_models,
                 "init_data" : self.init_data,
                 "iter_data" : self.iter_data,
             },
         )
-        wf = Workflow(name="block")
+        wf = Workflow(name="block", host=default_host)
         wf.add(block_step)
         wf.submit()
         
@@ -196,7 +225,7 @@ class TestBlockCL(unittest.TestCase):
         step = wf.query_step(name='step')[0]
         self.assertEqual(step.phase, "Succeeded")        
 
-        report = jsonpickle.decode(step.outputs.parameters['exploration_report'].value)
+        report = step.outputs.parameters['exploration_report'].value
         download_artifact(step.outputs.artifacts["iter_data"], path = 'iter_data')
         download_artifact(step.outputs.artifacts["models"], path = Path('models')/self.name)
         

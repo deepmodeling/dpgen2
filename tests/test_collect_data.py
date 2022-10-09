@@ -34,7 +34,13 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+    default_image,
+    default_host,
+)
 from mocked_ops import (
     MockedCollectData,
 )
@@ -53,6 +59,7 @@ class TestMockedCollectData(unittest.TestCase):
         for ii in self.labeled_data:
             (ii).mkdir(exist_ok=True, parents=True)
             (ii/'data').write_text(f'data of {str(ii)}')
+        self.type_map = []
 
     def tearDown(self):
         for ii in ['d0', 'd1', 'outdata', 'foo', 'bar', 'iter0', 'iter1'] :
@@ -66,6 +73,7 @@ class TestMockedCollectData(unittest.TestCase):
             'name': self.name,
             'labeled_data' : self.labeled_data,
             'iter_data' : self.iter_data,
+            'type_map' : self.type_map,
         }))
         iter_data = out['iter_data']
         
@@ -83,6 +91,7 @@ class TestMockedCollectData(unittest.TestCase):
         self.assertTrue((path/'data').read_text(), 'data of iter1')
         
         
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestMockedCollectDataArgo(unittest.TestCase):
     def setUp(self):
         self.iter_data = set(('foo/iter0', 'bar/iter1'))
@@ -98,6 +107,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             (ii/'data').write_text(f'data of {str(ii)}')
         self.iter_data = upload_artifact(list(self.iter_data))
         self.labeled_data = upload_artifact(self.labeled_data)
+        self.type_map = []
 
     def tearDown(self):
         for ii in ['d0', 'd1', 'outdata', 'foo', 'bar', 'iter0', 'iter1'] :
@@ -110,7 +120,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             'coll-data', 
             template = PythonOPTemplate(
                 MockedCollectData,
-                image = 'dflow:v1.0',
+                image = default_image,
                 output_artifact_archive={
                     "iter_data" : None,
                 },
@@ -118,6 +128,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             ),
             parameters = {
                 "name" : self.name,
+                "type_map" : self.type_map,
             },
             artifacts = {
                 "iter_data" : self.iter_data,
@@ -125,7 +136,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
             },
         )        
 
-        wf = Workflow(name="coll")
+        wf = Workflow(name="coll", host=default_host)
         wf.add(coll_data)
         wf.submit()
 

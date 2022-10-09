@@ -33,7 +33,13 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from context import upload_python_package
+from context import (
+    upload_python_package,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+    default_image,
+    default_host,
+)
 from dpgen2.superop.prep_run_fp import PrepRunFp
 from mocked_ops import (
     mocked_incar_template,
@@ -46,6 +52,14 @@ from dpgen2.constants import (
     vasp_conf_name,
     vasp_input_name,
     vasp_pot_name,
+)
+from dpgen2.utils.step_config import normalize as normalize_step_dict
+default_config = normalize_step_dict(
+    {
+        "template_config" : {
+            "image" : default_image,
+        }
+    }
 )
 
 def check_vasp_tasks(tcase, ntasks):
@@ -73,7 +87,12 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
             fname = Path(f'conf.{ii}')
             fname.write_text(f'conf {ii}')
             self.confs.append(fname)
-        self.incar = 'incar template'
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
+        self.inputs_fname = Path('inputs.dat')
+        self.type_map = ['H', 'O']
         
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -82,16 +101,22 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)
+        for ii in [self.incar, self.potcar, self.inputs_fname]:
+            if ii.is_file():
+                os.remove(ii)
 
     def test(self):
         op = MockedPrepVasp()
+        vasp_inputs = VaspInputs(
+                0.16,
+                True,
+                self.incar,
+                {'foo': self.potcar}
+            )
         out = op.execute( OPIO({
             'confs' : self.confs,
-            'inputs' : \
-            VaspInputs(
-                self.incar,
-                {'foo': 'bar'}
-            ),
+            'inputs' : vasp_inputs,
+            'type_map' : self.type_map,
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
         tdirs = [str(ii) for ii in tdirs]
@@ -147,6 +172,7 @@ class TestMockedRunVasp(unittest.TestCase):
             self.check_run_lmp_output(self.task_list_str[ii])
 
 
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestPrepRunVasp(unittest.TestCase):
     def setUp(self):
         self.ntasks = 6
@@ -155,8 +181,13 @@ class TestPrepRunVasp(unittest.TestCase):
             fname = Path(f'conf.{ii}')
             fname.write_text(f'conf {ii}')
             self.confs.append(fname)
-        self.incar = 'incar template'
         self.confs = upload_artifact(self.confs)
+        self.incar = Path('incar')
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path('potcar')
+        self.potcar.write_text('bar')
+        self.inputs_fname = Path('inputs.dat')
+        self.type_map = ['H', 'O']
 
     def tearDown(self):
         for ii in range(self.ntasks):
@@ -165,6 +196,9 @@ class TestPrepRunVasp(unittest.TestCase):
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
             os.remove(fname)        
+        for ii in [self.incar, self.potcar, self.inputs_fname]:
+            if ii.is_file():
+                os.remove(ii)
 
     def check_run_vasp_output(
             self,
@@ -187,24 +221,29 @@ class TestPrepRunVasp(unittest.TestCase):
             MockedPrepVasp,
             MockedRunVasp,
             upload_python_package = upload_python_package,
+            prep_config = default_config,
+            run_config = default_config,
+        )
+        vasp_inputs = VaspInputs(
+            0.16,
+            True,
+            self.incar,
+            {'foo': self.potcar}
         )
         prep_run_step = Step(
             'prep-run-step', 
             template = steps,
             parameters = {
-                'inputs' : \
-                VaspInputs(
-                    self.incar,
-                    {'foo': 'bar'}
-                ),
                 "fp_config": {},
+                'type_map' : self.type_map,
+                'inputs' : vasp_inputs,
             },
             artifacts = {
                 "confs" : self.confs,
             },
         )
 
-        wf = Workflow(name="dp-train")
+        wf = Workflow(name="dp-train", host=default_host)
         wf.add(prep_run_step)
         wf.submit()
         
@@ -218,7 +257,7 @@ class TestPrepRunVasp(unittest.TestCase):
         download_artifact(step.outputs.artifacts["labeled_data"])
         download_artifact(step.outputs.artifacts["logs"])
 
-        for ii in jsonpickle.decode(step.outputs.parameters['task_names'].value):
+        for ii in step.outputs.parameters['task_names'].value:
             self.check_run_vasp_output(ii)
 
         # for ii in range(6):
