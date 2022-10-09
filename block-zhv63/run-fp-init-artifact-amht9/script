@@ -1,7 +1,0 @@
-import os, json
-os.makedirs('/root/python/dpgen2/block-zhv63/run-fp-init-artifact-amht9/workdir/tmp/outputs/artifacts/log/.dflow', exist_ok=True)
-with open('/root/python/dpgen2/block-zhv63/run-fp-init-artifact-amht9/workdir/tmp/outputs/artifacts/log/.dflow/init', 'w') as f:
-    json.dump({'path_list': []}, f)
-os.makedirs('/root/python/dpgen2/block-zhv63/run-fp-init-artifact-amht9/workdir/tmp/outputs/artifacts/labeled_data/.dflow', exist_ok=True)
-with open('/root/python/dpgen2/block-zhv63/run-fp-init-artifact-amht9/workdir/tmp/outputs/artifacts/labeled_data/.dflow/init', 'w') as f:
-    json.dump({'path_list': []}, f)

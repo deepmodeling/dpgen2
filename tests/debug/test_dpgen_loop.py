@@ -228,12 +228,6 @@ class TestLoop(unittest.TestCase):
         wf = Workflow(name="dpgen")
         wf.add(dpgen_step)
         wf.submit()
-        if config["mode"] == "debug":
-            pass
-        else:
-            while wf.query_status() in ["Pending", "Running"]:
-                time.sleep(4)
-            self.assertEqual(wf.query_status(), "Succeeded")
         step = dpgen_step
         self.assertEqual(step.phase, "Succeeded")
 

@@ -1,4 +1,0 @@
-init_model /root/python/dpgen2/model.002.pb OK
-data /root/python/dpgen2/init_data/bar OK
-data /root/python/dpgen2/init_data/foo OK
-script /root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-train/workdir/tmp/outputs/artifacts/task_paths/task.0002/input.json OK

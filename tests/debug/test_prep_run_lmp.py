@@ -35,11 +35,12 @@ from mocked_ops import MockedRunLmp, mocked_numb_models
 
 default_config = normalize_step_dict(
     {
-        "template_config" : {
-            "image" : default_image,
+        "template_config": {
+            "image": default_image,
         }
     }
 )
+
 
 def make_task_group_list(ngrp, ntask_per_grp):
     tgrp = ExplorationTaskGroup()
@@ -201,19 +202,16 @@ class TestPrepRunLmp(unittest.TestCase):
         fc.append(f'group{ii} task{jj} input')
         for ii in [ii.name for ii in models]:
             fc.append((Path(cwd) / ii).read_text())
-        if config["mode"] == "debug":
-            os.chdir(cwd)
-            log_path = Path(task_name) / "../../log/" / task_name.split('/')[-1] / lmp_log_name
-            self.assertEqual(fc,log_path.read_text().strip().split("\n"))
-            traj_path = Path(task_name) / "../../traj/" / task_name.split('/')[-1] / lmp_traj_name
-            name = task_name.split('/')[-1]
-            self.assertEqual(f'traj of {name}', traj_path.read_text().split('\n')[0])
-            model_devi_path = Path(task_name) / "../../model_devi" / task_name.split('/')[-1] / lmp_model_devi_name
-            self.assertEqual(f'model_devi of {name}', Path(model_devi_path).read_text())
-        else:  
-            self.assertEqual(fc, Path(lmp_log_name).read_text().strip().split('\n'))
-            self.assertEqual(f'traj of {task_name}', Path(lmp_traj_name).read_text().split('\n')[0])
-            self.assertEqual(f'model_devi of {task_name}', Path(lmp_model_devi_name).read_text())
+
+        os.chdir(cwd)
+        log_path = Path(task_name) / "../../log/" / task_name.split('/')[-1] / lmp_log_name
+        self.assertEqual(fc,log_path.read_text().strip().split("\n"))
+        traj_path = Path(task_name) / "../../traj/" / task_name.split('/')[-1] / lmp_traj_name
+        name = task_name.split('/')[-1]
+        self.assertEqual(f'traj of {name}', traj_path.read_text().split('\n')[0])
+        model_devi_path = Path(task_name) / "../../model_devi" / task_name.split('/')[-1] / lmp_model_devi_name
+        self.assertEqual(f'model_devi of {name}', Path(model_devi_path).read_text())
+
         os.chdir(cwd)
 
 
@@ -222,9 +220,9 @@ class TestPrepRunLmp(unittest.TestCase):
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
-            upload_python_package = upload_python_package,
-            prep_config = default_config,
-            run_config = default_config,
+            upload_python_package=upload_python_package,
+            prep_config=default_config,
+            run_config=default_config,
         )        
         prep_run_step = Step(
             'prep-run-step', 
