@@ -1,0 +1,35 @@
+import os, sys, json
+package_root = '/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp/inputs/artifacts/dflow_python_packages'
+catalog_dir = os.path.join(package_root, '.dflow')
+if os.path.exists(catalog_dir):
+    for f in os.listdir(catalog_dir):
+        with open(os.path.join(catalog_dir, f), 'r') as fd:
+            for item in json.load(fd)['path_list']:
+                sys.path.insert(0, os.path.join(package_root, os.path.dirname(item['dflow_list_item'])))
+import json
+from dflow import config, s3_config
+config.update(json.loads('{"host": null, "token": null, "k8s_config_file": null, "k8s_api_server": null, "private_key_host_path": "/home/docker/.ssh", "save_path_as_parameter": false, "catalog_dir_name": ".dflow", "archive_mode": "tar", "util_image": "python:3.8", "util_image_pull_policy": null, "extender_image": "dptechnology/dflow-extender", "extender_image_pull_policy": null, "dispatcher_image": "dptechnology/dpdispatcher", "dispatcher_image_pull_policy": null, "save_keys_in_global_outputs": true, "mode": "debug"}'))
+s3_config.update(json.loads('{"endpoint": null, "console": "http://127.0.0.1:9001", "access_key": "admin", "secret_key": "password", "secure": false, "bucket_name": "my-bucket"}'))
+import os, sys, traceback, jsonpickle
+from dflow.python import OPIO, TransientError, FatalError
+from dflow.python.utils import handle_input_artifact, handle_input_parameter
+from dflow.python.utils import handle_output_artifact, handle_output_parameter
+from dpgen2.op.prep_lmp import PrepLmp
+
+op_obj = PrepLmp()
+input = OPIO()
+input_sign = PrepLmp.get_input_sign()
+input['lmp_task_grp'] = handle_input_parameter('lmp_task_grp', r'''{"py/object": "mocked_ops.MockedExplorationTaskGroup", "_task_list": [{"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 0", "in.lammps": "mocked input 0"}}, {"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 1", "in.lammps": "mocked input 1"}}, {"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 2", "in.lammps": "mocked input 2"}}, {"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 3", "in.lammps": "mocked input 3"}}, {"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 4", "in.lammps": "mocked input 4"}}, {"py/object": "dpgen2.exploration.task.task.ExplorationTask", "_files": {"conf.lmp": "mocked conf 5", "in.lammps": "mocked input 5"}}]}''', input_sign['lmp_task_grp'], None, '/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp')
+try:
+    output = op_obj.execute(input)
+except TransientError:
+    traceback.print_exc()
+    sys.exit(1)
+except FatalError:
+    traceback.print_exc()
+    sys.exit(2)
+os.makedirs('/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp/outputs/parameters', exist_ok=True)
+os.makedirs('/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp/outputs/artifacts', exist_ok=True)
+output_sign = PrepLmp.get_output_sign()
+handle_output_parameter('task_names', output['task_names'], output_sign['task_names'], None, '/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp')
+handle_output_artifact('task_paths', output['task_paths'], output_sign['task_paths'], None, '/root/python/dpgen2/dpgen-7k8wt/iter-000000--prep-lmp/workdir/tmp')

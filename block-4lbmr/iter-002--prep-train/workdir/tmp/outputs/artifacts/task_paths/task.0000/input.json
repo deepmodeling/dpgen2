@@ -1,0 +1,9 @@
+{
+    "seed": 0,
+    "data": [
+        "/root/python/dpgen2/init_data/bar",
+        "/root/python/dpgen2/init_data/foo",
+        "/root/python/dpgen2/iter-000",
+        "/root/python/dpgen2/iter-001"
+    ]
+}

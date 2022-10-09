@@ -1,0 +1,6 @@
+init_model /root/python/dpgen2/model.000.pb OK
+data /root/python/dpgen2/init_data/bar OK
+data /root/python/dpgen2/init_data/foo OK
+data /root/python/dpgen2/iter-000 OK
+data /root/python/dpgen2/iter-001 OK
+script /root/python/dpgen2/block-wxlaf/iter-002--prep-train/workdir/tmp/outputs/artifacts/task_paths/task.0000/input.json OK

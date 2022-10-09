@@ -1,0 +1,39 @@
+import os, sys, json
+package_root = '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp/inputs/artifacts/dflow_python_packages'
+catalog_dir = os.path.join(package_root, '.dflow')
+if os.path.exists(catalog_dir):
+    for f in os.listdir(catalog_dir):
+        with open(os.path.join(catalog_dir, f), 'r') as fd:
+            for item in json.load(fd)['path_list']:
+                sys.path.insert(0, os.path.join(package_root, os.path.dirname(item['dflow_list_item'])))
+import json
+from dflow import config, s3_config
+config.update(json.loads('{"host": null, "token": null, "k8s_config_file": null, "k8s_api_server": null, "private_key_host_path": "/home/docker/.ssh", "save_path_as_parameter": false, "catalog_dir_name": ".dflow", "archive_mode": "tar", "util_image": "python:3.8", "util_image_pull_policy": null, "extender_image": "dptechnology/dflow-extender", "extender_image_pull_policy": null, "dispatcher_image": "dptechnology/dpdispatcher", "dispatcher_image_pull_policy": null, "save_keys_in_global_outputs": true, "mode": "debug"}'))
+s3_config.update(json.loads('{"endpoint": null, "console": "http://127.0.0.1:9001", "access_key": "admin", "secret_key": "password", "secure": false, "bucket_name": "my-bucket"}'))
+import os, sys, traceback, jsonpickle
+from dflow.python import OPIO, TransientError, FatalError
+from dflow.python.utils import handle_input_artifact, handle_input_parameter
+from dflow.python.utils import handle_output_artifact, handle_output_parameter
+from mocked_ops import MockedSelectConfs
+
+op_obj = MockedSelectConfs()
+input = OPIO()
+input_sign = MockedSelectConfs.get_input_sign()
+input['conf_selector'] = handle_input_parameter('conf_selector', r'''{"py/object": "mocked_ops.MockedConfSelector", "trust_level": {"py/object": "dpgen2.exploration.selector.trust_level.TrustLevel", "_level_f_lo": 0.1, "_level_f_hi": 0.3, "_level_v_lo": null, "_level_v_hi": null}}''', input_sign['conf_selector'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+input['traj_fmt'] = handle_input_parameter('traj_fmt', r'''lammps/dump''', input_sign['traj_fmt'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+input['type_map'] = handle_input_parameter('type_map', r'''["H", "O"]''', input_sign['type_map'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+input['trajs'] = handle_input_artifact('trajs', input_sign['trajs'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+input['model_devis'] = handle_input_artifact('model_devis', input_sign['model_devis'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+try:
+    output = op_obj.execute(input)
+except TransientError:
+    traceback.print_exc()
+    sys.exit(1)
+except FatalError:
+    traceback.print_exc()
+    sys.exit(2)
+os.makedirs('/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp/outputs/parameters', exist_ok=True)
+os.makedirs('/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp/outputs/artifacts', exist_ok=True)
+output_sign = MockedSelectConfs.get_output_sign()
+handle_output_parameter('report', output['report'], output_sign['report'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')
+handle_output_artifact('confs', output['confs'], output_sign['confs'], None, '/root/python/dpgen2/dpgen-e4lz5/iter-000000--select-confs/workdir/tmp')

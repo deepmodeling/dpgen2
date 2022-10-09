@@ -1,0 +1,13 @@
+import os, json
+os.makedirs('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/model/.dflow', exist_ok=True)
+with open('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/model/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/lcurve/.dflow', exist_ok=True)
+with open('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/lcurve/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/log/.dflow', exist_ok=True)
+with open('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/log/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/script/.dflow', exist_ok=True)
+with open('/root/python/dpgen2/block-zhv63/run-train-init-artifact-owtzi/workdir/tmp/outputs/artifacts/script/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)

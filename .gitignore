@@ -42,3 +42,4 @@ dbconfig.json
 .idea/*
 _build
 dpgen2/_version.py
+upload/*
