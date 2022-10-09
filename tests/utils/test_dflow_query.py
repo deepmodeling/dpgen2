@@ -29,6 +29,8 @@ from mocked_ops import (
 from dpgen2.utils.dflow_query import (
     get_last_scheduler,
     get_subkey,
+    get_iteration,
+    matched_step_key,
     get_last_iteration,
     find_slice_ranges,
     sort_slice_ops,
@@ -111,7 +113,14 @@ class TestDflowQuery(unittest.TestCase):
         self.assertEqual(get_subkey('aa---bb'),  '-bb')
         self.assertEqual(get_subkey('aa----bb', 1),  '')
         self.assertEqual(get_subkey(''),  '')
+        self.assertEqual(get_iteration('aa--bb--cc'),  'aa')
 
+    def test_matched_step_key(self):
+        all_keys = ['iter-000--foo', 'iter-111--bar', 'iter-222--foo-001']
+        step_keys = ['foo']
+        ret = matched_step_key(all_keys, step_keys)
+        self.assertEqual(ret, ['iter-000--foo', 'iter-222--foo-001'])
+        
     def test_get_last_scheduler(self):
         value = get_last_scheduler(
             MockedWF(), 

@@ -12,8 +12,13 @@ DPGEN2 is the 2nd generation of the Deep Potential GENerator.
    :maxdepth: 3
    :caption: User Guide
 
+   quickcli
    cli
+   input.md
+   submit_args
    op_configs
+   alloy_configs
+   step_configs
 
 .. _developer-guide:
 

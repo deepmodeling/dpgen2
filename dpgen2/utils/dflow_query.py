@@ -10,6 +10,29 @@ def get_subkey(
 ):
     return key.split('--')[idx]
 
+def get_iteration(
+        key : str, 
+):
+    return get_subkey(key, 0)
+
+def matched_step_key(
+        all_keys : List[str],
+        step_keys : Optional[List[str]] = None,
+):
+    """
+    returns the keys in `all_keys` that matches any of the `step_keys`
+    """
+    if step_keys is None:
+        return all_keys
+    ret = []
+    for kk in all_keys:
+        for jj in step_keys:
+            if re.match(f'iter-[0-9]*--{jj}-[0-9]*', kk) or\
+               re.match(f'iter-[0-9]*--{jj}', kk):
+                ret.append(kk)
+                continue
+    return ret
+
 def get_last_scheduler(
         wf : Any, 
         keys : List[str],
