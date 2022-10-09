@@ -262,4 +262,3 @@ class TestPrepRunVasp(unittest.TestCase):
 
         # for ii in range(6):
         #     self.check_run_vasp_output(f'task.{ii:06d}')
-            

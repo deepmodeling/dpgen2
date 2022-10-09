@@ -105,5 +105,3 @@ class TestSelectConfs(unittest.TestCase):
         self.assertTrue(confs[0].read_text(), 'conf of conf.0')
         self.assertTrue(confs[1].read_text(), 'conf of conf.1')
         
-        
-        
