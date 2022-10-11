@@ -205,8 +205,7 @@ class TestBlockCL(unittest.TestCase):
                 "train_config" : {},
                 "lmp_config" : {},
                 "conf_selector" : self.conf_selector,
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "lmp_task_grp" : self.task_group_list,
             },
             artifacts = {

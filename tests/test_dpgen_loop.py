@@ -256,8 +256,7 @@ class TestLoop(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler,
             },
             artifacts = {
@@ -566,8 +565,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -638,8 +636,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_1,
             },
             artifacts = {
@@ -710,8 +707,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -791,8 +787,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -862,8 +857,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -930,8 +924,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1013,8 +1006,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1079,8 +1071,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1164,8 +1155,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
@@ -1229,8 +1219,7 @@ class TestLoopRestart(unittest.TestCase):
                 "template_script" : self.template_script,
                 "train_config" : {},
                 "lmp_config" : {},
-                "fp_config" : {},
-                'fp_inputs' : self.vasp_inputs,
+                "fp_config" : {'inputs' : self.vasp_inputs},
                 "exploration_scheduler" : self.scheduler_0,
             },
             artifacts = {
