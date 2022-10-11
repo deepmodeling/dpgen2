@@ -2,21 +2,9 @@ import os
 import numpy as np
 import unittest
 
-from dflow import (
-    InputParameter,
-    OutputParameter,
-    Inputs,
-    InputArtifact,
-    Outputs,
-    OutputArtifact,
-    Workflow,
-    Step,
-    Steps,
-    upload_artifact,
-    download_artifact,
-    S3Artifact,
-    argo_range
-)
+from dflow import (InputParameter, OutputParameter, Inputs, InputArtifact,
+                   Outputs, OutputArtifact, Workflow, Step, Steps,
+                   upload_artifact, download_artifact, S3Artifact, argo_range)
 from dflow.python import (
     PythonOPTemplate,
     OP,
@@ -54,13 +42,12 @@ from dpgen2.constants import (
     vasp_pot_name,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+
 default_config = normalize_step_dict(
-    {
-        "template_config" : {
-            "image" : default_image,
-        }
-    }
-)
+    {"template_config": {
+        "image": default_image,
+    }})
+
 
 def check_vasp_tasks(tcase, ntasks):
     cc = 0
@@ -69,8 +56,8 @@ def check_vasp_tasks(tcase, ntasks):
         tdir = vasp_task_pattern % cc
         tdirs.append(tdir)
         tcase.assertTrue(Path(tdir).is_dir())
-        fconf = Path(tdir)/vasp_conf_name
-        finpt = Path(tdir)/vasp_input_name
+        fconf = Path(tdir) / vasp_conf_name
+        finpt = Path(tdir) / vasp_input_name
         tcase.assertTrue(fconf.is_file())
         tcase.assertTrue(finpt.is_file())
         tcase.assertEqual(fconf.read_text(), f'conf {ii}')
@@ -79,101 +66,9 @@ def check_vasp_tasks(tcase, ntasks):
     return tdirs
 
 
-class TestPrepVaspTaskGroup(unittest.TestCase):
-    def setUp(self):
-        self.ntasks = 6
-        self.confs = []
-        for ii in range(self.ntasks):
-            fname = Path(f'conf.{ii}')
-            fname.write_text(f'conf {ii}')
-            self.confs.append(fname)
-        self.incar = Path('incar')
-        self.incar.write_text(mocked_incar_template)
-        self.potcar = Path('potcar')
-        self.potcar.write_text('bar')
-        self.inputs_fname = Path('inputs.dat')
-        self.type_map = ['H', 'O']
-        
-    def tearDown(self):
-        for ii in range(self.ntasks):
-            work_path = Path(vasp_task_pattern % ii)
-            if work_path.is_dir():
-                shutil.rmtree(work_path)
-            fname = Path(f'conf.{ii}')
-            os.remove(fname)
-        for ii in [self.incar, self.potcar, self.inputs_fname]:
-            if ii.is_file():
-                os.remove(ii)
-
-    def test(self):
-        op = MockedPrepVasp()
-        vasp_inputs = VaspInputs(
-                0.16,
-                True,
-                self.incar,
-                {'foo': self.potcar}
-            )
-        out = op.execute( OPIO({
-            'confs' : self.confs,
-            'inputs' : vasp_inputs,
-            'type_map' : self.type_map,
-        }) )
-        tdirs = check_vasp_tasks(self, self.ntasks)
-        tdirs = [str(ii) for ii in tdirs]
-        self.assertEqual(tdirs, out['task_names'])
-        self.assertEqual(tdirs, [str(ii) for ii in out['task_paths']])
-
-
-class TestMockedRunVasp(unittest.TestCase):
-    def setUp(self):
-        self.ntask = 6
-        self.task_list = []
-        for ii in range(self.ntask):
-            work_path = Path(vasp_task_pattern % ii)
-            work_path.mkdir(exist_ok=True, parents=True)
-            (work_path/vasp_conf_name).write_text(f'conf {ii}')
-            (work_path/vasp_input_name).write_text(f'incar template')
-            self.task_list.append(work_path)
-
-    def check_run_lmp_output(
-            self,
-            task_name : str,
-    ):
-        cwd = os.getcwd()
-        os.chdir(task_name)
-        fc = []
-        for ii in [vasp_conf_name, vasp_input_name]:
-            fc.append(Path(ii).read_text())    
-        self.assertEqual(fc, Path('log').read_text().strip().split('\n'))
-        ii = int(task_name.split('.')[1])
-        self.assertEqual(f'labeled_data of {task_name}\nconf {ii}', (Path('data_'+task_name) / 'data').read_text())
-        os.chdir(cwd)
-
-    def tearDown(self):
-        for ii in range(self.ntask):
-            work_path = Path(vasp_task_pattern % ii)
-            if work_path.is_dir():
-                shutil.rmtree(work_path)
-            
-    def test(self):
-        self.task_list_str = [str(ii) for ii in self.task_list]
-        for ii in range(self.ntask):
-            ip = OPIO({
-                'task_name' : self.task_list_str[ii],
-                'task_path' : self.task_list[ii],
-                'config' : {},
-            })
-            op = MockedRunVasp()
-            out = op.execute(ip)
-            self.assertEqual(out['log'] , Path(vasp_task_pattern % ii)/'log')
-            self.assertEqual(out['labeled_data'] , Path(vasp_task_pattern % ii)/('data_'+vasp_task_pattern % ii))
-            self.assertTrue(out['log'].is_file())
-            self.assertTrue(out['labeled_data'].is_dir())
-            self.check_run_lmp_output(self.task_list_str[ii])
-
-
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestPrepRunVasp(unittest.TestCase):
+
     def setUp(self):
         self.ntasks = 6
         self.confs = []
@@ -195,14 +90,14 @@ class TestPrepRunVasp(unittest.TestCase):
             if work_path.is_dir():
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
-            os.remove(fname)        
+            os.remove(fname)
         for ii in [self.incar, self.potcar, self.inputs_fname]:
             if ii.is_file():
                 os.remove(ii)
 
     def check_run_vasp_output(
-            self,
-            task_name : str,
+        self,
+        task_name: str,
     ):
         cwd = os.getcwd()
         os.chdir(task_name)
@@ -215,14 +110,17 @@ class TestPrepRunVasp(unittest.TestCase):
             pos = task_name.find("labeled_data")
             name = task_name.split('/')[-1]
             path = task_name[:pos] + 'log/' + name + '/log'
-            self.assertEqual(fc,Path(path).read_text().strip().split('\n'))
+            self.assertEqual(fc, Path(path).read_text().strip().split('\n'))
         else:
             self.assertEqual(fc, Path('log').read_text().strip().split('\n'))
         if config["mode"] == "debug":
             name = task_name.split('/')[-1]
-            self.assertEqual(f'labeled_data of {name}\nconf {ii}', (Path(task_name) / ('data_' + name) / 'data').read_text())
+            self.assertEqual(f'labeled_data of {name}\nconf {ii}',
+                             (Path(task_name) / ('data_' + name) /
+                              'data').read_text())
         else:
-            self.assertEqual(f'labeled_data of {task_name}\nconf {ii}', (Path('data_'+task_name) / 'data').read_text())
+            self.assertEqual(f'labeled_data of {task_name}\nconf {ii}',
+                             (Path('data_' + task_name) / 'data').read_text())
         # self.assertEqual(f'labeled_data of {task_name}', Path('labeled_data').read_text())
         os.chdir(cwd)
 
@@ -231,26 +129,21 @@ class TestPrepRunVasp(unittest.TestCase):
             "prep-run-vasp",
             MockedPrepVasp,
             MockedRunVasp,
-            upload_python_package = upload_python_package,
-            prep_config = default_config,
-            run_config = default_config,
+            upload_python_package=upload_python_package,
+            prep_config=default_config,
+            run_config=default_config,
         )
-        vasp_inputs = VaspInputs(
-            0.16,
-            True,
-            self.incar,
-            {'foo': self.potcar}
-        )
+        vasp_inputs = VaspInputs(0.16, True, self.incar, {'foo': self.potcar})
         prep_run_step = Step(
-            'prep-run-step', 
-            template = steps,
-            parameters = {
+            'prep-run-step',
+            template=steps,
+            parameters={
                 "fp_config": {},
-                'type_map' : self.type_map,
-                'inputs' : vasp_inputs,
+                'type_map': self.type_map,
+                'inputs': vasp_inputs,
             },
-            artifacts = {
-                "confs" : self.confs,
+            artifacts={
+                "confs": self.confs,
             },
         )
 
@@ -277,7 +170,8 @@ class TestPrepRunVasp(unittest.TestCase):
 
         # for ii in range(6):
         #     self.check_run_vasp_output(f'task.{ii:06d}')
-            
+
+
 if __name__ == "__main__":
     from dflow import config
     config["mode"] = "debug"

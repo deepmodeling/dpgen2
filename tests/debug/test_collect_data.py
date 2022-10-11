@@ -33,53 +33,6 @@ from mocked_ops import (
     MockedCollectData, )
 
 
-class TestMockedCollectData(unittest.TestCase):
-
-    def setUp(self):
-        self.iter_data = ['foo/iter0', 'bar/iter1']
-        self.iter_data = [Path(ii) for ii in self.iter_data]
-        self.name = 'outdata'
-        self.labeled_data = ['d0', 'd1']
-        self.labeled_data = [Path(ii) for ii in self.labeled_data]
-        for ii in self.iter_data:
-            ii.mkdir(exist_ok=True, parents=True)
-            (ii / 'data').write_text(f'data of {str(ii)}')
-        for ii in self.labeled_data:
-            (ii).mkdir(exist_ok=True, parents=True)
-            (ii / 'data').write_text(f'data of {str(ii)}')
-        self.type_map = []
-
-    def tearDown(self):
-        for ii in ['d0', 'd1', 'outdata', 'foo', 'bar', 'iter0', 'iter1']:
-            ii = Path(ii)
-            if ii.is_dir():
-                shutil.rmtree(ii)
-
-    def test(self):
-        op = MockedCollectData()
-        out = op.execute(
-            OPIO({
-                'name': self.name,
-                'labeled_data': self.labeled_data,
-                'iter_data': self.iter_data,
-                'type_map': self.type_map,
-            }))
-        iter_data = out['iter_data']
-
-        out_data = Path(self.name)
-        self.assertTrue(out_data.is_dir())
-        self.assertTrue((out_data / 'd0').is_dir())
-        self.assertTrue((out_data / 'd1').is_dir())
-        self.assertTrue((out_data / 'd0' / 'data').read_text(), 'data of d0')
-        self.assertTrue((out_data / 'd1' / 'data').read_text(), 'data of d1')
-        path = Path('iter0')
-        self.assertTrue(path.is_dir())
-        self.assertTrue((path / 'data').read_text(), 'data of iter0')
-        path = Path('iter1')
-        self.assertTrue(path.is_dir())
-        self.assertTrue((path / 'data').read_text(), 'data of iter1')
-
-
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestMockedCollectDataArgo(unittest.TestCase):
 
