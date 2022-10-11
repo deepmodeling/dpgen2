@@ -54,7 +54,6 @@ class ConcurrentLearningBlock(Steps):
             "conf_selector" : InputParameter(),
             "fp_config" : InputParameter(),
             "lmp_task_grp" : InputParameter(),
-            "fp_inputs" : InputParameter(),
         }
         self._input_artifacts={
             "init_models" : InputArtifact(optional=True),
@@ -214,7 +213,6 @@ def _block_cl(
         parameters={
             "block_id" : block_steps.inputs.parameters['block_id'],
             "fp_config": block_steps.inputs.parameters['fp_config'],            
-            "inputs": block_steps.inputs.parameters['fp_inputs'],            
             "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={

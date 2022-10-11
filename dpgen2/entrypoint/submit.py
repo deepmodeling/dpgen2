@@ -350,6 +350,7 @@ def workflow_concurrent_learning(
         incar_template_name = incar_file,
         potcar_names = fp_pp_files,
     )
+    fp_config['inputs'] = fp_inputs
     init_data_prefix = config.get('init_data_prefix') if old_style else config['inputs']['init_data_prefix']
     init_data = config['init_data_sys'] if old_style else config['inputs']['init_data_sys']
     if init_data_prefix is not None:
@@ -374,7 +375,6 @@ def workflow_concurrent_learning(
             "train_config" : train_config,
             "lmp_config" : lmp_config,
             "fp_config" : fp_config,
-            'fp_inputs' : fp_inputs,
             "exploration_scheduler" : scheduler,
         },
         artifacts = {

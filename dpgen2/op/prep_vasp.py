@@ -41,8 +41,8 @@ class PrepVasp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
+            "config" : BigParameter(dict),
             "type_map": List[str],
-            "inputs": BigParameter(VaspInputs),
             "confs" : Artifact(List[Path]),
         })
 
@@ -66,7 +66,7 @@ class PrepVasp(OP):
         ip : dict
             Input dict with components:
 
-            - `inputs` : (`VaspInputs`) Definitions for the VASP inputs
+            - `config` : (`dict`) Should have `config['inputs']`, which is of type `VaspInputs` and definites the VASP inputs
             - `confs` : (`Artifact(List[Path])`) Configurations for the VASP tasks. Stored in folders as deepmd/npy format. Can be parsed as dpdata.MultiSystems. 
         
         Returns
@@ -78,7 +78,7 @@ class PrepVasp(OP):
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the VASP. The order fo the Paths should be consistent with `op["task_names"]`
         """
 
-        inputs = ip['inputs']        
+        inputs = ip['config']['inputs']
         confs = ip['confs']
         type_map = ip['type_map']
 

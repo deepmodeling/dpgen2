@@ -130,7 +130,6 @@ class ConcurrentLearningLoop(Steps):
             "fp_config" : InputParameter(),
             "exploration_scheduler" : InputParameter(),
             "lmp_task_grp" : InputParameter(),
-            "fp_inputs" : InputParameter(),
         }
         self._input_artifacts={
             "init_models" : InputArtifact(optional=True),
@@ -220,7 +219,6 @@ class ConcurrentLearning(Steps):
             "train_config" : InputParameter(),
             "lmp_config" : InputParameter(),
             "fp_config" : InputParameter(),
-            "fp_inputs" : InputParameter(),
             "exploration_scheduler" : InputParameter(),
         }
         self._input_artifacts={
@@ -313,7 +311,6 @@ def _loop (
             "lmp_config" : steps.inputs.parameters["lmp_config"],
             "conf_selector" : steps.inputs.parameters["conf_selector"],
             "fp_config" : steps.inputs.parameters["fp_config"],
-            "fp_inputs" : steps.inputs.parameters["fp_inputs"],
             "lmp_task_grp" : steps.inputs.parameters["lmp_task_grp"],
         },
         artifacts={
@@ -375,7 +372,6 @@ def _loop (
             "lmp_config" : steps.inputs.parameters["lmp_config"],
             "conf_selector" : scheduler_step.outputs.parameters["conf_selector"],
             "fp_config" : steps.inputs.parameters["fp_config"],
-            "fp_inputs" : steps.inputs.parameters["fp_inputs"],
             "exploration_scheduler" : scheduler_step.outputs.parameters["exploration_scheduler"],
             "lmp_task_grp" : scheduler_step.outputs.parameters["lmp_task_grp"],
         },
@@ -473,7 +469,6 @@ def _dpgen(
             "conf_selector" : scheduler_step.outputs.parameters['conf_selector'],
             "lmp_config" : steps.inputs.parameters['lmp_config'],
             "fp_config" : steps.inputs.parameters['fp_config'],
-            "fp_inputs" : steps.inputs.parameters['fp_inputs'],
             "exploration_scheduler" : scheduler_step.outputs.parameters['exploration_scheduler'],
             "lmp_task_grp" : scheduler_step.outputs.parameters['lmp_task_grp'],
         },

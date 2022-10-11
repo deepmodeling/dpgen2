@@ -142,8 +142,8 @@ def _prep_run_fp(
             **prep_template_config,
         ),
         parameters={
+            "config" : prep_run_steps.inputs.parameters["fp_config"],
             "type_map" : prep_run_steps.inputs.parameters['type_map'],
-            "inputs": prep_run_steps.inputs.parameters['inputs'],
         },
         artifacts={
             "confs" : prep_run_steps.inputs.artifacts['confs'],
