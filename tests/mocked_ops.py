@@ -349,7 +349,7 @@ class MockedPrepVasp(PrepVasp):
         confs = ip['confs']
         # incar_temp = ip['incar_temp']
         # potcars = ip['potcars']
-        vasp_input = ip['inputs']
+        vasp_input = ip['config']['inputs']
         type_map = ip['type_map']
         if not (type_map == ['H', 'O']):
             raise FatalError
