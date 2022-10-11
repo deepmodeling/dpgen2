@@ -158,35 +158,6 @@ def check_run_train_dp_output(
         os.chdir(cwd)
 
 
-class TestMockedPrepDPTrain(unittest.TestCase):
-
-    def setUp(self):
-        self.numb_models = mocked_numb_models
-        self.template_script = mocked_template_script.copy()
-        self.expected_subdirs = ['task.0000', 'task.0001', 'task.0002']
-        self.expected_train_scripts = [
-            Path('task.0000/input.json'),
-            Path('task.0001/input.json'),
-            Path('task.0002/input.json')
-        ]
-
-    def tearDown(self):
-        for ii in self.expected_subdirs:
-            if Path(ii).exists():
-                shutil.rmtree(ii)
-
-    def test(self):
-        prep = MockedPrepDPTrain()
-        ip = OPIO({
-            "template_script": self.template_script,
-            "numb_models": self.numb_models,
-        })
-        op = prep.execute(ip)
-        # self.assertEqual(self.expected_train_scripts, op["train_scripts"])
-        self.assertEqual(self.expected_subdirs, op["task_names"])
-        self.assertEqual([Path(ii) for ii in self.expected_subdirs],
-                         op["task_paths"])
-
 
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestTrainDp(unittest.TestCase):
