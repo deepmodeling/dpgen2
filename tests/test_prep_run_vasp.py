@@ -115,7 +115,7 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
             )
         out = op.execute( OPIO({
             'confs' : self.confs,
-            'fp_config' : {'inputs' : vasp_inputs},
+            'config' : {'inputs' : vasp_inputs},
             'type_map' : self.type_map,
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)

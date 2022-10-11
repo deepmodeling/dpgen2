@@ -44,7 +44,7 @@ class RunVasp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
-            "config" : dict,
+            "config" : BigParameter(dict),
             "task_name": str,
             "task_path" : Artifact(Path),
         })

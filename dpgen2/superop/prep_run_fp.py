@@ -47,7 +47,6 @@ class PrepRunFp(Steps):
             "block_id" : InputParameter(type=str, value=""),
             "fp_config" : InputParameter(),
             "type_map" : InputParameter(),
-            "inputs": InputParameter(),
         }
         self._input_artifacts = {
             "confs" : InputArtifact()
