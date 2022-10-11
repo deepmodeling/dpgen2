@@ -5,6 +5,7 @@ from dflow.python import (
     Artifact,
     TransientError,
     FatalError,
+    BigParameter,
 )
 import os, json, dpdata
 from pathlib import Path
