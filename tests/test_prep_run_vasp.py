@@ -115,7 +115,7 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
             )
         out = op.execute( OPIO({
             'confs' : self.confs,
-            'config' : {'inputs' : vasp_inputs},
+            'fp_config' : {'inputs' : vasp_inputs},
             'type_map' : self.type_map,
         }) )
         tdirs = check_vasp_tasks(self, self.ntasks)
@@ -234,9 +234,8 @@ class TestPrepRunVasp(unittest.TestCase):
             'prep-run-step', 
             template = steps,
             parameters = {
-                "fp_config": {},
                 'type_map' : self.type_map,
-                'config' : {'inputs' : vasp_inputs},
+                'fp_config' : {'inputs' : vasp_inputs},
             },
             artifacts = {
                 "confs" : self.confs,

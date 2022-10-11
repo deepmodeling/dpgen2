@@ -76,7 +76,7 @@ Gamma
         vi = VaspInputs(0.1, True, iincar, ipotcar)
         op = PrepVasp()
         opout = op.execute(OPIO({
-            'inputs': vi,
+            'config': {'inputs' : vi},
             'confs' : self.confs,
             'type_map' : self.type_map,
         }))
