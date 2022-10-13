@@ -34,13 +34,14 @@ dpgen2 = "dpgen2.entrypoint.main:main"
 
 [project.optional-dependencies]
 docs = [
-    'sphinx',
-    'recommonmark',
-    'sphinx_rtd_theme>=1.0.0rc1',
-    'numpydoc',
-    'm2r2',
-    'deepmodeling-sphinx>=0.1.1',
-    'sphinx-argparse',
+     'sphinx',
+     'recommonmark',
+     'sphinx_rtd_theme>=1.0.0rc1',
+     'numpydoc',
+     'myst_parser',
+     'deepmodeling_sphinx',
+     'sphinx-argparse',
+     "dargs>=0.3.1",
 ]
 
 [tool.setuptools.packages.find]
