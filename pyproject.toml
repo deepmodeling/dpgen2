@@ -44,7 +44,7 @@ docs = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["dpgen2"]
+include = ["dpgen2*"]
 
 [tool.setuptools.package-data]
 dpgen2 = ['*.json']
