@@ -1,5 +1,0 @@
-numpy
-dpdata
-pydflow>=1.0.20
-dargs
-
