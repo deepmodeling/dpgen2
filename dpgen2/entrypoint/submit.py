@@ -353,7 +353,7 @@ def workflow_concurrent_learning(
     init_data_prefix = config.get('init_data_prefix') if old_style else config['inputs']['init_data_prefix']
     init_data = config['init_data_sys'] if old_style else config['inputs']['init_data_sys']
     if init_data_prefix is not None:
-        init_data = [os.path.join(init_data_prefix, ii) for ii in init_data_sys]
+        init_data = [os.path.join(init_data_prefix, ii) for ii in init_data]
     if isinstance(init_data,str):
         init_data = expand_sys_str(init_data)
     init_data = upload_artifact(init_data)
