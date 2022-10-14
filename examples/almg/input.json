@@ -171,9 +171,21 @@
 		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
 	    }
 	],
+	"_comment" : "Stage is of type List[List[dict]]. "
+	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group."
 	"stages":	[
-	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "conf_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
-	    }
+	    [
+		{
+		    "type" : "lmp-npt",
+		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+		    "conf_idx": [0], "n_sample" : 3
+		},
+		{
+		    "type" : "lmp-template",
+		    "lmp" : "template.lammps", "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [100, 200]},
+		    "conf_idx": [0], "n_sample" : 3
+		}		
+	    ]
 	],
 	"_comment" : "all"
     },
