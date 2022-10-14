@@ -14,7 +14,11 @@ from dpgen2.exploration.task import (
     LmpTemplateTaskGroup, 
     ExplorationStage,
 )
-from dpgen2.constants import lmp_conf_name, lmp_input_name
+from dpgen2.constants import (
+    lmp_conf_name,
+    lmp_input_name,
+    plm_input_name,
+)
 from unittest.mock import Mock, patch
 
 in_lmp_template = textwrap.dedent("""variable        NSTEPS          equal V_NSTEPS
@@ -190,6 +194,8 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         
     def tearDown(self):
         os.remove(self.lmp_template_fname)
+        os.remove(self.lmp_plm_template_fname)
+        os.remove(self.plm_template_fname)
 
     def test_lmp(self):        
         task_group = LmpTemplateTaskGroup()
@@ -211,8 +217,8 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         for cc,ii,jj in itertools.product(
                 range(len(self.confs)), 
                 range(len(self.lmp_rev_mat['V_NSTEPS'])),
-                range(len(self.lmp_rev_mat['V_TEMP']),
-        )):
+                range(len(self.lmp_rev_mat['V_TEMP'])),
+        ):
             ee = expected_lmp_template.split('\n')
             ee[0] = ee[0].replace('V_NSTEPS', str(self.lmp_rev_mat['V_NSTEPS'][ii]))
             ee[3] = ee[3].replace('V_TEMP', str(self.lmp_rev_mat['V_TEMP'][jj]))
@@ -222,63 +228,52 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             )
             self.assertEqual(
                 task_group[idx].files()[lmp_input_name].split('\n'),
-                ee
+                ee,
             )
             idx += 1
 
 
-    # def test_lmp_plm(self):
-    #     task_group = LmpTemplateTaskGroup()
-    #     task_group.set_conf(self.confs)
-    #     task_group.set_lmp(
-    #         self.numb_models,
-    #         self.lmp_plm_template_fname,
-    #         plm_template_fname=self.plm_template_fname,
-    #         rev_mat=self.lmp_plm_rev_mat,
-    #         traj_freq=self.traj_freq,
-    #     )
-    #     task_group.make_task()
-    #     ngroup = len(task_group)
-    #     self.assertEqual(
-    #         ngroup, 
-    #         len(self.confs) \
-    #         * len(self.lmp_plm_rev_mat['V_NSTEPS']) \
-    #         * len(self.lmp_plm_rev_mat['V_TEMP']) \
-    #         * len(self.lmp_plm_rev_mat['V_DIST0']))
-        
-                    
-        # print(task_group._task_list)
-        # print('\n'.join(task_group[0].files()[lmp_input_name]))
-
-
-        # self.tt = [100, 200]
-        # self.pp = [1, 10, 100]
-        # self.numb_model = 3
-        # self.mass_map = [10, 20]
-
-        # cpt_group = NPTTaskGroup()
-        # cpt_group.set_md(
-        #     self.numb_model, 
-        #     self.mass_map,
-        #     self.tt,
-        #     self.pp,
-        # )
-        # cpt_group.set_conf(
-        #     self.confs,
-        # )
-        # task_group = cpt_group.make_task()
-
-        # ngroup = len(task_group)
-        # self.assertEqual(ngroup, len(self.confs) * len(self.tt) * len(self.pp))
-        # for ii in range(ngroup):
-        #     i_idx = ii // (len(self.tt) * len(self.pp))
-        #     j_idx = (ii - len(self.tt) * len(self.pp) * i_idx) // len(self.pp)
-        #     k_idx = (ii - len(self.tt) * len(self.pp) * i_idx - len(self.pp) * j_idx)
-        #     self.assertEqual(
-        #         task_group[ii].files()[lmp_conf_name], 
-        #         self.confs[i_idx],
-        #     )
-        #     self.assertEqual(
-        #         task_group[ii].files()[lmp_input_name], 
-        #         in_template_npt % (self.tt[j_idx], self.pp[k_idx]),
-        #     )
+    def test_lmp_plm(self):
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_plm_template_fname,
+            plm_template_fname=self.plm_template_fname,
+            rev_mat=self.lmp_plm_rev_mat,
+            traj_freq=self.traj_freq,
+        )
+        task_group.make_task()
+        ngroup = len(task_group)
+        self.assertEqual(
+            ngroup, 
+            len(self.confs) \
+            * len(self.lmp_plm_rev_mat['V_NSTEPS']) \
+            * len(self.lmp_plm_rev_mat['V_TEMP']) \
+            * len(self.lmp_plm_rev_mat['V_DIST0']))
+        idx=0
+        for cc,ii,jj,kk in itertools.product(
+                range(len(self.confs)), 
+                range(len(self.lmp_plm_rev_mat['V_NSTEPS'])),
+                range(len(self.lmp_plm_rev_mat['V_TEMP'])),
+                range(len(self.lmp_plm_rev_mat['V_DIST0'])),
+        ):
+            eel = expected_lmp_plm_template.split('\n')
+            eel[0] = eel[0].replace('V_NSTEPS', str(self.lmp_plm_rev_mat['V_NSTEPS'][ii]))
+            eel[3] = eel[3].replace('V_TEMP', str(self.lmp_plm_rev_mat['V_TEMP'][jj]))
+            eep = in_plm_template.split('\n')
+            eep[0] = eep[0].replace('V_TEMP', str(self.lmp_plm_rev_mat['V_TEMP'][jj]))
+            eep[3] = eep[3].replace('V_DIST0', str(self.lmp_plm_rev_mat['V_DIST0'][kk]))
+            self.assertEqual(
+                task_group[idx].files()[lmp_conf_name],
+                self.confs[cc],
+            )
+            self.assertEqual(
+                task_group[idx].files()[lmp_input_name].split('\n'),
+                eel,
+            )
+            self.assertEqual(
+                task_group[idx].files()[plm_input_name].split('\n'),
+                eep,
+            )
+            idx += 1

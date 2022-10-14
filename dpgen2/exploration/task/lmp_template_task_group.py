@@ -42,7 +42,6 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         self.lmp_template = revise_lmp_input_model(
             self.lmp_template, self.model_list, self.traj_freq)
         self.lmp_template = revise_lmp_input_dump(self.lmp_template, self.traj_freq)
-        print(plm_template_fname)
         if plm_template_fname is not None:
             self.plm_template = Path(plm_template_fname).read_text().split('\n')
             self.plm_set = True            
@@ -62,30 +61,32 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         # clear all existing tasks
         self.clear()
         confs = self._sample_confs()
-        lmp_conts = self.make_cont(lmp_template, self.rev_mat)        
-        if not self.plm_set:
-            for cc, ll in itertools.product(confs, lmp_conts):
-                self.add_task(self._make_lmp_task(cc, ll))
-        else:
-            plm_conts = self.make_cont(self.plm_template, self.rev_mat)
-            for cc, ll, pp in itertools.product(confs, lmp_conts, plm_conts):
-                self.add_task(self._make_lmp_task(cc, ll, pp))
+        templates = [lmp_template]
+        if self.plm_set:
+            templates.append(self.plm_template)
+        conts = self.make_cont(templates, self.rev_mat)
+        nconts = len(conts[0])
+        for cc, ii in itertools.product(confs, range(nconts)):
+            if not self.plm_set:
+                self.add_task(self._make_lmp_task(cc, conts[0][ii]))
+            else:
+                self.add_task(self._make_lmp_task(cc, conts[0][ii], conts[1][ii]))
         return self
-
-
+    
     def make_cont(
             self,
-            template,
-            rev_mat,
+            templates : list,
+            rev_mat : dict,
     ):
         keys = rev_mat.keys()
         prod_vv = [ rev_mat[kk] for kk in keys ]
-        ret = []
+        ntemplate = len(templates)
+        ret = [[] for ii in range(ntemplate)]
         for vv in itertools.product(*prod_vv):
-            tt = template.copy()
-            ret.append('\n'.join(revise_by_keys(tt, keys, vv)))
-        return ret
-        
+            for ii in range(ntemplate):
+                tt = templates[ii].copy()
+                ret[ii].append('\n'.join(revise_by_keys(tt, keys, vv)))
+        return ret        
 
     def _make_lmp_task(
             self,
@@ -109,8 +110,6 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
                 plm_cont,
             )
         return task
-
-
 
 
 def find_only_one_key(lmp_lines, key):
