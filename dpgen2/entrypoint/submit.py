@@ -316,7 +316,7 @@ def workflow_concurrent_learning(
     collect_data_config = normalize_step_dict(config.get('collect_data_config', default_config)) if old_style else config['step_configs']['collect_data_config']
     cl_step_config = normalize_step_dict(config.get('cl_step_config', default_config)) if old_style else config['step_configs']['cl_step_config']
     upload_python_package = config.get('upload_python_package', None)
-    init_models_paths = config.get('training_iter0_model_path')
+    init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
