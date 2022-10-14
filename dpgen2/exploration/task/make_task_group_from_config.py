@@ -49,8 +49,8 @@ def lmp_template_task_group_args():
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
 
     return [
-        Argument("lmp_template_fname", str, optional=False, doc=doc_lmp_template_fname),
-        Argument("plm_template_fname", str, optional=True, default=None, doc=doc_plm_template_fname),
+        Argument("lmp_template_fname", str, optional=False, doc=doc_lmp_template_fname, alias=['lmp_template', 'lmp']),
+        Argument("plm_template_fname", str, optional=True, default=None, doc=doc_plm_template_fname, alias=['plm_template', 'plm']),
         Argument("revisions", dict, optional=True, default={}),
         Argument("traj_freq", int, optional=True, default=10, doc=doc_traj_freq, alias=['t_freq', 'trj_freq','trj_freq']),
     ]
