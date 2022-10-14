@@ -227,18 +227,19 @@ def make_naive_exploration_scheduler(
         # stage
         stage = ExplorationStage()
         for jj in job:
-            tgroup = make_task_group_from_config(jj)            
+            n_sample = jj.pop('n_sample')
             ##  ignore the expansion of sys_idx
             # get all file names of md initial configurations
             try:
-                sys_idx = job['sys_idx']
+                sys_idx = jj.pop('sys_idx')
             except KeyError:
-                sys_idx = job['conf_idx']
+                sys_idx = jj.pop('conf_idx')
             conf_list = []        
             for ii in sys_idx:
                 conf_list += make_conf_list(sys_configs[ii], type_map)
+            # make task group
+            tgroup = make_task_group_from_config(jj)            
             # add the list to task group
-            n_sample = job.get('n_sample')
             tgroup.set_conf(
                 conf_list,
                 n_sample=n_sample,
