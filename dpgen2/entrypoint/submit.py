@@ -220,7 +220,7 @@ def make_naive_exploration_scheduler(
     scheduler = ExplorationScheduler()
 
     for job_ in model_devi_jobs:
-        if isinstance(job_, list):
+        if not isinstance(job_, list):
             job = [job_]
         else:
             job = job_        
@@ -238,7 +238,7 @@ def make_naive_exploration_scheduler(
             for ii in sys_idx:
                 conf_list += make_conf_list(sys_configs[ii], type_map)
             # make task group
-            tgroup = make_task_group_from_config(jj)            
+            tgroup = make_task_group_from_config(numb_models, mass_map, jj)
             # add the list to task group
             tgroup.set_conf(
                 conf_list,
