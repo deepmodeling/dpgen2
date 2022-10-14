@@ -56,6 +56,8 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTask,
     NPTTaskGroup,
+    LmpTemplateTaskGroup,
+    make_task_group_from_config,
 )
 from dpgen2.exploration.selector import (
     ConfSelectorLammpsFrames,
@@ -217,42 +219,32 @@ def make_naive_exploration_scheduler(
     fatal_at_max = config.get('fatal_at_max', True) if old_style else config['explore']['fatal_at_max']
     scheduler = ExplorationScheduler()
 
-    for job in model_devi_jobs:
-        # task group
-        tgroup = NPTTaskGroup()
-        ##  ignore the expansion of sys_idx
-        # get all file names of md initial configurations
-        try:
-            sys_idx = job['sys_idx']
-        except KeyError:
-            sys_idx = job['conf_idx']
-        conf_list = []        
-        for ii in sys_idx:
-            conf_list += make_conf_list(sys_configs[ii], type_map)
-        # add the list to task group
-        n_sample = job.get('n_sample')
-        tgroup.set_conf(
-            conf_list,
-            n_sample=n_sample,
-        )
-        temps = job['temps']
-        press = job['press']
-        trj_freq = job['trj_freq']
-        nsteps = job['nsteps']
-        ensemble = job['ensemble']
-        # add md settings
-        tgroup.set_md(
-            numb_models,
-            mass_map,
-            temps = temps,
-            press = press,
-            ens = ensemble,
-            nsteps = nsteps,
-        )
-        tasks = tgroup.make_task()
+    for job_ in model_devi_jobs:
+        if isinstance(job_, list):
+            job = [job_]
+        else:
+            job = job_        
         # stage
         stage = ExplorationStage()
-        stage.add_task_group(tasks)
+        for jj in job:
+            tgroup = make_task_group_from_config(jj)            
+            ##  ignore the expansion of sys_idx
+            # get all file names of md initial configurations
+            try:
+                sys_idx = job['sys_idx']
+            except KeyError:
+                sys_idx = job['conf_idx']
+            conf_list = []        
+            for ii in sys_idx:
+                conf_list += make_conf_list(sys_configs[ii], type_map)
+            # add the list to task group
+            n_sample = job.get('n_sample')
+            tgroup.set_conf(
+                conf_list,
+                n_sample=n_sample,
+            )
+            tasks = tgroup.make_task()
+            stage.add_task_group(tasks)
         # trust level
         trust_level = TrustLevel(
             config['model_devi_f_trust_lo'] if old_style else config['explore']['f_trust_lo'],
