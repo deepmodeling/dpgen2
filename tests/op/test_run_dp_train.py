@@ -577,7 +577,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
 
 
     def tearDown(self):
-        for ii in ['init', self.task_path, self.task_name ]:
+        for ii in ['init', self.task_path, self.task_name, 'foo' ]:
             if Path(ii).exists():
                 shutil.rmtree(str(ii))
 

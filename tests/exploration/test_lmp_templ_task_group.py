@@ -190,6 +190,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         self.lmp_plm_rev_mat = {
             "V_NSTEPS": [1000], "V_TEMP": [50, 100], "V_DIST0" : [3, 4],
         }
+        self.rev_empty = {}
         self.traj_freq = 20
         
     def tearDown(self):
@@ -203,7 +204,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         task_group.set_lmp(
             self.numb_models,
             self.lmp_template_fname,
-            rev_mat=self.lmp_rev_mat,
+            revisions=self.lmp_rev_mat,
             traj_freq=self.traj_freq,
         )
         task_group.make_task()
@@ -240,7 +241,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             self.numb_models,
             self.lmp_plm_template_fname,
             plm_template_fname=self.plm_template_fname,
-            rev_mat=self.lmp_plm_rev_mat,
+            revisions=self.lmp_plm_rev_mat,
             traj_freq=self.traj_freq,
         )
         task_group.make_task()
@@ -277,3 +278,33 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
                 eep,
             )
             idx += 1
+
+
+    def test_lmp_empty(self):        
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions=self.rev_empty,
+            traj_freq=self.traj_freq,
+        )
+        task_group.make_task()
+        ngroup = len(task_group)
+        self.assertEqual(
+            ngroup, 
+            len(self.confs),
+        )
+        idx = 0
+        for cc in range(len(self.confs)):
+            ee = expected_lmp_template.split('\n')
+            self.assertEqual(
+                task_group[idx].files()[lmp_conf_name],
+                self.confs[cc],
+            )
+            self.assertEqual(
+                task_group[idx].files()[lmp_input_name].split('\n'),
+                ee,
+            )
+            idx += 1
+

@@ -58,6 +58,7 @@ class PrepRunLmp(Steps):
             "logs": OutputArtifact(),
             "trajs": OutputArtifact(),
             "model_devis": OutputArtifact(),
+            "plm_output": OutputArtifact(optional=True),
         }        
 
         super().__init__(
@@ -159,7 +160,7 @@ def _prep_run_lmp(
                 "int('{{item}}')",
                 input_parameter = ["task_name"],
                 input_artifact = ["task_path"],
-                output_artifact = ["log", "traj", "model_devi"],
+                output_artifact = ["log", "traj", "model_devi", "plm_output"],
             ),
             python_packages = upload_python_package,
             **run_template_config,
@@ -184,7 +185,6 @@ def _prep_run_lmp(
     prep_run_steps.outputs.artifacts["logs"]._from = run_lmp.outputs.artifacts["log"]
     prep_run_steps.outputs.artifacts["trajs"]._from = run_lmp.outputs.artifacts["traj"]
     prep_run_steps.outputs.artifacts["model_devis"]._from = run_lmp.outputs.artifacts["model_devi"]
+    prep_run_steps.outputs.artifacts["plm_output"]._from = run_lmp.outputs.artifacts["plm_output"]
 
     return prep_run_steps
-
-

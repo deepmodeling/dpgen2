@@ -59,6 +59,7 @@ class RunLmp(OP):
             "log" : Artifact(Path),
             "traj" : Artifact(Path),
             "model_devi": Artifact(Path),
+            "plm_output": Artifact(Path, optional=True),
         })
 
     @OP.exec_sign_check

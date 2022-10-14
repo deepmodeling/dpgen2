@@ -31,11 +31,11 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             numb_models : int,
             lmp_template_fname : str,
             plm_template_fname : str = None,
-            rev_mat : dict = {},
+            revisions : dict = {},
             traj_freq : int = 10,
     )->None:
         self.lmp_template = Path(lmp_template_fname).read_text().split('\n')
-        self.rev_mat = rev_mat
+        self.revisions = revisions
         self.traj_freq = traj_freq
         self.lmp_set = True
         self.model_list = sorted([model_name_pattern%ii for ii in range(numb_models)])
@@ -64,7 +64,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         templates = [lmp_template]
         if self.plm_set:
             templates.append(self.plm_template)
-        conts = self.make_cont(templates, self.rev_mat)
+        conts = self.make_cont(templates, self.revisions)
         nconts = len(conts[0])
         for cc, ii in itertools.product(confs, range(nconts)):
             if not self.plm_set:
@@ -76,10 +76,10 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
     def make_cont(
             self,
             templates : list,
-            rev_mat : dict,
+            revisions : dict,
     ):
-        keys = rev_mat.keys()
-        prod_vv = [ rev_mat[kk] for kk in keys ]
+        keys = revisions.keys()
+        prod_vv = [ revisions[kk] for kk in keys ]
         ntemplate = len(templates)
         ret = [[] for ii in range(ntemplate)]
         for vv in itertools.product(*prod_vv):
