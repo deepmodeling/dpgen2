@@ -14,6 +14,8 @@ from .lmp_template_task_group import (
 from .make_task_group_from_config import(
     normalize as normalize_task_group_config,
     make_task_group_from_config,
+    variant_task_group,
+    task_group_args,
 )
 from .stage import (
     ExplorationStage,

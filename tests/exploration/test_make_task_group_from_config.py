@@ -17,11 +17,10 @@ from dpgen2.exploration.task import (
 )
 
 
-
 class TestMakeTaskGroupFromConfig(unittest.TestCase):
     def setUp(self):
         self.config_npt = {
-            "type" : "lmp-npt",
+            "type" : "lmp-md",
             "Ts" : [100],
         }
         self.config_template = {

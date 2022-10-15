@@ -91,8 +91,29 @@ This section defines how the configuration space is explored.
 		}
 	],
 	"stages":	[
-		{ "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": null, "conf_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 },
-		{ "_idx": 1, "ensemble": "nvt", "nsteps": 20, "press": null, "conf_idx": [1], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 }
+	    [
+		{
+		    "_comment" : "stage 0, task group 0",
+		    "type" : "lmp-md",
+		    "ensemble": "nvt", "nsteps":  50, "temps": [50, 100], "trj_freq": 10,
+		    "conf_idx": [0], "n_sample" : 3
+		},
+		{
+		    "_comment" : "stage 1, task group 0",
+		    "type" : "lmp-template",
+		    "lmp" : "template.lammps", "plm" : "template.plumed", 
+		    "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [150, 200]},
+		    "conf_idx": [0], "n_sample" : 3
+		}
+	    ],
+	    [
+		{
+		    "_comment" : "stage 1, task group 0",
+		    "type" : "lmp-md",
+		    "ensemble": "npt", "nsteps":  50, "press": [1e0], "temps": [50, 100, 200], "trj_freq": 10,
+		    "conf_idx": [1], "n_sample" : 3
+		}
+	    ],
 	],
 }
 ```
@@ -103,7 +124,9 @@ The `"configurations"` provides the initial configurations (coordinates of atoms
 - `list[str]`: The strings provides the path to the configuration files.
 - `dict`: Automatic alloy configuration generator. See [the detailed doc](alloy_configs) of the allowed keys.
 
-The `"stages"` defines the exploration stages. It is a list of `dict`s, with each `dict` defining a stage. The `"ensemble"`, `"nsteps"`, `"press"`, `"temps"`, `"traj_freq"` keys are self-explanatory. `"conf_idx"` pickes initial configurations of DPMD simulations from the `"configurations"` list, it provides the index of the element in the `"configurations"` list. `"n_sample"` tells the number of confgiruations randomly sampled from the set picked by `"conf_idx"` for each thermodynamic state. All configurations picked by `"conf_idx"` has the same possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, each stage have 3 samples and 2 thermodynamic states (NVT, T=50 and 100K), then each iteration run 3x2=6 NVT DPMD simulatins.
+The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See [the full documentation of the target group](task_group_configs) for writting task groups.
+
+`"n_sample"` tells the number of confgiruations randomly sampled from the set picked by `"conf_idx"` from `configurations` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
 
 ### FP

@@ -59,14 +59,13 @@ def lmp_template_task_group_args():
 def variant_task_group():
     doc = "the type of the task group"
     return Variant("type", [
-        Argument("lmp-npt", dict, npt_task_group_args()),
+        Argument("lmp-md", dict, npt_task_group_args(), alias=['lmp-npt']),
         Argument("lmp-template", dict, lmp_template_task_group_args()),
     ], doc=doc)
-    
+
 
 def task_group_args():
-    return Argument("base", dict, [], [variant_task_group()])
-
+    return Argument("task_group_configs", dict, [], [variant_task_group()])
 
 def normalize(data):
     args = task_group_args()
@@ -81,7 +80,7 @@ def make_task_group_from_config(
         config,
 ):
     config = normalize(config)
-    if config['type'] == 'lmp-npt':
+    if config['type'] == 'lmp-md':
         tgroup = NPTTaskGroup()
         config.pop('type')
         tgroup.set_md(
@@ -104,4 +103,4 @@ def make_task_group_from_config(
 
 
 if __name__ == '__main__':
-    print(normalize({"type" : "lmp-npt"}))
+    print(normalize({"type" : "lmp-md"}))

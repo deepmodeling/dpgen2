@@ -176,7 +176,7 @@
 	"stages":	[
 	    [
 		{
-		    "type" : "lmp-npt",
+		    "type" : "lmp-md",
 		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
 		    "conf_idx": [0], "n_sample" : 3
 		},
