@@ -331,7 +331,7 @@ def workflow_concurrent_learning(
         select_confs_config = select_confs_config,
         collect_data_config = collect_data_config,
         cl_step_config = cl_step_config,
-        upload_python_packages = upload_python_packages,
+        upload_python_packages = upload_python_packages, # type: ignore
     )
     scheduler = make_naive_exploration_scheduler(config, old_style=old_style)
 
