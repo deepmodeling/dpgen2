@@ -5,6 +5,7 @@ from typing import (
     List,
     Tuple,
 )
+from dflow.python import FatalError
 
 class TrajsExplorationReport(ExplorationReport):
     def __init__(
