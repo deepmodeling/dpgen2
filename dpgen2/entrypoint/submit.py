@@ -316,7 +316,8 @@ def workflow_concurrent_learning(
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
     if upload_python_packages is not None:
-        upload_python_packages = [Path(ii) for ii in upload_python_packages]
+        _upload_python_packages: List[os.PathLike] = [Path(ii) for ii in upload_python_packages]
+        upload_python_packages = _upload_python_packages
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
@@ -331,7 +332,7 @@ def workflow_concurrent_learning(
         select_confs_config = select_confs_config,
         collect_data_config = collect_data_config,
         cl_step_config = cl_step_config,
-        upload_python_packages = upload_python_packages, # type: ignore
+        upload_python_packages = upload_python_packages,
     )
     scheduler = make_naive_exploration_scheduler(config, old_style=old_style)
 
