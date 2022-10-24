@@ -88,7 +88,7 @@
 	"_comment" : "all"
     },
 
-    "upload_python_package" : "/path/to/dpgen2",
+    "upload_python_packages" : "/path/to/dpgen2",
 
     "inputs": {
 	"type_map":		["Al", "Mg"],

@@ -36,7 +36,7 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    upload_python_package,
+    upload_python_packages,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
@@ -119,7 +119,7 @@ class TestLoop(unittest.TestCase):
             "prep-run-dp-train",
             MockedPrepDPTrain,
             MockedRunDPTrain,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -127,7 +127,7 @@ class TestLoop(unittest.TestCase):
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -135,7 +135,7 @@ class TestLoop(unittest.TestCase):
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -146,14 +146,14 @@ class TestLoop(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op,
             MockedCollectData,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )        
         self.dpgen_op = ConcurrentLearning(
             self.name,
             self.block_cl_op,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             step_config = default_config,
         )
 
@@ -326,7 +326,7 @@ class TestLoopRestart(unittest.TestCase):
             "prep-run-dp-train",
             MockedPrepDPTrain,
             MockedRunDPTrain,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -334,7 +334,7 @@ class TestLoopRestart(unittest.TestCase):
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -342,7 +342,7 @@ class TestLoopRestart(unittest.TestCase):
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -350,7 +350,7 @@ class TestLoopRestart(unittest.TestCase):
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspFail1,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -358,7 +358,7 @@ class TestLoopRestart(unittest.TestCase):
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVaspRestart,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -370,14 +370,14 @@ class TestLoopRestart(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op,
             MockedCollectDataFailed,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )        
         self.dpgen_op_0 = ConcurrentLearning(
             self.name,
             self.block_cl_op_0,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             step_config = default_config,
         )
         # restart collect data
@@ -388,14 +388,14 @@ class TestLoopRestart(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op,
             MockedCollectDataRestart,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )        
         self.dpgen_op_1 = ConcurrentLearning(
             self.name,
             self.block_cl_op_1,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             step_config = default_config,
         )
         # failed vasp 1
@@ -406,14 +406,14 @@ class TestLoopRestart(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op_f1,
             MockedCollectData,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )        
         self.dpgen_op_2 = ConcurrentLearning(
             self.name,
             self.block_cl_op_2,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             step_config = default_config,
         )
         # restart vasp
@@ -424,14 +424,14 @@ class TestLoopRestart(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op_res,
             MockedCollectData,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )        
         self.dpgen_op_3 = ConcurrentLearning(
             self.name,
             self.block_cl_op_3,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             step_config = default_config,
         )
 

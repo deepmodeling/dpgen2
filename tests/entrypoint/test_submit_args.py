@@ -44,7 +44,7 @@ class TestArgs(unittest.TestCase):
         self.assertEqual(normalize_step_dict(old_data.get('select_confs_config', default_config)), new_data['step_configs']['select_confs_config'])
         self.assertEqual(normalize_step_dict(old_data.get('collect_data_config', default_config)), new_data['step_configs']['collect_data_config'])
         self.assertEqual(normalize_step_dict(old_data.get('cl_step_config', default_config)), new_data['step_configs']['cl_step_config'])
-        self.assertEqual(old_data.get('upload_python_package', None), new_data['upload_python_package'])
+        self.assertEqual(old_data.get('upload_python_packages', None), new_data['upload_python_packages'])
         self.assertEqual(old_data['type_map'], new_data['inputs']['type_map'])
         self.assertEqual(old_data['numb_models'], new_data['train']['numb_models'])
         self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
@@ -158,7 +158,7 @@ old_str = textwrap.dedent("""
     },
 
     "_comment" : "upload the dpgen2 package if it is not in the images",
-    "upload_python_package" : "/path/to/dpgen2",
+    "upload_python_packages" : "/path/to/dpgen2",
 
     "max_numb_iter" :	5,
     "conv_accuracy" :	0.9,
@@ -342,7 +342,7 @@ new_str = textwrap.dedent("""
 	"_comment" : "all"
     },
 
-    "upload_python_package" : "/path/to/dpgen2",
+    "upload_python_packages" : "/path/to/dpgen2",
 
     "inputs": {
 	"type_map":		["Al", "Mg"],

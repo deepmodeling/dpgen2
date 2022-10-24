@@ -146,7 +146,7 @@ def dpgen_step_config_args(default_config):
 
 def submit_args(default_step_config = normalize_step_dict({})):
     doc_step_configs = "Configurations for executing dflow steps"
-    doc_upload_python_package = "Upload python package, for debug purpose"
+    doc_upload_python_packages = "Upload python package, for debug purpose"
     doc_inputs = "The input parameter and artifacts for dpgen2"
     doc_train = "The configuration for training"
     doc_explore = "The configuration for exploration"
@@ -157,7 +157,7 @@ def submit_args(default_step_config = normalize_step_dict({})):
         lebesgue_conf_args() + \
         default_step_config_args() + [
         Argument("step_configs", dict, dpgen_step_config_args(default_step_config), optional=True, default={}, doc=doc_step_configs),
-        Argument("upload_python_package", str, optional=True, default=None, doc=doc_upload_python_package),
+        Argument("upload_python_packages", [list,str], optional=True, default=None, doc=doc_upload_python_packages, alias=["upload_python_package"]),
         Argument("inputs", dict, input_args(), optional=False, doc=doc_inputs),
         Argument("train", dict, [], [variant_train()], optional=False, doc=doc_train),
         Argument("explore", dict, [], [variant_explore()], optional=False, doc=doc_explore),

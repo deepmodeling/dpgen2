@@ -35,7 +35,7 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    upload_python_package,
+    upload_python_packages,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
@@ -124,7 +124,7 @@ class TestMockedCollectDataArgo(unittest.TestCase):
                 output_artifact_archive={
                     "iter_data" : None,
                 },
-                python_packages = upload_python_package,
+                python_packages = upload_python_packages,
             ),
             parameters = {
                 "name" : self.name,

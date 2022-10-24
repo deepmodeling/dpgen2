@@ -34,7 +34,7 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    upload_python_package,
+    upload_python_packages,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
@@ -278,7 +278,7 @@ class TestTrainDp(unittest.TestCase):
             "train-steps",
             MockedPrepDPTrain,
             MockedRunDPTrain,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -328,7 +328,7 @@ class TestTrainDp(unittest.TestCase):
             "train-steps",
             MockedPrepDPTrain,
             MockedRunDPTrainNoneInitModel,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )

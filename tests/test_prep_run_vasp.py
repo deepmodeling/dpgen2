@@ -34,7 +34,7 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    upload_python_package,
+    upload_python_packages,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
@@ -220,7 +220,7 @@ class TestPrepRunVasp(unittest.TestCase):
             "prep-run-vasp",
             MockedPrepVasp,
             MockedRunVasp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )

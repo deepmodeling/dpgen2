@@ -111,7 +111,7 @@ def make_concurrent_learning_op (
         select_confs_config : dict = default_config,
         collect_data_config : dict = default_config,
         cl_step_config : dict = default_config,
-        upload_python_package : Optional[List[os.PathLike]] = None,
+        upload_python_packages : Optional[List[os.PathLike]] = None,
 ):
     if train_style == 'dp':
         prep_run_train_op = PrepRunDPTrain(
@@ -120,7 +120,7 @@ def make_concurrent_learning_op (
             RunDPTrain,
             prep_config = prep_train_config,
             run_config = run_train_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
     else:
         raise RuntimeError(f'unknown train_style {train_style}')
@@ -131,7 +131,7 @@ def make_concurrent_learning_op (
             RunLmp,
             prep_config = prep_explore_config,
             run_config = run_explore_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
     else:
         raise RuntimeError(f'unknown explore_style {explore_style}')
@@ -142,7 +142,7 @@ def make_concurrent_learning_op (
             RunVasp,
             prep_config = prep_fp_config,
             run_config = run_fp_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
     else:
         raise RuntimeError(f'unknown fp_style {fp_style}')
@@ -157,13 +157,13 @@ def make_concurrent_learning_op (
         CollectData,
         select_confs_config = select_confs_config,
         collect_data_config = collect_data_config,
-        upload_python_package = upload_python_package,
+        upload_python_packages = upload_python_packages,
     )    
     # dpgen
     dpgen_op = ConcurrentLearning(
         "concurrent-learning",
         block_cl_op,
-        upload_python_package = upload_python_package,
+        upload_python_packages = upload_python_packages,
         step_config = cl_step_config,
     )
         
@@ -311,8 +311,10 @@ def workflow_concurrent_learning(
     select_confs_config = normalize_step_dict(config.get('select_confs_config', default_config)) if old_style else config['step_configs']['select_confs_config']
     collect_data_config = normalize_step_dict(config.get('collect_data_config', default_config)) if old_style else config['step_configs']['collect_data_config']
     cl_step_config = normalize_step_dict(config.get('cl_step_config', default_config)) if old_style else config['step_configs']['cl_step_config']
-    upload_python_package = config.get('upload_python_package', None)
+    upload_python_packages = config.get('upload_python_packages', None)
     init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
+    if upload_python_packages is not None and isinstance(upload_python_packages, str):
+        upload_python_packages = [upload_python_packages]
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
@@ -327,7 +329,7 @@ def workflow_concurrent_learning(
         select_confs_config = select_confs_config,
         collect_data_config = collect_data_config,
         cl_step_config = cl_step_config,
-        upload_python_package = upload_python_package,
+        upload_python_packages = upload_python_packages,
     )
     scheduler = make_naive_exploration_scheduler(config, old_style=old_style)
 

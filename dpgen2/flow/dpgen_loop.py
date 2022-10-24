@@ -118,7 +118,7 @@ class ConcurrentLearningLoop(Steps):
             name : str,
             block_op : OPTemplate,
             step_config : dict = normalize_step_dict({}),
-            upload_python_package : Optional[List[os.PathLike]] = None,
+            upload_python_packages : Optional[List[os.PathLike]] = None,
     ):
         self._input_parameters={
             "block_id" : InputParameter(),
@@ -174,7 +174,7 @@ class ConcurrentLearningLoop(Steps):
             name,
             block_op,
             step_config = step_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
 
     @property
@@ -204,13 +204,13 @@ class ConcurrentLearning(Steps):
             name : str,
             block_op : OPTemplate,
             step_config : dict = normalize_step_dict({}),
-            upload_python_package : Optional[List[os.PathLike]] = None,
+            upload_python_packages : Optional[List[os.PathLike]] = None,
     ):
         self.loop = ConcurrentLearningLoop(
             name+'-loop',
             block_op,
             step_config = step_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
         
         self._input_parameters={
@@ -260,7 +260,7 @@ class ConcurrentLearning(Steps):
             self.loop,
             self.loop_key,
             step_config = step_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )
 
     @property
@@ -294,7 +294,7 @@ def _loop (
         name : str,
         block_op : OPTemplate,
         step_config : dict = normalize_step_dict({}),
-        upload_python_package : Optional[List[os.PathLike]] = None,
+        upload_python_packages : Optional[List[os.PathLike]] = None,
 ):    
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop('template_config')
@@ -327,7 +327,7 @@ def _loop (
         name = name + '-scheduler',
         template=PythonOPTemplate(
             SchedulerWrapper,
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **step_template_config,
         ),
         parameters={
@@ -347,7 +347,7 @@ def _loop (
         name = name + '-make-block-id',
         template=PythonOPTemplate(
             MakeBlockId,
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **step_template_config,
         ),
         parameters={
@@ -414,7 +414,7 @@ def _dpgen(
         loop_op,
         loop_key,
         step_config : dict = normalize_step_dict({}),
-        upload_python_package : Optional[List[os.PathLike]] = None
+        upload_python_packages : Optional[List[os.PathLike]] = None
 ):    
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop('template_config')
@@ -424,7 +424,7 @@ def _dpgen(
         name = name + '-scheduler',
         template=PythonOPTemplate(
             SchedulerWrapper,
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **step_template_config,
         ),
         parameters={
@@ -444,7 +444,7 @@ def _dpgen(
         name = name + '-make-block-id',
         template=PythonOPTemplate(
             MakeBlockId,
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **step_template_config,
         ),
         parameters={

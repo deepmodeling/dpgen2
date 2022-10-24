@@ -35,7 +35,7 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    upload_python_package,
+    upload_python_packages,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     default_image,
@@ -100,7 +100,7 @@ class TestBlockCL(unittest.TestCase):
             "prep-run-dp-train",
             MockedPrepDPTrain,
             MockedRunDPTrain,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -108,7 +108,7 @@ class TestBlockCL(unittest.TestCase):
             "prep-run-lmp",
             PrepLmp,
             MockedRunLmp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -116,7 +116,7 @@ class TestBlockCL(unittest.TestCase):
             "prep-run-fp",
             MockedPrepVasp,
             MockedRunVasp,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             prep_config = default_config,
             run_config = default_config,
         )
@@ -169,7 +169,7 @@ class TestBlockCL(unittest.TestCase):
             MockedSelectConfs,
             self.prep_run_fp_op,
             MockedCollectData,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
             select_confs_config = default_config,
             collect_data_config = default_config,
         )

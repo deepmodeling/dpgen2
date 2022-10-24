@@ -9,7 +9,7 @@ if os.getenv('SKIP_UT_WITH_DFLOW'):
 else:
     skip_ut_with_dflow = False
     skip_ut_with_dflow_reason = ''
-upload_python_package = os.path.join(dpgen_path, 'dpgen2')
+upload_python_packages = [os.path.join(dpgen_path, 'dpgen2')]
 # one needs to set proper values for the following variable.
 default_image = 'dptechnology/dpgen2:latest'
 default_host = None

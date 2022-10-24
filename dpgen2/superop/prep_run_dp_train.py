@@ -41,7 +41,7 @@ class PrepRunDPTrain(Steps):
             run_train_op : OP,
             prep_config : dict = normalize_step_dict({}),
             run_config : dict = normalize_step_dict({}),
-            upload_python_package : Optional[List[os.PathLike]] = None,
+            upload_python_packages : Optional[List[os.PathLike]] = None,
     ):
         self._input_parameters = {
             "block_id" : InputParameter(type=str, value=""),
@@ -91,7 +91,7 @@ class PrepRunDPTrain(Steps):
             run_train_op,
             prep_config = prep_config,
             run_config = run_config,
-            upload_python_package = upload_python_package,
+            upload_python_packages = upload_python_packages,
         )            
 
     @property
@@ -122,7 +122,7 @@ def _prep_run_dp_train(
         run_train_op : OP,
         prep_config : dict = normalize_step_dict({}),
         run_config : dict = normalize_step_dict({}),
-        upload_python_package : Optional[List[os.PathLike]] = None,
+        upload_python_packages : Optional[List[os.PathLike]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
@@ -138,7 +138,7 @@ def _prep_run_dp_train(
             output_artifact_archive={
                 "task_paths": None
             },
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **prep_template_config,
         ),
         parameters={
@@ -163,7 +163,7 @@ def _prep_run_dp_train(
                 input_artifact = ["task_path", "init_model"],
                 output_artifact = ["model", "lcurve", "log", "script"],
             ),
-            python_packages = upload_python_package,
+            python_packages = upload_python_packages,
             **run_template_config,
         ),
         parameters={
