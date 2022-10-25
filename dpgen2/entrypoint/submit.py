@@ -315,7 +315,8 @@ def workflow_concurrent_learning(
     init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
-    upload_python_packages = [Path(ii) for ii in upload_python_packages]
+    if upload_python_packages is not None:
+        upload_python_packages = [Path(ii) for ii in upload_python_packages]
 
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
