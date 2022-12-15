@@ -50,9 +50,9 @@ class TestArgs(unittest.TestCase):
         self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
         self.assertEqual(RunDPTrain.normalize_config({}), new_data['train']['config'])
         self.assertEqual(old_data.get('lmp_config', {}), new_data['explore']['config'])
-        self.assertEqual(old_data.get('fp_config', {}), new_data['fp']['config'])
-        self.assertEqual(old_data['fp_pp_files'], new_data['fp']['pp_files'])
-        self.assertEqual(old_data['fp_incar'], new_data['fp']['incar'])
+        self.assertEqual(old_data.get('fp_config', {}), new_data['fp']['run_config'])
+        self.assertEqual(old_data['fp_pp_files'], new_data['fp']['inputs_config']['pp_files'])
+        self.assertEqual(old_data['fp_incar'], new_data['fp']['inputs_config']['incar'])
         self.assertEqual(old_data.get('init_data_prefix'), new_data['inputs']['init_data_prefix'])
         self.assertEqual(old_data['init_data_sys'], new_data['inputs']['init_data_sys'])
 
@@ -131,7 +131,7 @@ old_str = textwrap.dedent("""
     },
     "fp_config": {
 	"command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std",
-        "log" : "vasp.log",
+        "log" : "fp.log",
         "out" : "data"
     },
 
@@ -433,12 +433,16 @@ new_str = textwrap.dedent("""
     },
     "fp" : {
 	"type" :	"vasp",
-	"config" : {
+	"run_config" : {
 	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
 	"task_max":	2,
-	"pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	"incar":         "vasp/INCAR",
+	"inputs_config" : {
+	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+	    "incar":    "vasp/INCAR",
+	    "kspacing":	0.32,
+	    "kgamma":	true
+	},
 	"_comment" : "all"
     }
 }

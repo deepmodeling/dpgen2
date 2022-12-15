@@ -14,7 +14,6 @@ from typing import (
     List, 
     Set,
 )
-from dpgen2.utils.run_command import run_command
 from dpgen2.utils.chdir import set_directory
 
 
@@ -75,23 +74,24 @@ class RunFp(OP):
             When mandatory files are not found.
         """
         config = ip['config']['run'] if ip['config']['run'] is not None else {}
+        config = type(self).normalize_config(config, strict=False)
         task_name = ip['task_name']
         task_path = ip['task_path']
         input_files = self.input_files()
         input_files = [(Path(task_path)/ii).resolve() for ii in input_files]
         opt_input_files = self.optional_input_files()
-        opt_input_files = [(Path(task_path)/ii).resolve() for ii in input_files]
+        opt_input_files = [(Path(task_path)/ii).resolve() for ii in opt_input_files]
         work_dir = Path(task_name)
 
         with set_directory(work_dir):
             # link input files
             for ii in input_files:
-                if not os.path.is_file(ii):
+                if not os.path.isfile(ii):
                     raise FatalError(f"cannot file file {ii}")
                 iname = ii.name
                 Path(iname).symlink_to(ii)
             for ii in opt_input_files:
-                if os.path.is_file(ii):
+                if os.path.isfile(ii):
                     iname = ii.name
                     Path(iname).symlink_to(ii)
             out_name, log_name = self.run_task(**config)

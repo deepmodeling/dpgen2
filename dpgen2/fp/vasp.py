@@ -1,3 +1,12 @@
+from dflow.python import (
+    OP,
+    OPIO,
+    OPIOSign,
+    Artifact,
+    TransientError,
+    FatalError,
+    BigParameter,
+)
 from pathlib import Path
 from typing import (
     Optional,
@@ -19,7 +28,11 @@ from dargs import (
 from .prep_fp import PrepFp
 from .run_fp import RunFp
 from .vasp_input import VaspInputs, make_kspacing_kpoints
-
+from dpgen2.constants import (
+    fp_default_log_name,
+    fp_default_out_data_name,
+)
+from dpgen2.utils.run_command import run_command
 
 # global static variables
 vasp_conf_name = 'POSCAR'
@@ -30,6 +43,7 @@ vasp_kp_name = 'KPOINTS'
 
 class PrepVasp(PrepFp):
     def prep_task(
+            self,
             conf_frame: dpdata.System,
             vasp_inputs: VaspInputs,
     ):
@@ -48,17 +62,20 @@ class PrepVasp(PrepFp):
 
         
 class RunVasp(RunFp):
-    def input_files() -> List[str]:
+    def input_files(self) -> List[str]:
         return [vasp_conf_name, vasp_input_name, vasp_pot_name, vasp_kp_name]
 
-    def optional_input_files() -> List[str]:
+    def optional_input_files(self) -> List[str]:
         return []
 
     def run_task(
+            self,
             command : str,
-            log_name: str,
-            out_name: str,
+            log: str,
+            out: str,
     ) -> Tuple[str, str]:
+        log_name = log
+        out_name = out
         # run vasp
         command = ' '.join([command, '>', log_name])
         ret, out, err = run_command(command, shell=True)
@@ -81,13 +98,13 @@ class RunVasp(RunFp):
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
             Argument("command", str, optional=True, default='vasp', doc=doc_vasp_cmd),
-            Argument("log", str, optional=True, default=vasp_default_log_name, doc=doc_vasp_log),
-            Argument("out", str, optional=True, default=vasp_default_out_data_name, doc=doc_vasp_out),
+            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
+            Argument("out", str, optional=True, default=fp_default_out_data_name, doc=doc_vasp_out),
         ]
 
     @staticmethod
     def normalize_config(data = {}, strict=True):
-        ta = RunVasp.vasp_args()
+        ta = RunVasp.args()
         base = Argument("base", dict, ta)
         data = base.normalize_value(data, trim_pattern="_*")
         base.check_value(data, strict=strict)

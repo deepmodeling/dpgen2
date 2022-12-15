@@ -14,8 +14,8 @@ lmp_log_name = 'log.lammps'
 lmp_model_devi_name = 'model_devi.out'
 fp_index_pattern = '%06d'
 fp_task_pattern = 'task.' + fp_index_pattern
-vasp_default_log_name = 'vasp.log'
-vasp_default_out_data_name = 'data'
+fp_default_log_name = 'fp.log'
+fp_default_out_data_name = 'data'
 
 default_image = 'dptechnology/dpgen2:latest'
 default_host = '127.0.0.1:2746'

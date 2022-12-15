@@ -99,7 +99,7 @@ class VaspInputs():
 
     @staticmethod
     def normalize_config(data = {}, strict=True):
-        ta = VaspInputs.vasp_args()
+        ta = VaspInputs.args()
         base = Argument("base", dict, ta)
         data = base.normalize_value(data, trim_pattern="_*")
         base.check_value(data, strict=strict)

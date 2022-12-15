@@ -11,15 +11,16 @@ from dflow.python import (
 )
 from pathlib import Path
 from dpgen2.constants import (
+    fp_default_log_name,
+    fp_default_out_data_name,
+)
+from dpgen2.fp import RunVasp
+from dpgen2.fp.vasp import (    
     vasp_conf_name,
     vasp_input_name,
     vasp_pot_name,
     vasp_kp_name,
-    vasp_default_log_name,
-    vasp_default_out_data_name,
 )
-from dpgen2.op.run_vasp import RunVasp
-
 
 class TestRunVasp(unittest.TestCase):
     def setUp(self):
@@ -37,7 +38,7 @@ class TestRunVasp(unittest.TestCase):
         if Path(self.task_name).is_dir():
             shutil.rmtree(self.task_name)
 
-    @patch('dpgen2.op.run_vasp.run_command')
+    @patch('dpgen2.fp.vasp.run_command')
     def test_success(self, mocked_run):
         mocked_run.side_effect = [ (0, 'foo\n', '') ]
         op = RunVasp()
@@ -47,18 +48,18 @@ class TestRunVasp(unittest.TestCase):
             (data_path/'foo').write_text('bar')
         def new_init(obj, foo):
             pass
-        with mock.patch.object(dpgen2.op.run_vasp.dpdata.LabeledSystem, 
+        with mock.patch.object(dpgen2.fp.vasp.dpdata.LabeledSystem, 
                                'to', 
                                new=new_to):
-            with mock.patch.object(dpgen2.op.run_vasp.dpdata.LabeledSystem, 
+            with mock.patch.object(dpgen2.fp.vasp.dpdata.LabeledSystem, 
                                    '__init__', 
                                    new=new_init):
                 out = op.execute(
                     OPIO({
-                        'config' : {'command' : 'myvasp',
+                        'config' :{'run': {'command' : 'myvasp',
                                     'log': 'foo.log', 
                                     'out':'data',
-                                    },
+                                    }},
                         'task_name' : self.task_name,
                         'task_path' : self.task_path,
                     }))
@@ -80,8 +81,8 @@ class TestRunVasp(unittest.TestCase):
         self.assertEqual((Path(self.task_name)/'data'/'foo').read_text(), 'bar')
 
 
-    @patch('dpgen2.op.run_vasp.run_command')
-    def test_success(self, mocked_run):
+    @patch('dpgen2.fp.vasp.run_command')
+    def test_success_1(self, mocked_run):
         mocked_run.side_effect = [ (0, 'foo\n', '') ]
         op = RunVasp()
         def new_to(obj, foo, bar):
@@ -90,26 +91,26 @@ class TestRunVasp(unittest.TestCase):
             (data_path/'foo').write_text('bar')
         def new_init(obj, foo):
             pass
-        with mock.patch.object(dpgen2.op.run_vasp.dpdata.LabeledSystem, 
+        with mock.patch.object(dpgen2.fp.vasp.dpdata.LabeledSystem, 
                                'to', 
                                new=new_to):
-            with mock.patch.object(dpgen2.op.run_vasp.dpdata.LabeledSystem, 
+            with mock.patch.object(dpgen2.fp.vasp.dpdata.LabeledSystem, 
                                    '__init__', 
                                    new=new_init):
                 out = op.execute(
                     OPIO({
-                        'config' : {'command' : 'myvasp',
-                                    },
+                        'config' : {'run' : {'command' : 'myvasp',
+                                             }},
                         'task_name' : self.task_name,
                         'task_path' : self.task_path,
                     }))
         work_dir = Path(self.task_name)
         # check output
-        self.assertEqual(out['log'], work_dir/vasp_default_log_name)
-        self.assertEqual(out['labeled_data'], work_dir/vasp_default_out_data_name)
+        self.assertEqual(out['log'], work_dir/fp_default_log_name)
+        self.assertEqual(out['labeled_data'], work_dir/fp_default_out_data_name)
         # check call
         calls = [
-            call(' '.join(['myvasp', '>', vasp_default_log_name]), shell=True),
+            call(' '.join(['myvasp', '>', fp_default_log_name]), shell=True),
         ]
         mocked_run.assert_has_calls(calls)
         # check input files are correctly linked
@@ -121,20 +122,21 @@ class TestRunVasp(unittest.TestCase):
         self.assertEqual((Path(self.task_name)/'data'/'foo').read_text(), 'bar')
     
 
-    @patch('dpgen2.op.run_vasp.run_command')
+    @patch('dpgen2.fp.vasp.run_command')
     def test_error(self, mocked_run):
         mocked_run.side_effect = [ (1, 'foo\n', '') ]
         op = RunVasp()
         with self.assertRaises(TransientError) as ee:
             out = op.execute(
                 OPIO({
-                    'config' : {'command' : 'myvasp'},
+                    'config' : {'run' : {'command' : 'myvasp',
+                                         }},
                     'task_name' : self.task_name,
                     'task_path' : self.task_path,
                 }))
         # check call
         calls = [
-            call(' '.join(['myvasp', '>', vasp_default_log_name]), shell=True),
+            call(' '.join(['myvasp', '>', fp_default_log_name]), shell=True),
         ]
         mocked_run.assert_has_calls(calls)
                         

@@ -71,13 +71,15 @@ def fp_args(inputs, run):
 
     return [
         Argument("inputs_config", dict, 
-                 inputs.args(), 
-                 optional=True, 
-                 default=inputs.normalize_config({}), doc=doc_config),
-        Argument("run_config", dict, 
-                 run.args(), 
-                 optional=True, 
-                 default=run.normalize_config({}), doc=doc_config),            
+                 inputs.args(),
+                 optional=False,
+                 doc=doc_inputs_config,
+                 ),
+        Argument("run_config", dict,
+                 run.args(),
+                 optional=False,
+                 doc=doc_run_config,
+                 ),
         Argument("task_max", int, optional=True, default=10, doc=doc_task_max),
     ]
 

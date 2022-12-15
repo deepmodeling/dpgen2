@@ -3,11 +3,12 @@ import os,sys,json,glob,shutil,textwrap
 import dpdata
 import numpy as np
 import unittest
-from dpgen2.fp.vasp import VaspInputs
-from dpgen2.op.prep_vasp import PrepVasp
+from dpgen2.fp.vasp import VaspInputs, PrepVasp
 from pathlib import Path
 from dpgen2.constants import (
-    vasp_task_pattern,
+    fp_task_pattern,
+)
+from dpgen2.fp.vasp import (
     vasp_input_name,
     vasp_pot_name,
     vasp_kp_name,
@@ -54,7 +55,7 @@ class TestPrepVasp(unittest.TestCase):
         tot_f_1 = sum(self.nframes_1)
         tot_f = tot_f_0 + tot_f_1
         for ii in range(tot_f):
-            tname = Path(vasp_task_pattern%ii)
+            tname = Path(fp_task_pattern%ii)
             if tname.is_dir():
                 shutil.rmtree(tname)
 
@@ -86,8 +87,8 @@ Gamma
         tot_f_1 = sum(self.nframes_1)
         tot_f = tot_f_0 + tot_f_1
         for ii in range(tot_f):
-            self.assertEqual(task_names[ii], vasp_task_pattern%ii)
-            self.assertEqual(str(task_paths[ii]), vasp_task_pattern%ii)
+            self.assertEqual(task_names[ii], fp_task_pattern%ii)
+            self.assertEqual(str(task_paths[ii]), fp_task_pattern%ii)
         for ii in range(tot_f_0):
             ipath = task_paths[ii]
             self.assertEqual('foo', (ipath/vasp_input_name).read_text())

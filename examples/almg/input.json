@@ -191,12 +191,16 @@
     },
     "fp" : {
 	"type" :	"vasp",
-	"config" : {
+	"task_max":	2,
+	"run_config" : {
 	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
-	"task_max":	2,
-	"pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	"incar":         "vasp/INCAR",
+	"inputs_config" : {
+	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+	    "incar":    "vasp/INCAR",
+	    "kspacing":	0.32,
+	    "kgamma":	true
+	},
 	"_comment" : "all"
     }
 }
