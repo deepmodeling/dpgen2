@@ -23,7 +23,7 @@ from dflow.python import(
     Slices,
 )
 from dpgen2.constants import (
-    vasp_index_pattern,
+    fp_index_pattern,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from dpgen2.utils.step_config import init_executor
@@ -173,7 +173,7 @@ def _prep_run_fp(
         artifacts={
             'task_path' : prep_fp.outputs.artifacts['task_paths'],
         },
-        with_sequence=argo_sequence(argo_len(prep_fp.outputs.parameters["task_names"]), format=vasp_index_pattern),
+        with_sequence=argo_sequence(argo_len(prep_fp.outputs.parameters["task_names"]), format=fp_index_pattern),
         # with_param=argo_range(argo_len(prep_fp.outputs.parameters["task_names"])),
         key = step_keys['run-fp'],
         executor = run_executor,

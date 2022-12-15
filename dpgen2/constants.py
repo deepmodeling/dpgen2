@@ -12,12 +12,8 @@ plm_output_name = 'output.plumed'
 lmp_traj_name = 'traj.dump'
 lmp_log_name = 'log.lammps'
 lmp_model_devi_name = 'model_devi.out'
-vasp_index_pattern = '%06d'
-vasp_task_pattern = 'task.' + vasp_index_pattern
-vasp_conf_name = 'POSCAR'
-vasp_input_name = 'INCAR'
-vasp_pot_name = 'POTCAR'
-vasp_kp_name = 'KPOINTS'
+fp_index_pattern = '%06d'
+fp_task_pattern = 'task.' + fp_index_pattern
 vasp_default_log_name = 'vasp.log'
 vasp_default_out_data_name = 'data'
 

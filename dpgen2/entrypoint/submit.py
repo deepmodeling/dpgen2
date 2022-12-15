@@ -31,8 +31,6 @@ from dpgen2.op import (
     RunDPTrain,
     PrepLmp,
     RunLmp,
-    PrepVasp,
-    RunVasp,
     SelectConfs,
     CollectData,
 )
@@ -45,9 +43,7 @@ from dpgen2.superop import (
 from dpgen2.flow import (
     ConcurrentLearning,
 )
-from dpgen2.fp import (
-    VaspInputs,
-)
+from dpgen2.fp import fp_styles
 from dpgen2.exploration.scheduler import (
     ExplorationScheduler,
     ConvergenceCheckStageScheduler,
@@ -135,11 +131,12 @@ def make_concurrent_learning_op (
         )
     else:
         raise RuntimeError(f'unknown explore_style {explore_style}')
-    if fp_style == 'vasp':
+
+    if fp_style in fp_styles.keys():        
         prep_run_fp_op = PrepRunFp(
-            "prep-run-vasp",
-            PrepVasp,
-            RunVasp,
+            f"prep-run-fp",
+            fp_styles[fp_style]['prep'],
+            fp_styles[fp_style]['run'],
             prep_config = prep_fp_config,
             run_config = run_fp_config,
             upload_python_packages = upload_python_packages,
@@ -344,16 +341,23 @@ def workflow_concurrent_learning(
     train_config = {} if old_style else config['train']['config']
     lmp_config = config.get('lmp_config', {}) if old_style else config['explore']['config']
     fp_config = config.get('fp_config', {}) if old_style else config['fp']['config']
-    kspacing, kgamma = get_kspacing_kgamma_from_incar(config['fp_incar'] if old_style else config['fp']['incar'])
-    fp_pp_files = config['fp_pp_files'] if old_style else config['fp']['pp_files']
-    incar_file = config['fp_incar'] if old_style else config['fp']['incar']
-    fp_inputs = VaspInputs(
-        kspacing = kspacing,
-        kgamma = kgamma,
-        incar_template_name = incar_file,
-        potcar_names = fp_pp_files,
-    )
+    if old_style:        
+        potcar_names = config['fp_pp_files']
+        incar_template_name = config['fp_incar']
+        kspacing, kgamma = get_kspacing_kgamma_from_incar(incar_template_name)
+        fp_inputs_config = {
+            'kspacing' : kspacing,
+            'kgamma' : kgamma,
+            'incar_template_name' : incar_template_name,
+            'potcar_names' : potcar_names,
+        }
+    else:
+        fp_inputs_config = config['fp']['inputs_config']
+    fp_inputs = fp_styles[fp_style]['inputs'](**fp_inputs_config)
+
     fp_config['inputs'] = fp_inputs
+    fp_config['run'] = config['fp']['run_config']
+
     init_data_prefix = config.get('init_data_prefix') if old_style else config['inputs']['init_data_prefix']
     init_data = config['init_data_sys'] if old_style else config['inputs']['init_data_sys']
     if init_data_prefix is not None:

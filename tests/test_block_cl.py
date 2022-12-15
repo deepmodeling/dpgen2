@@ -64,7 +64,7 @@ from dpgen2.constants import (
     lmp_input_name,
     lmp_traj_name,
     lmp_log_name,
-    vasp_task_pattern,
+    fp_task_pattern,
 )
 from mocked_ops import (    
     mocked_template_script,
@@ -232,7 +232,7 @@ class TestBlockCL(unittest.TestCase):
         # we know number of selected data is 2
         # by MockedConfSelector
         for ii in range(mocked_numb_select):
-            task_name = vasp_task_pattern % ii
+            task_name = fp_task_pattern % ii
             self.assertEqual(
                 '\n'.join([f'labeled_data of {task_name}',
                            f'select conf.{ii}',

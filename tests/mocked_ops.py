@@ -28,16 +28,17 @@ from dpgen2.constants import (
     lmp_traj_name,
     lmp_log_name,
     lmp_model_devi_name,
-    vasp_task_pattern,
+    fp_task_pattern,
+)
+from dpgen2.fp.vasp import(
     vasp_conf_name,
     vasp_input_name,
-)
+)    
 from dpgen2.op.run_dp_train import RunDPTrain
 from dpgen2.op.prep_dp_train import PrepDPTrain
 from dpgen2.op.prep_lmp import PrepExplorationTaskGroup
 from dpgen2.op.run_lmp import RunLmp
-from dpgen2.op.prep_vasp import PrepVasp
-from dpgen2.op.run_vasp import RunVasp
+from dpgen2.fp import PrepVasp, RunVasp
 from dpgen2.op.collect_data import CollectData
 from dpgen2.op.select_confs import SelectConfs
 from dpgen2.exploration.selector import TrustLevel, ConfSelector
@@ -365,7 +366,7 @@ class MockedPrepVasp(PrepVasp):
         task_paths = []
 
         for ii in range(nconfs):
-            task_path = Path(vasp_task_pattern % ii)
+            task_path = Path(fp_task_pattern % ii)
             task_path.mkdir(exist_ok=True, parents=True)
             from shutil import copyfile
             copyfile(confs[ii], task_path/vasp_conf_name)

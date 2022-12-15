@@ -15,23 +15,18 @@ from typing import (
     Union,
 )
 from pathlib import Path
-from dpgen2.fp.vasp import VaspInputs
 from dpgen2.utils import (
     set_directory,
 )
 from dpgen2.constants import (
-    vasp_task_pattern,
-    vasp_conf_name,
-    vasp_input_name,
-    vasp_pot_name,
-    vasp_kp_name,
+    fp_task_pattern,
 )
 
-class PrepVasp(OP):
-    r"""Prepares the working directories for VASP tasks.
+class PrepFp(OP):
+    r"""Prepares the working directories for first-principles (FP) tasks.
 
     A list of (same length as ip["confs"]) working directories
-    containing all files needed to start VASP tasks will be
+    containing all files needed to start FP tasks will be
     created. The paths of the directories will be returned as
     `op["task_paths"]`. The identities of the tasks are returned as
     `op["task_names"]`.
@@ -66,8 +61,8 @@ class PrepVasp(OP):
         ip : dict
             Input dict with components:
 
-            - `config` : (`dict`) Should have `config['inputs']`, which is of type `VaspInputs` and definites the VASP inputs
-            - `confs` : (`Artifact(List[Path])`) Configurations for the VASP tasks. Stored in folders as deepmd/npy format. Can be parsed as dpdata.MultiSystems. 
+            - `config` : (`dict`) Should have `config['inputs']`, which defines the input files of the FP task.
+            - `confs` : (`Artifact(List[Path])`) Configurations for the FP tasks. Stored in folders as deepmd/npy format. Can be parsed as dpdata.MultiSystems. 
         
         Returns
         -------
@@ -75,7 +70,7 @@ class PrepVasp(OP):
             Output dict with components:
 
             - `task_names`: (`List[str]`) The name of tasks. Will be used as the identities of the tasks. The names of different tasks are different.
-            - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the VASP. The order fo the Paths should be consistent with `op["task_names"]`
+            - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the FP. The order fo the Paths should be consistent with `op["task_names"]`
         """
 
         inputs = ip['config']['inputs']
@@ -107,22 +102,11 @@ class PrepVasp(OP):
     def _exec_one_frame(
             self,
             idx,
-            vasp_inputs : VaspInputs,
+            inputs,
             conf_frame : dpdata.System,
     ) -> Tuple[str, Path]:
-        task_name = vasp_task_pattern % idx
+        task_name = fp_task_pattern % idx
         task_path = Path(task_name)
         with set_directory(task_path):
-            conf_frame.to('vasp/poscar', vasp_conf_name)
-            Path(vasp_input_name).write_text(
-                vasp_inputs.incar_template
-            )
-            # fix the case when some element have 0 atom, e.g. H0O2
-            tmp_frame = dpdata.System(vasp_conf_name, fmt='vasp/poscar')
-            Path(vasp_pot_name).write_text(
-                vasp_inputs.make_potcar(tmp_frame['atom_names'])
-            )
-            Path(vasp_kp_name).write_text(
-                vasp_inputs.make_kpoints(conf_frame['cells'][0])
-            )
+            self.prep_task(conf_frame, inputs)
         return task_name, task_path

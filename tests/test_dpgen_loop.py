@@ -69,7 +69,9 @@ from dpgen2.constants import (
     lmp_input_name,
     lmp_traj_name,
     lmp_log_name,
-    vasp_task_pattern,
+    fp_task_pattern,
+)
+from dpgen2.fp.vasp import (
     vasp_conf_name,
     vasp_input_name,
     vasp_pot_name,
@@ -289,8 +291,8 @@ class TestLoop(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000000'/
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
-                '\n'.join(['labeled_data of '+vasp_task_pattern%ii,
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
+                '\n'.join(['labeled_data of '+fp_task_pattern%ii,
                            f'select conf.{ii}',
                            f'mocked conf {ii}',
                            f'mocked input {ii}',
@@ -299,8 +301,8 @@ class TestLoop(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
-                '\n'.join(['labeled_data of '+vasp_task_pattern%ii,
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
+                '\n'.join(['labeled_data of '+fp_task_pattern%ii,
                            f'select conf.{ii}',
                            f'mocked 1 conf {ii}',
                            f'mocked 1 input {ii}',
@@ -670,11 +672,11 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000000'/
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
                     'modified',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked conf {ii}',
                     f'mocked input {ii}',
@@ -683,10 +685,10 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked 1 conf {ii}',
                     f'mocked 1 input {ii}',
@@ -821,11 +823,11 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000000'/
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
                     'modified',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked conf {ii}',
                     f'mocked input {ii}',
@@ -834,10 +836,10 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked 2 conf {ii}',
                     f'mocked 2 input {ii}',
@@ -959,9 +961,9 @@ class TestLoopRestart(unittest.TestCase):
             if ii == 0:
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
                         f'mocked input {ii}',
@@ -970,10 +972,10 @@ class TestLoopRestart(unittest.TestCase):
             else :
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
                         'restarted',
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         'modified',
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
@@ -983,10 +985,10 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restarted',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked 1 conf {ii}',
                     f'mocked 1 input {ii}',
@@ -1106,10 +1108,10 @@ class TestLoopRestart(unittest.TestCase):
             if ii == 0:
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
                         'restart',
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
                         f'mocked input {ii}',
@@ -1118,11 +1120,11 @@ class TestLoopRestart(unittest.TestCase):
             elif ii == 1:
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
                         'restart',
                         'modified',
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
                         f'mocked input {ii}',
@@ -1131,10 +1133,10 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked 1 conf {ii}',
                     f'mocked 1 input {ii}',
@@ -1254,10 +1256,10 @@ class TestLoopRestart(unittest.TestCase):
             if ii == 0:
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
                         'restart',
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
                         f'mocked input {ii}',
@@ -1266,11 +1268,11 @@ class TestLoopRestart(unittest.TestCase):
             elif ii == 1:
                 self.assertEqual(
                     (Path('iter_data')/'iter-000000'/
-                     ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                     ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                     '\n'.join([
                         'restart',
                         'modified',
-                        'labeled_data of '+vasp_task_pattern%ii,
+                        'labeled_data of '+fp_task_pattern%ii,
                         f'select conf.{ii}',
                         f'mocked conf {ii}',
                         f'mocked input {ii}',
@@ -1279,10 +1281,10 @@ class TestLoopRestart(unittest.TestCase):
         for ii in range(mocked_numb_select):
             self.assertEqual(
                 (Path('iter_data')/'iter-000001'/\
-                 ('data_'+vasp_task_pattern%ii)/'data').read_text().strip(),
+                 ('data_'+fp_task_pattern%ii)/'data').read_text().strip(),
                 '\n'.join([
                     'restart',
-                    'labeled_data of '+vasp_task_pattern%ii,
+                    'labeled_data of '+fp_task_pattern%ii,
                     f'select conf.{ii}',
                     f'mocked 1 conf {ii}',
                     f'mocked 1 input {ii}',

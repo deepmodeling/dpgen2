@@ -48,7 +48,9 @@ from mocked_ops import (
 )
 from dpgen2.fp.vasp import VaspInputs
 from dpgen2.constants import (
-    vasp_task_pattern,
+    fp_task_pattern,
+)
+from dpgen2.fp.vasp import (
     vasp_conf_name,
     vasp_input_name,
     vasp_pot_name,
@@ -66,7 +68,7 @@ def check_vasp_tasks(tcase, ntasks):
     cc = 0
     tdirs = []
     for ii in range(ntasks):
-        tdir = vasp_task_pattern % cc
+        tdir = fp_task_pattern % cc
         tdirs.append(tdir)
         tcase.assertTrue(Path(tdir).is_dir())
         fconf = Path(tdir)/vasp_conf_name
@@ -96,7 +98,7 @@ class TestPrepVaspTaskGroup(unittest.TestCase):
         
     def tearDown(self):
         for ii in range(self.ntasks):
-            work_path = Path(vasp_task_pattern % ii)
+            work_path = Path(fp_task_pattern % ii)
             if work_path.is_dir():
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')
@@ -129,7 +131,7 @@ class TestMockedRunVasp(unittest.TestCase):
         self.ntask = 6
         self.task_list = []
         for ii in range(self.ntask):
-            work_path = Path(vasp_task_pattern % ii)
+            work_path = Path(fp_task_pattern % ii)
             work_path.mkdir(exist_ok=True, parents=True)
             (work_path/vasp_conf_name).write_text(f'conf {ii}')
             (work_path/vasp_input_name).write_text(f'incar template')
@@ -151,7 +153,7 @@ class TestMockedRunVasp(unittest.TestCase):
 
     def tearDown(self):
         for ii in range(self.ntask):
-            work_path = Path(vasp_task_pattern % ii)
+            work_path = Path(fp_task_pattern % ii)
             if work_path.is_dir():
                 shutil.rmtree(work_path)
             
@@ -165,8 +167,8 @@ class TestMockedRunVasp(unittest.TestCase):
             })
             op = MockedRunVasp()
             out = op.execute(ip)
-            self.assertEqual(out['log'] , Path(vasp_task_pattern % ii)/'log')
-            self.assertEqual(out['labeled_data'] , Path(vasp_task_pattern % ii)/('data_'+vasp_task_pattern % ii))
+            self.assertEqual(out['log'] , Path(fp_task_pattern % ii)/'log')
+            self.assertEqual(out['labeled_data'] , Path(fp_task_pattern % ii)/('data_'+fp_task_pattern % ii))
             self.assertTrue(out['log'].is_file())
             self.assertTrue(out['labeled_data'].is_dir())
             self.check_run_lmp_output(self.task_list_str[ii])
@@ -191,7 +193,7 @@ class TestPrepRunVasp(unittest.TestCase):
 
     def tearDown(self):
         for ii in range(self.ntasks):
-            work_path = Path(vasp_task_pattern % ii)
+            work_path = Path(fp_task_pattern % ii)
             if work_path.is_dir():
                 shutil.rmtree(work_path)
             fname = Path(f'conf.{ii}')

@@ -7,11 +7,11 @@ from dpgen2.constants import default_image
 from dflow.plugins.lebesgue import LebesgueExecutor
 from dpgen2.op.run_dp_train import RunDPTrain
 from dpgen2.op.run_lmp import RunLmp
-from dpgen2.op.run_vasp import RunVasp
 from dpgen2.utils import (
     step_conf_args,
     normalize_step_dict,
 )
+from dpgen2.fp import fp_styles
 
 def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
@@ -63,24 +63,39 @@ def variant_explore():
         Argument("lmp", dict, lmp_args()),
     ], doc=doc)
 
-def vasp_args():
-    doc_config = "Configuration of vasp runs"
+
+def fp_args(inputs, run):
+    doc_inputs_config = "Configuration for preparing vasp inputs"
+    doc_run_config = "Configuration for running vasp tasks"
     doc_task_max = "Maximum number of vasp tasks for each iteration"
-    doc_pp_files = 'The pseudopotential files set by a dict, e.g. {"Al" : "path/to/the/al/pp/file", "Mg" : "path/to/the/mg/pp/file"}'
-    doc_incar = "The path to the template incar file"
 
     return [
-        Argument("config", dict, RunVasp.vasp_args(), optional=True, default=RunVasp.normalize_config({}), doc=doc_config),
+        Argument("inputs_config", dict, 
+                 inputs.args(), 
+                 optional=True, 
+                 default=inputs.normalize_config({}), doc=doc_config),
+        Argument("run_config", dict, 
+                 run.args(), 
+                 optional=True, 
+                 default=run.normalize_config({}), doc=doc_config),            
         Argument("task_max", int, optional=True, default=10, doc=doc_task_max),
-        Argument("pp_files", dict, optional=False, doc=doc_pp_files),
-        Argument("incar", str, optional=False, doc=doc_pp_files),
     ]
+
 
 def variant_fp():
     doc = "the type of the fp"
-    return Variant("type", [
-        Argument("vasp", dict, vasp_args()),
-    ], doc=doc)
+
+    fp_list = []
+    for kk in fp_styles.keys():
+        fp_list.append(
+            Argument(
+                kk,
+                dict, 
+                fp_args(fp_styles[kk]['inputs'], fp_styles[kk]['run']),
+            ))
+
+    return Variant("type", fp_list, doc=doc)
+
 
 def input_args():
     doc_type_map = 'The type map. e.g. ["Al", "Mg"]. Al and Mg will have type 0 and 1, respectively.'
