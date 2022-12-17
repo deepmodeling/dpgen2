@@ -58,8 +58,8 @@ class PrepRunLmp(Steps):
             "logs": OutputArtifact(),
             "trajs": OutputArtifact(),
             "model_devis": OutputArtifact(),
-            "plm_output": OutputArtifact(optional=True),
-        }        
+            "plm_output": OutputArtifact(),
+        }
 
         super().__init__(
             name=name,
