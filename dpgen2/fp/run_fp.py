@@ -56,6 +56,7 @@ class RunFp(OP, ABC):
         """
         pass
 
+    @abstractmethod
     def optional_input_files(self) -> List[str]:
         r"""The optional input files to run a FP task.
         
@@ -67,6 +68,7 @@ class RunFp(OP, ABC):
         """
         pass
 
+    @abstractmethod
     def run_task(
             self,
             **kwargs,
@@ -87,6 +89,8 @@ class RunFp(OP, ABC):
             The file name of the log.
         """
         pass
+
+
 
     @OP.exec_sign_check
     def execute(
