@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import dpdata
 from dflow.python import (
     OP,
@@ -13,6 +14,7 @@ from typing import (
     Set, 
     Dict,
     Union,
+    Any,
 )
 from pathlib import Path
 from dpgen2.utils import (
@@ -22,7 +24,7 @@ from dpgen2.constants import (
     fp_task_pattern,
 )
 
-class PrepFp(OP):
+class PrepFp(OP, ABC):
     r"""Prepares the working directories for first-principles (FP) tasks.
 
     A list of (same length as ip["confs"]) working directories
@@ -48,6 +50,23 @@ class PrepFp(OP):
             "task_paths" : Artifact(List[Path]),
         })
 
+    @abstractmethod
+    def prep_task(
+            self,
+            conf_frame: dpdata.System,
+            inputs: Any,
+    ):
+        r"""Define how one FP task is prepared.
+
+        Parameters
+        ----------
+        conf_frame : dpdata.System
+            One frame of configuration in the dpdata format.
+        inputs: Any
+            The class object handels all other input files of the task. 
+            For example, pseudopotential file, k-point file and so on.
+        """
+        pass
 
     @OP.exec_sign_check
     def execute(

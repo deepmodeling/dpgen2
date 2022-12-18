@@ -47,6 +47,16 @@ class PrepVasp(PrepFp):
             conf_frame: dpdata.System,
             vasp_inputs: VaspInputs,
     ):
+        r"""Define how one Vasp task is prepared.
+
+        Parameters
+        ----------
+        conf_frame : dpdata.System
+            One frame of configuration in the dpdata format.
+        inputs: VaspInputs
+            The VaspInputs object handels all other input files of the task.
+        """
+
         conf_frame.to('vasp/poscar', vasp_conf_name)
         Path(vasp_input_name).write_text(
             vasp_inputs.incar_template
@@ -63,17 +73,52 @@ class PrepVasp(PrepFp):
         
 class RunVasp(RunFp):
     def input_files(self) -> List[str]:
+        r"""The mandatory input files to run a vasp task.
+        
+        Returns
+        -------
+        files: List[str]
+            A list of madatory input files names.
+
+        """
         return [vasp_conf_name, vasp_input_name, vasp_pot_name, vasp_kp_name]
 
     def optional_input_files(self) -> List[str]:
+        r"""The optional input files to run a vasp task.
+        
+        Returns
+        -------
+        files: List[str]
+            A list of optional input files names.
+
+        """
         return []
 
     def run_task(
             self,
             command : str,
-            log: str,
             out: str,
+            log: str,
     ) -> Tuple[str, str]:
+        r"""Defines how one FP task runs
+        
+        Parameters
+        ----------
+        command: str
+            The command of running vasp task
+        out: str
+            The name of the output data file.
+        log: str
+            The name of the log file
+
+        Returns
+        -------
+        out_name: str
+            The file name of the output data in the dpdata.LabeledSystem format.
+        log_name: str
+            The file name of the log.
+        """
+
         log_name = log
         out_name = out
         # run vasp
@@ -98,8 +143,8 @@ class RunVasp(RunFp):
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
             Argument("command", str, optional=True, default='vasp', doc=doc_vasp_cmd),
-            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
             Argument("out", str, optional=True, default=fp_default_out_data_name, doc=doc_vasp_out),
+            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
         ]
 
     @staticmethod

@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dflow.python import (
     OP,
     OPIO,
@@ -17,7 +18,7 @@ from typing import (
 from dpgen2.utils.chdir import set_directory
 
 
-class RunFp(OP):
+class RunFp(OP, ABC):
     r"""Execute a first-principles (FP) task.
 
     A working directory named `task_name` is created. All input files
@@ -42,6 +43,50 @@ class RunFp(OP):
             "log": Artifact(Path),
             "labeled_data" : Artifact(Path),
         })
+
+    @abstractmethod
+    def input_files(self) -> List[str]:
+        r"""The mandatory input files to run a FP task.
+        
+        Returns
+        -------
+        files: List[str]
+            A list of madatory input files names.
+
+        """
+        pass
+
+    def optional_input_files(self) -> List[str]:
+        r"""The optional input files to run a FP task.
+        
+        Returns
+        -------
+        files: List[str]
+            A list of optional input files names.
+
+        """
+        pass
+
+    def run_task(
+            self,
+            **kwargs,
+    ) -> Tuple[str, str]:
+        r"""Defines how one FP task runs
+        
+        Parameters
+        ----------
+        kwargs
+            Keyword args defined by the developer. 
+            The fp/run_config session will be passed to this function.
+
+        Returns
+        -------
+        out_name: str
+            The file name of the output data. Should be in dpdata.LabeledSystem format.
+        log_name: str
+            The file name of the log.
+        """
+        pass
 
     @OP.exec_sign_check
     def execute(
