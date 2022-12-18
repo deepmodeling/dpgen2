@@ -14,6 +14,7 @@ from typing import (
     Tuple, 
     List, 
     Set,
+    Dict,
 )
 from dpgen2.utils.chdir import set_directory
 import dargs
@@ -104,7 +105,25 @@ class RunFp(OP, ABC):
         pass
 
     @classmethod
-    def normalize_config(cls, data = {}, strict=True):
+    def normalize_config(
+            cls, 
+            data: Dict={}, 
+            strict: bool=True) -> Dict:
+        r"""Normalized the argument.
+
+        Parameters
+        ----------
+        data: Dict
+            The input dict of arguments.
+        strict: bool
+            Strictly check the arguments.
+        
+        Returns
+        -------
+        data: Dict
+            The normalized arguments.
+        
+        """
         ta = cls.args()
         base = dargs.Argument("base", dict, ta)
         data = base.normalize_value(data, trim_pattern="_*")
