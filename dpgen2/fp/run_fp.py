@@ -16,6 +16,7 @@ from typing import (
     Set,
 )
 from dpgen2.utils.chdir import set_directory
+import dargs
 
 
 class RunFp(OP, ABC):
@@ -79,7 +80,7 @@ class RunFp(OP, ABC):
         ----------
         kwargs
             Keyword args defined by the developer. 
-            The fp/run_config session will be passed to this function.
+            The fp/run_config session of the input file will be passed to this function.
 
         Returns
         -------
@@ -90,6 +91,25 @@ class RunFp(OP, ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def args() -> List[dargs.Argument]:
+        r"""The argument definition of the `run_task` method.
+
+        Returns
+        -------
+        arguments: List[dargs.Arguments]
+            List of dargs.Arguments defines the arguments of `run_task` method.
+        """
+        pass
+
+    @classmethod
+    def normalize_config(cls, data = {}, strict=True):
+        ta = cls.args()
+        base = dargs.Argument("base", dict, ta)
+        data = base.normalize_value(data, trim_pattern="_*")
+        base.check_value(data, strict=strict)
+        return data
 
 
     @OP.exec_sign_check

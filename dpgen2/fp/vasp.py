@@ -138,6 +138,14 @@ class RunVasp(RunFp):
 
     @staticmethod
     def args():
+        r"""The argument definition of the `run_task` method.
+
+        Returns
+        -------
+        arguments: List[dargs.Arguments]
+            List of dargs.Arguments defines the arguments of `run_task` method.
+        """
+
         doc_vasp_cmd = "The command of VASP"
         doc_vasp_log = "The log file name of VASP"
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
@@ -147,10 +155,3 @@ class RunVasp(RunFp):
             Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
         ]
 
-    @staticmethod
-    def normalize_config(data = {}, strict=True):
-        ta = RunVasp.args()
-        base = Argument("base", dict, ta)
-        data = base.normalize_value(data, trim_pattern="_*")
-        base.check_value(data, strict=strict)
-        return data
