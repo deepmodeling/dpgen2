@@ -115,11 +115,11 @@ def input_args():
 
 def dflow_conf_args():
     doc_dflow_config = "The configuration passed to dflow"
-    doc_s3_config = "The S3 configuration passed to dflow"
+    doc_dflow_s3_config = "The S3 configuration passed to dflow"
     
     return [
         Argument("dflow_config", dict, optional=True, default=None, doc=doc_dflow_config),
-        Argument("s3_config", dict, optional=True, default=None, doc=doc_s3_config),
+        Argument("dflow_s3_config", dict, optional=True, default=None, doc=doc_dflow_s3_config),
     ]
 
 def lebesgue_conf_args():
@@ -128,6 +128,26 @@ def lebesgue_conf_args():
     return [
         Argument("lebesgue_context_config", dict, optional=True, default=None, doc=doc_lebesgue_context_config),
     ]
+
+def bohrium_conf_args():
+    doc_username = "The username of the Bohrium platform"
+    doc_password = "The password of the Bohrium platform"
+    doc_project_id = "The project ID of the Bohrium platform"
+    doc_host = "The host name of the Bohrium platform. Will overwrite `dflow_config['host']`"
+    doc_k8s_api_server = "The k8s server of the Bohrium platform. Will overwrite `dflow_config['k8s_api_server']`"
+    doc_repo_key = "The repo key of the Bohrium platform. Will overwrite `dflow_s3_config['repo_key']`"
+    doc_storage_client = "The storage client of the Bohrium platform. Will overwrite `dflow_s3_config['storage_client']`"
+
+    return [
+        Argument("username", str, optional=False, doc=doc_username),
+        Argument("password", str, optional=False, doc=doc_password),
+        Argument("project_id", int, optional=False, doc=doc_project_id),
+        Argument("host", str, optional=True, default="https://workflows.deepmodeling.com", doc=doc_host),
+        Argument("k8s_api_server", str, optional=True, default="https://workflows.deepmodeling.com", doc=doc_k8s_api_server),
+        Argument("repo_key", str, optional=True, default="oss-bohrium", doc=doc_repo_key),
+        Argument("storage_client", str, optional=True, default="dflow.plugins.bohrium.TiefblueClient", doc=doc_storage_client),
+    ]
+
 
 def default_step_config_args():
     doc_default_step_config = "The default step configuration."
@@ -162,6 +182,7 @@ def dpgen_step_config_args(default_config):
 
 
 def submit_args(default_step_config = normalize_step_dict({})):
+    doc_bohrium_config = "Configurations for the Bohrium platform."
     doc_step_configs = "Configurations for executing dflow steps"
     doc_upload_python_packages = "Upload python package, for debug purpose"
     doc_inputs = "The input parameter and artifacts for dpgen2"
@@ -173,6 +194,7 @@ def submit_args(default_step_config = normalize_step_dict({})):
         dflow_conf_args() + \
         lebesgue_conf_args() + \
         default_step_config_args() + [
+        Argument("bohrium_config", dict, bohrium_conf_args(), optional=True, default=None, doc=doc_bohrium_config),
         Argument("step_configs", dict, dpgen_step_config_args(default_step_config), optional=True, default={}, doc=doc_step_configs),
         Argument("upload_python_packages", [list,str], optional=True, default=None, doc=doc_upload_python_packages, alias=["upload_python_package"]),
         Argument("inputs", dict, input_args(), optional=False, doc=doc_inputs),

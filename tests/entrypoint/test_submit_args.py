@@ -5,7 +5,7 @@ import random
 import tempfile
 import dpdata
 from pathlib import Path
-from dpgen2.entrypoint.submit_args import (
+from dpgen2.entrypoint.args import (
     normalize,
 )
 from dpgen2.utils import (
@@ -18,6 +18,22 @@ class TestArgs(unittest.TestCase):
         old_data = json.loads(old_str)
         new_data = normalize(json.loads(new_str))
         default_config = normalize_step_dict(old_data.get('default_config', {}))
+        self.assertEqual(
+            new_data['dflow_config'], 
+            {
+                "host": "http://address.of.the.host:port",
+            }
+        )
+        self.assertEqual(
+            new_data['dflow_s3_config'], 
+            {
+                "s3_endpoint": "address.of.the.s3.sever:port",
+            }
+        )
+        self.assertEqual(
+            new_data['bohrium_config'],
+            None,
+        )
         self.assertEqual(old_data['model_devi_jobs'], new_data['explore']['stages'])
         self.assertEqual(old_data['sys_configs'], new_data['explore']['configurations'])
         self.assertEqual(old_data.get('sys_prefix'), new_data['explore']['configuration_prefix'])
@@ -55,6 +71,23 @@ class TestArgs(unittest.TestCase):
         self.assertEqual(old_data['fp_incar'], new_data['fp']['inputs_config']['incar'])
         self.assertEqual(old_data.get('init_data_prefix'), new_data['inputs']['init_data_prefix'])
         self.assertEqual(old_data['init_data_sys'], new_data['inputs']['init_data_sys'])
+
+
+    def test_bohrium(self):
+        new_data = normalize(json.loads(new_str_bhr))
+        self.assertEqual(
+            new_data['bohrium_config'],
+            {
+                "username" : "foo",
+                "password" : "bar",
+                "project_id" : 10086,
+                "host": "https://workflows.deepmodeling.com",
+                "k8s_api_server": "https://workflows.deepmodeling.com",
+                "repo_key": "oss-bohrium",
+                "storage_client" : "dflow.plugins.bohrium.TiefblueClient",
+            },
+        )
+        
 
 
 old_str = textwrap.dedent("""
@@ -428,6 +461,82 @@ new_str = textwrap.dedent("""
 	"stages":	[
 	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
 	    }
+	],
+	"_comment" : "all"
+    },
+    "fp" : {
+	"type" :	"vasp",
+	"run_config" : {
+	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+	},
+	"task_max":	2,
+	"inputs_config" : {
+	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+	    "incar":    "vasp/INCAR",
+	    "kspacing":	0.32,
+	    "kgamma":	true
+	},
+	"_comment" : "all"
+    }
+}
+""")
+
+
+new_str_bhr = textwrap.dedent("""
+{
+    "bohrium_config": {
+        "username": "foo",
+        "password": "bar",
+        "project_id": 10086
+    },
+
+    "default_step_config" : {
+	"template_config" : {
+	    "image" : "dflow:1.1.4",
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "step_configs":{
+	"_comment" : "all"
+    },
+
+    "upload_python_packages" : "/path/to/dpgen2",
+
+    "inputs": {
+	"type_map":		["Al", "Mg"],
+	"mass_map":		[27, 24],
+	"init_data_prefix":	"",
+	"init_data_sys":	[
+	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+	],
+	"_comment" : "all"
+    },
+    "train":{
+	"type" :	"dp",
+	"numb_models" : 4,
+	"config" : {},
+	"template_script" : {
+	},
+	"_comment" : "all"
+    },
+
+    "explore" : {
+	"type" : "lmp",
+	"config" : {
+	    "command": "lmp -var restart 0"
+	},
+	"max_numb_iter" :	5,
+	"conv_accuracy" :	0.9,
+	"fatal_at_max" :	false,
+	"f_trust_lo":		0.05,
+	"f_trust_hi":		0.50,
+	"configuration_prefix": null, 
+	"configuration":	[
+	],
+	"stages":	[
 	],
 	"_comment" : "all"
     },

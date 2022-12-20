@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
 	     'numpy',
 	     'dpdata',
-	     'pydflow>=1.5.10',
+	     'pydflow>=1.6.18',
 	     'dargs>=0.3.1',
 	     'scipy',
 ]

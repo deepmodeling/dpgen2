@@ -2,21 +2,27 @@ import logging
 from dflow import (
     Workflow,
 )
-from dpgen2.utils import (
-    workflow_config_from_dict,
-)
 from dpgen2.utils.dflow_query import (
     get_last_scheduler,
 )
 from typing import (
     Optional, Dict, Union, List,
 )
+from dpgen2.entrypoint.common import (
+    global_config_workflow,
+)
+from dpgen2.entrypoint.args import (
+    normalize as normalize_args,
+)
+
 
 def status(
         workflow_id,
         wf_config : Optional[Dict] = {}, 
 ):
-    workflow_config_from_dict(wf_config)
+    wf_config = normalize_args(wf_config)
+
+    global_config_workflow(wf_config)
 
     wf = Workflow(id=workflow_id)
 

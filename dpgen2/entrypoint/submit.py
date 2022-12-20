@@ -72,9 +72,17 @@ from dpgen2.utils import (
     print_keys_in_nice_format,
     workflow_config_from_dict,
     matched_step_key,
+    bohrium_config_from_dict,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
-from dpgen2.entrypoint.submit_args import normalize as normalize_submit_args
+from dpgen2.entrypoint.common import (
+    global_config_workflow,
+    expand_sys_str,
+    expand_idx,
+)
+from dpgen2.entrypoint.args import (
+    normalize as normalize_args,
+)
 from typing import (
     Union, List, Dict, Optional,
 )
@@ -87,12 +95,6 @@ default_config = normalize_step_dict(
     }
 )
 
-def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
-    root_dir = Path(root_dir)
-    matches = [str(d) for d in root_dir.rglob("*") if (d / "type.raw").is_file()]
-    if (root_dir / "type.raw").is_file():
-        matches.append(str(root_dir))
-    return matches
 
 def make_concurrent_learning_op (
         train_style : str = 'dp',
@@ -340,7 +342,7 @@ def workflow_concurrent_learning(
     template_script = config['default_training_param'] if old_style else config['train']['template_script']
     train_config = {} if old_style else config['train']['config']
     lmp_config = config.get('lmp_config', {}) if old_style else config['explore']['config']
-    fp_config = config.get('fp_config', {}) if old_style else config['fp']['config']
+    fp_config = config.get('fp_config', {}) if old_style else {}
     if old_style:        
         potcar_names = config['fp_pp_files']
         incar_template_name = config['fp_incar']
@@ -393,32 +395,17 @@ def workflow_concurrent_learning(
     return dpgen_step
 
 
-def wf_global_workflow(
-        wf_config,
-):
-    workflow_config_from_dict(wf_config)
-
-    # lebesgue context
-    from dflow.plugins.lebesgue import LebesgueContext
-    lb_context_config = wf_config.get("lebesgue_context_config", None)
-    if lb_context_config:
-        lebesgue_context = LebesgueContext(
-            **lb_context_config,
-        )
-    else :
-        lebesgue_context = None
-
-    return lebesgue_context
-
-
 def submit_concurrent_learning(
         wf_config,
         reuse_step = None,
         old_style = False,
 ):
-    wf_config = normalize_submit_args(wf_config)
+    # normalize args
+    wf_config = normalize_args(wf_config)
 
-    context = wf_global_workflow(wf_config)
+    do_lebesgue = wf_config.get("lebesgue_context_config", None) is not None
+
+    context = global_config_workflow(wf_config, do_lebesgue=do_lebesgue)
     
     dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
 
@@ -437,28 +424,6 @@ def print_list_steps(
     for idx,ii in enumerate(steps):
         ret.append(f'{idx:8d}    {ii}')
     return '\n'.join(ret)
-
-
-def expand_idx (in_list) :
-    ret = []
-    for ii in in_list :
-        if isinstance(ii, int) :
-            ret.append(ii)
-        elif isinstance(ii, str):
-            step_str = ii.split(':')
-            if len(step_str) > 1 :
-                step = int(step_str[1])
-            else :
-                step = 1
-            range_str = step_str[0].split('-')
-            if len(range_str) == 2:
-                ret += range(int(range_str[0]), int(range_str[1]), step)
-            elif len(range_str) == 1 :
-                ret += [int(range_str[0])]
-            else:
-                raise RuntimeError('not expected range string', step_str[0])
-    ret = sorted(list(set(ret)))
-    return ret
 
 
 def successful_step_keys(wf):
@@ -492,9 +457,9 @@ def resubmit_concurrent_learning(
         reuse = None,
         old_style = False,
 ):
-    wf_config = normalize_submit_args(wf_config)
+    wf_config = normalize_args(wf_config)
 
-    context = wf_global_workflow(wf_config)
+    context = global_config_workflow(wf_config)
 
     old_wf = Workflow(id=wfid)
     all_step_keys = get_resubmit_keys(old_wf)

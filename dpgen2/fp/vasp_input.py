@@ -20,8 +20,8 @@ class VaspInputs():
     def __init__(
             self,
             kspacing : Union[float, List[float]],
-            incar_template_name : str,
-            potcar_names : Dict[str, str],
+            incar : str,
+            pp_files : Dict[str, str],
             kgamma : bool = True,
     ):
         """
@@ -31,9 +31,9 @@ class VaspInputs():
                 The kspacing. If it is a number, then three directions use the same
                 ksapcing, otherwise it is a list of three numbers, specifying the
                 kspacing used in the x, y and z dimension.
-        incar_template_name: str
+        incar: str
                 A template INCAR file. 
-        potcar_names : Dict[str,str]
+        pp_files : Dict[str,str]
                 The potcar files for the elements. For example
                 { 
                    "H" : "/path/to/POTCAR_H",
@@ -44,8 +44,8 @@ class VaspInputs():
         """
         self.kspacing = kspacing
         self.kgamma = kgamma
-        self.incar_from_file(incar_template_name)
-        self.potcars_from_file(potcar_names)
+        self.incar_from_file(incar)
+        self.potcars_from_file(pp_files)
 
     @property
     def incar_template(self):
@@ -91,8 +91,8 @@ class VaspInputs():
         doc_kspacing = "The spacing of k-point sampling. `ksapcing` will overwrite the incar template"
         doc_kgamma = "If the k-mesh includes the gamma point. `kgamma` will overwrite the incar template"
         return [
-            Argument("pp_files", dict, optional=False, doc=doc_pp_files),
             Argument("incar", str, optional=False, doc=doc_pp_files),
+            Argument("pp_files", dict, optional=False, doc=doc_pp_files),
             Argument("kspacing", float, optional=False, doc=doc_kspacing),
             Argument("kgamma", bool, optional=True, default=True, doc=doc_kgamma),
         ]
