@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: | 
         pip install -e .
-        pip install mock coverage 
+        pip install mock coverage pytest
     - name: Test
       run: SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 coverage run --source=./dpgen2 -m unittest && coverage report
     - uses: codecov/codecov-action@v3
