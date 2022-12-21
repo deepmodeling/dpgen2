@@ -1,3 +1,6 @@
+from .conf_generator import (
+    ConfGenerator,
+)
 from .alloy_conf import (
     AlloyConfGenerator,
 )
