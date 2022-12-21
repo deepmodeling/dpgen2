@@ -48,7 +48,7 @@ class ConfGenerator(ABC):
         """
         ret = []
         ms = self.generate(type_map)
-        for ii in range(len(ms)):
+        for ii in range(len(ms.systems)):
             ss = ms[ii]
             for jj in range(ss.get_nframes()):
                 tf = Path(tempfile.NamedTemporaryFile().name)
@@ -68,7 +68,8 @@ class ConfGenerator(ABC):
     def normalize_config(
             cls, 
             data: Dict={}, 
-            strict: bool=True) -> Dict:
+            strict: bool=True,
+    ) -> Dict:
         r"""Normalized the argument.
 
         Parameters
