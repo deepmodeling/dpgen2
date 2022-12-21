@@ -35,7 +35,7 @@ class ConfGenerator(ABC):
             self, 
             type_map,
             fmt='lammps/lmp',
-    ):
+    ) -> List[str]:
         r"""Get the file content of configurations
 
         Parameters
@@ -63,7 +63,7 @@ class ConfGenerator(ABC):
 
     @staticmethod
     @abstractmethod
-    def args():
+    def args() -> List[dargs.Argument]:
         pass
 
 

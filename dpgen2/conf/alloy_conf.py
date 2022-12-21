@@ -83,7 +83,7 @@ class AlloyConfGenerator(ConfGenerator):
         return ms    
 
     @staticmethod
-    def args():
+    def args() -> List[Argument]:
         doc_numb_confs = 'The number of configurations to generate'
         doc_lattice = 'The lattice. Should be a list providing [ "lattice_type", lattice_const ], or a list providing [ "/path/to/dpdata/system", "fmt" ]. The two styles are distinguished by the type of the second element.'
         doc_replicate = 'The number of replicates in each direction'

@@ -36,7 +36,7 @@ class FileConfGenerator(ConfGenerator):
     def generate(
             self,
             type_map,
-    ):
+    ) -> dpdata.MultiSystems:
         ms = dpdata.MultiSystems(type_map=type_map)
         for ff in self.files:
             ms.append(dpdata.System(ff, fmt=self.fmt))
@@ -44,7 +44,7 @@ class FileConfGenerator(ConfGenerator):
 
 
     @staticmethod
-    def args():
+    def args() -> List[Argument]:
         doc_files = "The paths to the configuration files. widecards are supported."
         doc_prefix = "The prefix of file paths."
         doc_fmt = "The format (dpdata accepted formats) of the files."
