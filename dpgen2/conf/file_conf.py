@@ -15,7 +15,7 @@ from dargs import (
 class FileConfGenerator(ConfGenerator):
     def __init__(
             self,
-            files : List[str],
+            files : Union[str,List[str]],
             fmt : str = 'auto',
             prefix : Optional[str] = None,
     ):
@@ -23,11 +23,12 @@ class FileConfGenerator(ConfGenerator):
             assert(isinstance(files, str))
             files = [files]
         if prefix is not None:
-            files = [Path(prefix) / Path(ii) for ii in files]
-        self.files = []            
-        for ii in files:
-            ff = Path(ii).absolute()
-            ff = glob.glob(str(ff))
+            pfiles = [Path(prefix) / Path(ii) for ii in files]
+        else:
+            pfiles = [Path(ii) for ii in files]
+        self.files = []
+        for ii in pfiles:
+            ff = glob.glob(str(ii.absolute()))
             ff.sort()
             self.files += ff
         self.fmt = fmt
