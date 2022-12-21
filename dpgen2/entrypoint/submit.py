@@ -43,7 +43,12 @@ from dpgen2.superop import (
 from dpgen2.flow import (
     ConcurrentLearning,
 )
-from dpgen2.fp import fp_styles
+from dpgen2.fp import (
+    fp_styles,
+)
+from dpgen2.conf import (
+    conf_styles,
+)
 from dpgen2.exploration.scheduler import (
     ExplorationScheduler,
     ConvergenceCheckStageScheduler,
@@ -66,8 +71,6 @@ from dpgen2.constants import (
 from dpgen2.utils import (
     dump_object_to_file,
     load_object_from_file,
-    normalize_alloy_conf_dict,
-    generate_alloy_conf_file_content,
     sort_slice_ops,
     print_keys_in_nice_format,
     workflow_config_from_dict,
@@ -169,32 +172,6 @@ def make_concurrent_learning_op (
     return dpgen_op
 
 
-def make_conf_list(
-        conf_list,
-        type_map,
-        fmt='vasp/poscar'
-):
-    # load confs from files
-    if isinstance(conf_list, list):
-        conf_list_fname = []
-        for jj in conf_list:
-            confs = sorted(glob.glob(jj))
-            conf_list_fname = conf_list_fname + confs
-        conf_list = []
-        for ii in conf_list_fname:
-            ss = dpdata.System(ii, type_map=type_map, fmt=fmt)
-            ss_str = dpdata.lammps.lmp.from_system_data(ss, 0)
-            conf_list.append(ss_str)
-    # generate alloy confs
-    elif isinstance(conf_list, dict):
-        conf_list['type_map'] = type_map
-        i_dict = normalize_alloy_conf_dict(conf_list)
-        conf_list = generate_alloy_conf_file_content(**i_dict)
-    else:
-        raise RuntimeError('unknown input format of conf_list: ', type(conf_list))
-    return conf_list
-
-
 def make_naive_exploration_scheduler(
         config,
         old_style = False,
@@ -218,13 +195,15 @@ def make_naive_exploration_scheduler(
     
     sys_configs_lmp = []
     for sys_config in sys_configs:
-        sys_configs_lmp.append(make_conf_list(sys_config, type_map))
+        conf_style = sys_config.pop("type")        
+        generator = conf_styles[conf_style](**sys_config)
+        sys_configs_lmp.append(generator.get_file_content(type_map))
 
     for job_ in model_devi_jobs:
         if not isinstance(job_, list):
             job = [job_]
         else:
-            job = job_        
+            job = job_
         # stage
         stage = ExplorationStage()
         for jj in job:

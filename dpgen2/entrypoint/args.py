@@ -3,6 +3,7 @@ from dargs import (
     Argument,
     Variant,
 )
+import dpgen2
 from dpgen2.constants import default_image
 from dflow.plugins.lebesgue import LebesgueExecutor
 from dpgen2.op.run_dp_train import RunDPTrain
@@ -12,6 +13,7 @@ from dpgen2.utils import (
     normalize_step_dict,
 )
 from dpgen2.fp import fp_styles
+from dpgen2.conf import conf_styles
 
 def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
@@ -53,7 +55,10 @@ def lmp_args():
         Argument("v_trust_lo", float, optional=True, default=None, doc=doc_v_trust_lo),
         Argument("v_trust_hi", float, optional=True, default=None, doc=doc_v_trust_hi),
         Argument("configuration_prefix", str, optional=True, default=None, doc=doc_configuration_prefix),
-        Argument("configurations", list, optional=False, doc=doc_configuration, alias=["configuration"]),
+        Argument("configurations", list, 
+                 [], [variant_conf()], 
+                 optional=False, repeat=True,                 
+                 doc=doc_configuration, alias=["configuration"]),
         Argument("stages", list, optional=False, doc=doc_stages),
     ]
 
@@ -97,6 +102,16 @@ def variant_fp():
             ))
 
     return Variant("type", fp_list, doc=doc)
+
+
+def variant_conf():
+    doc = "the type of the configuration generator"
+    var_list = []
+    for kk in conf_styles.keys():
+        var_list.append(
+            Argument(kk, dict, conf_styles[kk].args())
+        )
+    return Variant("type", var_list, doc=doc,)
 
 
 def input_args():

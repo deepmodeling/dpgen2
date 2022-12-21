@@ -35,6 +35,7 @@ class TestArgs(unittest.TestCase):
             None,
         )
         self.assertEqual(old_data['model_devi_jobs'], new_data['explore']['stages'])
+        new_data['explore']['configurations'][0].pop("type")
         self.assertEqual(old_data['sys_configs'], new_data['explore']['configurations'])
         self.assertEqual(old_data.get('sys_prefix'), new_data['explore']['configuration_prefix'])
         self.assertEqual(old_data['mass_map'], new_data['inputs']['mass_map'])
@@ -211,6 +212,8 @@ old_str = textwrap.dedent("""
 	    "lattice" : ["fcc", 4.57],
 	    "replicate" : [2, 2, 2],
 	    "numb_confs" : 30,
+            "atom_pert_dist" : 0.0,
+            "cell_pert_frac" : 0.0,
 	    "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
 	}
     ],
@@ -452,6 +455,7 @@ new_str = textwrap.dedent("""
 	"configuration_prefix": null, 
 	"configuration":	[
 	    {
+                "type" : "alloy",
 		"lattice" : ["fcc", 4.57],
 		"replicate" : [2, 2, 2],
 		"numb_confs" : 30,

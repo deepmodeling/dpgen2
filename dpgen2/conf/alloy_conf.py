@@ -11,6 +11,95 @@ from dargs import (
     Variant,
 )
 from .unit_cells import generate_unit_cell
+from .conf_generator import ConfGenerator
+
+class AlloyConfGenerator(ConfGenerator):
+    """
+    Parameters
+    ----------
+    numb_confs  int
+                Number of configurations to generate
+    lattice     Union[dpdata.System, Tuple[str,float]]
+                Lattice of the alloy confs. can be 
+                `dpdata.System`: lattice in `dpdata.System`
+                `Tuple[str, float]`: pair of lattice type and lattice constant.
+                lattice type can be "bcc", "fcc", "hcp", "sc" or "diamond"
+    replicate   Union[List[int], Tuple[int], int]
+                replicate of the lattice
+    concentration   List[List[float]] or List[float] or None
+                If `List[float]`, the concentrations of each element. The length of
+                the list should be the same as the `type_map`.
+                If `List[List[float]]`, a list of concentrations (`List[float]`) is
+                randomly picked from the List.
+                If `None`, the elements are assumed to be of equal concentration.
+    cell_pert_frac  float
+                fraction of cell perturbation
+    atom_pert_dist  float
+                the atom perturbation distance (unit angstrom).
+    """
+    def __init__ (
+            self,
+            numb_confs,
+            lattice : Union[dpdata.System, Tuple[str,float]],
+            replicate : Union[List[int], Tuple[int], int, None] = None,
+            concentration: Union[List[List[float]], List[float], None] = None,
+            cell_pert_frac: float = 0.0,
+            atom_pert_dist: float = 0.0,
+    ):
+        self.numb_confs = numb_confs
+        self.lattice = lattice
+        self.replicate = replicate
+        self.concentration = concentration
+        self.cell_pert_frac = cell_pert_frac
+        self.atom_pert_dist = atom_pert_dist
+        
+    def generate(
+            self,
+            type_map,            
+    ) -> dpdata.MultiSystems:
+        r"""Method of generating configurations.
+
+        Parameters
+        ----------
+        type_map: List[str]
+                The type map.
+
+        Returns
+        -------
+        confs:  dpdata.MultiSystems
+                The returned configurations in `dpdata.MultiSystems` format
+        
+        """
+        ms = dpdata.MultiSystems(type_map=type_map)
+        ac = AlloyConf(self.lattice, type_map, replicate=self.replicate)
+        systems = ac.generate_systems(
+            self.numb_confs, 
+            concentration=self.concentration,
+            cell_pert_frac=self.cell_pert_frac,
+            atom_pert_dist=self.atom_pert_dist,
+        )
+        for ss in systems:
+            ms.append(ss)
+        return ms    
+
+    @staticmethod
+    def args():
+        doc_numb_confs = 'The number of configurations to generate'
+        doc_lattice = 'The lattice. Should be a list providing [ "lattice_type", lattice_const ], or a list providing [ "/path/to/dpdata/system", "fmt" ]. The two styles are distinguished by the type of the second element.'
+        doc_replicate = 'The number of replicates in each direction'
+        doc_concentration = 'The concentration of each element. If None all elements have the same concentration'
+        doc_cell_pert_frac = 'The faction of cell perturbation'
+        doc_atom_pert_dist = 'The distance of atomic position perturbation'
+        
+        return [
+            Argument("numb_confs", int, optional=True, default=1, doc=doc_numb_confs),
+            Argument("lattice", [list,tuple], doc=doc_lattice),
+            Argument("replicate", list, optional=True, default=None, doc=doc_replicate),
+            Argument("concentration", list, optional=True, default=None, doc=doc_concentration),
+            Argument("cell_pert_frac", float, optional=True, default=0.0, doc=doc_cell_pert_frac),
+            Argument("atom_pert_dist", float, optional=True, default=0.0, doc=doc_atom_pert_dist),
+        ]
+
 
 class AlloyConf():
     """

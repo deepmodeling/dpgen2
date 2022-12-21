@@ -165,6 +165,7 @@
 	"configuration_prefix": null, 
 	"configurations":	[
 	    {
+		"type": "alloy",
 		"lattice" : ["fcc", 4.57],
 		"replicate" : [2, 2, 2],
 		"numb_confs" : 30,

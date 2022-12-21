@@ -5,11 +5,148 @@ import random
 import tempfile
 import dpdata
 from pathlib import Path
-from dpgen2.utils.alloy_conf import (
+from dpgen2.conf.alloy_conf import (
+    AlloyConfGenerator,
     AlloyConf, 
     generate_alloy_conf_file_content, 
     normalize,
 )
+
+
+ofc0 = '\n1 atoms\n2 atom types\n   0.0000000000    2.0000000000 xlo xhi\n   0.0000000000    2.0000000000 ylo yhi\n   0.0000000000    2.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      1    0.0000000000    0.0000000000    0.0000000000\n'
+ofc1 = '\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n'
+ofc2 = '\n1 atoms\n2 atom types\n   0.0000000000    4.0000000000 xlo xhi\n   0.0000000000    4.0000000000 ylo yhi\n   0.0000000000    4.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n'
+
+
+class TestConfGenerator(unittest.TestCase):
+    def test_make_conf_list(self):
+        idict = {
+            'numb_confs' : 3,
+            'lattice' : ('sc', 3.),
+            'concentration' : [0., 1.],
+        }
+        acg = AlloyConfGenerator(**idict)
+        ret = acg.get_file_content(type_map=['Al', 'Mg'])
+        self.assertEqual(ret, [ofc1, ofc1, ofc1])
+
+
+class TestAlloyConfGenerator(unittest.TestCase):
+    def test_concentration_none_vasp(self):
+        type_map = ['a', 'b']
+        random.seed(0)
+        acg = AlloyConfGenerator(3, ('sc', 2), replicate=(2, 2, 1), concentration=None)
+        fcs = acg.get_file_content(type_map, fmt='vasp/poscar')
+        sys_list = []
+        for ii in fcs:
+            tf = Path(tempfile.NamedTemporaryFile().name)
+            tf.write_text(ii)
+            sys_list.append(dpdata.System(tf, fmt='vasp/poscar'))
+            tf.unlink()
+        self.assertEqual(len(sys_list), 3)
+        for ii in range(3):
+            np.testing.assert_array_almost_equal(
+                sys_list[ii]['cells'][0],
+                np.array([ [4, 0, 0], [0, 4, 0], [0, 0, 2] ])
+            )
+            np.testing.assert_array_almost_equal(
+                np.sort(sys_list[ii]['coords'][0], axis=0),
+                np.sort(np.array([ [0, 0, 0], [0, 2, 0], [2, 0, 0], [2, 2, 0] ]), axis=0)
+            )
+            self.assertEqual(sys_list[ii]['atom_names'], ['a', 'b'])
+        # result at seed == 0
+        np.testing.assert_array_almost_equal(sys_list[0]['atom_types'], [0, 0, 1, 1])
+        np.testing.assert_array_almost_equal(sys_list[1]['atom_types'], [0, 0, 1, 1])
+        np.testing.assert_array_almost_equal(sys_list[2]['atom_types'], [0, 1, 1, 1])
+        self.assertEqual(sys_list[0]['atom_numbs'], [2, 2])
+        self.assertEqual(sys_list[1]['atom_numbs'], [2, 2])
+        self.assertEqual(sys_list[2]['atom_numbs'], [1, 3])
+
+
+    def test_concentration_list(self):
+        type_map = ['a', 'b']
+        random.seed(0)
+        acg = AlloyConfGenerator(3, ('sc', 2), replicate=(2, 2, 1), concentration=[0., 1.])
+        fcs = acg.get_file_content(type_map, fmt='lammps/lmp')
+        sys_list = []
+        for ii in fcs:
+            tf = Path(tempfile.NamedTemporaryFile().name)
+            tf.write_text(ii)
+            sys_list.append(dpdata.System(tf, fmt='lammps/lmp', type_map=type_map))
+            tf.unlink()
+        self.assertEqual(len(sys_list), 3)
+        for ii in range(3):
+            np.testing.assert_array_almost_equal(
+                sys_list[ii]['cells'][0],
+                np.array([ [4, 0, 0], [0, 4, 0], [0, 0, 2] ])
+            )
+            np.testing.assert_array_almost_equal(
+                np.sort(sys_list[ii]['coords'][0], axis=0),
+                np.sort(np.array([ [0, 0, 0], [0, 2, 0], [2, 0, 0], [2, 2, 0] ]), axis=0)
+            )
+            self.assertEqual(sys_list[ii]['atom_names'], type_map)
+            # result at seed == 0
+            np.testing.assert_array_almost_equal(sys_list[ii]['atom_types'], [1, 1, 1, 1])
+            self.assertEqual(sys_list[ii]['atom_numbs'], [0, 4])
+
+
+    def test_concentration_list_list(self):
+        type_map = ['a', 'b']
+        random.seed(0)
+        nframes = 5
+        acg = AlloyConfGenerator(
+            nframes, 
+            ('sc', 2), 
+            replicate=(2, 2, 1), 
+            concentration=[[0., 1.], [1., 0.]],
+        )
+        fcs = acg.get_file_content(type_map, fmt='lammps/lmp')
+        sys_list = []
+        for ii in fcs:
+            tf = Path(tempfile.NamedTemporaryFile().name)
+            tf.write_text(ii)
+            sys_list.append(dpdata.System(tf, fmt='lammps/lmp'))
+            tf.unlink()
+        self.assertEqual(len(sys_list), nframes)
+        for ii in range(nframes):
+            np.testing.assert_array_almost_equal(
+                sys_list[ii]['cells'][0],
+                np.array([ [4, 0, 0], [0, 4, 0], [0, 0, 2] ])
+            )
+            np.testing.assert_array_almost_equal(
+                np.sort(sys_list[ii]['coords'][0], axis=0),
+                np.sort(np.array([ [0, 0, 0], [0, 2, 0], [2, 0, 0], [2, 2, 0] ]), axis=0)
+            )
+        # result at seed == 0
+        np.testing.assert_array_almost_equal(sys_list[0]['atom_types'], [0, 0, 0, 0])
+        np.testing.assert_array_almost_equal(sys_list[1]['atom_types'], [0, 0, 0, 0])
+        np.testing.assert_array_almost_equal(sys_list[2]['atom_types'], [0, 0, 0, 0])
+        np.testing.assert_array_almost_equal(sys_list[3]['atom_types'], [1, 1, 1, 1])
+        np.testing.assert_array_almost_equal(sys_list[4]['atom_types'], [1, 1, 1, 1])
+        self.assertEqual(sys_list[0]['atom_numbs'], [4, 0])
+        self.assertEqual(sys_list[1]['atom_numbs'], [4, 0])
+        self.assertEqual(sys_list[2]['atom_numbs'], [4, 0])
+        self.assertEqual(sys_list[3]['atom_numbs'], [0, 4])
+        self.assertEqual(sys_list[4]['atom_numbs'], [0, 4])
+
+
+    def test_normalize(self):
+        in_data = {
+            "lattice" : ("bcc", 2),
+        }
+        expected_out_data = {
+            "lattice" : ("bcc", 2),
+            "replicate" : None,
+            "numb_confs" : 1,
+            "cell_pert_frac" : 0.,
+            "atom_pert_dist" : 0.,
+            'concentration' : None,
+        }
+        out_data = AlloyConfGenerator.normalize_config(
+            in_data,
+        )
+        self.assertEqual(out_data, expected_out_data)
+
+
 
 class TestAlloyConf(unittest.TestCase):
     def test_concentration_none_vasp(self):

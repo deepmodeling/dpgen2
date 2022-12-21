@@ -2,7 +2,7 @@ from utils.context import dpgen2
 import numpy as np
 import unittest, json, shutil, os
 from pathlib import Path
-from dpgen2.utils.unit_cells import generate_unit_cell
+from dpgen2.conf.unit_cells import generate_unit_cell
 
 class TestGenerateUnitCell(unittest.TestCase):
     def test_bcc(self):

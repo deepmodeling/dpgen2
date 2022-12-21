@@ -3,8 +3,6 @@ from pathlib import Path
 from dpgen2.utils import (
     dump_object_to_file,
     load_object_from_file,
-    normalize_alloy_conf_dict,
-    generate_alloy_conf_file_content,
     sort_slice_ops,
     print_keys_in_nice_format,
     workflow_config_from_dict,
