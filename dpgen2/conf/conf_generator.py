@@ -11,7 +11,10 @@ from abc import (
 
 class ConfGenerator(ABC):
     @abstractmethod
-    def generate(self, type_map):
+    def generate(
+            self,
+            type_map,            
+    ) -> dpdata.MultiSystems:
         r"""Method of generating configurations.
 
         Parameters
@@ -48,7 +51,7 @@ class ConfGenerator(ABC):
         """
         ret = []
         ms = self.generate(type_map)
-        for ii in range(len(ms.systems)):
+        for ii in range(len(ms)):
             ss = ms[ii]
             for jj in range(ss.get_nframes()):
                 tf = Path(tempfile.NamedTemporaryFile().name)
