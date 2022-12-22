@@ -54,10 +54,10 @@ class ConfGenerator(ABC):
         for ii in range(len(ms)):
             ss = ms[ii]
             for jj in range(ss.get_nframes()):
-                tf = Path(tempfile.NamedTemporaryFile().name)
-                ss[jj].to(fmt, tf)
-                ret.append(tf.read_text())
-                tf.unlink()
+                with tempfile.NamedTemporaryFile() as ft:
+                    tf = Path(ft.name)
+                    ss[jj].to(fmt, tf)
+                    ret.append(tf.read_text())
         return ret
 
 
