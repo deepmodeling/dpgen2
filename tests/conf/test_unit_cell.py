@@ -1,4 +1,4 @@
-from utils.context import dpgen2
+from .context import dpgen2
 import numpy as np
 import unittest, json, shutil, os
 from pathlib import Path

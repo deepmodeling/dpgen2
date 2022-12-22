@@ -1,4 +1,4 @@
-from utils.context import dpgen2
+from .context import dpgen2
 import textwrap
 import shutil
 import numpy as np

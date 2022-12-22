@@ -1,4 +1,4 @@
-from context import dpgen2
+from .context import dpgen2
 import os,sys,json,glob,shutil,textwrap
 import dpdata
 import numpy as np

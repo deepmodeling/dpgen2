@@ -1,5 +1,5 @@
 import unittest, json, shutil, os, json, textwrap
-from utils.context import dpgen2
+from .context import dpgen2
 import numpy as np
 import random
 import tempfile

@@ -1,4 +1,4 @@
-from op.context import dpgen2
+from .context import dpgen2
 import numpy as np
 import unittest, json, shutil
 from mock import mock, patch, call
