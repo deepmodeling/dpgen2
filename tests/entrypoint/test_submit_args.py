@@ -64,7 +64,8 @@ class TestArgs(unittest.TestCase):
         self.assertEqual(old_data.get('upload_python_packages', None), new_data['upload_python_packages'])
         self.assertEqual(old_data['type_map'], new_data['inputs']['type_map'])
         self.assertEqual(old_data['numb_models'], new_data['train']['numb_models'])
-        self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
+        # self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
+        self.assertEqual(new_data['train']['template_script'], "dp_input_template")
         self.assertEqual(RunDPTrain.normalize_config({}), new_data['train']['config'])
         self.assertEqual(old_data.get('lmp_config', {}), new_data['explore']['config'])
         self.assertEqual(old_data.get('fp_config', {}), new_data['fp']['run_config'])
@@ -394,54 +395,8 @@ new_str = textwrap.dedent("""
 	"type" :	"dp",
 	"numb_models" : 4,
 	"config" : {},
-	"template_script" : {
-	    "model" : {
-		"type_map":		["Al", "Mg"],
-		"descriptor": {
-		    "type":		"se_a",
-		    "sel":		[90, 90],
-		    "rcut_smth":	1.80,
-		    "rcut":		6.00,
-		    "neuron":	[25, 50, 100],
-		    "resnet_dt":	false,
-		    "axis_neuron":	4,
-		    "seed":		1
-		},
-		"fitting_net" : {
-		    "neuron":	[128, 128, 128],
-		    "resnet_dt":	true,
-		    "seed":		1
-		}
-	    },
-	    "loss" : {
-		"start_pref_e":	0.02,
-		"limit_pref_e":	1,
-		"start_pref_f":	1000,
-		"limit_pref_f":	1,
-		"start_pref_v":	0,
-		"limit_pref_v":	0
-	    },
-	    "learning_rate" : {
-		"start_lr":		0.001,
-		"stop_lr":		1e-8,
-		"decay_steps":	100
-	    },
-	    "training" : {
-		"training_data": {
-		    "systems": [],
-		    "batch_size":"auto"
-		},
-		"numb_steps":1000,
-		"seed":10,
-		"disp_file":"lcurve.out",
-		"disp_freq":100,
-		"save_freq":1000
-	    },
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+	"template_script" : "dp_input_template"
     },
-
     "explore" : {
 	"type" : "lmp",
 	"config" : {
@@ -522,8 +477,7 @@ new_str_bhr = textwrap.dedent("""
 	"type" :	"dp",
 	"numb_models" : 4,
 	"config" : {},
-	"template_script" : {
-	},
+	"template_script" : "dp_input_template",
 	"_comment" : "all"
     },
 

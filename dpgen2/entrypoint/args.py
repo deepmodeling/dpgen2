@@ -18,12 +18,12 @@ from dpgen2.conf import conf_styles
 def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
     doc_config = "Configuration of training"
-    doc_template_script = "Template training script. It can be a `List[Dict]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `Dict`, the models share the same template training script. "
+    doc_template_script = "File names of the template training script. It can be a `List[Dict]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `Dict`, the models share the same template training script. "
     
     return [
         Argument("config", dict, RunDPTrain.training_args(), optional=True, default=RunDPTrain.normalize_config({}), doc=doc_numb_models),
         Argument("numb_models", int, optional=True, default=4, doc=doc_numb_models),
-        Argument("template_script", [list,dict], optional=False, doc=doc_template_script),
+        Argument("template_script", [list,str], optional=False, doc=doc_template_script),
     ]
 
 def variant_train():
@@ -41,6 +41,7 @@ def lmp_args():
     doc_f_trust_hi = "Higher trust level of force model deviation"
     doc_v_trust_lo = "Lower trust level of virial model deviation"
     doc_v_trust_hi = "Higher trust level of virial model deviation"
+    doc_output_nopbc = "Remove pbc of the output configurations"
     doc_configuration_prefix = "The path prefix of lmp initial configurations"
     doc_configuration = "A list of initial configurations."
     doc_stages = "A list of exploration stages."
@@ -54,6 +55,7 @@ def lmp_args():
         Argument("f_trust_hi", float, optional=False, doc=doc_f_trust_hi),
         Argument("v_trust_lo", float, optional=True, default=None, doc=doc_v_trust_lo),
         Argument("v_trust_hi", float, optional=True, default=None, doc=doc_v_trust_hi),
+        Argument("output_nopbc", bool, optional=True, default=False, doc=doc_output_nopbc),
         Argument("configuration_prefix", str, optional=True, default=None, doc=doc_configuration_prefix),
         Argument("configurations", list, 
                  [], [variant_conf()], 

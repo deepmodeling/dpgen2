@@ -107,7 +107,7 @@ class RunGaussian(RunFp):
     def run_task(
             self,
             command : str,
-            out_name: str,
+            out: str,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
         
@@ -115,7 +115,7 @@ class RunGaussian(RunFp):
         ----------
         command: str
             The command of running gaussian task
-        out_name: str
+        out: str
             The name of the output data file.
 
         Returns
@@ -126,6 +126,7 @@ class RunGaussian(RunFp):
             The file name of the log.
         """
         # run gaussian
+        out_name = out
         command = ' '.join([command, gaussian_input_name])
         ret, out, err = run_command(command, shell=True)
         if ret != 0:

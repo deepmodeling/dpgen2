@@ -190,6 +190,7 @@ def make_naive_exploration_scheduler(
     fp_task_max = config['fp_task_max'] if old_style else config['fp']['task_max']
     conv_accuracy = config['conv_accuracy'] if old_style else config['explore']['conv_accuracy']
     max_numb_iter = config['max_numb_iter'] if old_style else config['explore']['max_numb_iter']
+    output_nopbc = False if old_style else config['explore']['output_nopbc']
     fatal_at_max = config.get('fatal_at_max', True) if old_style else config['explore']['fatal_at_max']
     scheduler = ExplorationScheduler()
     
@@ -237,6 +238,7 @@ def make_naive_exploration_scheduler(
         selector = ConfSelectorLammpsFrames(
             trust_level,
             fp_task_max,
+            nopbc=output_nopbc,
         )
         # stage_scheduler
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -318,7 +320,11 @@ def workflow_concurrent_learning(
 
     type_map = config['type_map'] if old_style else config['inputs']['type_map']
     numb_models = config['numb_models'] if old_style else config['train']['numb_models']
-    template_script = config['default_training_param'] if old_style else config['train']['template_script']
+    template_script_ = config['default_training_param'] if old_style else config['train']['template_script']
+    if isinstance(template_script_, list):
+        template_script = [Path(ii).read_text() for ii in template_script_]
+    else:
+        template_script = Path(template_script_).read_text()
     train_config = {} if old_style else config['train']['config']
     lmp_config = config.get('lmp_config', {}) if old_style else config['explore']['config']
     fp_config = config.get('fp_config', {}) if old_style else {}

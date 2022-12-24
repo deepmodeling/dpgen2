@@ -28,11 +28,13 @@ class ConfSelectorLammpsFrames(ConfSelector):
             trust_level,
             max_numb_sel : Optional[int] = None,
             conf_filters : Optional[ConfFilters] = None,
+            nopbc: Optional[bool] = False,
     ):
         self.trust_level = trust_level
         self.max_numb_sel = max_numb_sel
         self.conf_filters = conf_filters
         self.report = TrajsExplorationReport()
+        self.nopbc = nopbc
     
     def select (
             self,
@@ -83,6 +85,7 @@ class ConfSelectorLammpsFrames(ConfSelector):
         for ii in range(ntraj):
             if len(id_cand_list[ii]) > 0:
                 ss = dpdata.System(trajs[ii], fmt=traj_fmt, type_map=type_map)
+                ss.nopbc = self.nopbc
                 ss = ss.sub_system(id_cand_list[ii])        
                 ms.append(ss)
             

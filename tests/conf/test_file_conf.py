@@ -125,6 +125,7 @@ class TestFileConfGenerator(unittest.TestCase):
             "files" : "foo",
             "fmt" : 'auto',
             "prefix" : None,
+            "remove_pbc" : False,
         }
         out_data = FileConfGenerator.normalize_config(
             in_data,
@@ -141,6 +142,7 @@ class TestFileConfGenerator(unittest.TestCase):
             "files" : ["foo"],
             "fmt" : "bar",
             "prefix" : None,
+            "remove_pbc" : False,
         }
         out_data = FileConfGenerator.normalize_config(
             in_data,
