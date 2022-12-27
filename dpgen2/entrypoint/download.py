@@ -24,6 +24,7 @@ def download(
         wf_config : Optional[Dict] = {}, 
         wf_keys : Optional[List] = None,
         prefix : Optional[str] = None,
+        chk_pnt : Optional[bool] = True,
 ):
     wf_config = normalize_args(wf_config)
 
@@ -36,5 +37,5 @@ def download(
     
     assert wf_keys is not None
     for kk in wf_keys:
-        download_dpgen2_artifacts(wf, kk, prefix=prefix)
+        download_dpgen2_artifacts(wf, kk, prefix=prefix, chk_pnt=chk_pnt)
         logging.info(f'step {kk} downloaded')
