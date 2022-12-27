@@ -31,6 +31,7 @@ def update_finished_steps(
         download : Optional[bool] = False,
         watching_keys : Optional[List[str]] = None,
         prefix : Optional[str] = None,
+        chk_pnt : Optional[bool] = True,
 ):
     wf_keys = wf.query_keys_of_steps()
     wf_keys = matched_step_key(wf_keys, watching_keys)
@@ -44,7 +45,7 @@ def update_finished_steps(
     for kk in diff_keys:
         logging.info(f'steps {kk.ljust(50,"-")} finished')
         if download :
-            download_dpgen2_artifacts(wf, kk, prefix=prefix)
+            download_dpgen2_artifacts(wf, kk, prefix=prefix, chk_pnt=chk_pnt)
             logging.info(f'steps {kk.ljust(50,"-")} downloaded')
     finished_keys = wf_keys
     return finished_keys
@@ -57,6 +58,7 @@ def watch(
         frequency : float = 600.,
         download : Optional[bool] = False,
         prefix : Optional[str] = None,
+        chk_pnt : Optional[bool] = True,
 ):
     wf_config = normalize_args(wf_config)
 
@@ -73,6 +75,7 @@ def watch(
             download=download,
             watching_keys=watching_keys,
             prefix=prefix,
+            chk_pnt=chk_pnt,
         )
         time.sleep(frequency)
 
@@ -84,6 +87,7 @@ def watch(
             download=download,
             watching_keys=watching_keys,
             prefix=prefix,
+            chk_pnt=chk_pnt,
         )
         logging.info("well done")
     elif status in ["Failed", "Error"]:

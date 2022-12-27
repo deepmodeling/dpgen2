@@ -144,6 +144,10 @@ def main_parser() -> argparse.ArgumentParser:
     parser_download.add_argument(
         "-p","--prefix", type=str, help="the prefix of the path storing the download artifacts"
     )
+    parser_download.add_argument(
+        "-n","--no-check-point", action='store_false',
+        help="if specified, download regardless whether check points exist."
+    )
 
     ##########################################
     # watch
@@ -172,6 +176,10 @@ def main_parser() -> argparse.ArgumentParser:
     )
     parser_watch.add_argument(
         "-p","--prefix", type=str, help="the prefix of the path storing the download artifacts"
+    )
+    parser_watch.add_argument(
+        "-n","--no-check-point", action='store_false',
+        help="if specified, download regardless whether check points exist."
     )
 
     # --version
@@ -246,6 +254,7 @@ def main():
             wfid, config,
             wf_keys=args.keys,
             prefix=args.prefix,
+            chk_pnt=args.no_check_point,
         )
     elif args.command == "watch":
         with open(args.CONFIG) as fp:
@@ -257,6 +266,7 @@ def main():
             frequency=args.frequency,
             download=args.download,
             prefix=args.prefix,
+            chk_pnt=args.no_check_point,
         )
     elif args.command is None:
         pass
