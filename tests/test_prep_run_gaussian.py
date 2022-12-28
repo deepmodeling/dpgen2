@@ -1,5 +1,5 @@
 import numpy as np
-import unittest
+import unittest, os, shutil
 from pathlib import Path
 
 from dpgen2.fp.gaussian import (
@@ -39,6 +39,9 @@ class TestPrepGaussian(unittest.TestCase):
             inputs=inputs,
         )
         assert Path(gaussian_input_name).exists()
+        for ii in ['task.log', 'task.gjf']:
+            if Path(ii).exists():
+                os.remove(ii)
 
 
 class TestRunGaussian(unittest.TestCase):
@@ -66,3 +69,10 @@ class TestRunGaussian(unittest.TestCase):
         )
         assert out_name == output
         assert log_name == gaussian_output_name
+        for ii in [output]:
+            if Path(ii).exists():
+                shutil.rmtree(ii)
+        for ii in ['task.log', 'task.gjf']:
+            if Path(ii).exists():
+                os.remove(ii)
+            
