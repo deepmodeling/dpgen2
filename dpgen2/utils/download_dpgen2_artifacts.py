@@ -116,7 +116,7 @@ def download_dpgen2_artifacts(
     else:
         _dload_output_lower(step, mypath, key, subkey, output_def)
         if chk_pnt:
-            (mypath/subkey/'outputs'/'done').write_text("")
+            (mypath/subkey/'outputs'/'done').touch()
 
     return
 
