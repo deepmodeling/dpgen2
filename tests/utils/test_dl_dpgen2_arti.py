@@ -81,6 +81,36 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
 
 
     @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    def test_fp_download_chkpnt(self, mocked_dl):
+        if Path('iter-000001').exists():
+            shutil.rmtree('iter-000001')
+        Path("iter-000001/prep-run-fp/inputs").mkdir(parents=True, exist_ok=True)
+        Path("iter-000001/prep-run-fp/outputs").mkdir(parents=True, exist_ok=True)
+        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-fp', None, chk_pnt=True)
+        expected = [
+            mock.call("arti-confs", path=Path("iter-000001/prep-run-fp/inputs"), skip_exists=True),
+            mock.call("arti-logs", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+            mock.call("arti-labeled_data", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+        ]
+        self.assertEqual(len(mocked_dl.call_args_list), len(expected))
+        for ii,jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii,jj)        
+        self.assertTrue(Path("iter-000001/prep-run-fp/inputs/done").is_file())
+        self.assertTrue(Path("iter-000001/prep-run-fp/outputs/done").is_file())
+
+        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-fp', None, chk_pnt=True)
+        expected = [
+            mock.call("arti-confs", path=Path("iter-000001/prep-run-fp/inputs"), skip_exists=True),
+            mock.call("arti-logs", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+            mock.call("arti-labeled_data", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+        ]
+        self.assertEqual(len(mocked_dl.call_args_list), len(expected))
+        for ii,jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii,jj)        
+        if Path('iter-000001').exists():
+            shutil.rmtree('iter-000001')
+
+    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
     def test_empty_download(self, mocked_dl):
         download_dpgen2_artifacts(Mockedwf(), 'iter-000001--foo', None)
         expected = [

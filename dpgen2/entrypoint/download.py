@@ -24,7 +24,7 @@ def download(
         wf_config : Optional[Dict] = {}, 
         wf_keys : Optional[List] = None,
         prefix : Optional[str] = None,
-        chk_pnt : Optional[bool] = True,
+        chk_pnt : bool = False,
 ):
     wf_config = normalize_args(wf_config)
 

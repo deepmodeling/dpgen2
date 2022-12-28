@@ -31,7 +31,7 @@ def update_finished_steps(
         download : Optional[bool] = False,
         watching_keys : Optional[List[str]] = None,
         prefix : Optional[str] = None,
-        chk_pnt : Optional[bool] = True,
+        chk_pnt : bool = False,
 ):
     wf_keys = wf.query_keys_of_steps()
     wf_keys = matched_step_key(wf_keys, watching_keys)
@@ -56,9 +56,9 @@ def watch(
         wf_config : Optional[Dict] = {},
         watching_keys : Optional[List] = default_watching_keys,
         frequency : float = 600.,
-        download : Optional[bool] = False,
+        download : bool = False,
         prefix : Optional[str] = None,
-        chk_pnt : Optional[bool] = True,
+        chk_pnt : bool = False,
 ):
     wf_config = normalize_args(wf_config)
 

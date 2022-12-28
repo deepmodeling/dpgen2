@@ -2,11 +2,17 @@ import logging
 import numpy as np
 from pathlib import Path
 
+from dflow import (
+    Workflow,
+)
 from dpgen2.utils.dflow_query import(
     get_iteration,
     get_subkey,
 )
 from dflow import Workflow,download_artifact
+from typing import (
+    Optional
+)
 
 
 class DownloadDefinition():
@@ -61,10 +67,10 @@ op_download_setting = {
     
 
 def download_dpgen2_artifacts(
-        wf,
-        key,
-        prefix = None,
-        chk_pnt = True,
+        wf : Workflow,
+        key : str,
+        prefix : Optional[str] = None,
+        chk_pnt : bool = False,
 ):
     """
     download the artifacts of a step.
