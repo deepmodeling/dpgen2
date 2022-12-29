@@ -126,7 +126,7 @@ def input_args():
         Argument("type_map", list, optional=False, doc=doc_type_map),
         Argument("mass_map", list, optional=False, doc=doc_mass_map),
         Argument("init_data_prefix", str, optional=True, default=None, doc=doc_init_data_prefix),
-        Argument("init_data_sys", list, optional=False, default=None, doc=doc_init_sys),
+        Argument("init_data_sys", [list,str], optional=False, default=None, doc=doc_init_sys),
     ]
     
 

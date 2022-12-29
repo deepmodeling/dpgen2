@@ -17,9 +17,10 @@ classifiers = [
 dependencies = [
 	     'numpy',
 	     'dpdata',
-	     'pydflow>=1.6.18',
+	     'pydflow>=1.6.23',
 	     'dargs>=0.3.1',
 	     'scipy',
+	     'lbg',
 ]
 requires-python = ">=3.7"
 readme = "README.md"
