@@ -8,11 +8,17 @@ from typing import (
 )
 from dflow.python import FatalError
 
-class TrajsExplorationReport(ExplorationReport):
+class ExplorationReportTrustLevels(ExplorationReport):
     def __init__(
             self,
+            trust_level,
+            conv_accuracy,
     ):
+        self.trust_level = trust_level
+        self.conv_accuracy = conv_accuracy
         self.clear()
+        self.v_level = ( (self.trust_level.level_v_lo is not None) and \
+                         (self.trust_level.level_v_hi is not None) )                
 
     def clear(
             self,
@@ -23,7 +29,43 @@ class TrajsExplorationReport(ExplorationReport):
         self.traj_fail = []        
         self.traj_cand_picked = []
 
-    def record_traj(
+    def record(
+            self,
+            md_f : List[np.array],
+            md_v : Optional[List[np.array]] = None,
+    ):
+        ntraj = len(md_f)
+        if md_v is None:
+            md_v = [None for ii in range(ntraj)]
+        for ii in range(ntraj):
+            id_f_cand, id_f_accu, id_f_fail = self._get_indexes(
+                md_f[ii], self.trust_level.level_f_lo, self.trust_level.level_f_hi)
+            id_v_cand, id_v_accu, id_v_fail = self._get_indexes(
+                md_v[ii], self.trust_level.level_v_lo, self.trust_level.level_v_hi)
+            self._record_one_traj(
+                id_f_accu, id_f_cand, id_f_fail,
+                id_v_accu, id_v_cand, id_v_fail,
+            )
+        assert(len(self.traj_nframes) == ntraj)
+        assert(len(self.traj_cand) == ntraj)
+        assert(len(self.traj_accu) == ntraj)
+        assert(len(self.traj_fail) == ntraj)
+
+    def _get_indexes(
+            self,
+            md, 
+            level_lo,
+            level_hi,
+    ):
+        if (md is not None) and (level_hi is not None) and (level_lo is not None):
+            id_cand = np.where(np.logical_and(md >=level_lo, md < level_hi))[0]
+            id_accu = np.where(md < level_lo)[0]
+            id_fail = np.where(md >=level_hi)[0]
+        else:
+            id_cand = id_accu = id_fail = None
+        return id_cand, id_accu, id_fail
+
+    def _record_one_traj(
             self,
             id_f_accu,
             id_f_cand,
@@ -68,8 +110,11 @@ class TrajsExplorationReport(ExplorationReport):
         self.traj_cand.append(set_cand)
         self.traj_accu.append(set_accu)
         self.traj_fail.append(set_fail)
-
         
+
+    def converged(self):
+        return self.accurate_ratio() >= self.conv_accuracy        
+
     def failed_ratio(
             self,
             tag = None,
@@ -91,7 +136,18 @@ class TrajsExplorationReport(ExplorationReport):
         traj_nf = [len(ii) for ii in self.traj_cand]
         return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
-    def get_candidates(
+    def get_candidate_ids(
+            self,
+            max_nframes : Optional[int] = None,
+    ) -> List[List[int]]:
+        ntraj = len(self.traj_nframes)
+        id_cand = self._get_candidates(max_nframes)
+        id_cand_list = [[] for ii in range(ntraj)]
+        for ii in id_cand:
+            id_cand_list[ii[0]].append(ii[1])
+        return id_cand_list
+
+    def _get_candidates(
             self,
             max_nframes : Optional[int] = None,
     )->List[Tuple[int,int]]:
@@ -120,3 +176,10 @@ class TrajsExplorationReport(ExplorationReport):
             ret = self.traj_cand_picked
         return ret
         
+    def print_header(self) -> str:
+        r"""Print the header of report"""
+        raise NotImplementedError
+
+    def print(self) -> str:
+        r"""Print the report"""
+        raise NotImplementedError

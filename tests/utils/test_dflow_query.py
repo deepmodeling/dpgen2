@@ -18,7 +18,7 @@ from dpgen2.exploration.scheduler import (
 )
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import TrustLevel, ConfSelectorLammpsFrames
+from dpgen2.exploration.selector import TrustLevel, ConfSelectorFrames
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,

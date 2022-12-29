@@ -9,5 +9,5 @@ from .conf_selector import (
     ConfSelector,
 )
 from .conf_selector_frame import (
-    ConfSelectorLammpsFrames,
+    ConfSelectorFrames,
 )

@@ -16,7 +16,6 @@ class ConfSelector(ABC):
             self,
             trajs : List[Path],
             model_devis : List[Path],
-            traj_fmt : str = 'deepmd/npy',
             type_map : Optional[List[str]] = None,
     ) -> Tuple[List[ Path ], ExplorationReport]:
         pass

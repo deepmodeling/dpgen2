@@ -17,13 +17,11 @@ class ConvergenceCheckStageScheduler(StageScheduler):
             self,
             stage : ExplorationStage,
             selector : ConfSelector,
-            conv_accuracy : float = 0.9,
             max_numb_iter : Optional[int] = None,
             fatal_at_max : bool = True,
     ):
         self.stage = stage
         self.selector = selector
-        self.conv_accuracy = conv_accuracy
         self.max_numb_iter = max_numb_iter
         self.fatal_at_max = fatal_at_max
         self.nxt_iter = 0
@@ -52,11 +50,11 @@ class ConvergenceCheckStageScheduler(StageScheduler):
             lmp_task_grp = self.stage.make_task()
             ret_selector = self.selector
         else :
-            stg_complete = report.accurate_ratio() >= self.conv_accuracy
+            stg_complete = report.converged()
             self.conv = stg_complete
             if not stg_complete:
                 # check if we have any candidate to improve the quality of the model
-                if report.candidate_ratio() == 0.0:
+                if report.no_candidate():
                     raise FatalError(
                         'The iteration is not converted, but we find that '
                         'it does not selected any candidate configuration. '

@@ -5,10 +5,16 @@ import unittest
 from pathlib import Path
 from dpgen2.exploration.selector import (
     TrustLevel,
-    ConfSelectorLammpsFrames,
+    ConfSelectorFrames,
+)
+from dpgen2.exploration.report import (
+    ExplorationReportTrustLevels,
+)
+from dpgen2.exploration.render import (
+    TrajRenderLammps,
 )
 
-class TestConfSelectorLammpsFrames(unittest.TestCase):
+class TestConfSelectorFrames(unittest.TestCase):
     def setUp(self):
         self.dump_file = textwrap.dedent(
             """ITEM: TIMESTEP
@@ -62,7 +68,6 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         for ii in self.model_devis:
             ii.write_text(self.model_devi_file)
         
-        self.traj_fmt = 'lammps/dump'
         self.type_map = ['O', 'H']
 
     def tearDown(self):
@@ -74,11 +79,13 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
                 shutil.rmtree(ii)
 
     def test_f_0(self):
-        conf_selector = ConfSelectorLammpsFrames(
-            TrustLevel(0.1, 0.5),
+        report = ExplorationReportTrustLevels(TrustLevel(0.1, 0.5), 0.9)
+        traj_render = TrajRenderLammps()
+        conf_selector = ConfSelectorFrames(
+            traj_render, report,
         )
         confs, report = conf_selector.select(
-            self.trajs, self.model_devis, self.traj_fmt, self.type_map)
+            self.trajs, self.model_devis, self.type_map)
         ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
@@ -98,11 +105,13 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 0.)
 
     def test_f_1(self):
-        conf_selector = ConfSelectorLammpsFrames(
-            TrustLevel(0.25, 0.35),
+        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35), 0.9)
+        traj_render = TrajRenderLammps()
+        conf_selector = ConfSelectorFrames(
+            traj_render, report
         )
         confs, report = conf_selector.select(
-            self.trajs, self.model_devis, self.traj_fmt, self.type_map)
+            self.trajs, self.model_devis, self.type_map)
         ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
@@ -119,11 +128,13 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         
 
     def test_fv_0(self):
-        conf_selector = ConfSelectorLammpsFrames(
-            TrustLevel(0.25, 0.35, 0.05, 0.15),
+        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35, 0.05, 0.15), 0.9)
+        traj_render = TrajRenderLammps()
+        conf_selector = ConfSelectorFrames(
+            traj_render, report,
         )
         confs, report = conf_selector.select(
-            self.trajs, self.model_devis, self.traj_fmt, self.type_map)
+            self.trajs, self.model_devis, self.type_map)
         ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)
@@ -142,12 +153,14 @@ class TestConfSelectorLammpsFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 2./3.)
         
     def test_fv_1(self):
-        conf_selector = ConfSelectorLammpsFrames(
-            TrustLevel(0.25, 0.35, 0.05, 0.15),
+        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35, 0.05, 0.15), 0.9)
+        traj_render = TrajRenderLammps()
+        conf_selector = ConfSelectorFrames(
+            traj_render, report,
             max_numb_sel = 1,
         )
         confs, report = conf_selector.select(
-            self.trajs, self.model_devis, self.traj_fmt, self.type_map)
+            self.trajs, self.model_devis, self.type_map)
         ms = dpdata.MultiSystems(type_map=self.type_map)
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(len(ms), 1)

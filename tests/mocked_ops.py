@@ -621,10 +621,35 @@ class MockedCollectDataRestart(CollectData):
 
 
 class MockedExplorationReport(ExplorationReport):
-    def __init__(self):
+    def __init__(
+            self,
+            conv_accuracy = 0.9
+    ):
+        self.conv_accuracy = conv_accuracy
         self.failed = .1
         self.candidate = .1
         self.accurate = .8
+
+    def clear(self):
+        raise NotImplementedError
+
+    def record(self, mdf, mdv):
+        raise NotImplementedError
+
+    def print(self):
+        raise NotImplementedError
+
+    def print_header(self):
+        raise NotImplementedError
+
+    def converged(self):
+        return self.accurate >= self.conv_accuracy
+
+    def no_candidate(self):
+        return self.candidate_ratio() == 0.0
+
+    def get_candidate_ids(self, max_nframes):
+        raise NotImplementedError
 
     def failed_ratio (
             self, 
