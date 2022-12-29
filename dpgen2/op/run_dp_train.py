@@ -190,12 +190,12 @@ class RunDPTrain(OP):
         if major_version == "1":
             # v1 behavior
             odict['training']['systems'] = data_list
-            odict['training']['batch_size'] = "auto"
+            # odict['training']['batch_size'] = "auto"
             odict['training']['auto_prob_style'] = auto_prob_str
         elif major_version == "2":
             # v2 behavior
             odict['training']['training_data']['systems'] = data_list
-            odict['training']['training_data']['batch_size'] = "auto"
+            # odict['training']['training_data']['batch_size'] = "auto"
             odict['training']['training_data']['auto_prob'] = auto_prob_str
             odict['training'].pop('validation_data', None)
         else:
