@@ -8,7 +8,7 @@ from typing import (
 )
 from .traj_render import TrajRender
 from pathlib import Path
-from dpgen2.exploration.selector import ConfFilters
+
 
 class TrajRenderLammps(TrajRender):
     def __init__(
@@ -39,7 +39,7 @@ class TrajRenderLammps(TrajRender):
             trajs: List[Path],
             id_selected: List[List[int]],
             type_map: Optional[List[str]] = None,
-            conf_filters: Optional[ConfFilters] = None,
+            conf_filters: Optional["ConfFilters"] = None,
     ) -> dpdata.MultiSystems :
         del conf_filters        # by far does not support conf filters
         ntraj = len(trajs)

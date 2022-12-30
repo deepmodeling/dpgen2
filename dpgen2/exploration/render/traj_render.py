@@ -8,7 +8,6 @@ from typing import (
 )
 from abc import ABC, abstractmethod
 from pathlib import Path
-from dpgen2.exploration.selector import ConfFilters
 
 class TrajRender(ABC):
     @abstractmethod
@@ -43,7 +42,7 @@ class TrajRender(ABC):
             traj: List[Path],
             id_selected: List[List[int]],
             type_map: Optional[List[str]] = None,
-            conf_filters: Optional[ConfFilters] = None,
+            conf_filters: Optional["ConfFilters"] = None,
     ) -> dpdata.MultiSystems :
         r"""Get configurations from trajectory by selection.
         
