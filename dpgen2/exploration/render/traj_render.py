@@ -8,6 +8,10 @@ from typing import (
 )
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from dpgen2.exploration.selector import ConfFilters
+
 
 class TrajRender(ABC):
     @abstractmethod
