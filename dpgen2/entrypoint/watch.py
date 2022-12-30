@@ -68,7 +68,7 @@ def watch(
 
     finished_keys = None
 
-    while wf.query_status() in ["Pending", "Running"]:
+    while wf.query_status() in ["Pending", "Running", "Failed", "Error"]:
         finished_keys = update_finished_steps(
             wf,
             finished_keys,
@@ -77,6 +77,8 @@ def watch(
             prefix=prefix,
             chk_pnt=chk_pnt,
         )
+        if wf.query_status() in ["Failed", "Error"]:
+            break
         time.sleep(frequency)
 
     status = wf.query_status()

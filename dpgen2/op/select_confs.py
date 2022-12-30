@@ -72,7 +72,6 @@ class SelectConfs(OP):
         confs, report = conf_selector.select(
             trajs, 
             model_devis, 
-            traj_fmt = traj_fmt,
             type_map = type_map,
         )
 
