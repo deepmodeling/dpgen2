@@ -9,6 +9,12 @@ from typing import (
 from dflow.python import FatalError
 
 class ExplorationReportTrustLevels(ExplorationReport):
+    # class attrs
+    spaces = [8, 8, 8, 10, 10, 10]
+    fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
+    fmt_flt = '%.4f'
+    header_str = '#' + fmt_str % ('stage', 'id_stg.', 'iter.', 'accu.', 'cand.', 'fail.')
+
     def __init__(
             self,
             trust_level,
@@ -18,7 +24,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.conv_accuracy = conv_accuracy
         self.clear()
         self.v_level = ( (self.trust_level.level_v_lo is not None) and \
-                         (self.trust_level.level_v_hi is not None) )                
+                         (self.trust_level.level_v_hi is not None) )
 
     def clear(
             self,
@@ -180,8 +186,21 @@ class ExplorationReportTrustLevels(ExplorationReport):
         
     def print_header(self) -> str:
         r"""Print the header of report"""
-        raise NotImplementedError
+        return ExplorationReportTrustLevels.header_str
 
-    def print(self) -> str:
+    def print(
+            self, 
+            stage_idx : int,
+            idx_in_stage : int,
+            iter_idx : int,
+    ) -> str:
         r"""Print the report"""
-        raise NotImplementedError
+        fmt_str = ExplorationReportTrustLevels.fmt_str
+        fmt_flt = ExplorationReportTrustLevels.fmt_flt
+        ret = ' ' + fmt_str % (
+            str(stage_idx), str(idx_in_stage), str(iter_idx),
+            fmt_flt%(self.accurate_ratio()),
+            fmt_flt%(self.candidate_ratio()),
+            fmt_flt%(self.failed_ratio()),
+        )
+        return ret

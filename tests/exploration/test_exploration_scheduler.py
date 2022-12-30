@@ -257,27 +257,25 @@ class TestExplorationScheduler(unittest.TestCase):
         )
         scheduler.add_stage_scheduler(stage_scheduler)
 
-        foo_report = MockedExplorationReport()
-        foo_report.accurate = 0.5
-        foo_report.failed = 0.5          
-        bar_report = MockedExplorationReport()
-        bar_report.accurate = 1.0
-        bar_report.failed = 0.0        
+        foo_report = ExplorationReportTrustLevels(trust_level, 0.9)
+        foo_report.record([ np.array([0.3, 0.9]) ])
+        bar_report = ExplorationReportTrustLevels(trust_level, 0.9)
+        bar_report.record([ np.array([0.1, 0.1]) ])
 
         expected_output = [
             '#   stage  id_stg.    iter.      accu.      cand.      fail.',
             '# Stage    0  --------------------',
-            '        0        0        0     1.0000     0.1000     0.0000',
+            '        0        0        0     1.0000     0.0000     0.0000',
             '# Stage    0  converged YES  reached max numb iterations NO ',
             '# Stage    1  --------------------',
-            '        1        0        1     0.5000     0.1000     0.5000',
-            '        1        1        2     1.0000     0.1000     0.0000',
+            '        1        0        1     0.0000     0.5000     0.5000',
+            '        1        1        2     1.0000     0.0000     0.0000',
             '# Stage    1  converged YES  reached max numb iterations NO ',
             '# All stages converged',
         ]
-        self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output[:1])+'\n')
+        self.assertEqual(scheduler.print_convergence(), "No finished iteration found\n")
         conv, ltg, sel = scheduler.plan_next_iteration()
-        self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output[:1])+'\n')
+        self.assertEqual(scheduler.print_convergence(), "No finished iteration found\n")
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
         self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output[:3])+'\n')
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])

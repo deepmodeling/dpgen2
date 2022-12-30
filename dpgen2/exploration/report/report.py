@@ -65,6 +65,11 @@ class ExplorationReport(ABC):
         pass
 
     @abstractmethod
-    def print(self) -> str:
+    def print(
+            self, 
+            stage_idx : int,
+            idx_in_stage : int,
+            iter_idx : int,
+    ) -> str:
         r"""Print the report"""
         pass

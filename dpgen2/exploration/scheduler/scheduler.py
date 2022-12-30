@@ -189,18 +189,19 @@ class ExplorationScheduler():
             return None
 
     def print_convergence(self):
-        spaces = [8, 8, 8, 10, 10, 10]
-        fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
-        fmt_flt = '%.4f'
-        header_str = '#' + fmt_str % ('stage', 'id_stg.', 'iter.', 'accu.', 'cand.', 'fail.')
-        ret = [header_str]
+        ret = []
+        stages = self.stage_schedulers
 
         stage_idx, idx_in_stage, iter_idx = self.get_stage_of_iterations()
-        accu, cand, fail = self.get_convergence_ratio()
+
+        if np.size(iter_idx) == 0:
+            return "No finished iteration found\n"
         
-        iidx = 0
         prev_stg_idx = -1
-        for iidx in range(len(accu)):
+        for iidx in range(np.size(iter_idx)):
+            if len(ret) == 0:
+                ret.append(
+                    stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header())
             if stage_idx[iidx] != prev_stg_idx:
                 if prev_stg_idx >= 0:
                     _summary = self._print_prev_summary(prev_stg_idx)
@@ -208,12 +209,11 @@ class ExplorationScheduler():
                     ret.append(_summary)
                 ret.append(f'# Stage {stage_idx[iidx]:4d}  ' + '-'*20)
                 prev_stg_idx = stage_idx[iidx]
-            ret.append(' ' + fmt_str % (
-                str(stage_idx[iidx]), str(idx_in_stage[iidx]), str(iidx), 
-                fmt_flt%(accu[iidx]*1),
-                fmt_flt%(cand[iidx]*1),
-                fmt_flt%(fail[iidx]*1),
-            ))
+            ret.append(
+                stages[stage_idx[iidx]].reports[idx_in_stage[iidx]]\
+                .print(stage_idx[iidx], idx_in_stage[iidx], iidx)
+            )
+
         if self.complete():
             if prev_stg_idx >= 0:
                 _summary = self._print_prev_summary(prev_stg_idx)
