@@ -64,6 +64,12 @@ from dpgen2.exploration.selector import (
     ConfSelectorFrames,
     TrustLevel,
 )
+from dpgen2.exploration.render import (
+    TrajRenderLammps,
+)
+from dpgen2.exploration.report import (
+    ExplorationReportTrustLevels,
+)
 from dpgen2.constants import (
     default_image,
     default_host,
