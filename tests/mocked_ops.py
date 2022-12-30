@@ -717,10 +717,12 @@ class MockedStage2(ExplorationStage):
 
 class MockedConfSelector(ConfSelector):
     def __init__(
-            self,
+            self,            
             trust_level: TrustLevel = TrustLevel(0.1, 0.2),
+            conv_accuracy: float = 0.9,
     ):
         self.trust_level = trust_level
+        self.conv_accuracy = conv_accuracy
 
     def select (
             self,
@@ -749,7 +751,7 @@ class MockedConfSelector(ConfSelector):
             fname = Path('conf.1')
             fname.write_text('conf of conf.1')
             confs.append(fname)
-        report = MockedExplorationReport()
+        report = MockedExplorationReport(conv_accuracy=self.conv_accuracy)
         return confs, report
 
 class MockedSelectConfs(SelectConfs):
@@ -783,5 +785,8 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
             conv_accuracy : float = 0.9,
             max_numb_iter : int = None,
     ):
-        self.selector = MockedConfSelector(trust_level)
-        super().__init__(stage, self.selector, conv_accuracy, max_numb_iter)
+        self.selector = MockedConfSelector(
+            trust_level, 
+            conv_accuracy=conv_accuracy,
+        )
+        super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)
