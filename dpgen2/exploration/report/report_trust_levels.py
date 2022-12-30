@@ -31,12 +31,14 @@ class ExplorationReportTrustLevels(ExplorationReport):
 
     def record(
             self,
-            md_f : List[np.array],
-            md_v : Optional[List[np.array]] = None,
+            md_f : List[np.ndarray],
+            md_v_: Optional[List[np.ndarray]] = None,
     ):
         ntraj = len(md_f)
-        if md_v is None:
+        if md_v_ is None:
             md_v = [None for ii in range(ntraj)]
+        else:
+            md_v = md_v_
         for ii in range(ntraj):
             id_f_cand, id_f_accu, id_f_fail = self._get_indexes(
                 md_f[ii], self.trust_level.level_f_lo, self.trust_level.level_f_hi)

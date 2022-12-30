@@ -1,3 +1,4 @@
+import numpy as np
 from abc import ABC, abstractmethod
 from typing import (
     Tuple, List, Optional,
@@ -12,17 +13,17 @@ class ExplorationReport(ABC):
     @abstractmethod
     def record(
             self,
-            mdf : List[List[float]],
-            mdv : Optional[List[List[float]]] = None,
+            md_f : List[np.ndarray],
+            md_v : Optional[List[np.ndarray]] = None,
     ):
         r"""Record the model deviations of the trajectories
 
         Parameters
         ----------
-        mdf : Optional[List[List[float]]]
+        mdf : List[np.ndarray]
                 The force model deviations. mdf[ii][jj] is the force model deviation
                 of the jj-th frame of the ii-th trajectory.
-        mdv : Optional[List[List[float]]]
+        mdv : Optional[List[np.ndarray]]
                 The virial model deviations. mdv[ii][jj] is the virial model deviation
                 of the jj-th frame of the ii-th trajectory.
         """

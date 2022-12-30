@@ -15,7 +15,7 @@ class TrajRender(ABC):
     def get_model_devi(
             self,
             files : List[Path],
-    ) -> Tuple[Union[List[np.array], None], Union[List[np.array], None]]:
+    ) -> Tuple[List[np.ndarray], Union[List[np.ndarray], None]]:
         r"""Get model deviations from recording files.
         
         Parameters
@@ -25,10 +25,10 @@ class TrajRender(ABC):
 
         Returns
         -------
-        model_devis: Tuple[Union[np.array,None], Union[np.array,None]]
+        model_devis: Tuple[List[np.array], Union[List[np.array],None]]
                 A tuple. model_devis[0] is the force model deviations,
                 model_devis[1] is the virial model deviations.
-                Either of model_devis[0] or model_devis[1] can be None.
+                The model_devis[1] can be None.
                 If not None, model_devis[i] is List[np.array], where np.array is a
                 one-dimensional array.
                 The first dimension of model_devis[i] is the trajectory

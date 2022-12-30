@@ -20,7 +20,7 @@ class TrajRenderLammps(TrajRender):
     def get_model_devi(
             self,
             files : List[Path],
-    ) -> Tuple[Union[List[np.array], None], Union[List[np.array], None]]:
+    ) -> Tuple[List[np.ndarray], Union[List[np.ndarray], None]]:
         nframes = len(files)
         mdfs = []
         mdvs = []
