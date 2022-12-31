@@ -3,7 +3,7 @@ import os, textwrap
 import numpy as np
 import unittest
 from collections import Counter
-from dpgen2.exploration.report import NaiveExplorationReport, ExplorationReportTrustLevels
+from dpgen2.exploration.report import ExplorationReportTrustLevels
 from dpgen2.exploration.selector import TrustLevel
 
 
