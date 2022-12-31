@@ -195,7 +195,6 @@ def _block_cl(
         parameters={
             "conf_selector": block_steps.inputs.parameters['conf_selector'],
             "type_map": block_steps.inputs.parameters["type_map"],
-            "traj_fmt": 'lammps/dump',
         },
         artifacts={
             "trajs" : prep_run_lmp.outputs.artifacts['trajs'],

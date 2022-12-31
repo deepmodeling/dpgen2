@@ -20,7 +20,6 @@ class SelectConfs(OP):
     def get_input_sign(cls):
         return OPIOSign({
             "conf_selector": ConfSelector,
-            "traj_fmt": str,
             "type_map": List[str],
 
             "trajs": Artifact(List[Path]),
@@ -48,7 +47,6 @@ class SelectConfs(OP):
             Input dict with components:
         
             - `conf_selector`: (`ConfSelector`) Configuration selector.
-            - `traj_fmt`: (`str`) The format of trajectory.
             - `type_map`: (`List[str]`) The type map.
             - `trajs`: (`Artifact(List[Path])`) The trajectories generated in the exploration.
             - `model_devis`: (`Artifact(List[Path])`) The file storing the model deviation of the trajectory. The order of model deviation storage is consistent with that of the trajectories. The order of frames of one model deviation storage is also consistent with tat of the corresponding trajectory.
@@ -63,7 +61,6 @@ class SelectConfs(OP):
         """
 
         conf_selector = ip['conf_selector']
-        traj_fmt = ip['traj_fmt']
         type_map = ip['type_map']
 
         trajs = ip['trajs']

@@ -54,8 +54,6 @@ class ConfSelectorFrames(ConfSelector):
                 Format: each line has 7 numbers they are used as
                 # frame_id  md_v_max md_v_min md_v_mean  md_f_max md_f_min md_f_mean
                 where `md` stands for model deviation, v for virial and f for force
-        traj_fmt : str
-                Format of the trajectory, by default it is the dump file of LAMMPS
         type_map : List[str]
                 The `type_map` of the systems
 
