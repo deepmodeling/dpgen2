@@ -726,7 +726,6 @@ class MockedConfSelector(ConfSelector):
             self,
             trajs : List[Path],
             model_devis : List[Path],
-            traj_fmt : str = 'deepmd/npy',
             type_map : List[str] = None,
     ) -> Tuple[List[ Path ], TrustLevel] :
         confs = []

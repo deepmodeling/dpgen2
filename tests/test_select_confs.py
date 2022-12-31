@@ -58,7 +58,6 @@ class TestMockedSelectConfs(unittest.TestCase):
         op = MockedSelectConfs()
         out = op.execute(OPIO({
             'conf_selector': self.conf_selector,
-            'traj_fmt': self.traj_fmt,
             'type_map' : self.type_map,
             'trajs' : self.trajs,
             'model_devis' : self.model_devis,
@@ -76,7 +75,6 @@ class TestMockedSelectConfs(unittest.TestCase):
 class TestSelectConfs(unittest.TestCase):
     def setUp(self): 
         self.conf_selector = MockedConfSelector()
-        self.traj_fmt = 'foo'
         self.type_map = []
         self.trajs = [Path('traj.foo'), Path('traj.bar')]
         self.model_devis = [Path('md.foo'), Path('md.bar')]
@@ -91,7 +89,6 @@ class TestSelectConfs(unittest.TestCase):
         op = SelectConfs()
         out = op.execute(OPIO({
             'conf_selector': self.conf_selector,
-            'traj_fmt': self.traj_fmt,
             'type_map' : self.type_map,
             'trajs' : self.trajs,
             'model_devis' : self.model_devis,
