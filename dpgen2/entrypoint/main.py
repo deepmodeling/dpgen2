@@ -40,10 +40,6 @@ from dpgen2 import (
     __version__
 )
 
-#####################################
-# logging
-logging.basicConfig(level=logging.INFO)
-
 
 def main_parser() -> argparse.ArgumentParser:
     """DPGEN2 commandline options argument parser.
@@ -221,6 +217,10 @@ def parse_args(args: Optional[List[str]] = None):
     
 
 def main():
+    #####################################
+    # logging
+    logging.basicConfig(level=logging.INFO)
+
     args = parse_args()
     dict_args = vars(args)
 
