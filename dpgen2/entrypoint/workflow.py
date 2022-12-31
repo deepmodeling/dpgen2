@@ -44,6 +44,5 @@ def execute_workflow_subcommand(
     wf_config = normalize_args(wf_config)    
     global_config_workflow(wf_config)
     wf = Workflow(id=wfid)
-    ff = getattr(wf, command)
-    ff()
+    getattr(wf, command)()
     
