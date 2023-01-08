@@ -7,11 +7,13 @@ from dflow.python import (
     Artifact,
     TransientError,
     FatalError,
+    BigParameter
 )
 from typing import (
     Tuple,
     List,
     Set,
+    Optional
 )
 from dpgen2.utils.run_command import run_command
 from dpgen2.utils import (
@@ -31,6 +33,7 @@ from dargs import (
     Variant, 
     ArgumentEncoder,
 )
+from dpgen2.fp import BinaryFileInput
 
 
 class RunLmp(OP):
@@ -47,7 +50,7 @@ class RunLmp(OP):
     @classmethod
     def get_input_sign(cls):
         return OPIOSign({
-            "config" : dict,
+            "config" : BigParameter(dict),
             "task_name": str,
             "task_path": Artifact(Path),
             "models" : Artifact(List[Path]),
@@ -95,6 +98,7 @@ class RunLmp(OP):
         config = ip['config'] if ip['config'] is not None else {}
         config = RunLmp.normalize_config(config)
         command = config['command']
+        teacher_model: Optional(BinaryFileInput) = config.get("teacher_model", None)
         task_name = ip['task_name']
         task_path = ip['task_path']
         models = ip['models']
@@ -102,6 +106,11 @@ class RunLmp(OP):
         input_files = [(Path(task_path)/ii).resolve() for ii in input_files]
         model_files = [Path(ii).resolve() for ii in models]
         work_dir = Path(task_name)
+        
+        if teacher_model:
+            assert len(model_files) == 1, 'One model is enough in knowledge distillation'
+            teacher_model.save_as_file('teacher_model.pb')
+            model_files = [Path('teacher_model.pb').resolve()] + model_files
 
         with set_directory(work_dir):
             # link input files
@@ -112,6 +121,10 @@ class RunLmp(OP):
             for idx,mm in enumerate(model_files):
                 mname = model_name_pattern % (idx)
                 Path(mname).symlink_to(mm)
+            
+            if teacher_model:
+                add_teacher_model()
+
             # run lmp
             command = ' '.join([command, '-i', lmp_input_name, '-log', lmp_log_name])
             ret, out, err = run_command(command, shell=True)
@@ -132,8 +145,10 @@ class RunLmp(OP):
     @staticmethod
     def lmp_args():
         doc_lmp_cmd = "The command of LAMMPS"
+        doc_teacher_model = "The teacher model in `Knowledge Distillation`"
         return [
             Argument("command", str, optional=True, default='lmp', doc=doc_lmp_cmd),
+            Argument("teacher_model", BinaryFileInput, optional=True, default=None, doc=doc_teacher_model),
         ]
 
     @staticmethod
@@ -146,3 +161,30 @@ class RunLmp(OP):
 
     
 config_args = RunLmp.lmp_args
+
+
+def add_teacher_model():
+    lmp_input_lines = open(lmp_input_name, encoding='utf8').readlines()
+    idx = find_only_one_key(lmp_input_lines, ['pair_style', 'deepmd'])
+
+    model0_pattern = model_name_pattern % 0
+    assert lmp_input_lines[idx].find(model0_pattern) != -1, f'error: cannot find \"{model0_pattern}\" in lmp_input, {lmp_input_lines[idx]}'
+
+    lmp_input_lines[idx] = lmp_input_lines[idx].replace(model0_pattern, ' '.join([model_name_pattern % i for i in range(2)]))
+
+    with open(lmp_input_name, 'w', encoding='utf8') as f:
+        f.write('\n'.join(lmp_input_lines))
+
+
+def find_only_one_key(lmp_lines, key):
+    found = []
+    for idx in range(len(lmp_lines)):
+        words = lmp_lines[idx].split()
+        nkey = len(key)
+        if len(words) >= nkey and words[:nkey] == key :
+            found.append(idx)
+    if len(found) > 1:
+        raise RuntimeError('found %d keywords %s' % (len(found), key))
+    if len(found) == 0:
+        raise RuntimeError('failed to find keyword %s' % (key))
+    return found[0]

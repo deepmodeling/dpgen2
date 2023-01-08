@@ -8,6 +8,7 @@ from .gaussian import (
     PrepGaussian,
     RunGaussian,
 )
+from .binary_file_input import BinaryFileInput
 
 fp_styles = {
     "vasp" :  {

@@ -91,7 +91,7 @@ class VaspInputs():
         doc_kspacing = "The spacing of k-point sampling. `ksapcing` will overwrite the incar template"
         doc_kgamma = "If the k-mesh includes the gamma point. `kgamma` will overwrite the incar template"
         return [
-            Argument("incar", str, optional=False, doc=doc_pp_files),
+            Argument("incar", str, optional=False, doc=doc_incar),
             Argument("pp_files", dict, optional=False, doc=doc_pp_files),
             Argument("kspacing", float, optional=False, doc=doc_kspacing),
             Argument("kgamma", bool, optional=True, default=True, doc=doc_kgamma),
