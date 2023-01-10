@@ -236,52 +236,107 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_print_scheduler(self):
         scheduler = ExplorationScheduler()        
-        trust_level = TrustLevel(0.1, 0.3)
-        report = ExplorationReportTrustLevels(trust_level, 0.9)
-        traj_render = TrajRenderLammps()        
-        selector = ConfSelectorFrames(traj_render, report)
-        stage_scheduler = ConvergenceCheckStageScheduler(
+        trust_level_0 = TrustLevel(0.1, 0.3)
+        report_0 = ExplorationReportTrustLevels(trust_level_0, 0.9)
+        traj_render_0 = TrajRenderLammps()        
+        selector_0 = ConfSelectorFrames(traj_render_0, report_0)
+        stage_scheduler_0 = ConvergenceCheckStageScheduler(
             MockedStage(),
-            selector,
+            selector_0,
             max_numb_iter = 2,
         )
-        scheduler.add_stage_scheduler(stage_scheduler)
-        trust_level = TrustLevel(0.2, 0.4)
-        report = ExplorationReportTrustLevels(trust_level, 0.9)
-        traj_render = TrajRenderLammps()        
-        selector = ConfSelectorFrames(traj_render, report)
-        stage_scheduler = ConvergenceCheckStageScheduler(
+        scheduler.add_stage_scheduler(stage_scheduler_0)
+        trust_level_1 = TrustLevel(0.2, 0.4)
+        report_1 = ExplorationReportTrustLevels(trust_level_1, 0.9)
+        traj_render_1 = TrajRenderLammps()        
+        selector_1 = ConfSelectorFrames(traj_render_1, report_1)
+        stage_scheduler_1 = ConvergenceCheckStageScheduler(
             MockedStage1(),
-            selector,
+            selector_1,
             max_numb_iter = 2,
         )
-        scheduler.add_stage_scheduler(stage_scheduler)
+        scheduler.add_stage_scheduler(stage_scheduler_1)
 
-        foo_report = ExplorationReportTrustLevels(trust_level, 0.9)
+        tar_report = ExplorationReportTrustLevels(trust_level_0, 0.9)
+        tar_report.record([ np.array([0.08, 0.05]) ])
+        foo_report = ExplorationReportTrustLevels(trust_level_1, 0.9)
         foo_report.record([ np.array([0.3, 0.9]) ])
-        bar_report = ExplorationReportTrustLevels(trust_level, 0.9)
+        bar_report = ExplorationReportTrustLevels(trust_level_1, 0.9)
         bar_report.record([ np.array([0.1, 0.1]) ])
 
         expected_output = [
-            '#   stage  id_stg.    iter.      accu.      cand.      fail.',
+            '#   stage  id_stg.    iter.      accu.      cand.      fail.   lvl_f_lo   lvl_f_hi    cvged',
             '# Stage    0  --------------------',
-            '        0        0        0     1.0000     0.0000     0.0000',
+            '        0        0        0     1.0000     0.0000     0.0000     0.1000     0.3000     True',
             '# Stage    0  converged YES  reached max numb iterations NO ',
             '# Stage    1  --------------------',
-            '        1        0        1     0.0000     0.5000     0.5000',
-            '        1        1        2     1.0000     0.0000     0.0000',
+            '        1        0        1     0.0000     0.5000     0.5000     0.2000     0.4000    False',
+            '        1        1        2     1.0000     0.0000     0.0000     0.2000     0.4000     True',
             '# Stage    1  converged YES  reached max numb iterations NO ',
             '# All stages converged',
         ]
         self.assertEqual(scheduler.print_convergence(), "No finished iteration found\n")
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(scheduler.print_convergence(), "No finished iteration found\n")
-        conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
+        conv, ltg, sel = scheduler.plan_next_iteration(tar_report, [])        
         self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output[:3])+'\n')
         conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output[:6])+'\n')
         conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])
         self.assertEqual(scheduler.print_convergence(), '\n'.join(expected_output)+'\n')
+
+
+    def test_print_scheduler_last_iteration(self):
+        scheduler = ExplorationScheduler()        
+        trust_level_0 = TrustLevel(0.1, 0.3)
+        report_0 = ExplorationReportTrustLevels(trust_level_0, 0.9)
+        traj_render_0 = TrajRenderLammps()        
+        selector_0 = ConfSelectorFrames(traj_render_0, report_0)
+        stage_scheduler_0 = ConvergenceCheckStageScheduler(
+            MockedStage(),
+            selector_0,
+            max_numb_iter = 2,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler_0)
+        trust_level_1 = TrustLevel(0.2, 0.4)
+        report_1 = ExplorationReportTrustLevels(trust_level_1, 0.9)
+        traj_render_1 = TrajRenderLammps()        
+        selector_1 = ConfSelectorFrames(traj_render_1, report_1)
+        stage_scheduler_1 = ConvergenceCheckStageScheduler(
+            MockedStage1(),
+            selector_1,
+            max_numb_iter = 2,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler_1)
+
+        tar_report = ExplorationReportTrustLevels(trust_level_0, 0.9)
+        tar_report.record([ np.array([0.08, 0.05]) ])
+        foo_report = ExplorationReportTrustLevels(trust_level_1, 0.9)
+        foo_report.record([ np.array([0.3, 0.9]) ])
+        bar_report = ExplorationReportTrustLevels(trust_level_1, 0.9)
+        bar_report.record([ np.array([0.1, 0.1]) ])
+
+        expected_output = [
+            '#   stage  id_stg.    iter.      accu.      cand.      fail.   lvl_f_lo   lvl_f_hi    cvged',
+            '        0        0        0     1.0000     0.0000     0.0000     0.1000     0.3000     True',
+            '        1        0        1     0.0000     0.5000     0.5000     0.2000     0.4000    False',
+            '        1        1        2     1.0000     0.0000     0.0000     0.2000     0.4000     True',
+            '# All stages converged',
+        ]
+        self.assertEqual(scheduler.print_last_iteration(),
+                         "No finished iteration found\n")
+        conv, ltg, sel = scheduler.plan_next_iteration()
+        self.assertEqual(scheduler.print_last_iteration(),
+                         "No finished iteration found\n")
+        conv, ltg, sel = scheduler.plan_next_iteration(tar_report, [])        
+        self.assertEqual(scheduler.print_last_iteration(print_header=True),
+                         '\n'.join(expected_output[:2])+'\n')
+        conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
+        self.assertEqual(scheduler.print_last_iteration(),
+                         '\n'.join(expected_output[2:3])+'\n')
+        conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])
+        self.assertEqual(scheduler.print_last_iteration(),
+                         '\n'.join(expected_output[3:])+'\n')
 
 
     def test_success_and_ratios(self):

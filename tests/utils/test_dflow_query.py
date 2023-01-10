@@ -32,6 +32,7 @@ from dpgen2.utils.dflow_query import (
     get_iteration,
     matched_step_key,
     get_last_iteration,
+    get_all_schedulers,
     find_slice_ranges,
     sort_slice_ops,
     print_keys_in_nice_format,
@@ -88,20 +89,28 @@ dpgen_keys = [
 ]
 
 class MockedTar:
-    value = 10
+    def __init__(self):
+        self.value = 10
 
 class MockedFoo:
-    parameters = {
-        'exploration_scheduler' : MockedTar()
-    }
+    def __init__(self):
+        self.parameters = {
+            'exploration_scheduler' : MockedTar()
+        }
 
 class MockedBar:
-    outputs = MockedFoo        
+    def __init__(self, xx):
+        self.outputs = MockedFoo()
+        self.outputs.parameters['exploration_scheduler'].value = xx*10
 
 class MockedWF:
     def query_step(self,key=None):
-        assert(key == 'iter1--scheduler')
-        return [MockedBar()]
+        if key == 'iter-0--scheduler':
+            return [MockedBar(0)]
+        elif key == 'iter-1--scheduler':
+            return [MockedBar(1)]
+        else:
+            raise RuntimeError('unexpected key')
 
 class TestDflowQuery(unittest.TestCase):
     def test_get_subkey(self):
@@ -124,9 +133,17 @@ class TestDflowQuery(unittest.TestCase):
     def test_get_last_scheduler(self):
         value = get_last_scheduler(
             MockedWF(), 
-            ['iter1--scheduler', 'foo', 'bar', 'iter0--scheduler', 'init--scheduler'],
+            ['iter-1--scheduler', 'foo', 'bar', 'iter-0--scheduler', 'init--scheduler'],
         )
         self.assertEqual(value, 10)
+
+
+    def test_get_all_schedulers(self):
+        value = get_all_schedulers(
+            MockedWF(), 
+            ['iter-1--scheduler', 'foo', 'bar', 'iter-0--scheduler', 'init--scheduler'],
+        )
+        self.assertEqual(value, [0, 10])
 
     def test_get_last_iteration(self):
         last = get_last_iteration(dpgen_keys)

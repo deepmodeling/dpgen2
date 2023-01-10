@@ -9,12 +9,6 @@ from typing import (
 from dflow.python import FatalError
 
 class ExplorationReportTrustLevels(ExplorationReport):
-    # class attrs
-    spaces = [8, 8, 8, 10, 10, 10]
-    fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
-    fmt_flt = '%.4f'
-    header_str = '#' + fmt_str % ('stage', 'id_stg.', 'iter.', 'accu.', 'cand.', 'fail.')
-
     def __init__(
             self,
             trust_level,
@@ -25,6 +19,21 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.clear()
         self.v_level = ( (self.trust_level.level_v_lo is not None) and \
                          (self.trust_level.level_v_hi is not None) )
+
+        print_tuple = ('stage', 'id_stg.', 'iter.',
+                       'accu.', 'cand.', 'fail.',
+                       'lvl_f_lo', 'lvl_f_hi',
+        )
+        spaces = [8, 8, 8, 10, 10, 10, 10, 10]
+        if self.v_level:
+            print_tuple += ('v_lo', 'v_hi',)
+            spaces += [10, 10]
+        print_tuple += ('cvged',)
+        spaces += [8]
+        self.fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
+        self.fmt_flt = '%.4f'
+        self.header_str = '#' + self.fmt_str % print_tuple
+
 
     def clear(
             self,
@@ -186,7 +195,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         
     def print_header(self) -> str:
         r"""Print the header of report"""
-        return ExplorationReportTrustLevels.header_str
+        return self.header_str
 
     def print(
             self, 
@@ -195,12 +204,23 @@ class ExplorationReportTrustLevels(ExplorationReport):
             iter_idx : int,
     ) -> str:
         r"""Print the report"""
-        fmt_str = ExplorationReportTrustLevels.fmt_str
-        fmt_flt = ExplorationReportTrustLevels.fmt_flt
-        ret = ' ' + fmt_str % (
-            str(stage_idx), str(idx_in_stage), str(iter_idx),
-            fmt_flt%(self.accurate_ratio()),
-            fmt_flt%(self.candidate_ratio()),
-            fmt_flt%(self.failed_ratio()),
+        fmt_str = self.fmt_str
+        fmt_flt = self.fmt_flt
+        print_tuple = (
+                str(stage_idx), str(idx_in_stage), str(iter_idx),
+                fmt_flt%(self.accurate_ratio()),
+                fmt_flt%(self.candidate_ratio()),
+                fmt_flt%(self.failed_ratio()),
+                fmt_flt%(self.trust_level.level_f_lo),
+                fmt_flt%(self.trust_level.level_f_hi),
         )
+        if self.v_level:
+            print_tuple += (
+                fmt_flt%(self.trust_level.level_v_lo),
+                fmt_flt%(self.trust_level.level_v_hi),
+            )
+        print_tuple += (
+            str(self.converged()),
+        )
+        ret = ' ' + fmt_str % print_tuple
         return ret

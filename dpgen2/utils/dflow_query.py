@@ -51,6 +51,22 @@ def get_last_scheduler(
         step = wf.query_step(key=skey)[0]
         return step.outputs.parameters['exploration_scheduler'].value
 
+def get_all_schedulers(
+        wf : Any,
+        keys : List[str],
+):
+    """
+    get the output Scheduler of the all the iterations
+    """
+    scheduler_keys = sorted(matched_step_key(keys, ['scheduler']))
+    if len(scheduler_keys) == 0:
+        return None
+    else:
+        all_schedulers = [
+            wf.query_step(key=skey)[0].outputs.parameters['exploration_scheduler'].value
+            for skey in scheduler_keys
+        ]
+    return all_schedulers
         
 def get_last_iteration(
         keys : List[str], 

@@ -82,6 +82,7 @@ from dpgen2.utils import (
     workflow_config_from_dict,
     matched_step_key,
     bohrium_config_from_dict,
+    get_subkey,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from dpgen2.entrypoint.common import (
@@ -388,10 +389,36 @@ def workflow_concurrent_learning(
     return dpgen_step
 
 
+def update_reuse_step_scheduler(
+        reuse_step,
+        scheduler_new,
+):
+    scheduler_ids = []
+    for idx,ii in enumerate(reuse_step):
+        if get_subkey(ii.key, 1) == "scheduler":
+            scheduler_ids.append(idx)
+    scheduler_keys = [reuse_step[ii].key for ii in scheduler_ids]
+    assert(sorted(scheduler_keys) == scheduler_keys),\
+        "The scheduler keys are not properly sorted"
+
+    if len(scheduler_ids) == 0:
+        logging.warning("No scheduler found in the workflow, "
+                        "does not do any replacement."
+        )
+        return reuse_step
+
+    # do replacement
+    reuse_step[scheduler_ids[-1]].modify_output_artifact(
+        "exploration_scheduler", scheduler_new)
+
+    return reuse_step
+
+
 def submit_concurrent_learning(
         wf_config,
         reuse_step = None,
         old_style = False,
+        replace_scheduler = False,
 ):
     # normalize args
     wf_config = normalize_args(wf_config)
@@ -401,6 +428,10 @@ def submit_concurrent_learning(
     context = global_config_workflow(wf_config, do_lebesgue=do_lebesgue)
     
     dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
+    
+    if replace_scheduler:
+        scheduler_new = dpgen_step.inputs.parameters['exploration_scheduler'].value
+        reuse_step = update_reuse_step_scheduler(reuse_step, scheduler_new)
 
     wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)
@@ -449,6 +480,7 @@ def resubmit_concurrent_learning(
         list_steps = False,
         reuse = None,
         old_style = False,
+        replace_scheduler = False,
 ):
     wf_config = normalize_args(wf_config)
 
@@ -474,6 +506,7 @@ def resubmit_concurrent_learning(
         wf_config, 
         reuse_step=reuse_step,
         old_style=old_style,
+        replace_scheduler=replace_scheduler,
     )
 
     return wf

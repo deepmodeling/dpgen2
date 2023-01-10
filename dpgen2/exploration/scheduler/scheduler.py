@@ -188,6 +188,32 @@ class ExplorationScheduler():
         else:
             return None
 
+
+    def print_last_iteration(self, print_header=False):
+        stages = self.stage_schedulers
+        
+        stage_idx, idx_in_stage, iter_idx = self.get_stage_of_iterations()
+
+        if np.size(iter_idx) == 0:
+            return "No finished iteration found\n"
+
+        iidx = np.size(iter_idx)-1
+        
+        ret = []
+        if print_header:
+            ret.append(
+                stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header())
+        ret.append(
+            stages[stage_idx[iidx]].reports[idx_in_stage[iidx]]\
+            .print(stage_idx[iidx], idx_in_stage[iidx], iidx)
+        )
+
+        if self.complete():
+            ret.append(f'# All stages converged')
+        return '\n'.join(ret + [''])
+        
+
+
     def print_convergence(self):
         ret = []
         stages = self.stage_schedulers

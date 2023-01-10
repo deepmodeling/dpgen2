@@ -91,7 +91,10 @@ def main_parser() -> argparse.ArgumentParser:
         "-l", "--list", action='store_true', help="list the Steps of the existing workflow."
     )
     parser_resubmit.add_argument(
-        "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
+        "-u", "--reuse", type=str, nargs='+', default=None, help="specify which Steps to reuse."
+    )
+    parser_resubmit.add_argument(
+        "-s", "--replace-scheduler", action='store_true', help="replace the scheduler defined in the old workflow by that defined in the input script."
     )
     parser_resubmit.add_argument(
         "-o", "--old-compatible", action='store_true', help="compatible with old-style input script used in dpgen2 < 0.0.6."
@@ -241,6 +244,7 @@ def main():
             list_steps=args.list, 
             reuse=args.reuse,
             old_style=args.old_compatible,
+            replace_scheduler=args.replace_scheduler,
         )
     elif args.command == "status":
         with open(args.CONFIG) as fp:
