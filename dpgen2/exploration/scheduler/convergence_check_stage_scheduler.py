@@ -30,8 +30,14 @@ class ConvergenceCheckStageScheduler(StageScheduler):
         self.complete_ = False
         self.reports = []
 
+    def get_reports(self):
+        return self.reports
+
     def complete(self):
         return self.complete_
+
+    def next_iteration(self):
+        return self.nxt_iter
 
     def converged(self):
         return self.conv

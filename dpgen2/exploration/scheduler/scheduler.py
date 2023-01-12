@@ -28,7 +28,6 @@ class ExplorationScheduler():
     ):
         self.stage_schedulers = []
         self.cur_stage = 0
-        self.iteration = -1
         self.complete_ = False
         
     def add_stage_scheduler(
@@ -66,7 +65,15 @@ class ExplorationScheduler():
         Iteration index increase when `self.plan_next_iteration` returns valid `lmp_task_grp` and `conf_selector` for the next iteration.
 
         """
-        return self.iteration
+        tot_iter = -1
+        for idx,ii in enumerate(self.stage_schedulers):
+            if ii.complete():
+                # the last plan is not used because the stage
+                # is found converged
+                tot_iter += ii.next_iteration() - 1
+            else:
+                tot_iter += ii.next_iteration()
+        return tot_iter
 
     def complete(self):
         """
@@ -120,7 +127,6 @@ class ExplorationScheduler():
                 self.complete_ = True
                 return True, None, None,
         else :
-            self.iteration += 1
             return stg_complete, lmp_task_grp, conf_selector
 
 

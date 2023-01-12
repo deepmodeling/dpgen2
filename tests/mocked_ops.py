@@ -634,11 +634,18 @@ class MockedExplorationReport(ExplorationReport):
     def record(self, mdf, mdv):
         raise NotImplementedError
 
-    def print(self):
-        raise NotImplementedError
+    def print(
+            self, 
+            stage_idx : int,
+            idx_in_stage : int,
+            iter_idx : int,
+    ):
+        # raise NotImplementedError
+        return f'{self.failed} {self.candidate} {self.accurate} {self.conv_accuracy}'
 
     def print_header(self):
-        raise NotImplementedError
+        # raise NotImplementedError
+        return 'header'
 
     def converged(self):
         return self.accurate >= self.conv_accuracy

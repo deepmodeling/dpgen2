@@ -17,7 +17,7 @@ class StageScheduler(ABC):
     """
 
     @abstractmethod
-    def converged(self):
+    def converged(self)->bool:
         """
         Tell if the stage is converged
 
@@ -25,6 +25,42 @@ class StageScheduler(ABC):
         -------
         converged  bool
                    the convergence
+        """
+        pass
+
+    @abstractmethod
+    def converged(self)->bool:
+        """
+        Tell if the stage is complete
+
+        Returns
+        -------
+        converged  bool
+                   if the stage is complete
+        """
+        pass
+
+    @abstractmethod
+    def next_iteration(self)->int:
+        """
+        Return the index of the next iteration
+
+        Returns
+        -------
+        index  int
+                   the index of the next iteration
+        """
+        pass
+
+    @abstractmethod
+    def get_reports(self)->List[ExplorationReport]:
+        """
+        Return all exploration reports
+
+        Returns
+        -------
+        reports  List[ExplorationReport]
+                   the reports
         """
         pass
 

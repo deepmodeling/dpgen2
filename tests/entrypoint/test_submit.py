@@ -9,7 +9,24 @@ from dpgen2.entrypoint.submit import (
     expand_idx,
     print_list_steps,
     update_reuse_step_scheduler,
+    copy_scheduler_plans,
 )
+from dpgen2.exploration.scheduler import (
+    ConvergenceCheckStageScheduler,
+    ExplorationScheduler,
+)
+from dpgen2.exploration.report import ExplorationReport, ExplorationReportTrustLevels
+from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
+from dpgen2.exploration.selector import TrustLevel, ConfSelectorFrames
+from dpgen2.exploration.render import TrajRenderLammps
+from mocked_ops import (
+    MockedExplorationReport,
+    MockedExplorationTaskGroup,
+    MockedExplorationTaskGroup1,
+    MockedStage,
+    MockedStage1,
+)
+
 
 ifc0 = """Al1 
 1.0
@@ -57,7 +74,7 @@ class MockedStep():
         self.scheduler = scheduler
         self.key = f"iter-{self.scheduler.value}--scheduler"
 
-    def modify_output_artifact(self, key, scheduler):
+    def modify_output_parameter(self, key, scheduler):
         assert key == "exploration_scheduler"
         self.scheduler = scheduler
 
@@ -84,6 +101,7 @@ class TestSubmit(unittest.TestCase):
             MockedStep(MockedScheduler(2)),
             MockedStep(MockedScheduler(3)),
         ]
+
         reuse_steps = update_reuse_step_scheduler(
             reuse_steps, 
             MockedScheduler(4),
@@ -93,3 +111,196 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(reuse_steps[1].scheduler.value, 1)
         self.assertEqual(reuse_steps[2].scheduler.value, 2)
         self.assertEqual(reuse_steps[3].scheduler.value, 4)
+
+
+    def test_copy_scheduler(self):
+        scheduler = ExplorationScheduler()
+        scheduler_new = ExplorationScheduler()
+        trust_level = TrustLevel(0.1, 0.3)
+        report = ExplorationReportTrustLevels(trust_level, 0.9)
+        traj_render = TrajRenderLammps()        
+        selector = ConfSelectorFrames(traj_render, report)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage(),
+            selector,
+            max_numb_iter = 2,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage(),
+            selector,
+            max_numb_iter = 2,
+        )
+        scheduler_new.add_stage_scheduler(stage_scheduler)
+
+        trust_level = TrustLevel(0.2, 0.4)
+        report = ExplorationReportTrustLevels(trust_level, 0.9)
+        traj_render = TrajRenderLammps()        
+        selector = ConfSelectorFrames(traj_render, report)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage1(),
+            selector,
+            max_numb_iter = 3,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage1(),
+            selector,
+            max_numb_iter = 3,
+        )
+        scheduler_new.add_stage_scheduler(stage_scheduler)
+
+        foo_report = MockedExplorationReport()
+        foo_report.accurate = 0.5
+        foo_report.failed = 0.5          
+        bar_report = MockedExplorationReport()
+        bar_report.accurate = 1.0
+        bar_report.failed = 0.0        
+        
+        conv, ltg, sel = scheduler.plan_next_iteration()
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.1)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.3)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 0)
+        self.assertEqual(scheduler.get_iteration(), 0)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertFalse(scheduler.stage_schedulers[0].converged())
+        conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.2)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.4)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 1)
+        self.assertEqual(scheduler.get_iteration(), 1)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
+        self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
+        conv, ltg, sel = scheduler.plan_next_iteration(foo_report)
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.2)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.4)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 1)
+        self.assertEqual(scheduler.get_iteration(), 2)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertTrue(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
+        self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+
+        scheduler_new = copy_scheduler_plans(scheduler_new, scheduler)
+
+        self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
+        self.assertEqual(scheduler.get_stage(), scheduler_new.get_stage())
+        self.assertEqual(scheduler.complete(), scheduler_new.complete())
+        self.assertEqual(scheduler.print_convergence(), scheduler_new.print_convergence())
+
+
+    def test_copy_scheduler_complete(self):
+        scheduler = ExplorationScheduler()
+        scheduler_new = ExplorationScheduler()
+        trust_level = TrustLevel(0.1, 0.3)
+        report = ExplorationReportTrustLevels(trust_level, 0.9)
+        traj_render = TrajRenderLammps()        
+        selector = ConfSelectorFrames(traj_render, report)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage(),
+            selector,
+            max_numb_iter = 1,
+            fatal_at_max = False,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage(),
+            selector,
+            max_numb_iter = 2,
+        )
+        scheduler_new.add_stage_scheduler(stage_scheduler)
+
+        trust_level = TrustLevel(0.2, 0.4)
+        report = ExplorationReportTrustLevels(trust_level, 0.9)
+        traj_render = TrajRenderLammps()        
+        selector = ConfSelectorFrames(traj_render, report)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage1(),
+            selector,
+            max_numb_iter = 3,
+        )
+        scheduler.add_stage_scheduler(stage_scheduler)
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            MockedStage1(),
+            selector,
+            max_numb_iter = 3,
+        )
+        scheduler_new.add_stage_scheduler(stage_scheduler)
+
+        foo_report = MockedExplorationReport()
+        foo_report.accurate = 0.5
+        foo_report.failed = 0.5          
+        bar_report = MockedExplorationReport()
+        bar_report.accurate = 1.0
+        bar_report.failed = 0.0        
+        
+        conv, ltg, sel = scheduler.plan_next_iteration()
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.1)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.3)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 0)
+        self.assertEqual(scheduler.get_iteration(), 0)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertFalse(scheduler.stage_schedulers[0].converged())
+        conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])        
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.2)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.4)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 1)
+        self.assertEqual(scheduler.get_iteration(), 1)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertFalse(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
+        self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+        self.assertFalse(scheduler.complete())
+        conv, ltg, sel = scheduler.plan_next_iteration(foo_report)
+        self.assertEqual(conv, False)
+        self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
+        self.assertTrue(isinstance(sel, ConfSelectorFrames))
+        self.assertEqual(sel.report.trust_level.level_f_lo, 0.2)
+        self.assertEqual(sel.report.trust_level.level_f_hi, 0.4)
+        self.assertTrue(sel.report.trust_level.level_v_lo is None)
+        self.assertTrue(sel.report.trust_level.level_v_hi is None)
+        self.assertEqual(scheduler.get_stage(), 1)
+        self.assertEqual(scheduler.get_iteration(), 2)
+        self.assertEqual(len(scheduler.stage_schedulers), 2)
+        self.assertFalse(scheduler.stage_schedulers[0].converged())
+        self.assertTrue(scheduler.stage_schedulers[0].complete())
+        self.assertFalse(scheduler.stage_schedulers[1].converged())
+        self.assertFalse(scheduler.stage_schedulers[1].complete())
+
+        scheduler_new = copy_scheduler_plans(scheduler_new, scheduler)
+
+        self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
+        self.assertEqual(scheduler.get_stage(), scheduler_new.get_stage())
+        self.assertEqual(scheduler.complete(), scheduler_new.complete())
+        self.assertEqual(scheduler.print_convergence(), scheduler_new.print_convergence())
