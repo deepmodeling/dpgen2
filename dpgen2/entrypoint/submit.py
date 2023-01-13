@@ -472,13 +472,17 @@ def submit_concurrent_learning(
     if replace_scheduler:
         scheduler_new = copy.deepcopy(dpgen_step.inputs.parameters['exploration_scheduler'].value)
         idx_old = get_scheduler_ids(reuse_step)[-1]
-        scheduler_old = reuse_step[idx_old].outputs.parameters['exploration_scheduler'].value
+        scheduler_old = reuse_step[idx_old].inputs.parameters['exploration_scheduler'].value
         scheduler_new = copy_scheduler_plans(scheduler_new, scheduler_old)
-        logging.debug('old scheduler======\n', scheduler_old.print_convergence())
-        logging.debug('new scheduler======\n', scheduler_new.print_convergence())
-        reuse_step[idx_old].modify_output_parameter(
-            "exploration_scheduler", scheduler_new,
-        )
+        exploration_report = reuse_step[idx_old].inputs.parameters['exploration_report'].value
+        # plan next
+        # hack! trajs is set to None...
+        conv, lmp_task_grp, selector = scheduler_new.plan_next_iteration(exploration_report, trajs=None)
+        # update output of the scheduler step
+        reuse_step[idx_old].modify_output_parameter("converged", conv,)
+        reuse_step[idx_old].modify_output_parameter("exploration_scheduler", scheduler_new,)
+        reuse_step[idx_old].modify_output_parameter("lmp_task_grp", lmp_task_grp,)
+        reuse_step[idx_old].modify_output_parameter("conf_selector", selector,)
 
     wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)
