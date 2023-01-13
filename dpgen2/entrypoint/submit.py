@@ -456,9 +456,9 @@ def copy_scheduler_plans(
 
 def submit_concurrent_learning(
         wf_config,
-        reuse_step = None,
-        old_style = False,
-        replace_scheduler = False,
+        reuse_step : Optional[List[Step]] = None,
+        old_style : bool = False,
+        replace_scheduler: bool = False,
 ):
     # normalize args
     wf_config = normalize_args(wf_config)
@@ -469,7 +469,7 @@ def submit_concurrent_learning(
     
     dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
     
-    if replace_scheduler:
+    if reuse_step is not None and replace_scheduler:
         scheduler_new = copy.deepcopy(dpgen_step.inputs.parameters['exploration_scheduler'].value)
         idx_old = get_scheduler_ids(reuse_step)[-1]
         scheduler_old = reuse_step[idx_old].inputs.parameters['exploration_scheduler'].value
