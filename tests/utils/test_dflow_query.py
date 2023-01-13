@@ -105,7 +105,9 @@ class MockedBar:
 
 class MockedWF:
     def query_step(self,key=None):
-        if key == 'iter-0--scheduler':
+        if key == 'init--scheduler':
+            return [MockedBar(2)]
+        elif key == 'iter-0--scheduler':
             return [MockedBar(0)]
         elif key == 'iter-1--scheduler':
             return [MockedBar(1)]
@@ -143,7 +145,7 @@ class TestDflowQuery(unittest.TestCase):
             MockedWF(), 
             ['iter-1--scheduler', 'foo', 'bar', 'iter-0--scheduler', 'init--scheduler'],
         )
-        self.assertEqual(value, [0, 10])
+        self.assertEqual(value, [20, 0, 10])
 
     def test_get_last_iteration(self):
         last = get_last_iteration(dpgen_keys)

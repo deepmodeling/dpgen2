@@ -28,7 +28,8 @@ def matched_step_key(
     for kk in all_keys:
         for jj in step_keys:
             if re.match(f'iter-[0-9]*--{jj}-[0-9]*', kk) or\
-               re.match(f'iter-[0-9]*--{jj}', kk):
+               re.match(f'iter-[0-9]*--{jj}', kk) or\
+               re.match(f'init--{jj}', kk):
                 ret.append(kk)
                 continue
     return ret

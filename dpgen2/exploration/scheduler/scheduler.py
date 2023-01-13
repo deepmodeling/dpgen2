@@ -82,6 +82,20 @@ class ExplorationScheduler():
         """
         return self.complete_
 
+    def force_stage_complete(self):
+        """
+        Force complete the current stage 
+
+        """
+        self.stage_schedulers[self.cur_stage].force_complete()
+        self.cur_stage += 1
+        if self.cur_stage < len(self.stage_schedulers):
+            # goes to next stage
+            self.plan_next_iteration()
+        else:
+            # all stages complete
+            self.complete_ = True
+
     def plan_next_iteration(
             self,
             report : Optional[ExplorationReport] = None,
@@ -116,7 +130,7 @@ class ExplorationScheduler():
                 )
         except FatalError as e:
             raise FatalError(f'stage {self.cur_stage}: ' + str(e))
-        
+
         if stg_complete:
             self.cur_stage += 1
             if self.cur_stage < len(self.stage_schedulers):

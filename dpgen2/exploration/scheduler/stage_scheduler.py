@@ -29,7 +29,7 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
-    def converged(self)->bool:
+    def complete(self)->bool:
         """
         Tell if the stage is complete
 
@@ -37,6 +37,14 @@ class StageScheduler(ABC):
         -------
         converged  bool
                    if the stage is complete
+        """
+        pass
+
+    @abstractmethod
+    def force_complete(self):
+        """
+        For complete the stage
+
         """
         pass
 

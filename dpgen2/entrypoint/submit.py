@@ -1,4 +1,4 @@
-import glob, dpdata, os, pickle, logging
+import glob, dpdata, os, pickle, logging, copy
 from pathlib import Path
 from dflow import (
     InputParameter,
@@ -437,13 +437,19 @@ def copy_scheduler_plans(
     for ii in range(len(scheduler_old.stage_schedulers)):
         old_stage = scheduler_old.stage_schedulers[ii]
         old_reports = old_stage.get_reports()
-        if old_stage.complete():
-            scheduler_new.stage_schedulers[ii] = old_stage
-            scheduler_new.cur_stage += 1
-        elif len(old_reports) > 0:
-            scheduler_new.stage_schedulers[ii].plan_next_iteration()
+        if old_stage.next_iteration() > 0:
+            if ii != scheduler_new.get_stage():
+                raise RuntimeError(
+                    f'The stage {scheduler_new.get_stage()} of the new '
+                    f'scheduler does not match'
+                    f'the stage {ii} of the old scheduler. '
+                    f'scheduler, which should not happen'
+                )
             for report in old_reports:
-                scheduler_new.stage_schedulers[ii].plan_next_iteration(report)
+                scheduler_new.plan_next_iteration(report)
+            if old_stage.complete() and \
+               (not scheduler_new.stage_schedulers[ii].complete()):
+                scheduler_new.force_stage_complete()
         else:
             break
     return scheduler_new
@@ -463,19 +469,16 @@ def submit_concurrent_learning(
     
     dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
     
-    print('=0===============', len(reuse_step))
     if replace_scheduler:
-        scheduler_new = dpgen_step.inputs.parameters['exploration_scheduler'].value
+        scheduler_new = copy.deepcopy(dpgen_step.inputs.parameters['exploration_scheduler'].value)
         idx_old = get_scheduler_ids(reuse_step)[-1]
-        print('here=========', idx_old, get_scheduler_ids(reuse_step))
         scheduler_old = reuse_step[idx_old].outputs.parameters['exploration_scheduler'].value
-        # scheduler_new = copy_scheduler_plans(scheduler_new, scheduler_old)
+        scheduler_new = copy_scheduler_plans(scheduler_new, scheduler_old)
         logging.debug('old scheduler======\n', scheduler_old.print_convergence())
         logging.debug('new scheduler======\n', scheduler_new.print_convergence())
-        # reuse_step[idx_old].modify_output_parameter(
-        #     "exploration_scheduler", scheduler_new,
-        # )
-    print('1================', len(reuse_step))
+        reuse_step[idx_old].modify_output_parameter(
+            "exploration_scheduler", scheduler_new,
+        )
 
     wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)

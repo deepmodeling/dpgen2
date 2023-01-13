@@ -203,8 +203,8 @@ class TestSubmit(unittest.TestCase):
 
         scheduler_new = copy_scheduler_plans(scheduler_new, scheduler)
 
-        self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
         self.assertEqual(scheduler.get_stage(), scheduler_new.get_stage())
+        self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
         self.assertEqual(scheduler.complete(), scheduler_new.complete())
         self.assertEqual(scheduler.print_convergence(), scheduler_new.print_convergence())
 
@@ -303,4 +303,9 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
         self.assertEqual(scheduler.get_stage(), scheduler_new.get_stage())
         self.assertEqual(scheduler.complete(), scheduler_new.complete())
-        self.assertEqual(scheduler.print_convergence(), scheduler_new.print_convergence())
+        # 1st stage of scheduler_new is forced complete.
+        self.assertEqual(
+            scheduler.print_convergence().replace(
+            'reached max numb iterations YES',
+            'reached max numb iterations NO ',),
+            scheduler_new.print_convergence())

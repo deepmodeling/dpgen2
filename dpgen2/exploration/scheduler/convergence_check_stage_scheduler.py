@@ -36,6 +36,9 @@ class ConvergenceCheckStageScheduler(StageScheduler):
     def complete(self):
         return self.complete_
 
+    def force_complete(self):
+        self.complete_ = True
+
     def next_iteration(self):
         return self.nxt_iter
 
@@ -50,6 +53,10 @@ class ConvergenceCheckStageScheduler(StageScheduler):
             report : Optional[ExplorationReport] = None,
             trajs : Optional[List[Path]] = None,
     ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]] :
+        if self.complete():
+            raise FatalError(
+                'Cannot plan because the stage has completed.'
+            )
         if report is None:
             stg_complete = False
             self.conv = stg_complete
