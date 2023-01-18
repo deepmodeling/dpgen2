@@ -1,8 +1,8 @@
 from dflow.utils import run_command as dflow_run_command
-from typing import Tuple
+from typing import Tuple, Union, List
 
 def run_command(
-        cmd : str,
+        cmd : Union[str, List[str]],
         shell: bool = False,
 ) -> Tuple[int, str, str]:
     return dflow_run_command(
