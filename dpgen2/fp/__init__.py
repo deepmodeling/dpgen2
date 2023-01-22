@@ -8,7 +8,11 @@ from .gaussian import (
     PrepGaussian,
     RunGaussian,
 )
-from .binary_file_input import BinaryFileInput
+from .deepmd import (
+    DeepmdInputs,
+    PrepDeepmd,
+    RunDeepmd
+)
 
 fp_styles = {
     "vasp" :  {
@@ -21,4 +25,9 @@ fp_styles = {
         "prep" : PrepGaussian,
         "run" : RunGaussian,
     },
+    "deepmd": {
+        "inputs" : DeepmdInputs,
+        "prep" : PrepDeepmd,
+        "run" : RunDeepmd,
+    }
 }

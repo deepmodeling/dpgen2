@@ -33,7 +33,7 @@ from dargs import (
     Variant, 
     ArgumentEncoder,
 )
-from dpgen2.fp import BinaryFileInput
+from dpgen2.utils import BinaryFileInput
 
 
 class RunLmp(OP):
@@ -98,7 +98,7 @@ class RunLmp(OP):
         config = ip['config'] if ip['config'] is not None else {}
         config = RunLmp.normalize_config(config)
         command = config['command']
-        teacher_model: Optional(BinaryFileInput) = config.get("teacher_model", None)
+        teacher_model: Optional(BinaryFileInput) = config["teacher_model_path"]
         task_name = ip['task_name']
         task_path = ip['task_path']
         models = ip['models']
@@ -123,7 +123,7 @@ class RunLmp(OP):
                 Path(mname).symlink_to(mm)
             
             if teacher_model:
-                add_teacher_model()
+                add_teacher_model(lmp_input_name)
 
             # run lmp
             command = ' '.join([command, '-i', lmp_input_name, '-log', lmp_log_name])
@@ -148,7 +148,7 @@ class RunLmp(OP):
         doc_teacher_model = "The teacher model in `Knowledge Distillation`"
         return [
             Argument("command", str, optional=True, default='lmp', doc=doc_lmp_cmd),
-            Argument("teacher_model", BinaryFileInput, optional=True, default=None, doc=doc_teacher_model),
+            Argument("teacher_model_path", [BinaryFileInput, str], optional=True, default=None, doc=doc_teacher_model),
         ]
 
     @staticmethod
@@ -163,17 +163,19 @@ class RunLmp(OP):
 config_args = RunLmp.lmp_args
 
 
-def add_teacher_model():
-    lmp_input_lines = open(lmp_input_name, encoding='utf8').readlines()
+def add_teacher_model(lmp_input_name: str):
+    with open(lmp_input_name, encoding='utf8') as f:
+        lmp_input_lines = f.readlines()
+
     idx = find_only_one_key(lmp_input_lines, ['pair_style', 'deepmd'])
 
     model0_pattern = model_name_pattern % 0
-    assert lmp_input_lines[idx].find(model0_pattern) != -1, f'error: cannot find \"{model0_pattern}\" in lmp_input, {lmp_input_lines[idx]}'
+    assert lmp_input_lines[idx].find(model0_pattern) != -1, f'Error: cannot find \"{model0_pattern}\" in lmp_input, {lmp_input_lines[idx]}'
 
     lmp_input_lines[idx] = lmp_input_lines[idx].replace(model0_pattern, ' '.join([model_name_pattern % i for i in range(2)]))
 
     with open(lmp_input_name, 'w', encoding='utf8') as f:
-        f.write('\n'.join(lmp_input_lines))
+        f.write(''.join(lmp_input_lines))
 
 
 def find_only_one_key(lmp_lines, key):

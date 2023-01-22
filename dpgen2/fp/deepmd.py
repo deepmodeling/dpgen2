@@ -15,8 +15,10 @@ from dargs import (
 
 from .prep_fp import PrepFp
 from .run_fp import RunFp
+from ..utils import BinaryFileInput
 from dpgen2.constants import (
     fp_default_out_data_name,
+    fp_default_log_name
 )
 from dpgen2.utils.run_command import run_command
 from pathlib import Path
@@ -24,9 +26,6 @@ import os
 
 # global static variables
 deepmd_input_path = 'one_frame_input'
-
-# global static variables
-log_output_name = 'deepmd.log'
 
 # global static variables
 deepmd_teacher_model = 'teacher_model.pb'
@@ -84,8 +83,10 @@ class RunDeepmd(RunFp):
 
     def run_task(
             self,
-            teacher_model: str,
-            type_map: List[str] = None
+            teacher_model_path: BinaryFileInput,
+            out: str,
+            log: str,
+            type_map: List[str] = None,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
         
@@ -103,10 +104,13 @@ class RunDeepmd(RunFp):
         log_name: str
             The file name of the log.
         """
-        # run Deepmd
-        self._dp_infer(teacher_model, type_map)
+        log_name = log
+        out_name = out
 
-        ret, out, err = run_command(f'echo "job finished!" > {log_output_name}', shell=True)
+        # Run deepmd
+        self._dp_infer(teacher_model_path, type_map, out_name)
+
+        ret, out, err = run_command(f'echo "job finished!" > {log_name}', shell=True)
         if ret != 0:
             raise TransientError(
                 'vasp failed\n',
@@ -114,15 +118,15 @@ class RunDeepmd(RunFp):
                 'err msg', err, '\n'
             )     
 
-        return deepmd_input_path, log_output_name
+        return out_name, log_name
     
-    def _dp_infer(self, teacher_model: str, type_map):
-        model_path = Path('teacher_model.pb')
-        model_path.write_text(teacher_model)
+    def _dp_infer(self, teacher_model_path: BinaryFileInput, type_map, out_name):
+        teacher_model_path.save_as_file(deepmd_teacher_model)
 
         from deepmd.infer import DeepPot
         import numpy as np
 
+        dp = DeepPot(deepmd_teacher_model)
         if type_map is None:
             assert dp.model_type == "ener", 'type_map should be define or model type should be "ener"'
             type_map = dp.get_type_map()
@@ -130,12 +134,11 @@ class RunDeepmd(RunFp):
             assert type_map == dp.get_type_map(), \
                 f'type_map({type_map}) and deepmd model type_map{dp.get_type_map()} are not the same!'
 
-        dp = DeepPot(model_path)
-
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(deepmd_input_path, type_map=type_map)
+        ss.to('deepmd/npy', out_name)
 
-        coord_npy_path_list = list(Path(deepmd_input_path).glob('*/coord.npy'))
+        coord_npy_path_list = list(Path(out_name).glob('*/coord.npy'))
         assert len(coord_npy_path_list) == 1, coord_npy_path_list
         coord_npy_path = coord_npy_path_list[0]
         energy_npy_path = coord_npy_path.parent / 'energy.npy'
@@ -147,16 +150,16 @@ class RunDeepmd(RunFp):
         cell = ss['cells'].reshape([nframe, -1])
         atype = ss['atom_types'].tolist()
         
-        e, f, v = dp.eval(coord, cell, atype)
+        energy, force, virial_force = dp.eval(coord, cell, atype)
         
         with open(energy_npy_path, 'wb') as f:
-            np.save(f, e)
+            np.save(f, energy)
         with open(force_npy_path, 'wb') as f:
-            np.save(f, f)
+            np.save(f, force)
         with open(virial_npy_path, 'wb') as f:
-            np.save(f, v)
+            np.save(f, virial_force)
         
-        os.remove(str(model_path))
+        os.remove(deepmd_teacher_model)
 
 
     @staticmethod
@@ -171,7 +174,11 @@ class RunDeepmd(RunFp):
 
         doc_deepmd_teacher_model = "The path of teacher model, which can be loaded by deepmd.infer.DeepPot"
         doc_deepmd_type_map = "The type map of teacher model. It can be set automatically when the type of teacher model is \"ener\", otherwise it should be provided by the user."
+        doc_deepmd_log = "The log file name of dp"
+        doc_deepmd_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
-            Argument("teacher_model", str, optional=False, doc=doc_deepmd_teacher_model),
-            Argument("type_map", str, optional=True, default=None, doc=doc_deepmd_type_map),
+            Argument("teacher_model_path", [str, BinaryFileInput], optional=False, doc=doc_deepmd_teacher_model),
+            Argument("type_map", list, optional=True, default=None, doc=doc_deepmd_type_map),
+            Argument("out", str, optional=True, default=fp_default_out_data_name, doc=doc_deepmd_out),
+            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_deepmd_log),
         ]

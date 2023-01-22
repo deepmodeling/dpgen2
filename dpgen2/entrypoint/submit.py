@@ -82,6 +82,7 @@ from dpgen2.utils import (
     workflow_config_from_dict,
     matched_step_key,
     bohrium_config_from_dict,
+    BinaryFileInput
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from dpgen2.entrypoint.common import (
@@ -120,7 +121,7 @@ def make_concurrent_learning_op (
         cl_step_config : dict = default_config,
         upload_python_packages : Optional[List[os.PathLike]] = None,
 ):
-    if train_style == 'dp':
+    if train_style in ('dp', 'dp-dist'):
         prep_run_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
             PrepDPTrain,
@@ -302,7 +303,14 @@ def workflow_concurrent_learning(
     collect_data_config = normalize_step_dict(config.get('collect_data_config', default_config)) if old_style else config['step_configs']['collect_data_config']
     cl_step_config = normalize_step_dict(config.get('cl_step_config', default_config)) if old_style else config['step_configs']['cl_step_config']
     upload_python_packages = config.get('upload_python_packages', None)
-    init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
+    if train_style == 'dp':
+        init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
+    elif train_style == 'dp-dist' and not old_style:
+        init_models_paths = [config['train']['student_model_path']] if 'student_model_path' in config['train'] else None
+        config['train']["numb_models"] = 1
+    else:
+        raise Exception(f'unknown train type: {train_style}')
+
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
     if upload_python_packages is not None:
@@ -335,6 +343,10 @@ def workflow_concurrent_learning(
         template_script = Path(template_script_).read_text()
     train_config = {} if old_style else config['train']['config']
     lmp_config = config.get('lmp_config', {}) if old_style else config['explore']['config']
+    if 'teacher_model_path' in lmp_config:
+        assert os.path.exists(lmp_config['teacher_model_path']), f'No such file: {lmp_config["teacher_model_path"]}'
+        lmp_config['teacher_model_path'] = BinaryFileInput(lmp_config['teacher_model_path'], 'pb')
+
     fp_config = config.get('fp_config', {}) if old_style else {}
     if old_style:        
         potcar_names = config['fp_pp_files']
@@ -352,6 +364,11 @@ def workflow_concurrent_learning(
 
     fp_config['inputs'] = fp_inputs
     fp_config['run'] = config['fp']['run_config']
+    if fp_style == 'deepmd':
+        assert "teacher_model_path" in fp_config['run'], f'Cannot find "teacher_model_path" in config["fp"]["run_config"] when fp_style is "deepmd"'
+        assert os.path.exists(fp_config["run"]["teacher_model_path"]), f'No such file: {fp_config["run"]["teacher_model_path"]}'
+        fp_config["run"]["teacher_model_path"] = BinaryFileInput(fp_config["run"]["teacher_model_path"], 'pb')
+
 
     init_data_prefix = config.get('init_data_prefix') if old_style else config['inputs']['init_data_prefix']
     init_data = config['init_data_sys'] if old_style else config['inputs']['init_data_sys']

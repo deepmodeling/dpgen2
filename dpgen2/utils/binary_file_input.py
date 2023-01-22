@@ -9,7 +9,6 @@ from typing import (
     Union,
     Optional
 )
-import dpdata
 from dargs import (
     dargs, 
     Argument,
@@ -21,10 +20,10 @@ from pathlib import Path
 class BinaryFileInput:
     def __init__(self, path: Union[str, Path], suffix: str = None) -> None:
         path = str(path)
-        assert os.path.exists(path), f"No such file: {path}"
+        assert os.path.exists(path), f"No such file: {str(path)}"
         if suffix:
             assert path.endswith(suffix), \
-                f"File suffix mismatch, require \"{suffix}\", current \"{path.split('.')[-1]}\", file path: {path}"
+                f"File suffix mismatch, require \"{suffix}\", current \"{str(path).split('.')[-1]}\", file path: {str(path)}"
 
         self.suffix = suffix
         self.file_name = os.path.basename(path)
@@ -33,7 +32,7 @@ class BinaryFileInput:
             self._base64_data = base64.b64encode(data)
     
     def save_as_file(self, path: Union[str, Path]) -> None:
-        if self.suffix and str(path).split('.')[-1] != self.suffix:
+        if self.suffix and not str(path).endswith(self.suffix):
             print(f"warning: file suffix mismatch! Suffix of input file is \"{self.suffix}\", current suffix is \"{str(path).split('.')[-1]}\"")
 
         with open(path, 'wb') as file:

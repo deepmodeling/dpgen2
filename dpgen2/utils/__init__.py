@@ -33,3 +33,4 @@ from .dflow_query import (
     sort_slice_ops,
     print_keys_in_nice_format,
 )
+from .binary_file_input import BinaryFileInput

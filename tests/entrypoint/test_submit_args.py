@@ -11,7 +11,7 @@ from dpgen2.entrypoint.args import (
 from dpgen2.utils import (
     normalize_step_dict,
 )
-from dpgen2.op import RunDPTrain
+from dpgen2.op import RunDPTrain, RunLmp
 
 class TestArgs(unittest.TestCase):
     def test(self):
@@ -67,7 +67,7 @@ class TestArgs(unittest.TestCase):
         # self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
         self.assertEqual(new_data['train']['template_script'], "dp_input_template")
         self.assertEqual(RunDPTrain.normalize_config({}), new_data['train']['config'])
-        self.assertEqual(old_data.get('lmp_config', {}), new_data['explore']['config'])
+        self.assertEqual(RunLmp.normalize_config(old_data.get('lmp_config', {})), new_data['explore']['config'])
         self.assertEqual(old_data.get('fp_config', {}), new_data['fp']['run_config'])
         self.assertEqual(old_data['fp_pp_files'], new_data['fp']['inputs_config']['pp_files'])
         self.assertEqual(old_data['fp_incar'], new_data['fp']['inputs_config']['incar'])

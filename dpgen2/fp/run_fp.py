@@ -174,12 +174,14 @@ class RunFp(OP, ABC):
         with set_directory(work_dir):
             # link input files
             for ii in input_files:
-                if not os.path.isfile(ii):
-                    raise FatalError(f"cannot file file {ii}")
-                iname = ii.name
-                Path(iname).symlink_to(ii)
+                if os.path.isfile(ii) or os.path.isdir(ii):
+                    iname = ii.name
+                    Path(iname).symlink_to(ii)
+                else:
+                    raise FatalError(f"cannot find file {ii}")
+
             for ii in opt_input_files:
-                if os.path.isfile(ii):
+                if os.path.isfile(ii) or os.path.isdir(ii):
                     iname = ii.name
                     Path(iname).symlink_to(ii)
             out_name, log_name = self.run_task(**config)
