@@ -13,28 +13,29 @@ from dargs import (
     dargs, 
     Argument,
 )
-import base64
 import os
 from pathlib import Path
+import warnings
 
 class BinaryFileInput:
-    def __init__(self, path: Union[str, Path], suffix: str = None) -> None:
+    def __init__(self, path: Union[str, Path], ext: str = None) -> None:
         path = str(path)
         assert os.path.exists(path), f"No such file: {str(path)}"
-        if suffix:
-            assert path.endswith(suffix), \
-                f"File suffix mismatch, require \"{suffix}\", current \"{str(path).split('.')[-1]}\", file path: {str(path)}"
+        if ext and not ext.startswith('.'): ext = '.' + ext
+        self.ext = ext
 
-        self.suffix = suffix
+        if self.ext:
+            assert os.path.splitext(path)[-1] == self.ext, \
+                f"File extension mismatch, require \"{ext}\", current \"{os.path.splitext(path)[-1]}\", file path: {str(path)}"
+
         self.file_name = os.path.basename(path)
         with open(path, 'rb') as f:
-            data = f.read()
-            self._base64_data = base64.b64encode(data)
+            self._data = f.read()
     
     def save_as_file(self, path: Union[str, Path]) -> None:
-        if self.suffix and not str(path).endswith(self.suffix):
-            print(f"warning: file suffix mismatch! Suffix of input file is \"{self.suffix}\", current suffix is \"{str(path).split('.')[-1]}\"")
+        if self.ext and os.path.splitext(path)[-1] != self.ext:
+            warnings.warn(f"warning: file extension mismatch! Extension of input file is \"{self.ext}\"," + \
+                          f"current extension is \"{str(path).split('.')[-1]}\"")
 
         with open(path, 'wb') as file:
-            data = base64.b64decode(self._base64_data)
-            file.write(data)
+            file.write(self._data)
