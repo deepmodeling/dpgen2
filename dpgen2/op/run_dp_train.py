@@ -1,4 +1,4 @@
-import os, json, dpdata, glob
+import os, json, dpdata, glob, shutil
 from pathlib import Path
 from dpgen2.utils.run_command import run_command
 from dpgen2.utils.chdir import set_directory
@@ -125,6 +125,14 @@ class RunDPTrain(OP):
         train_dict = RunDPTrain.write_other_to_input_script(
             train_dict, config, do_init_model, major_version)        
 
+        if RunDPTrain.skip_training(work_dir, train_dict, init_data, iter_data):
+            return OPIO({
+                "script" : work_dir / train_script_name,
+                "model" : work_dir / "frozen_model.pb",
+                "lcurve" : work_dir / "lcurve.out",
+                "log" : work_dir / "train.log",
+            })            
+
         with set_directory(work_dir):
             # open log
             fplog = open('train.log', 'w')
@@ -223,6 +231,30 @@ class RunDPTrain(OP):
             else:
                 raise RuntimeError('unsupported DeePMD-kit major version', major_version)
         return odict
+
+    @staticmethod
+    def skip_training(
+            work_dir,
+            train_dict,
+            init_model,
+            iter_data,
+    ):
+        # we have init model and no iter data, skip training
+        if (init_model is not None) and \
+           (iter_data is None or len(iter_data) == 0) :
+            with set_directory(work_dir):
+                with open(train_script_name, 'w') as fp:
+                    json.dump(train_dict, fp, indent=4)
+                Path('train.log').write_text(
+                    f'We have init model {init_model} and '
+                    f'no iteration training data. '
+                    f'The training is skipped.'
+                )
+                Path('lcurve.out').touch()
+                shutil.copy(init_model, 'frozen_model.pb')
+            return True
+        else:
+            return False
 
     @staticmethod
     def decide_init_model(
