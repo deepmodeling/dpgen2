@@ -125,7 +125,7 @@ class RunDPTrain(OP):
         train_dict = RunDPTrain.write_other_to_input_script(
             train_dict, config, do_init_model, major_version)        
 
-        if RunDPTrain.skip_training(work_dir, train_dict, str(init_model), iter_data):
+        if RunDPTrain.skip_training(work_dir, train_dict, init_model, iter_data):
             return OPIO({
                 "script" : work_dir / train_script_name,
                 "model" : work_dir / "frozen_model.pb",
@@ -248,7 +248,7 @@ class RunDPTrain(OP):
                 Path('train.log').write_text(
                     f'We have init model {init_model} and '
                     f'no iteration training data. '
-                    f'The training is skipped.'
+                    f'The training is skipped.\n'
                 )
                 Path('lcurve.out').touch()
                 shutil.copy(init_model, 'frozen_model.pb')

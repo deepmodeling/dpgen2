@@ -25,7 +25,7 @@ def dp_train_args():
         Argument("config", dict, RunDPTrain.training_args(), optional=True, default=RunDPTrain.normalize_config({}), doc=doc_numb_models),
         Argument("numb_models", int, optional=True, default=4, doc=doc_numb_models),
         Argument("template_script", [list,str], optional=False, doc=doc_template_script),
-        Argument("init_model_paths", list, optional=True, doc=doc_init_models_paths, alias=['training_iter0_model_path']),
+        Argument("init_models_paths", list, optional=True, doc=doc_init_models_paths, alias=['training_iter0_model_path']),
     ]
 
 def variant_train():

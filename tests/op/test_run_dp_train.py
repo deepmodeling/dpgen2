@@ -577,7 +577,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
 
 
     def tearDown(self):
-        for ii in ['init', self.task_path, self.task_name, 'foo' ]:
+        for ii in ['init', self.task_path, self.task_name, 'foo']:
             if Path(ii).exists():
                 shutil.rmtree(str(ii))
 
@@ -592,10 +592,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         self.assertDictEqual(odict, self.expected_odict_v2)
 
 
-    @patch('dpgen2.op.run_dp_train.run_command')
-    def test_exec_v2_empty_list(self, mocked_run):
-        mocked_run.side_effect = [ (0, 'foo\n', ''), (0, 'bar\n', '') ]
-
+    def test_exec_v2_empty_list(self):
         config = self.config.copy()
         config['init_model_policy'] = 'no'
 
@@ -605,6 +602,9 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             json.dump(self.idict_v2, fp, indent=4)
         task_name = self.task_name
         work_dir = Path(task_name)
+
+        self.init_model = self.init_model.absolute()
+        self.init_model.write_text('this is init model')
 
         ptrain = RunDPTrain()
         out = ptrain.execute(
@@ -621,26 +621,20 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         self.assertEqual(out['model'], work_dir/'frozen_model.pb')
         self.assertEqual(out['lcurve'], work_dir/'lcurve.out')
         self.assertEqual(out['log'], work_dir/'train.log')
-        
-        calls = [
-            call(['dp', 'train', train_script_name]),
-            call(['dp', 'freeze', '-o', 'frozen_model.pb']),
-        ]
-        mocked_run.assert_has_calls(calls)
-        
+
         self.assertTrue(work_dir.is_dir())
         self.assertTrue(out['log'].is_file())
         self.assertEqual(out['log'].read_text(), 
-                         '#=================== train std out ===================\n'
-                         'foo\n'
-                         '#=================== train std err ===================\n'
-                         '#=================== freeze std out ===================\n'
-                         'bar\n'
-                         '#=================== freeze std err ===================\n'
+                         f'We have init model {self.init_model} and '
+                         f'no iteration training data. '
+                         f'The training is skipped.\n'
                          )
         with open(out['script']) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
+        self.assertEqual(Path(out['model']).read_text(), "this is init model")
+
+        os.remove(self.init_model)
 
 
     @patch('dpgen2.op.run_dp_train.run_command')
