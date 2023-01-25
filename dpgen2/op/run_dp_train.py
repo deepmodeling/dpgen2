@@ -125,7 +125,7 @@ class RunDPTrain(OP):
         train_dict = RunDPTrain.write_other_to_input_script(
             train_dict, config, do_init_model, major_version)        
 
-        if RunDPTrain.skip_training(work_dir, train_dict, init_data, iter_data):
+        if RunDPTrain.skip_training(work_dir, train_dict, str(init_model), iter_data):
             return OPIO({
                 "script" : work_dir / train_script_name,
                 "model" : work_dir / "frozen_model.pb",

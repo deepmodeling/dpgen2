@@ -303,7 +303,7 @@ def workflow_concurrent_learning(
     collect_data_config = normalize_step_dict(config.get('collect_data_config', default_config)) if old_style else config['step_configs']['collect_data_config']
     cl_step_config = normalize_step_dict(config.get('cl_step_config', default_config)) if old_style else config['step_configs']['cl_step_config']
     upload_python_packages = config.get('upload_python_packages', None)
-    init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('training_iter0_model_path', None)
+    init_models_paths = config.get('training_iter0_model_path', None) if old_style else config['train'].get('init_models_paths', None)
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
     if upload_python_packages is not None:
