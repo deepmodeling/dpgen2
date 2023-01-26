@@ -30,8 +30,22 @@ class ExplorationReport(ABC):
         pass
 
     @abstractmethod
-    def converged(self) -> bool :
-        r"""If the exploration is converged"""
+    def converged(
+            self, 
+            reports,
+    )->bool:
+        r"""Check if the exploration is converged. 
+        
+        Parameters
+        ----------
+        reports List[ExplorationReportTrustLevels]
+                Historical reports
+        
+        Returns
+        -------
+        converged  bool
+                If the exploration is converged.
+        """
         pass
 
     def no_candidate(self) -> bool: 

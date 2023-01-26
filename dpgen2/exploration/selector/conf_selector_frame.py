@@ -1,4 +1,5 @@
 import dpdata
+import copy
 import numpy as np
 from collections import Counter
 from typing import (
@@ -80,4 +81,4 @@ class ConfSelectorFrames(ConfSelector):
         out_path.mkdir(exist_ok=True)
         ms.to_deepmd_npy(out_path)
 
-        return [out_path], self.report
+        return [out_path], copy.deepcopy(self.report)

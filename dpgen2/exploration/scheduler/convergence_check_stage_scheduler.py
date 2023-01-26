@@ -63,7 +63,7 @@ class ConvergenceCheckStageScheduler(StageScheduler):
             lmp_task_grp = self.stage.make_task()
             ret_selector = self.selector
         else :
-            stg_complete = report.converged()
+            stg_complete = report.converged(self.reports)
             self.conv = stg_complete
             if not stg_complete:
                 # check if we have any candidate to improve the quality of the model

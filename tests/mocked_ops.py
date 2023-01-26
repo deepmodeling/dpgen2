@@ -647,7 +647,7 @@ class MockedExplorationReport(ExplorationReport):
         # raise NotImplementedError
         return 'header'
 
-    def converged(self):
+    def converged(self, reports):
         return self.accurate >= self.conv_accuracy
 
     def no_candidate(self):

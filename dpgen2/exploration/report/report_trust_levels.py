@@ -127,9 +127,24 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.traj_cand.append(set_cand)
         self.traj_accu.append(set_accu)
         self.traj_fail.append(set_fail)
-        
 
-    def converged(self):
+
+    def converged(
+            self, 
+            reports: Optional[List[ExplorationReport]] = None,
+    )->bool:
+        r"""Check if the exploration is converged. 
+        
+        Parameters
+        ----------
+        reports List[ExplorationReportTrustLevels]
+                Historical reports
+        
+        Returns
+        -------
+        converged  bool
+                If the exploration is converged.
+        """
         return self.accurate_ratio() >= self.conv_accuracy        
 
     def failed_ratio(
