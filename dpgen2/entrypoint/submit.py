@@ -49,6 +49,9 @@ from dpgen2.fp import (
 from dpgen2.conf import (
     conf_styles,
 )
+from dpgen2.exploration.report import (
+    conv_styles,
+)
 from dpgen2.exploration.scheduler import (
     ExplorationScheduler,
     ConvergenceCheckStageScheduler,
@@ -193,16 +196,16 @@ def make_naive_exploration_scheduler(
     mass_map = config['mass_map'] if old_style else config['inputs']['mass_map']
     type_map = config['type_map'] if old_style else config['inputs']['type_map']
     numb_models = config['numb_models'] if old_style else config['train']['numb_models']
-    fp_task_max = config['fp_task_max'] if old_style else config['fp']['task_max']
-    conv_accuracy = config['conv_accuracy'] if old_style else config['explore']['conv_accuracy']
+    fp_task_max = config['fp_task_max'] if old_style else config['fp']['task_max']    
     max_numb_iter = config['max_numb_iter'] if old_style else config['explore']['max_numb_iter']
-    output_nopbc = False if old_style else config['explore']['output_nopbc']
     fatal_at_max = config.get('fatal_at_max', True) if old_style else config['explore']['fatal_at_max']
+    convergence = config['explore']['convergence']
+    output_nopbc = False if old_style else config['explore']['output_nopbc']
     scheduler = ExplorationScheduler()
     
     sys_configs_lmp = []
     for sys_config in sys_configs:
-        conf_style = sys_config.pop("type")        
+        conf_style = sys_config.pop("type")
         generator = conf_styles[conf_style](**sys_config)
         sys_configs_lmp.append(generator.get_file_content(type_map))
 
@@ -233,15 +236,9 @@ def make_naive_exploration_scheduler(
             )
             tasks = tgroup.make_task()
             stage.add_task_group(tasks)
-        # trust level
-        trust_level = TrustLevel(
-            config['model_devi_f_trust_lo'] if old_style else config['explore']['f_trust_lo'],
-            config['model_devi_f_trust_hi'] if old_style else config['explore']['f_trust_hi'],
-            level_v_lo=config.get('model_devi_v_trust_lo') if old_style else config['explore']['v_trust_lo'],
-            level_v_hi=config.get('model_devi_v_trust_hi') if old_style else config['explore']['v_trust_hi'],
-        )
         # report
-        report = ExplorationReportTrustLevels(trust_level, conv_accuracy)
+        conv_style = convergence.pop("type")
+        report = conv_styles[conv_style](**convergence)
         render = TrajRenderLammps(nopbc=output_nopbc)
         # selector
         selector = ConfSelectorFrames(
