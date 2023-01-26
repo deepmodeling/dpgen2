@@ -58,7 +58,6 @@ from dpgen2.fp.vasp import VaspInputs
 from dpgen2.flow.dpgen_loop import ConcurrentLearning
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import TrustLevel
 
 from dpgen2.constants import (
     train_task_pattern,
@@ -197,19 +196,14 @@ class TestLoop(unittest.TestCase):
         )
 
         self.scheduler = ExplorationScheduler()        
-        self.trust_level = TrustLevel(0.1, 0.3)
-        trust_level = TrustLevel(0.1, 0.3)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
         self.scheduler.add_stage_scheduler(stage_scheduler)
-        trust_level = TrustLevel(0.2, 0.4)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage1(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
@@ -476,38 +470,28 @@ class TestLoopRestart(unittest.TestCase):
         )
 
         self.scheduler_0 = ExplorationScheduler()        
-        self.trust_level = TrustLevel(0.1, 0.3)
-        trust_level = TrustLevel(0.1, 0.3)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
         self.scheduler_0.add_stage_scheduler(stage_scheduler)
-        trust_level = TrustLevel(0.2, 0.4)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage1(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
         self.scheduler_0.add_stage_scheduler(stage_scheduler)
 
         self.scheduler_1 = ExplorationScheduler()        
-        self.trust_level = TrustLevel(0.1, 0.3)
-        trust_level = TrustLevel(0.1, 0.3)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )
         self.scheduler_1.add_stage_scheduler(stage_scheduler)
-        trust_level = TrustLevel(0.2, 0.4)
         stage_scheduler = MockedConstTrustLevelStageScheduler(
             MockedStage2(),
-            trust_level,
             conv_accuracy = 0.7,
             max_numb_iter = 2,
         )

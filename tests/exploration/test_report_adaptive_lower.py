@@ -4,6 +4,7 @@ import numpy as np
 import unittest
 from collections import Counter
 from dpgen2.exploration.report import ExplorationReportAdaptiveLower
+from dargs import Argument
 
 class TestTrajsExplorationResport(unittest.TestCase):
 
@@ -21,10 +22,10 @@ class TestTrajsExplorationResport(unittest.TestCase):
         expected_accu = set([ (0,1), (1,6), (1,7) ])
 
         ter = ExplorationReportAdaptiveLower(
-            trust_f_hi = 0.7,
+            level_f_hi = 0.7,
             numb_candi_f = 3,
             rate_candi_f = 0.001,
-            trust_v_hi = 0.76,
+            level_v_hi = 0.76,
             numb_candi_v = 3,
             rate_candi_v = 0.001,
             n_checked_steps = 3,
@@ -36,17 +37,17 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(set(ter.failed), expected_fail)
         
         class MockedReport:
-            trust_f_lo = 0
-            trust_v_lo = 0        
+            level_f_lo = 0
+            level_v_lo = 0        
         mr = MockedReport()
-        mr.trust_f_lo = 0.42
-        mr.trust_v_lo = 0.50
+        mr.level_f_lo = 0.42
+        mr.level_v_lo = 0.50
         self.assertFalse(ter.converged([mr]))
         self.assertTrue(ter.converged([mr, mr]))
         self.assertTrue(ter.converged([mr, mr, mr]))
         mr1 = MockedReport()
-        mr1.trust_f_lo = 0.42
-        mr1.trust_v_lo = 0.60
+        mr1.level_f_lo = 0.42
+        mr1.level_v_lo = 0.60
         self.assertFalse(ter.converged([mr]))
         self.assertFalse(ter.converged([mr, mr1]))
         self.assertFalse(ter.converged([mr, mr1, mr]))
@@ -97,7 +98,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
                               (1,0), (1,1), (1,5), (1,6), (1,7), (1,8) ])
 
         ter = ExplorationReportAdaptiveLower(
-            trust_f_hi = 0.7,
+            level_f_hi = 0.7,
             numb_candi_f = 3,
             rate_candi_f = 0.001,
             n_checked_steps = 2,
@@ -137,10 +138,10 @@ class TestTrajsExplorationResport(unittest.TestCase):
                               (1,0), (1,1), (1,5), (1,6), (1,7), (1,8) ])
 
         ter = ExplorationReportAdaptiveLower(
-            trust_f_hi = 1.0,
+            level_f_hi = 1.0,
             numb_candi_f = 0,
             rate_candi_f = 0.000,
-            trust_v_hi = 0.76,
+            level_v_hi = 0.76,
             numb_candi_v = 3,
             rate_candi_v = 0.001,
             n_checked_steps = 3,
@@ -152,11 +153,11 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(set(ter.failed), expected_fail)
         
         class MockedReport:
-            trust_f_lo = 0
-            trust_v_lo = 0        
+            level_f_lo = 0
+            level_v_lo = 0        
         mr = MockedReport()
-        mr.trust_f_lo = 1.0
-        mr.trust_v_lo = 0.51
+        mr.level_f_lo = 1.0
+        mr.level_v_lo = 0.51
         self.assertFalse(ter.converged([mr]))
         self.assertTrue(ter.converged([mr, mr]))
         self.assertTrue(ter.converged([mr, mr, mr]))
@@ -174,3 +175,22 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(ter.failed_ratio(), 6./18.)
 
 
+    def test_args(self):
+        input_dict = {
+            "level_f_hi" : 1.0,
+            "numb_candi_f" : 100,
+            "rate_candi_f" : 0.1,
+            "conv_tolerance" : 0.01,
+        }
+
+        base = Argument("base", dict, ExplorationReportAdaptiveLower.args())
+        data = base.normalize_value(input_dict)
+        self.assertAlmostEqual(data['level_f_hi'], 1.)
+        self.assertEqual(data['numb_candi_f'], 100)
+        self.assertAlmostEqual(data['rate_candi_f'], 0.1)
+        self.assertTrue(data['level_v_hi'] is None)
+        self.assertEqual(data['numb_candi_v'], 0)
+        self.assertAlmostEqual(data['rate_candi_v'], 0.)
+        self.assertEqual(data['n_checked_steps'], 2)
+        self.assertAlmostEqual(data['conv_tolerance'], 0.01)
+        ExplorationReportAdaptiveLower(*data)

@@ -114,11 +114,15 @@
 	"config" : {
 	    "command": "lmp -var restart 0"
 	},
+	"convergence": {
+	    "type" :	"fixed-levels",
+	    "conv_accuracy" :	0.9,
+	    "level_f_lo":	0.05,
+	    "level_f_hi":	0.50,
+	    "_comment" : "all"
+	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
 	"output_nopbc":		false,
 	"configuration_prefix": null, 
 	"configurations":	[
@@ -151,14 +155,14 @@
     "fp" : {
 	"type" :	"vasp",
 	"task_max":	2,
-	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
-	},
 	"inputs_config" : {
 	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
 	    "incar":    "vasp/INCAR",
 	    "kspacing":	0.32,
 	    "kgamma":	true
+	},
+	"run_config" : {
+	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
 	"_comment" : "all"
     }

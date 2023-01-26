@@ -7,18 +7,25 @@ from typing import (
     Tuple,
 )
 from dflow.python import FatalError
+from dargs import Argument
 
 class ExplorationReportTrustLevels(ExplorationReport):
     def __init__(
             self,
-            trust_level,
-            conv_accuracy,
+            level_f_lo,
+            level_f_hi,
+            level_v_lo = None,
+            level_v_hi = None,
+            conv_accuracy = 0.9,
     ):
-        self.trust_level = trust_level
+        self.level_f_lo = level_f_lo
+        self.level_f_hi = level_f_hi
+        self.level_v_lo = level_v_lo
+        self.level_v_hi = level_v_hi
         self.conv_accuracy = conv_accuracy
         self.clear()
-        self.v_level = ( (self.trust_level.level_v_lo is not None) and \
-                         (self.trust_level.level_v_hi is not None) )
+        self.v_level = ( (self.level_v_lo is not None) and \
+                         (self.level_v_hi is not None) )
 
         print_tuple = ('stage', 'id_stg.', 'iter.',
                        'accu.', 'cand.', 'fail.',
@@ -33,6 +40,21 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
         self.fmt_flt = '%.4f'
         self.header_str = '#' + self.fmt_str % print_tuple
+
+    @staticmethod
+    def args() -> List[Argument]:
+        doc_level_f_lo = "The lower trust level of force model deviation"
+        doc_level_f_hi = "The higher trust level of force model deviation"
+        doc_level_v_lo = "The lower trust level of virial model deviation"
+        doc_level_v_hi = "The higher trust level of virial model deviation"
+        doc_conv_accuracy = "If the ratio of accurate frames is larger than this value, the stage is converged"
+        return [
+            Argument("level_f_lo", float, optional=False, doc=doc_level_f_lo),
+            Argument("level_f_hi", float, optional=False, doc=doc_level_f_hi),
+            Argument("level_v_lo", float, optional=True, default=None, doc=doc_level_v_lo),
+            Argument("level_v_hi", float, optional=True, default=None, doc=doc_level_v_hi),
+            Argument("conv_accuracy", float, optional=True, default=0.9, doc=doc_conv_accuracy),
+        ]
 
 
     def clear(
@@ -56,9 +78,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
             md_v = md_v_
         for ii in range(ntraj):
             id_f_cand, id_f_accu, id_f_fail = self._get_indexes(
-                md_f[ii], self.trust_level.level_f_lo, self.trust_level.level_f_hi)
+                md_f[ii], self.level_f_lo, self.level_f_hi)
             id_v_cand, id_v_accu, id_v_fail = self._get_indexes(
-                md_v[ii], self.trust_level.level_v_lo, self.trust_level.level_v_hi)
+                md_v[ii], self.level_v_lo, self.level_v_hi)
             self._record_one_traj(
                 id_f_accu, id_f_cand, id_f_fail,
                 id_v_accu, id_v_cand, id_v_fail,
@@ -226,13 +248,13 @@ class ExplorationReportTrustLevels(ExplorationReport):
                 fmt_flt%(self.accurate_ratio()),
                 fmt_flt%(self.candidate_ratio()),
                 fmt_flt%(self.failed_ratio()),
-                fmt_flt%(self.trust_level.level_f_lo),
-                fmt_flt%(self.trust_level.level_f_hi),
+                fmt_flt%(self.level_f_lo),
+                fmt_flt%(self.level_f_hi),
         )
         if self.v_level:
             print_tuple += (
-                fmt_flt%(self.trust_level.level_v_lo),
-                fmt_flt%(self.trust_level.level_v_hi),
+                fmt_flt%(self.level_v_lo),
+                fmt_flt%(self.level_v_hi),
             )
         print_tuple += (
             str(self.converged()),

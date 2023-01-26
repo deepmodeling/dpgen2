@@ -8,13 +8,15 @@ from typing import (
     Tuple,
 )
 from dflow.python import FatalError
+from dargs import Argument
+
 
 class ExplorationReportAdaptiveLower(ExplorationReport):
     r"""The exploration report that adapts the lower trust level.
 
     This report will treat a fixed number of frames that has force 
-    model deviation lower than `trust_f_hi`, and virial model deviation
-    lower than `trust_v_hi` as candidates.
+    model deviation lower than `level_f_hi`, and virial model deviation
+    lower than `level_v_hi` as candidates.
     
     The number of force frames is given by max(`numb_candi_f`, `rate_candi_f` * nframes)
     The number of virial frames is given by max(`numb_candi_v`, `rate_candi_v` * nframes)
@@ -29,22 +31,22 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
 
     Parameters
     ----------
-    trust_f_hi          float
+    level_f_hi          float
         The higher trust level of force model deviation
     numb_candi_f        int
         The number of force frames that has a model deviation lower than 
-        `trust_f_hi` treated as candidate.
+        `level_f_hi` treated as candidate.
     rate_candi_f        float
         The ratio of force frames that has a model deviation lower than 
-        `trust_f_hi` treated as candidate.
-    trust_v_hi          float
+        `level_f_hi` treated as candidate.
+    level_v_hi          float
         The higher trust level of virial model deviation
     numb_candi_v        int
         The number of virial frames that has a model deviation lower than 
-        `trust_v_hi` treated as candidate.
+        `level_v_hi` treated as candidate.
     rate_candi_v        float
         The ratio of virial frames that has a model deviation lower than 
-        `trust_v_hi` treated as candidate.
+        `level_v_hi` treated as candidate.
     n_checked_steps     int
         The number of steps to check the convergence.
     conv_tolerance      float
@@ -53,24 +55,24 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
 
     def __init__(
             self,
-            trust_f_hi : float = 0.5,
+            level_f_hi : float = 0.5,
             numb_candi_f : int = 200,
             rate_candi_f : float = 0.01,
-            trust_v_hi : Optional[float] = None,
+            level_v_hi : Optional[float] = None,
             numb_candi_v : int = 0,
             rate_candi_v : float = 0.,
             n_checked_steps: int = 2,
             conv_tolerance : float = 0.05,
     ):
-        self.trust_f_hi = trust_f_hi
-        self.trust_v_hi = trust_v_hi
+        self.level_f_hi = level_f_hi
+        self.level_v_hi = level_v_hi
         self.numb_candi_f = numb_candi_f
         self.rate_candi_f = rate_candi_f
         self.numb_candi_v = numb_candi_v
         self.rate_candi_v = rate_candi_v
-        self.has_virial = self.trust_v_hi is not None
+        self.has_virial = self.level_v_hi is not None
         if not self.has_virial:
-            self.trust_v_hi = sys.float_info.max
+            self.level_v_hi = sys.float_info.max
             self.numb_candi_v = 0
             self.rate_candi_v = 0.
         self.n_checked_steps = n_checked_steps
@@ -89,6 +91,28 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.fmt_str = ' '.join([f'%{ii}s' for ii in spaces])
         self.fmt_flt = '%.4f'
         self.header_str = '#' + self.fmt_str % print_tuple
+
+
+    @staticmethod
+    def args() -> List[Argument]:
+        doc_level_f_hi = "The higher trust level of force model deviation"
+        doc_numb_candi_f = "The number of force frames that has a model deviation lower than `level_f_hi` treated as candidate."
+        doc_rate_candi_f = "The ratio of force frames that has a model deviation lower than `level_f_hi` treated as candidate."
+        doc_level_v_hi = "The higher trust level of virial model deviation"
+        doc_numb_candi_v = "The number of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
+        doc_rate_candi_v = "The ratio of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
+        doc_n_check_steps = "The number of steps to check the convergence."
+        doc_conv_tolerance = "The convergence tolerance."
+        return [
+            Argument("level_f_hi", float, optional=True, default=0.5, doc=doc_level_f_hi),
+            Argument("numb_candi_f", int, optional=True, default=200, doc=doc_numb_candi_f),
+            Argument("rate_candi_f", float, optional=True, default=0.01, doc=doc_rate_candi_v),
+            Argument("level_v_hi", float, optional=True, default=None, doc=doc_level_v_hi),
+            Argument("numb_candi_v", int, optional=True, default=0, doc=doc_numb_candi_v),
+            Argument("rate_candi_v", float, optional=True, default=0.0, doc=doc_rate_candi_v),
+            Argument("n_checked_steps", int, optional=True, default=2, doc=doc_n_check_steps),
+            Argument("conv_tolerance", float, optional=True, default=0.05, doc=doc_conv_tolerance),
+        ]
 
 
     def clear(
@@ -138,15 +162,15 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             numb_candi_v = len(coll_v)
         # compute trust lo
         if numb_candi_v == 0:
-            self.trust_v_lo = self.trust_v_hi
+            self.level_v_lo = self.level_v_hi
         else:
-            self.trust_v_lo = coll_v[-numb_candi_v][0]
+            self.level_v_lo = coll_v[-numb_candi_v][0]
         if not self.has_virial:
-            self.trust_v_lo = None
+            self.level_v_lo = None
         if numb_candi_f == 0:
-            self.trust_f_lo = self.trust_f_hi
+            self.level_f_lo = self.level_f_hi
         else:
-            self.trust_f_lo = coll_f[-numb_candi_f][0]
+            self.level_f_lo = coll_f[-numb_candi_f][0]
         # add to candidate set
         for ii in range(len(coll_f) - numb_candi_f, len(coll_f)):
             self.candi.add(tuple(coll_f[ii][1:]))
@@ -185,7 +209,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         coll_f = []
         coll_v = []
         for ii in range(nframes):
-            if md_f[ii] > self.trust_f_hi or md_v[ii] > self.trust_v_hi:
+            if md_f[ii] > self.level_f_hi or md_v[ii] > self.level_v_hi:
                 failed.append((tt, ii))
             else:
                 coll_f.append([md_f[ii], tt, ii])
@@ -212,13 +236,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         if 1 + len(reports) < self.n_checked_steps:
             return False
         else:
-            all_trust_f = [ii.trust_f_lo for ii in reports] + [self.trust_f_lo]
-            all_trust_f = all_trust_f[-self.n_checked_steps:]
-            conv = self._sequence_conv(all_trust_f)
+            all_level_f = [ii.level_f_lo for ii in reports] + [self.level_f_lo]
+            all_level_f = all_level_f[-self.n_checked_steps:]
+            conv = self._sequence_conv(all_level_f)
             if self.has_virial:
-                all_trust_v = [ii.trust_v_lo for ii in reports] + [self.trust_v_lo]
-                all_trust_v = all_trust_v[-self.n_checked_steps:]
-                conv = conv and self._sequence_conv(all_trust_v)
+                all_level_v = [ii.level_v_lo for ii in reports] + [self.level_v_lo]
+                all_level_v = all_level_v[-self.n_checked_steps:]
+                conv = conv and self._sequence_conv(all_level_v)
             return conv            
 
     def failed_ratio(
@@ -294,13 +318,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 fmt_flt%(self.accurate_ratio()),
                 fmt_flt%(self.candidate_ratio()),
                 fmt_flt%(self.failed_ratio()),
-                fmt_flt%(self.trust_f_lo),
-                fmt_flt%(self.trust_f_hi),
+                fmt_flt%(self.level_f_lo),
+                fmt_flt%(self.level_f_hi),
         )
         if self.has_virial:
             print_tuple += (
-                fmt_flt%(self.trust_v_lo),
-                fmt_flt%(self.trust_v_hi),
+                fmt_flt%(self.level_v_lo),
+                fmt_flt%(self.level_v_hi),
             )
         ret = ' ' + fmt_str % print_tuple
         return ret

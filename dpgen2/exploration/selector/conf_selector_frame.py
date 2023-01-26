@@ -13,7 +13,6 @@ from . import (
     ConfFilters,
 )
 from dpgen2.exploration.report import ExplorationReport
-from dpgen2.exploration.selector import TrustLevel
 from dpgen2.exploration.render import TrajRender
 
 class ConfSelectorFrames(ConfSelector):

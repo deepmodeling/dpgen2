@@ -1,6 +1,3 @@
-from .trust_level import (
-    TrustLevel,
-)
 from .conf_filter import (
     ConfFilter,
     ConfFilters,

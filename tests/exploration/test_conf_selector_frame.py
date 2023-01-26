@@ -4,7 +4,6 @@ import numpy as np
 import unittest
 from pathlib import Path
 from dpgen2.exploration.selector import (
-    TrustLevel,
     ConfSelectorFrames,
 )
 from dpgen2.exploration.report import (
@@ -79,7 +78,7 @@ class TestConfSelectorFrames(unittest.TestCase):
                 shutil.rmtree(ii)
 
     def test_f_0(self):
-        report = ExplorationReportTrustLevels(TrustLevel(0.1, 0.5), 0.9)
+        report = ExplorationReportTrustLevels(0.1, 0.5, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render, report,
@@ -105,7 +104,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 0.)
 
     def test_f_1(self):
-        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35), 0.9)
+        report = ExplorationReportTrustLevels(0.25, 0.35, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render, report
@@ -128,7 +127,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         
 
     def test_fv_0(self):
-        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35, 0.05, 0.15), 0.9)
+        report = ExplorationReportTrustLevels(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render, report,
@@ -153,7 +152,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 2./3.)
         
     def test_fv_1(self):
-        report = ExplorationReportTrustLevels(TrustLevel(0.25, 0.35, 0.05, 0.15), 0.9)
+        report = ExplorationReportTrustLevels(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render, report,

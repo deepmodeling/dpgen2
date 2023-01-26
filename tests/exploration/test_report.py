@@ -4,8 +4,7 @@ import numpy as np
 import unittest
 from collections import Counter
 from dpgen2.exploration.report import ExplorationReportTrustLevels
-from dpgen2.exploration.selector import TrustLevel
-
+from dargs import Argument
 
 class TestTrajsExplorationResport(unittest.TestCase):
     def test_fv(self):
@@ -27,8 +26,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         expected_fail = [set(ii) for ii in expected_fail]
         all_cand_sel = [ (0,6), (0,5), (1,8), (1,6), (1,0), (1,5) ]
 
-        trust_level = TrustLevel(0.3, 0.6, 0.3, 0.6)
-        ter = ExplorationReportTrustLevels(trust_level, 0.9)
+        ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.9)
         ter.record(md_f, md_v)
         self.assertFalse(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
@@ -66,8 +64,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         expected_fail = [set(ii) for ii in expected_fail]
         all_cand_sel = [ (0,4), (0,7), (0,6), (1,6), (1,0), (1,8) ]
         
-        trust_level = TrustLevel(0.3, 0.6, 0.3, 0.6)
-        ter = ExplorationReportTrustLevels(trust_level, 0.2)
+        ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.2)
         ter.record(md_f, md_v)
         self.assertTrue(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
@@ -102,8 +99,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         expected_fail = [set(ii) for ii in expected_fail]
         all_cand_sel = [ (0,4), (0,7), (0,6), (1,6), (1,0), (1,8) ]
         
-        trust_level = TrustLevel(0.3, 0.6, 0.3, 0.6)
-        ter = ExplorationReportTrustLevels(trust_level, 0.2)
+        ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.2)
         ter.record(md_f, md_v)
         self.assertTrue(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
@@ -118,3 +114,20 @@ class TestTrajsExplorationResport(unittest.TestCase):
                 self.assertTrue(jj in expected_cand[ii])
                 npicked += 1
         self.assertEqual(npicked, 6)
+
+
+    def test_args(self):
+        input_dict = {
+            "level_f_lo" : 0.5,
+            "level_f_hi" : 1.0,
+            "conv_accuracy" : 0.9,
+        }
+
+        base = Argument("base", dict, ExplorationReportTrustLevels.args())
+        data = base.normalize_value(input_dict)
+        self.assertAlmostEqual(data['level_f_lo'], .5)
+        self.assertAlmostEqual(data['level_f_hi'], 1.)
+        self.assertTrue(data['level_v_lo'] is None)
+        self.assertTrue(data['level_v_hi'] is None)
+        self.assertAlmostEqual(data['conv_accuracy'], 0.9)
+        ExplorationReportTrustLevels(*data)

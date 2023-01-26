@@ -41,7 +41,7 @@ from dpgen2.op.run_lmp import RunLmp
 from dpgen2.fp import PrepVasp, RunVasp
 from dpgen2.op.collect_data import CollectData
 from dpgen2.op.select_confs import SelectConfs
-from dpgen2.exploration.selector import TrustLevel, ConfSelector
+from dpgen2.exploration.selector import ConfSelector
 from dpgen2.exploration.task import ExplorationTask, ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.scheduler import ConvergenceCheckStageScheduler
@@ -723,10 +723,8 @@ class MockedStage2(ExplorationStage):
 class MockedConfSelector(ConfSelector):
     def __init__(
             self,            
-            trust_level: TrustLevel = TrustLevel(0.1, 0.2),
             conv_accuracy: float = 0.9,
     ):
-        self.trust_level = trust_level
         self.conv_accuracy = conv_accuracy
 
     def select (
@@ -734,7 +732,7 @@ class MockedConfSelector(ConfSelector):
             trajs : List[Path],
             model_devis : List[Path],
             type_map : List[str] = None,
-    ) -> Tuple[List[ Path ], TrustLevel] :
+    ) -> Tuple[List[ Path ], ExplorationReport] :
         confs = []
         if len(trajs) == mocked_numb_lmp_tasks:
             # get output from prep_run_lmp
@@ -785,12 +783,10 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
     def __init__(
             self,
             stage : ExplorationStage,
-            trust_level : TrustLevel,
             conv_accuracy : float = 0.9,
             max_numb_iter : int = None,
     ):
         self.selector = MockedConfSelector(
-            trust_level, 
             conv_accuracy=conv_accuracy,
         )
         super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)

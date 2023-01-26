@@ -14,6 +14,7 @@ from dpgen2.utils import (
 )
 from dpgen2.fp import fp_styles
 from dpgen2.conf import conf_styles
+from dpgen2.exploration.report import conv_styles
 
 def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
@@ -34,16 +35,33 @@ def variant_train():
         Argument("dp", dict, dp_train_args()),
     ], doc=doc)
 
+
+def variant_conv():
+    doc = "the type of the convergence check"
+    var_list = []
+    for kk in conv_styles.keys():
+        var_list.append(
+            Argument(kk, dict, conv_styles[kk].args())
+        )
+    return Variant("type", var_list, doc=doc,)
+
+
+def variant_conf():
+    doc = "the type of the configuration generator"
+    var_list = []
+    for kk in conf_styles.keys():
+        var_list.append(
+            Argument(kk, dict, conf_styles[kk].args())
+        )
+    return Variant("type", var_list, doc=doc,)
+
+
 def lmp_args():
     doc_config = "Configuration of lmp exploration"
     doc_max_numb_iter = "Maximum number of iterations per stage"
-    doc_conv_accuracy = "Convergence accuracy"
     doc_fatal_at_max = "Fatal when the number of iteration per stage reaches the `max_numb_iter`"
-    doc_f_trust_lo = "Lower trust level of force model deviation"
-    doc_f_trust_hi = "Higher trust level of force model deviation"
-    doc_v_trust_lo = "Lower trust level of virial model deviation"
-    doc_v_trust_hi = "Higher trust level of virial model deviation"
     doc_output_nopbc = "Remove pbc of the output configurations"
+    doc_convergence = "The method of convergence check."
     doc_configuration_prefix = "The path prefix of lmp initial configurations"
     doc_configuration = "A list of initial configurations."
     doc_stages = "A list of exploration stages."
@@ -51,17 +69,17 @@ def lmp_args():
     return [
         Argument("config", dict, RunLmp.lmp_args(), optional=True, default=RunLmp.normalize_config({}), doc=doc_config),
         Argument("max_numb_iter", int, optional=True, default=10, doc=doc_max_numb_iter),
-        Argument("conv_accuracy", float, optional=True, default=0.9, doc=doc_conv_accuracy),
         Argument("fatal_at_max", bool, optional=True, default=True, doc=doc_fatal_at_max),
-        Argument("f_trust_lo", float, optional=False, doc=doc_f_trust_lo),
-        Argument("f_trust_hi", float, optional=False, doc=doc_f_trust_hi),
-        Argument("v_trust_lo", float, optional=True, default=None, doc=doc_v_trust_lo),
-        Argument("v_trust_hi", float, optional=True, default=None, doc=doc_v_trust_hi),
         Argument("output_nopbc", bool, optional=True, default=False, doc=doc_output_nopbc),
+        Argument("convergence", list, 
+                 [], [variant_conv()], 
+                 optional=False,
+                 doc=doc_convergence
+                 ),
         Argument("configuration_prefix", str, optional=True, default=None, doc=doc_configuration_prefix),
         Argument("configurations", list, 
                  [], [variant_conf()], 
-                 optional=False, repeat=True,                 
+                 optional=False, repeat=True,
                  doc=doc_configuration, alias=["configuration"]),
         Argument("stages", list, optional=False, doc=doc_stages),
     ]
@@ -106,16 +124,6 @@ def variant_fp():
             ))
 
     return Variant("type", fp_list, doc=doc)
-
-
-def variant_conf():
-    doc = "the type of the configuration generator"
-    var_list = []
-    for kk in conf_styles.keys():
-        var_list.append(
-            Argument(kk, dict, conf_styles[kk].args())
-        )
-    return Variant("type", var_list, doc=doc,)
 
 
 def input_args():

@@ -4,7 +4,6 @@ from typing import Optional, Tuple, List, Set
 from pathlib import Path
 from . import (
     ConfFilters,
-    TrustLevel,
 )
 from dpgen2.exploration.report import ExplorationReport
 

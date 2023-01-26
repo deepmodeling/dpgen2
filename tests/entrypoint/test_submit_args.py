@@ -42,13 +42,17 @@ class TestArgs(unittest.TestCase):
         self.assertEqual(old_data['type_map'], new_data['inputs']['type_map'])
         self.assertEqual(old_data['numb_models'], new_data['train']['numb_models'])
         self.assertEqual(old_data['fp_task_max'], new_data['fp']['task_max'])
-        self.assertEqual(old_data['conv_accuracy'], new_data['explore']['conv_accuracy'])
         self.assertEqual(old_data['max_numb_iter'], new_data['explore']['max_numb_iter'])
         self.assertEqual(old_data.get('fatal_at_max', True), new_data['explore']['fatal_at_max'])
-        self.assertEqual(old_data['model_devi_f_trust_lo'], new_data['explore']['f_trust_lo'])
-        self.assertEqual(old_data['model_devi_f_trust_hi'], new_data['explore']['f_trust_hi'])
-        self.assertEqual(old_data.get('model_devi_v_trust_lo'), new_data['explore']['v_trust_lo'])
-        self.assertEqual(old_data.get('model_devi_v_trust_hi'), new_data['explore']['v_trust_hi'])
+        # self.assertEqual(old_data['conv_accuracy'], new_data['explore']['conv_accuracy'])
+        # self.assertEqual(old_data['model_devi_f_trust_lo'], new_data['explore']['f_trust_lo'])
+        # self.assertEqual(old_data['model_devi_f_trust_hi'], new_data['explore']['f_trust_hi'])
+        # self.assertEqual(old_data.get('model_devi_v_trust_lo'), new_data['explore']['v_trust_lo'])
+        # self.assertEqual(old_data.get('model_devi_v_trust_hi'), new_data['explore']['v_trust_hi'])        
+        self.assertEqual(new_data['explore']['convergence']['type'], 'fixed-levels')
+        self.assertAlmostEqual(new_data['explore']['convergence']['level_f_lo'], 0.05)
+        self.assertAlmostEqual(new_data['explore']['convergence']['level_f_hi'], 0.5)
+        self.assertAlmostEqual(new_data['explore']['convergence']['conv_accuracy'], 0.9)
         self.assertEqual(old_data.get('train_style', 'dp'), new_data['train']['type'])
         self.assertEqual(old_data.get('explore_style', 'lmp'), new_data['explore']['type'])
         self.assertEqual(old_data.get('fp_style', 'vasp'), new_data['fp']['type'])
@@ -403,10 +407,13 @@ new_str = textwrap.dedent("""
 	    "command": "lmp -var restart 0"
 	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
+        "convergence":{
+                "type": "fixed-levels",
+                "level_f_lo":		0.05,
+                "level_f_hi":		0.50,
+                "conv_accuracy" :	0.9
+        },
 	"configuration_prefix": null, 
 	"configuration":	[
 	    {
@@ -487,10 +494,13 @@ new_str_bhr = textwrap.dedent("""
 	    "command": "lmp -var restart 0"
 	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
+        "convergence":{
+                "type": "fixed-levels",
+                "level_f_lo":		0.05,
+                "level_f_hi":		0.50,
+                "conv_accuracy" :	0.9
+        },
 	"configuration_prefix": null, 
 	"configuration":	[
 	],

@@ -62,7 +62,6 @@ from dpgen2.exploration.task import (
 )
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
-    TrustLevel,
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,

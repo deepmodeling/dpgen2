@@ -86,10 +86,13 @@ foo_str = textwrap.dedent("""
 	    "command": "lmp -var restart 0"
 	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
+        "convergence":{
+                "type": "fixed-levels",
+                "level_f_lo":		0.05,
+                "level_f_hi":		0.50,
+                "conv_accuracy" :	0.9
+        },
 	"configuration_prefix": null, 
 	"configuration":	[
 	],
