@@ -24,6 +24,8 @@ from dpgen2.utils.run_command import run_command
 from pathlib import Path
 import os
 
+import numpy as np
+
 # global static variables
 deepmd_input_path = 'one_frame_input'
 
@@ -106,9 +108,11 @@ class RunDeepmd(RunFp):
         """
         log_name = log
         out_name = out
+        
+        dp, type_map = self._get_dp_model(teacher_model_path, type_map)
 
         # Run deepmd
-        self._dp_infer(teacher_model_path, type_map, out_name)
+        self._dp_infer(dp, type_map, out_name)
 
         ret, out, err = run_command(f'echo "job finished!" > {log_name}', shell=True)
         if ret != 0:
@@ -116,24 +120,28 @@ class RunDeepmd(RunFp):
                 'vasp failed\n',
                 'out msg', out, '\n',
                 'err msg', err, '\n'
-            )     
+            )
 
         return out_name, log_name
-    
-    def _dp_infer(self, teacher_model_path: BinaryFileInput, type_map, out_name):
-        teacher_model_path.save_as_file(deepmd_teacher_model)
 
+
+    def _get_dp_model(self, teacher_model_path: BinaryFileInput, type_map: List[str]):
         from deepmd.infer import DeepPot
-        import numpy as np
-
+        teacher_model_path.save_as_file(deepmd_teacher_model)
         dp = DeepPot(deepmd_teacher_model)
+
         if type_map is None:
-            assert dp.model_type == "ener", 'type_map should be define or model type should be "ener"'
+            assert dp.model_type == "ener", 'type_map should be defined or model type should be "ener"'
             type_map = dp.get_type_map()
         elif dp.model_type == "ener":
+            # models with model_type != "ener" do not have function *get_type_map*
             assert type_map == dp.get_type_map(), \
                 f'type_map({type_map}) and deepmd model type_map{dp.get_type_map()} are not the same!'
 
+        os.remove(deepmd_teacher_model)
+        return dp, type_map
+
+    def _dp_infer(self, dp, type_map, out_name):
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(deepmd_input_path, type_map=type_map)
         ss.to('deepmd/npy', out_name)
@@ -144,22 +152,20 @@ class RunDeepmd(RunFp):
         energy_npy_path = coord_npy_path.parent / 'energy.npy'
         force_npy_path = coord_npy_path.parent / 'force.npy'
         virial_npy_path = coord_npy_path.parent / 'virial.npy'
-        
+
         nframe = ss.get_nframes()
         coord = ss['coords']
         cell = ss['cells'].reshape([nframe, -1])
         atype = ss['atom_types'].tolist()
-        
+
         energy, force, virial_force = dp.eval(coord, cell, atype)
-        
+
         with open(energy_npy_path, 'wb') as f:
             np.save(f, energy)
         with open(force_npy_path, 'wb') as f:
             np.save(f, force)
         with open(virial_npy_path, 'wb') as f:
             np.save(f, virial_force)
-        
-        os.remove(deepmd_teacher_model)
 
 
     @staticmethod
