@@ -11,13 +11,16 @@ from dpgen2.utils import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 from typing import (
-    Union, List, Dict, Optional,
+    Union,
+    List,
+    Dict,
+    Optional,
 )
 
 
 def global_config_workflow(
-        wf_config,
-        do_lebesgue : bool=False,
+    wf_config,
+    do_lebesgue: bool = False,
 ):
     # dflow_config, dflow_s3_config
     workflow_config_from_dict(wf_config)
@@ -26,6 +29,7 @@ def global_config_workflow(
     lebesgue_context = None
     if do_lebesgue:
         from dflow.plugins.lebesgue import LebesgueContext
+
         lb_context_config = wf_config.get("lebesgue_context_config", None)
         if lb_context_config:
             lebesgue_context = LebesgueContext(
@@ -34,9 +38,10 @@ def global_config_workflow(
 
     # bohrium configuration
     if wf_config.get("bohrium_config") is not None:
-        assert(lebesgue_context is None), \
-            "cannot use bohrium and lebesgue at the same time"
-        bohrium_config_from_dict(wf_config["bohrium_config"])        
+        assert (
+            lebesgue_context is None
+        ), "cannot use bohrium and lebesgue at the same time"
+        bohrium_config_from_dict(wf_config["bohrium_config"])
 
     return lebesgue_context
 
@@ -49,25 +54,23 @@ def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
     return matches
 
 
-def expand_idx (in_list) :
+def expand_idx(in_list):
     ret = []
-    for ii in in_list :
-        if isinstance(ii, int) :
+    for ii in in_list:
+        if isinstance(ii, int):
             ret.append(ii)
         elif isinstance(ii, str):
-            step_str = ii.split(':')
-            if len(step_str) > 1 :
+            step_str = ii.split(":")
+            if len(step_str) > 1:
                 step = int(step_str[1])
-            else :
+            else:
                 step = 1
-            range_str = step_str[0].split('-')
+            range_str = step_str[0].split("-")
             if len(range_str) == 2:
                 ret += range(int(range_str[0]), int(range_str[1]), step)
-            elif len(range_str) == 1 :
+            elif len(range_str) == 1:
                 ret += [int(range_str[0])]
             else:
-                raise RuntimeError('not expected range string', step_str[0])
+                raise RuntimeError("not expected range string", step_str[0])
     ret = sorted(list(set(ret)))
     return ret
-
-

@@ -7,16 +7,15 @@ from . import (
 )
 from dpgen2.exploration.report import ExplorationReport
 
+
 class ConfSelector(ABC):
-    """Select configurations from trajectory and model deviation files.
-    """
+    """Select configurations from trajectory and model deviation files."""
+
     @abstractmethod
-    def select (
-            self,
-            trajs : List[Path],
-            model_devis : List[Path],
-            type_map : Optional[List[str]] = None,
-    ) -> Tuple[List[ Path ], ExplorationReport]:
+    def select(
+        self,
+        trajs: List[Path],
+        model_devis: List[Path],
+        type_map: Optional[List[str]] = None,
+    ) -> Tuple[List[Path], ExplorationReport]:
         pass
-
-

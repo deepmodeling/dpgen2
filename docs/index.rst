@@ -33,5 +33,5 @@ DPGEN2 is the 2nd generation of the Deep Potential GENerator.
 * :ref:`modindex`
 * :ref:`search`
 
-.. _feedback: 
-.. _affiliated packages: 
+.. _feedback:
+.. _affiliated packages:

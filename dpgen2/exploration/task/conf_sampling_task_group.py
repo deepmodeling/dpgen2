@@ -8,23 +8,24 @@ from . import (
     ExplorationTaskGroup,
 )
 from dpgen2.constants import (
-    lmp_conf_name, 
+    lmp_conf_name,
     lmp_input_name,
     model_name_pattern,
 )
 
+
 class ConfSamplingTaskGroup(ExplorationTaskGroup):
     def __init__(
-            self, 
+        self,
     ):
         super().__init__()
         self.conf_set = False
-    
+
     def set_conf(
-            self,
-            conf_list : List[str],
-            n_sample : Optional[int] = None,
-            random_sample : bool = False,
+        self,
+        conf_list: List[str],
+        n_sample: Optional[int] = None,
+        random_sample: bool = False,
     ):
         """
         Set the configurations of exploration
@@ -34,8 +35,8 @@ class ConfSamplingTaskGroup(ExplorationTaskGroup):
         conf_list       str
                         A list of file contents
         n_sample        int
-                        Number of samples drawn from the conf list each time 
-                        `make_task` is called. If set to `None`, 
+                        Number of samples drawn from the conf list each time
+                        `make_task` is called. If set to `None`,
                         `n_sample` is set to length of the conf_list.
         random_sample   bool
                         If true the confs are randomly sampled, otherwise are
@@ -51,7 +52,7 @@ class ConfSamplingTaskGroup(ExplorationTaskGroup):
         self.conf_set = True
 
     def _sample_confs(
-            self,
+        self,
     ):
         confs = []
         for ii in range(self.n_sample):

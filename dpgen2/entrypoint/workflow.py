@@ -12,37 +12,32 @@ from dpgen2.entrypoint.common import (
     global_config_workflow,
 )
 
-workflow_subcommands = ["terminate", 
-                        "stop",
-                        "suspend",
-                        "delete",
-                        "retry",
-                        "resume",
-                        ]
+workflow_subcommands = [
+    "terminate",
+    "stop",
+    "suspend",
+    "delete",
+    "retry",
+    "resume",
+]
 
-def add_subparser_workflow_subcommand(
-        subparsers,
-        command: str
-):
+
+def add_subparser_workflow_subcommand(subparsers, command: str):
     parser_cmd = subparsers.add_parser(
         command,
         help=f"{command.capitalize()} a DPGEN2 workflow.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_cmd.add_argument(
-        "CONFIG", help="the config file in json format."
-    )
-    parser_cmd.add_argument(
-        "ID", help="the ID of the workflow."
-    )
+    parser_cmd.add_argument("CONFIG", help="the config file in json format.")
+    parser_cmd.add_argument("ID", help="the ID of the workflow.")
+
 
 def execute_workflow_subcommand(
-        command: str,
-        wfid: str,
-        wf_config: Optional[dict] = {},
+    command: str,
+    wfid: str,
+    wf_config: Optional[dict] = {},
 ):
-    wf_config = normalize_args(wf_config)    
+    wf_config = normalize_args(wf_config)
     global_config_workflow(wf_config)
     wf = Workflow(id=wfid)
     getattr(wf, command)()
-    

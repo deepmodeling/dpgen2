@@ -17,25 +17,25 @@ from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.selector import ConfSelector
 
 
-class ExplorationScheduler():
+class ExplorationScheduler:
     """
     The exploration scheduler.
 
     """
 
     def __init__(
-            self,
+        self,
     ):
         self.stage_schedulers = []
         self.cur_stage = 0
         self.complete_ = False
-        
+
     def add_stage_scheduler(
-            self,
-            stage_scheduler : StageScheduler,
+        self,
+        stage_scheduler: StageScheduler,
     ):
         """
-        Add stage scheduler. 
+        Add stage scheduler.
 
         All added schedulers can be treated as a `list` (order matters). Only one stage is converged, the iteration goes to the next iteration.
 
@@ -43,7 +43,7 @@ class ExplorationScheduler():
         ----------
         stage_scheduler: StageScheduler
             The added stage scheduler
-        
+
         """
         self.stage_schedulers.append(stage_scheduler)
         self.complete_ = False
@@ -51,7 +51,7 @@ class ExplorationScheduler():
 
     def get_stage(self):
         """
-        Get the index of current stage. 
+        Get the index of current stage.
 
         Stage index increases when the previous stage converges. Usually called after `self.plan_next_iteration`.
 
@@ -66,7 +66,7 @@ class ExplorationScheduler():
 
         """
         tot_iter = -1
-        for idx,ii in enumerate(self.stage_schedulers):
+        for idx, ii in enumerate(self.stage_schedulers):
             if ii.complete():
                 # the last plan is not used because the stage
                 # is found converged
@@ -84,7 +84,7 @@ class ExplorationScheduler():
 
     def force_stage_complete(self):
         """
-        Force complete the current stage 
+        Force complete the current stage
 
         """
         self.stage_schedulers[self.cur_stage].force_complete()
@@ -97,10 +97,10 @@ class ExplorationScheduler():
             self.complete_ = True
 
     def plan_next_iteration(
-            self,
-            report : Optional[ExplorationReport] = None,
-            trajs : Optional[List[Path]] = None,
-    ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]] :
+        self,
+        report: Optional[ExplorationReport] = None,
+        trajs: Optional[List[Path]] = None,
+    ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]]:
         """
         Make the plan for the next DPGEN iteration.
 
@@ -109,7 +109,7 @@ class ExplorationScheduler():
         report : ExplorationReport
             The exploration report of this iteration.
         confs: List[Path]
-            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration. 
+            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration.
 
         Returns
         -------
@@ -123,13 +123,14 @@ class ExplorationScheduler():
         """
 
         try:
-            stg_complete, lmp_task_grp, conf_selector = \
-                self.stage_schedulers[self.cur_stage].plan_next_iteration(
-                    report,
-                    trajs,
-                )
+            stg_complete, lmp_task_grp, conf_selector = self.stage_schedulers[
+                self.cur_stage
+            ].plan_next_iteration(
+                report,
+                trajs,
+            )
         except FatalError as e:
-            raise FatalError(f'stage {self.cur_stage}: ' + str(e))
+            raise FatalError(f"stage {self.cur_stage}: " + str(e))
 
         if stg_complete:
             self.cur_stage += 1
@@ -139,10 +140,13 @@ class ExplorationScheduler():
             else:
                 # all stages complete
                 self.complete_ = True
-                return True, None, None,
-        else :
+                return (
+                    True,
+                    None,
+                    None,
+                )
+        else:
             return stg_complete, lmp_task_grp, conf_selector
-
 
     def get_stage_of_iterations(self):
         """
@@ -163,18 +167,17 @@ class ExplorationScheduler():
         idx_in_stage = []
         iter_idx = []
         for ii in range(max_iter):
-            idx = np.searchsorted(cumsum_stage_iters, ii+1)
+            idx = np.searchsorted(cumsum_stage_iters, ii + 1)
             stage_idx.append(idx)
             if idx > 0:
-                idx_in_stage.append(ii - cumsum_stage_iters[idx-1])
-            else :
+                idx_in_stage.append(ii - cumsum_stage_iters[idx - 1])
+            else:
                 idx_in_stage.append(ii)
             iter_idx.append(ii)
-        assert( len(stage_idx) == max_iter)
-        assert( len(idx_in_stage) == max_iter)
-        assert( len(iter_idx) == max_iter)
+        assert len(stage_idx) == max_iter
+        assert len(idx_in_stage) == max_iter
+        assert len(iter_idx) == max_iter
         return stage_idx, idx_in_stage, iter_idx
-    
 
     def get_convergence_ratio(self):
         """
@@ -202,37 +205,40 @@ class ExplorationScheduler():
 
     def _print_prev_summary(self, prev_stg_idx):
         if prev_stg_idx >= 0:
-            yes = 'YES' if self.stage_schedulers[prev_stg_idx].converged() else 'NO '
-            rmx = 'YES' if self.stage_schedulers[prev_stg_idx].reached_max_iteration() else 'NO '
-            return f'# Stage {prev_stg_idx:4d}  converged {yes}  reached max numb iterations {rmx}' 
+            yes = "YES" if self.stage_schedulers[prev_stg_idx].converged() else "NO "
+            rmx = (
+                "YES"
+                if self.stage_schedulers[prev_stg_idx].reached_max_iteration()
+                else "NO "
+            )
+            return f"# Stage {prev_stg_idx:4d}  converged {yes}  reached max numb iterations {rmx}"
         else:
             return None
 
-
     def print_last_iteration(self, print_header=False):
         stages = self.stage_schedulers
-        
+
         stage_idx, idx_in_stage, iter_idx = self.get_stage_of_iterations()
 
         if np.size(iter_idx) == 0:
             return "No finished iteration found\n"
 
-        iidx = np.size(iter_idx)-1
-        
+        iidx = np.size(iter_idx) - 1
+
         ret = []
         if print_header:
             ret.append(
-                stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header())
+                stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header()
+            )
         ret.append(
-            stages[stage_idx[iidx]].reports[idx_in_stage[iidx]]\
+            stages[stage_idx[iidx]]
+            .reports[idx_in_stage[iidx]]
             .print(stage_idx[iidx], idx_in_stage[iidx], iidx)
         )
 
         if self.complete():
-            ret.append(f'# All stages converged')
-        return '\n'.join(ret + [''])
-        
-
+            ret.append(f"# All stages converged")
+        return "\n".join(ret + [""])
 
     def print_convergence(self):
         ret = []
@@ -242,21 +248,23 @@ class ExplorationScheduler():
 
         if np.size(iter_idx) == 0:
             return "No finished iteration found\n"
-        
+
         prev_stg_idx = -1
         for iidx in range(np.size(iter_idx)):
             if len(ret) == 0:
                 ret.append(
-                    stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header())
+                    stages[stage_idx[iidx]].reports[idx_in_stage[iidx]].print_header()
+                )
             if stage_idx[iidx] != prev_stg_idx:
                 if prev_stg_idx >= 0:
                     _summary = self._print_prev_summary(prev_stg_idx)
                     assert _summary is not None
                     ret.append(_summary)
-                ret.append(f'# Stage {stage_idx[iidx]:4d}  ' + '-'*20)
+                ret.append(f"# Stage {stage_idx[iidx]:4d}  " + "-" * 20)
                 prev_stg_idx = stage_idx[iidx]
             ret.append(
-                stages[stage_idx[iidx]].reports[idx_in_stage[iidx]]\
+                stages[stage_idx[iidx]]
+                .reports[idx_in_stage[iidx]]
                 .print(stage_idx[iidx], idx_in_stage[iidx], iidx)
             )
 
@@ -265,5 +273,5 @@ class ExplorationScheduler():
                 _summary = self._print_prev_summary(prev_stg_idx)
                 assert _summary is not None
                 ret.append(_summary)
-                ret.append(f'# All stages converged')
-        return '\n'.join(ret + [''])
+                ret.append(f"# All stages converged")
+        return "\n".join(ret + [""])

@@ -2,8 +2,9 @@ import dflow, importlib
 from dflow import config, s3_config
 from dflow.plugins import bohrium
 
+
 def bohrium_config_from_dict(
-        bohrium_config,
+    bohrium_config,
 ):
     config["host"] = bohrium_config["host"]
     config["k8s_api_server"] = bohrium_config["k8s_api_server"]
@@ -11,7 +12,7 @@ def bohrium_config_from_dict(
     bohrium.config["password"] = bohrium_config["password"]
     bohrium.config["project_id"] = str(bohrium_config["project_id"])
     s3_config["repo_key"] = bohrium_config["repo_key"]
-    module, cls = (bohrium_config["storage_client"].rsplit('.', maxsplit=1))
-    module = importlib.import_module(module) 
+    module, cls = bohrium_config["storage_client"].rsplit(".", maxsplit=1)
+    module = importlib.import_module(module)
     client = getattr(module, cls)
     s3_config["storage_client"] = client()

@@ -15,6 +15,7 @@ from . import (
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.render import TrajRender
 
+
 class ConfSelectorFrames(ConfSelector):
     """Select frames from trajectories as confs.
 
@@ -25,24 +26,25 @@ class ConfSelectorFrames(ConfSelector):
         The configuration filter
 
     """
+
     def __init__(
-            self,
-            traj_render: TrajRender,
-            report: ExplorationReport,
-            max_numb_sel : Optional[int] = None,
-            conf_filters : Optional[ConfFilters] = None,
+        self,
+        traj_render: TrajRender,
+        report: ExplorationReport,
+        max_numb_sel: Optional[int] = None,
+        conf_filters: Optional[ConfFilters] = None,
     ):
         self.max_numb_sel = max_numb_sel
         self.conf_filters = conf_filters
         self.traj_render = traj_render
         self.report = report
-    
-    def select (
-            self,
-            trajs : List[Path],
-            model_devis : List[Path],
-            type_map : Optional[List[str]] = None,
-    ) -> Tuple[List[ Path ], ExplorationReport]:
+
+    def select(
+        self,
+        trajs: List[Path],
+        model_devis: List[Path],
+        type_map: Optional[List[str]] = None,
+    ) -> Tuple[List[Path], ExplorationReport]:
         """Select configurations
 
         Parameters
@@ -62,11 +64,11 @@ class ConfSelectorFrames(ConfSelector):
         confs : List[Path]
                 The selected confgurations, stored in a folder in deepmd/npy format, can be parsed as dpdata.MultiSystems. The `list` only has one item.
         report : ExplorationReport
-                The exploration report recoding the status of the exploration. 
+                The exploration report recoding the status of the exploration.
 
         """
         ntraj = len(trajs)
-        assert(ntraj == len(model_devis))
+        assert ntraj == len(model_devis)
 
         mdf, mdv = self.traj_render.get_model_devi(model_devis)
 
@@ -74,9 +76,11 @@ class ConfSelectorFrames(ConfSelector):
         self.report.record(mdf, mdv)
         id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
 
-        ms = self.traj_render.get_confs(trajs, id_cand_list, type_map, self.conf_filters)
-            
-        out_path = Path('confs')
+        ms = self.traj_render.get_confs(
+            trajs, id_cand_list, type_map, self.conf_filters
+        )
+
+        out_path = Path("confs")
         out_path.mkdir(exist_ok=True)
         ms.to_deepmd_npy(out_path)
 

@@ -110,7 +110,7 @@
 	"init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
 	"init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
     ],
-    "sys_configs_prefix": "", 
+    "sys_configs_prefix": "",
     "sys_configs":	[
 	{
 	    "lattice" : ["fcc", 4.57],
@@ -178,11 +178,10 @@
 	{ "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 }
     ],
 
-    "_comment":		" 02.fp ",    
+    "_comment":		" 02.fp ",
     "fp_style":		"vasp",
     "fp_task_max":	2,
     "fp_pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
     "fp_incar":         "vasp/INCAR",
     "_comment":		" that's all "
 }
-

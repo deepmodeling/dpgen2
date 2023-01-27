@@ -38,7 +38,7 @@ Al
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """
-ofc0 = '\n1 atoms\n2 atom types\n   0.0000000000    2.0000000000 xlo xhi\n   0.0000000000    2.0000000000 ylo yhi\n   0.0000000000    2.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      1    0.0000000000    0.0000000000    0.0000000000\n'
+ofc0 = "\n1 atoms\n2 atom types\n   0.0000000000    2.0000000000 xlo xhi\n   0.0000000000    2.0000000000 ylo yhi\n   0.0000000000    2.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      1    0.0000000000    0.0000000000    0.0000000000\n"
 
 ifc1 = """Mg1 
 1.0
@@ -50,7 +50,7 @@ Mg
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """
-ofc1 = '\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n'
+ofc1 = "\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
 
 ifc2 = """Mg1 
 1.0
@@ -62,14 +62,15 @@ Mg
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """
-ofc2 = '\n1 atoms\n2 atom types\n   0.0000000000    4.0000000000 xlo xhi\n   0.0000000000    4.0000000000 ylo yhi\n   0.0000000000    4.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n'
+ofc2 = "\n1 atoms\n2 atom types\n   0.0000000000    4.0000000000 xlo xhi\n   0.0000000000    4.0000000000 ylo yhi\n   0.0000000000    4.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
 
 
-class MockedScheduler():
+class MockedScheduler:
     def __init__(self, value=0):
         self.value = value
 
-class MockedStep():
+
+class MockedStep:
     def __init__(self, scheduler=None):
         self.scheduler = scheduler
         self.key = f"iter-{self.scheduler.value}--scheduler"
@@ -81,18 +82,16 @@ class MockedStep():
 
 class TestSubmit(unittest.TestCase):
     def test_expand_idx(self):
-        ilist = ['1', '3-5', '10-20:2']
+        ilist = ["1", "3-5", "10-20:2"]
         olist = expand_idx(ilist)
         expected_olist = [1, 3, 4, 10, 12, 14, 16, 18]
         self.assertEqual(olist, expected_olist)
 
-
     def test_print_list_steps(self):
-        ilist = ['foo', 'bar']
+        ilist = ["foo", "bar"]
         ostr = print_list_steps(ilist)
-        expected_ostr = '       0    foo\n       1    bar'
+        expected_ostr = "       0    foo\n       1    bar"
         self.assertEqual(ostr, expected_ostr)
-
 
     def test_update_reuse_step_scheduler(self):
         reuse_steps = [
@@ -103,7 +102,7 @@ class TestSubmit(unittest.TestCase):
         ]
 
         reuse_steps = update_reuse_step_scheduler(
-            reuse_steps, 
+            reuse_steps,
             MockedScheduler(4),
         )
         self.assertEqual(len(reuse_steps), 4)
@@ -112,49 +111,48 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(reuse_steps[2].scheduler.value, 2)
         self.assertEqual(reuse_steps[3].scheduler.value, 4)
 
-
     def test_copy_scheduler(self):
         scheduler = ExplorationScheduler()
         scheduler_new = ExplorationScheduler()
         report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
-        traj_render = TrajRenderLammps()        
+        traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
             selector,
-            max_numb_iter = 2,
+            max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
             selector,
-            max_numb_iter = 2,
+            max_numb_iter=2,
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
         report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        traj_render = TrajRenderLammps()        
+        traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
             selector,
-            max_numb_iter = 3,
+            max_numb_iter=3,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
             selector,
-            max_numb_iter = 3,
+            max_numb_iter=3,
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
         foo_report = MockedExplorationReport()
         foo_report.accurate = 0.5
-        foo_report.failed = 0.5          
+        foo_report.failed = 0.5
         bar_report = MockedExplorationReport()
         bar_report.accurate = 1.0
-        bar_report.failed = 0.0        
-        
+        bar_report.failed = 0.0
+
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
@@ -167,7 +165,7 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 0)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
-        conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])        
+        conv, ltg, sel = scheduler.plan_next_iteration(bar_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
         self.assertTrue(isinstance(sel, ConfSelectorFrames))
@@ -204,52 +202,53 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(scheduler.get_stage(), scheduler_new.get_stage())
         self.assertEqual(scheduler.get_iteration(), scheduler_new.get_iteration())
         self.assertEqual(scheduler.complete(), scheduler_new.complete())
-        self.assertEqual(scheduler.print_convergence(), scheduler_new.print_convergence())
-
+        self.assertEqual(
+            scheduler.print_convergence(), scheduler_new.print_convergence()
+        )
 
     def test_copy_scheduler_complete(self):
         scheduler = ExplorationScheduler()
         scheduler_new = ExplorationScheduler()
         report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
-        traj_render = TrajRenderLammps()        
+        traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
             selector,
-            max_numb_iter = 1,
-            fatal_at_max = False,
+            max_numb_iter=1,
+            fatal_at_max=False,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage(),
             selector,
-            max_numb_iter = 2,
+            max_numb_iter=2,
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
         report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        traj_render = TrajRenderLammps()        
+        traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
             selector,
-            max_numb_iter = 3,
+            max_numb_iter=3,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
         stage_scheduler = ConvergenceCheckStageScheduler(
             MockedStage1(),
             selector,
-            max_numb_iter = 3,
+            max_numb_iter=3,
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
         foo_report = MockedExplorationReport()
         foo_report.accurate = 0.5
-        foo_report.failed = 0.5          
+        foo_report.failed = 0.5
         bar_report = MockedExplorationReport()
         bar_report.accurate = 1.0
-        bar_report.failed = 0.0        
-        
+        bar_report.failed = 0.0
+
         conv, ltg, sel = scheduler.plan_next_iteration()
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup))
@@ -262,7 +261,7 @@ class TestSubmit(unittest.TestCase):
         self.assertEqual(scheduler.get_iteration(), 0)
         self.assertEqual(len(scheduler.stage_schedulers), 2)
         self.assertFalse(scheduler.stage_schedulers[0].converged())
-        conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])        
+        conv, ltg, sel = scheduler.plan_next_iteration(foo_report, [])
         self.assertEqual(conv, False)
         self.assertTrue(isinstance(ltg, MockedExplorationTaskGroup1))
         self.assertTrue(isinstance(sel, ConfSelectorFrames))
@@ -302,6 +301,8 @@ class TestSubmit(unittest.TestCase):
         # 1st stage of scheduler_new is forced complete.
         self.assertEqual(
             scheduler.print_convergence().replace(
-            'reached max numb iterations YES',
-            'reached max numb iterations NO ',),
-            scheduler_new.print_convergence())
+                "reached max numb iterations YES",
+                "reached max numb iterations NO ",
+            ),
+            scheduler_new.print_convergence(),
+        )

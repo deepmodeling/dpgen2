@@ -124,7 +124,7 @@
 	"max_numb_iter" :	5,
 	"fatal_at_max" :	false,
 	"output_nopbc":		false,
-	"configuration_prefix": null, 
+	"configuration_prefix": null,
 	"configurations":	[
 	    {
 		"type": "alloy",
@@ -147,7 +147,7 @@
 		    "type" : "lmp-template",
 		    "lmp" : "template.lammps", "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [100, 200]},
 		    "conf_idx": [0], "n_sample" : 3
-		}		
+		}
 	    ]
 	],
 	"_comment" : "all"
@@ -167,4 +167,3 @@
 	"_comment" : "all"
     }
 }
-

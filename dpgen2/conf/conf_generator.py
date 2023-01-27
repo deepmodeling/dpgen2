@@ -3,17 +3,20 @@ import dargs
 import tempfile
 from pathlib import Path
 from typing import (
-    List, Dict,
+    List,
+    Dict,
 )
 from abc import (
-    ABC, abstractmethod,
+    ABC,
+    abstractmethod,
 )
+
 
 class ConfGenerator(ABC):
     @abstractmethod
     def generate(
-            self,
-            type_map,            
+        self,
+        type_map,
     ) -> dpdata.MultiSystems:
         r"""Method of generating configurations.
 
@@ -26,15 +29,14 @@ class ConfGenerator(ABC):
         -------
         confs:  dpdata.MultiSystems
                 The returned configurations in `dpdata.MultiSystems` format
-        
+
         """
         pass
 
-
     def get_file_content(
-            self, 
-            type_map,
-            fmt='lammps/lmp',
+        self,
+        type_map,
+        fmt="lammps/lmp",
     ) -> List[str]:
         r"""Get the file content of configurations
 
@@ -60,18 +62,16 @@ class ConfGenerator(ABC):
                     ret.append(tf.read_text())
         return ret
 
-
     @staticmethod
     @abstractmethod
     def args() -> List[dargs.Argument]:
         pass
 
-
     @classmethod
     def normalize_config(
-            cls, 
-            data: Dict={}, 
-            strict: bool=True,
+        cls,
+        data: Dict = {},
+        strict: bool = True,
     ) -> Dict:
         r"""Normalized the argument.
 
@@ -81,12 +81,12 @@ class ConfGenerator(ABC):
             The input dict of arguments.
         strict: bool
             Strictly check the arguments.
-        
+
         Returns
         -------
         data: Dict
             The normalized arguments.
-        
+
         """
         ta = cls.args()
         base = dargs.Argument("base", dict, ta)

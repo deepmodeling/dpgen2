@@ -11,8 +11,8 @@ from dflow.python import (
 import os, json, dpdata
 from pathlib import Path
 from typing import (
-    Tuple, 
-    List, 
+    Tuple,
+    List,
     Set,
     Dict,
 )
@@ -33,23 +33,27 @@ class RunFp(OP, ABC):
 
     @classmethod
     def get_input_sign(cls):
-        return OPIOSign({
-            "config" : BigParameter(dict),
-            "task_name": str,
-            "task_path" : Artifact(Path),
-        })
+        return OPIOSign(
+            {
+                "config": BigParameter(dict),
+                "task_name": str,
+                "task_path": Artifact(Path),
+            }
+        )
 
     @classmethod
     def get_output_sign(cls):
-        return OPIOSign({
-            "log": Artifact(Path),
-            "labeled_data" : Artifact(Path),
-        })
+        return OPIOSign(
+            {
+                "log": Artifact(Path),
+                "labeled_data": Artifact(Path),
+            }
+        )
 
     @abstractmethod
     def input_files(self) -> List[str]:
         r"""The mandatory input files to run a FP task.
-        
+
         Returns
         -------
         files: List[str]
@@ -61,7 +65,7 @@ class RunFp(OP, ABC):
     @abstractmethod
     def optional_input_files(self) -> List[str]:
         r"""The optional input files to run a FP task.
-        
+
         Returns
         -------
         files: List[str]
@@ -72,15 +76,15 @@ class RunFp(OP, ABC):
 
     @abstractmethod
     def run_task(
-            self,
-            **kwargs,
+        self,
+        **kwargs,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
-        
+
         Parameters
         ----------
         kwargs
-            Keyword args defined by the developer. 
+            Keyword args defined by the developer.
             The fp/run_config session of the input file will be passed to this function.
 
         Returns
@@ -105,10 +109,7 @@ class RunFp(OP, ABC):
         pass
 
     @classmethod
-    def normalize_config(
-            cls, 
-            data: Dict={}, 
-            strict: bool=True) -> Dict:
+    def normalize_config(cls, data: Dict = {}, strict: bool = True) -> Dict:
         r"""Normalized the argument.
 
         Parameters
@@ -117,12 +118,12 @@ class RunFp(OP, ABC):
             The input dict of arguments.
         strict: bool
             Strictly check the arguments.
-        
+
         Returns
         -------
         data: Dict
             The normalized arguments.
-        
+
         """
         ta = cls.args()
         base = dargs.Argument("base", dict, ta)
@@ -130,11 +131,10 @@ class RunFp(OP, ABC):
         base.check_value(data, strict=strict)
         return data
 
-
     @OP.exec_sign_check
     def execute(
-            self,
-            ip : OPIO,
+        self,
+        ip: OPIO,
     ) -> OPIO:
         r"""Execute the OP.
 
@@ -142,7 +142,7 @@ class RunFp(OP, ABC):
         ----------
         ip : dict
             Input dict with components:
-        
+
             - `config`: (`dict`) The config of FP task. Should have `config['run']`, which defines the runtime configuration of the FP task.
             - `task_name`: (`str`) The name of task.
             - `task_path`: (`Artifact(Path)`) The path that contains all input files prepareed by `PrepFp`.
@@ -150,25 +150,25 @@ class RunFp(OP, ABC):
         Returns
         -------
             Output dict with components:
-        
+
             - `log`: (`Artifact(Path)`) The log file of FP.
             - `labeled_data`: (`Artifact(Path)`) The path to the labeled data in `"deepmd/npy"` format provided by `dpdata`.
-        
+
         Exceptions
         ----------
         TransientError
-            On the failure of FP execution. 
+            On the failure of FP execution.
         FatalError
             When mandatory files are not found.
         """
-        config = ip['config']['run'] if ip['config']['run'] is not None else {}
+        config = ip["config"]["run"] if ip["config"]["run"] is not None else {}
         config = type(self).normalize_config(config, strict=False)
-        task_name = ip['task_name']
-        task_path = ip['task_path']
+        task_name = ip["task_name"]
+        task_path = ip["task_path"]
         input_files = self.input_files()
-        input_files = [(Path(task_path)/ii).resolve() for ii in input_files]
+        input_files = [(Path(task_path) / ii).resolve() for ii in input_files]
         opt_input_files = self.optional_input_files()
-        opt_input_files = [(Path(task_path)/ii).resolve() for ii in opt_input_files]
+        opt_input_files = [(Path(task_path) / ii).resolve() for ii in opt_input_files]
         work_dir = Path(task_name)
 
         with set_directory(work_dir):
@@ -184,9 +184,9 @@ class RunFp(OP, ABC):
                     Path(iname).symlink_to(ii)
             out_name, log_name = self.run_task(**config)
 
-        return OPIO({
-            "log": work_dir / log_name,
-            "labeled_data": work_dir / out_name,
-        })
-
-
+        return OPIO(
+            {
+                "log": work_dir / log_name,
+                "labeled_data": work_dir / out_name,
+            }
+        )

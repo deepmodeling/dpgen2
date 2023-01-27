@@ -3,17 +3,18 @@ from abc import ABC, abstractmethod
 import dpdata
 import numpy as np
 
+
 class ConfFilter(ABC):
     @abstractmethod
-    def check (
-            self,
-            coords : np.ndarray,
-            cell: np.ndarray,
-            atom_types : np.ndarray,
-            nopbc: bool,
-    ) -> bool :
+    def check(
+        self,
+        coords: np.ndarray,
+        cell: np.ndarray,
+        atom_types: np.ndarray,
+        nopbc: bool,
+    ) -> bool:
         """Check if the configuration is valid.
-        
+
         Parameters
         ----------
         coords : numpy.array
@@ -33,33 +34,37 @@ class ConfFilter(ABC):
         """
         pass
 
-class ConfFilters():
+
+class ConfFilters:
     def __init__(
-            self,
+        self,
     ):
         self._filters = []
 
     def add(
-            self,
-            conf_filter : ConfFilter,
-    )->ConfFilters:
+        self,
+        conf_filter: ConfFilter,
+    ) -> ConfFilters:
         self._filters.append(conf_filter)
         return self
 
     def check(
-            self,
-            conf : dpdata.System,
-    ) -> bool : 
-        natoms = sum(conf['atom_numbs'])
+        self,
+        conf: dpdata.System,
+    ) -> bool:
+        natoms = sum(conf["atom_numbs"])
         selected_idx = np.arange(conf.get_nframes())
-        for ff in self._filters:                         
-            fsel = np.where (
-                [ ff.check(conf['coords'][ii], 
-                           conf['cells'][ii],
-                           conf['atom_types'],
-                           conf.nopbc)
-                  for ii in range(conf.get_nframes()) ]
+        for ff in self._filters:
+            fsel = np.where(
+                [
+                    ff.check(
+                        conf["coords"][ii],
+                        conf["cells"][ii],
+                        conf["atom_types"],
+                        conf.nopbc,
+                    )
+                    for ii in range(conf.get_nframes())
+                ]
             )[0]
             selected_idx = np.intersect1d(selected_idx, fsel)
         return conf.sub_system(selected_idx)
-    

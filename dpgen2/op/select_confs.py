@@ -11,33 +11,34 @@ from pathlib import Path
 from dpgen2.exploration.selector import ConfSelector
 from dpgen2.exploration.report import ExplorationReport
 
-class SelectConfs(OP):
-    """Select configurations from exploration trajectories for labeling.
 
-    """
+class SelectConfs(OP):
+    """Select configurations from exploration trajectories for labeling."""
 
     @classmethod
     def get_input_sign(cls):
-        return OPIOSign({
-            "conf_selector": ConfSelector,
-            "type_map": List[str],
-
-            "trajs": Artifact(List[Path]),
-            "model_devis": Artifact(List[Path]),
-        })
+        return OPIOSign(
+            {
+                "conf_selector": ConfSelector,
+                "type_map": List[str],
+                "trajs": Artifact(List[Path]),
+                "model_devis": Artifact(List[Path]),
+            }
+        )
 
     @classmethod
     def get_output_sign(cls):
-        return OPIOSign({
-            "report" : BigParameter(ExplorationReport),
-
-            "confs" : Artifact(List[Path]),
-        })
+        return OPIOSign(
+            {
+                "report": BigParameter(ExplorationReport),
+                "confs": Artifact(List[Path]),
+            }
+        )
 
     @OP.exec_sign_check
     def execute(
-            self,
-            ip : OPIO,
+        self,
+        ip: OPIO,
     ) -> OPIO:
         r"""Execute the OP.
 
@@ -45,7 +46,7 @@ class SelectConfs(OP):
         ----------
         ip : dict
             Input dict with components:
-        
+
             - `conf_selector`: (`ConfSelector`) Configuration selector.
             - `type_map`: (`List[str]`) The type map.
             - `trajs`: (`Artifact(List[Path])`) The trajectories generated in the exploration.
@@ -54,25 +55,27 @@ class SelectConfs(OP):
         Returns
         -------
             Output dict with components:
-        
+
             - `report`: (`ExplorationReport`) The report on the exploration.
             - `conf`: (`Artifact(List[Path])`) The selected configurations.
-        
+
         """
 
-        conf_selector = ip['conf_selector']
-        type_map = ip['type_map']
+        conf_selector = ip["conf_selector"]
+        type_map = ip["type_map"]
 
-        trajs = ip['trajs']
-        model_devis = ip['model_devis']
+        trajs = ip["trajs"]
+        model_devis = ip["model_devis"]
 
         confs, report = conf_selector.select(
-            trajs, 
-            model_devis, 
-            type_map = type_map,
+            trajs,
+            model_devis,
+            type_map=type_map,
         )
 
-        return OPIO({
-            "report" : report,
-            "confs" : confs,
-        })
+        return OPIO(
+            {
+                "report": report,
+                "confs": confs,
+            }
+        )

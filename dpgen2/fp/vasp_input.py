@@ -3,26 +3,27 @@ import dpdata
 from pathlib import Path
 from typing import (
     Optional,
-    Tuple, 
-    List, 
-    Set, 
+    Tuple,
+    List,
+    Set,
     Dict,
     Union,
 )
 from dargs import (
-    dargs, 
-    Argument, 
-    Variant, 
+    dargs,
+    Argument,
+    Variant,
     ArgumentEncoder,
 )
 
-class VaspInputs():
+
+class VaspInputs:
     def __init__(
-            self,
-            kspacing : Union[float, List[float]],
-            incar : str,
-            pp_files : Dict[str, str],
-            kgamma : bool = True,
+        self,
+        kspacing: Union[float, List[float]],
+        incar: str,
+        pp_files: Dict[str, str],
+        kgamma: bool = True,
     ):
         """
         Parameters
@@ -32,10 +33,10 @@ class VaspInputs():
                 ksapcing, otherwise it is a list of three numbers, specifying the
                 kspacing used in the x, y and z dimension.
         incar: str
-                A template INCAR file. 
+                A template INCAR file.
         pp_files : Dict[str,str]
                 The potcar files for the elements. For example
-                { 
+                {
                    "H" : "/path/to/POTCAR_H",
                    "O" : "/path/to/POTCAR_O",
                 }
@@ -56,31 +57,31 @@ class VaspInputs():
         return self._potcars
 
     def incar_from_file(
-            self,
-            fname : str,
+        self,
+        fname: str,
     ):
         self._incar_template = Path(fname).read_text()
 
     def potcars_from_file(
-            self,
-            dict_fnames : Dict[str,str],
+        self,
+        dict_fnames: Dict[str, str],
     ):
         self._potcars = {}
-        for kk,vv in dict_fnames.items():
-            self._potcars[kk] = Path(vv).read_text()            
+        for kk, vv in dict_fnames.items():
+            self._potcars[kk] = Path(vv).read_text()
 
     def make_potcar(
-            self, 
-            atom_names,
-    ) -> str:        
+        self,
+        atom_names,
+    ) -> str:
         potcar_contents = []
         for nn in atom_names:
             potcar_contents.append(self._potcars[nn])
-        return "".join(potcar_contents)            
+        return "".join(potcar_contents)
 
     def make_kpoints(
-            self,
-            box : np.ndarray,
+        self,
+        box: np.ndarray,
     ) -> str:
         return make_kspacing_kpoints(box, self.kspacing, self.kgamma)
 
@@ -98,7 +99,7 @@ class VaspInputs():
         ]
 
     @staticmethod
-    def normalize_config(data = {}, strict=True):
+    def normalize_config(data={}, strict=True):
         ta = VaspInputs.args()
         base = Argument("base", dict, ta)
         data = base.normalize_value(data, trim_pattern="_*")
@@ -106,13 +107,15 @@ class VaspInputs():
         return data
 
 
-
-def make_kspacing_kpoints(box, kspacing, kgamma) :
+def make_kspacing_kpoints(box, kspacing, kgamma):
     if type(kspacing) is not list:
         kspacing = [kspacing, kspacing, kspacing]
     box = np.array(box)
     rbox = _reciprocal_box(box)
-    kpoints = [max(1,(np.ceil(2 * np.pi * np.linalg.norm(ii) / ks).astype(int))) for ii,ks in zip(rbox,kspacing)]
+    kpoints = [
+        max(1, (np.ceil(2 * np.pi * np.linalg.norm(ii) / ks).astype(int)))
+        for ii, ks in zip(rbox, kspacing)
+    ]
     ret = _make_vasp_kpoints(kpoints, kgamma)
     return ret
 
@@ -126,6 +129,7 @@ def _make_vasp_kp_gamma(kpoints):
     ret += "0  0  0\n"
     return ret
 
+
 def _make_vasp_kp_mp(kpoints):
     ret = ""
     ret += "K-Points\n"
@@ -135,15 +139,16 @@ def _make_vasp_kp_mp(kpoints):
     ret += "0  0  0\n"
     return ret
 
-def _make_vasp_kpoints (kpoints, kgamma = False) :
-    if kgamma :
+
+def _make_vasp_kpoints(kpoints, kgamma=False):
+    if kgamma:
         ret = _make_vasp_kp_gamma(kpoints)
-    else :
+    else:
         ret = _make_vasp_kp_mp(kpoints)
     return ret
-    
-def _reciprocal_box(box) :
+
+
+def _reciprocal_box(box):
     rbox = np.linalg.inv(box)
     rbox = rbox.T
     return rbox
-

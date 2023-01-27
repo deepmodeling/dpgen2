@@ -3,9 +3,7 @@ import dpdata
 import glob
 from pathlib import Path
 from .conf_generator import ConfGenerator
-from typing import (
-    Optional, Union, List, Tuple
-)
+from typing import Optional, Union, List, Tuple
 from dargs import (
     Argument,
     Variant,
@@ -14,14 +12,14 @@ from dargs import (
 
 class FileConfGenerator(ConfGenerator):
     def __init__(
-            self,
-            files : Union[str,List[str]],
-            fmt : str = 'auto',
-            prefix : Optional[str] = None,
-            remove_pbc : Optional[bool] = False,
+        self,
+        files: Union[str, List[str]],
+        fmt: str = "auto",
+        prefix: Optional[str] = None,
+        remove_pbc: Optional[bool] = False,
     ):
         if not isinstance(files, list):
-            assert(isinstance(files, str))
+            assert isinstance(files, str)
             files = [files]
         if prefix is not None:
             pfiles = [Path(prefix) / Path(ii) for ii in files]
@@ -35,10 +33,9 @@ class FileConfGenerator(ConfGenerator):
         self.fmt = fmt
         self.remove_pbc = remove_pbc
 
-
     def generate(
-            self,
-            type_map,
+        self,
+        type_map,
     ) -> dpdata.MultiSystems:
         ms = dpdata.MultiSystems(type_map=type_map)
         for ff in self.files:
@@ -47,7 +44,6 @@ class FileConfGenerator(ConfGenerator):
                 ss.remove_pbc()
             ms.append(ss)
         return ms
-
 
     @staticmethod
     def args() -> List[Argument]:
@@ -59,7 +55,8 @@ class FileConfGenerator(ConfGenerator):
         return [
             Argument("files", [str, list], optional=False, doc=doc_files),
             Argument("prefix", str, optional=True, default=None, doc=doc_prefix),
-            Argument("fmt", str, optional=True, default='auto', doc=doc_fmt),
-            Argument("remove_pbc", bool, optional=True, default=False, doc=doc_remove_pbc),
+            Argument("fmt", str, optional=True, default="auto", doc=doc_fmt),
+            Argument(
+                "remove_pbc", bool, optional=True, default=False, doc=doc_remove_pbc
+            ),
         ]
-

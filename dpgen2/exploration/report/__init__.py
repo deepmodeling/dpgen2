@@ -9,6 +9,6 @@ from .report_adaptive_lower import (
 )
 
 conv_styles = {
-    "fixed-levels" : ExplorationReportTrustLevels,
-    "adaptive-lower" : ExplorationReportAdaptiveLower,
+    "fixed-levels": ExplorationReportTrustLevels,
+    "adaptive-lower": ExplorationReportAdaptiveLower,
 }

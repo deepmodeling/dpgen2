@@ -15,7 +15,7 @@ from dflow import (
     upload_artifact,
     download_artifact,
     S3Artifact,
-    argo_range
+    argo_range,
 )
 from dflow.python import (
     PythonOPTemplate,
@@ -28,6 +28,7 @@ from dflow.python import (
 import time, shutil, json, jsonpickle
 from typing import Set, List, Tuple
 from pathlib import Path
+
 try:
     from context import dpgen2
 except ModuleNotFoundError:
@@ -40,67 +41,73 @@ from mocked_ops import (
 )
 from dpgen2.op.select_confs import SelectConfs
 
+
 class TestMockedSelectConfs(unittest.TestCase):
-    def setUp(self): 
+    def setUp(self):
         self.conf_selector = MockedConfSelector()
-        self.traj_fmt = 'foo'
+        self.traj_fmt = "foo"
         self.type_map = []
-        self.trajs = [Path('traj.foo'), Path('traj.bar')]
-        self.model_devis = [Path('md.foo'), Path('md.bar')]
+        self.trajs = [Path("traj.foo"), Path("traj.bar")]
+        self.model_devis = [Path("md.foo"), Path("md.bar")]
 
     def tearDown(self):
-        for ii in ['conf.0', 'conf.1']:
-            ii=Path(ii)
+        for ii in ["conf.0", "conf.1"]:
+            ii = Path(ii)
             if ii.is_file():
                 os.remove(ii)
-    
+
     def test(self):
         op = MockedSelectConfs()
-        out = op.execute(OPIO({
-            'conf_selector': self.conf_selector,
-            'type_map' : self.type_map,
-            'trajs' : self.trajs,
-            'model_devis' : self.model_devis,
-        }))
-        confs = out['confs']
-        report = out['report']
+        out = op.execute(
+            OPIO(
+                {
+                    "conf_selector": self.conf_selector,
+                    "type_map": self.type_map,
+                    "trajs": self.trajs,
+                    "model_devis": self.model_devis,
+                }
+            )
+        )
+        confs = out["confs"]
+        report = out["report"]
 
         # self.assertTrue(report.converged())
         self.assertTrue(confs[0].is_file())
         self.assertTrue(confs[1].is_file())
-        self.assertTrue(confs[0].read_text(), 'conf of conf.0')
-        self.assertTrue(confs[1].read_text(), 'conf of conf.1')
-        
+        self.assertTrue(confs[0].read_text(), "conf of conf.0")
+        self.assertTrue(confs[1].read_text(), "conf of conf.1")
+
 
 class TestSelectConfs(unittest.TestCase):
-    def setUp(self): 
+    def setUp(self):
         self.conf_selector = MockedConfSelector()
         self.type_map = []
-        self.trajs = [Path('traj.foo'), Path('traj.bar')]
-        self.model_devis = [Path('md.foo'), Path('md.bar')]
+        self.trajs = [Path("traj.foo"), Path("traj.bar")]
+        self.model_devis = [Path("md.foo"), Path("md.bar")]
 
     def tearDown(self):
-        for ii in ['conf.0', 'conf.1']:
-            ii=Path(ii)
+        for ii in ["conf.0", "conf.1"]:
+            ii = Path(ii)
             if ii.is_file():
                 os.remove(ii)
-    
+
     def test(self):
         op = SelectConfs()
-        out = op.execute(OPIO({
-            'conf_selector': self.conf_selector,
-            'type_map' : self.type_map,
-            'trajs' : self.trajs,
-            'model_devis' : self.model_devis,
-        }))
-        confs = out['confs']
-        report = out['report']
+        out = op.execute(
+            OPIO(
+                {
+                    "conf_selector": self.conf_selector,
+                    "type_map": self.type_map,
+                    "trajs": self.trajs,
+                    "model_devis": self.model_devis,
+                }
+            )
+        )
+        confs = out["confs"]
+        report = out["report"]
 
         # self.assertTrue(report.converged())
         self.assertTrue(confs[0].is_file())
         self.assertTrue(confs[1].is_file())
-        self.assertTrue(confs[0].read_text(), 'conf of conf.0')
-        self.assertTrue(confs[1].read_text(), 'conf of conf.1')
-        
-        
-        
+        self.assertTrue(confs[0].read_text(), "conf of conf.0")
+        self.assertTrue(confs[1].read_text(), "conf of conf.1")

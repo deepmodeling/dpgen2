@@ -2,7 +2,7 @@
     "train_style" : "dp",
     "explore_style" : "lmp",
     "fp_style" : "vasp",
-    
+
     "prep_train_config" : {
     "template_config" : {
         "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/dflow:v1.0",
@@ -24,7 +24,7 @@
     },
     "_comment" : "all"
     },
-    
+
     "run_train_config" : {
     "template_config" : {
         "image" : "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/deepmd-kit-native:2.1.1_cpu",
@@ -89,7 +89,7 @@
     },
     "dflow_config" : {
 	"host" : "http://60.205.112.9:2746",
-	"s3_endpoint" : "60.205.112.9:9000", 
+	"s3_endpoint" : "60.205.112.9:9000",
 	"_catalog_file_name" : "dflow"
     },
     "lebesgue_context_config": {
@@ -99,15 +99,15 @@
             "scass_type": "c16_m32_cpu",
             "program_id": "xxxx",
             "job_type": "container"
-        },        
+        },
         "app_name" : "Default",
         "org_id" : "xxx",
         "user_id" : "xxx",
         "tag" : ""
-    },   
-    
+    },
+
     "_comment" : "upload the dpgen2 package if it is not in the images",
-    "upload_python_package" : "/path/to/dpgen2", 
+    "upload_python_package" : "/path/to/dpgen2",
     "max_numb_iter" :	100,
     "conv_accuracy" :	0.9,
     "fatal_at_max" :	true,
@@ -119,7 +119,7 @@
     "init_data_sys":	[
 	"CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
     ],
-    "sys_configs_prefix": "", 
+    "sys_configs_prefix": "",
     "sys_configs":	[
 	 ["CH4.POSCAR.01x01x01/01.scale_pert/sys-0004-0001/scale*/00000*/POSCAR"],
      ["CH4.POSCAR.01x01x01/01.scale_pert/sys-0004-0001/scale*/00001*/POSCAR"]
@@ -174,7 +174,7 @@
         "save_freq":1000
     }
     },
-    
+
     "_comment":		" 01.model_devi ",
     "_comment": "model_devi_skip: the first x of the recorded frames",
     "model_devi_dt":		0.002,
@@ -186,9 +186,9 @@
 	{ "_idx": 0, "ensemble": "nvt", "nsteps": 300, "press": [1.0], "sys_idx": [0], "temps": [100], "trj_freq": 10 },
     { "_idx": 1, "ensemble": "nvt", "nsteps": 3000, "press": [1.0], "sys_idx": [1], "temps": [100], "trj_freq": 10 }
     ],
-  
 
-    "_comment":		" 02.fp ",    
+
+    "_comment":		" 02.fp ",
     "fp_style":		"vasp",
     "_fp_accurate_threshold":		0.99,
     "_fp_accurate_soft_threshold":	0.95,
@@ -197,10 +197,9 @@
     "_fp_task_min":	5,
     "_fp_pp_path":	"./",
     "fp_pp_files":	{
-        "H": "POTCAR_H", 
+        "H": "POTCAR_H",
         "C": "POTCAR_C"
     },
     "fp_incar":         "./INCAR_methane",
     "_comment":		" that's all "
 }
-

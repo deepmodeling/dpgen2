@@ -1,8 +1,11 @@
 import numpy as np
 from abc import ABC, abstractmethod
 from typing import (
-    Tuple, List, Optional,
+    Tuple,
+    List,
+    Optional,
 )
+
 
 class ExplorationReport(ABC):
     @abstractmethod
@@ -12,9 +15,9 @@ class ExplorationReport(ABC):
 
     @abstractmethod
     def record(
-            self,
-            md_f : List[np.ndarray],
-            md_v : Optional[List[np.ndarray]] = None,
+        self,
+        md_f: List[np.ndarray],
+        md_v: Optional[List[np.ndarray]] = None,
     ):
         r"""Record the model deviations of the trajectories
 
@@ -31,16 +34,16 @@ class ExplorationReport(ABC):
 
     @abstractmethod
     def converged(
-            self, 
-            reports,
-    )->bool:
-        r"""Check if the exploration is converged. 
-        
+        self,
+        reports,
+    ) -> bool:
+        r"""Check if the exploration is converged.
+
         Parameters
         ----------
         reports List[ExplorationReportTrustLevels]
                 Historical reports
-        
+
         Returns
         -------
         converged  bool
@@ -48,14 +51,14 @@ class ExplorationReport(ABC):
         """
         pass
 
-    def no_candidate(self) -> bool: 
+    def no_candidate(self) -> bool:
         r"""If no candidate configuration is found"""
-        return all([ len(ii) == 0 for ii in self.get_candidate_ids()])
+        return all([len(ii) == 0 for ii in self.get_candidate_ids()])
 
     @abstractmethod
     def get_candidate_ids(
-            self, 
-            max_nframes : Optional[int] = None,
+        self,
+        max_nframes: Optional[int] = None,
     ) -> List[List[int]]:
         r"""Get indexes of candidate configurations
 
@@ -67,8 +70,8 @@ class ExplorationReport(ABC):
         Returns
         -------
         idx:    List[List[int]]
-                The frame indices of candidate configurations. 
-                idx[ii][jj] is the frame index of the jj-th candidate of the 
+                The frame indices of candidate configurations.
+                idx[ii][jj] is the frame index of the jj-th candidate of the
                 ii-th trajectory.
         """
         pass
@@ -80,10 +83,10 @@ class ExplorationReport(ABC):
 
     @abstractmethod
     def print(
-            self, 
-            stage_idx : int,
-            idx_in_stage : int,
-            iter_idx : int,
+        self,
+        stage_idx: int,
+        idx_in_stage: int,
+        iter_idx: int,
     ) -> str:
         r"""Print the report"""
         pass

@@ -4,7 +4,7 @@ from abc import (
     abstractmethod,
 )
 from dpgen2.constants import (
-    lmp_conf_name, 
+    lmp_conf_name,
     lmp_input_name,
     model_name_pattern,
 )
@@ -16,7 +16,8 @@ from typing import (
     List,
 )
 
-class ExplorationStage():
+
+class ExplorationStage:
     """
     The exploration stage.
 
@@ -33,12 +34,12 @@ class ExplorationStage():
         self.explor_groups = []
 
     def add_task_group(
-            self,
-            grp : ExplorationTaskGroup,
+        self,
+        grp: ExplorationTaskGroup,
     ):
         """
         Add an exploration group
-        
+
         Parameters
         ----------
         grp: ExplorationTaskGroup
@@ -49,10 +50,10 @@ class ExplorationStage():
         return self
 
     def make_task(
-            self,
-    )->ExplorationTaskGroup:
+        self,
+    ) -> ExplorationTaskGroup:
         """
-        Make the LAMMPS task group.        
+        Make the LAMMPS task group.
 
         Returns
         -------
@@ -68,5 +69,3 @@ class ExplorationStage():
             # lmp_task_grp.add_group(ii.make_task())
             lmp_task_grp += ii.make_task()
         return lmp_task_grp
-
-

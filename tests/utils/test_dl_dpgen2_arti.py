@@ -15,22 +15,29 @@ from dpgen2.entrypoint.watch import (
 
 import mock
 
+
 class MockedArti:
     def __getitem__(
-            self,
-            key,
+        self,
+        key,
     ):
-        return 'arti-' + key
+        return "arti-" + key
+
 
 class MockedDef:
     artifacts = MockedArti()
+
 
 class MockedStep:
     inputs = MockedDef()
     outputs = MockedDef()
 
-class Mockedwf:    
-    keys = ['iter-0--prep-run-train',]
+
+class Mockedwf:
+    keys = [
+        "iter-0--prep-run-train",
+    ]
+
     def query_step(self, key):
         return [MockedStep()]
 
@@ -39,118 +46,246 @@ class Mockedwf:
 
 
 class TestDownloadDpgen2Artifact(unittest.TestCase):
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_train_download(self, mocked_dl):
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000000--prep-run-train', 'foo')
+        download_dpgen2_artifacts(Mockedwf(), "iter-000000--prep-run-train", "foo")
         expected = [
-            mock.call("arti-init_models", path=Path("foo/iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-init_data", path=Path("foo/iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-iter_data", path=Path("foo/iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-scripts", path=Path("foo/iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-models", path=Path("foo/iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("foo/iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-lcurves", path=Path("foo/iter-000000/prep-run-train/outputs"), skip_exists=True),
+            mock.call(
+                "arti-init_models",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_data",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-iter_data",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-scripts",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-lcurves",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
 
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_lmp_download(self, mocked_dl):
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-lmp', None)
+        download_dpgen2_artifacts(Mockedwf(), "iter-000001--prep-run-lmp", None)
         expected = [
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-trajs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-model_devis", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-trajs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-model_devis",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
 
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_fp_download(self, mocked_dl):
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-fp', None)
+        download_dpgen2_artifacts(Mockedwf(), "iter-000001--prep-run-fp", None)
         expected = [
-            mock.call("arti-confs", path=Path("iter-000001/prep-run-fp/inputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
-            mock.call("arti-labeled_data", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-confs",
+                path=Path("iter-000001/prep-run-fp/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-labeled_data",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
 
-
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_fp_download_chkpnt(self, mocked_dl):
-        if Path('iter-000001').exists():
-            shutil.rmtree('iter-000001')
+        if Path("iter-000001").exists():
+            shutil.rmtree("iter-000001")
         Path("iter-000001/prep-run-fp/inputs").mkdir(parents=True, exist_ok=True)
         Path("iter-000001/prep-run-fp/outputs").mkdir(parents=True, exist_ok=True)
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-fp', None, chk_pnt=True)
+        download_dpgen2_artifacts(
+            Mockedwf(), "iter-000001--prep-run-fp", None, chk_pnt=True
+        )
         expected = [
-            mock.call("arti-confs", path=Path("iter-000001/prep-run-fp/inputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
-            mock.call("arti-labeled_data", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-confs",
+                path=Path("iter-000001/prep-run-fp/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-labeled_data",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)        
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
         self.assertTrue(Path("iter-000001/prep-run-fp/inputs/done").is_file())
         self.assertTrue(Path("iter-000001/prep-run-fp/outputs/done").is_file())
 
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--prep-run-fp', None, chk_pnt=True)
+        download_dpgen2_artifacts(
+            Mockedwf(), "iter-000001--prep-run-fp", None, chk_pnt=True
+        )
         expected = [
-            mock.call("arti-confs", path=Path("iter-000001/prep-run-fp/inputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
-            mock.call("arti-labeled_data", path=Path("iter-000001/prep-run-fp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-confs",
+                path=Path("iter-000001/prep-run-fp/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-labeled_data",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)        
-        if Path('iter-000001').exists():
-            shutil.rmtree('iter-000001')
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
+        if Path("iter-000001").exists():
+            shutil.rmtree("iter-000001")
 
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_empty_download(self, mocked_dl):
-        download_dpgen2_artifacts(Mockedwf(), 'iter-000001--foo', None)
-        expected = [
-        ]
+        download_dpgen2_artifacts(Mockedwf(), "iter-000001--foo", None)
+        expected = []
         self.assertEqual(mocked_dl.call_args_list, expected)
 
-        
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_update_finished_steps_exist_steps(self, mocked_dl):
         wf = Mockedwf()
-        wf.keys = ['iter-000000--prep-run-train', 'iter-000001--prep-run-lmp']
-        finished_keys = update_finished_steps(wf, ['iter-000000--prep-run-train'], True)
+        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-lmp"]
+        finished_keys = update_finished_steps(wf, ["iter-000000--prep-run-train"], True)
         self.assertEqual(finished_keys, wf.keys)
         expected = [
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-trajs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-model_devis", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-trajs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-model_devis",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
 
-    @mock.patch('dpgen2.utils.download_dpgen2_artifacts.download_artifact')
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_update_finished_steps_none_steps(self, mocked_dl):
         wf = Mockedwf()
-        wf.keys = ['iter-000000--prep-run-train', 'iter-000001--prep-run-lmp']
+        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-lmp"]
         finished_keys = update_finished_steps(wf, None, True)
         self.assertEqual(finished_keys, wf.keys)
         expected = [
-            mock.call("arti-init_models", path=Path("iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-init_data", path=Path("iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-iter_data", path=Path("iter-000000/prep-run-train/inputs"), skip_exists=True),
-            mock.call("arti-scripts", path=Path("iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-models", path=Path("iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-lcurves", path=Path("iter-000000/prep-run-train/outputs"), skip_exists=True),
-            mock.call("arti-logs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-trajs", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
-            mock.call("arti-model_devis", path=Path("iter-000001/prep-run-lmp/outputs"), skip_exists=True),
+            mock.call(
+                "arti-init_models",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_data",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-iter_data",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-scripts",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-lcurves",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-logs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-trajs",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-model_devis",
+                path=Path("iter-000001/prep-run-lmp/outputs"),
+                skip_exists=True,
+            ),
         ]
-        for ii,jj in zip(mocked_dl.call_args_list, expected):
-            self.assertEqual(ii,jj)
-        
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)

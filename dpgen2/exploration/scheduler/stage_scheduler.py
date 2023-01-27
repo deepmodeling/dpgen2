@@ -11,13 +11,14 @@ from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
 from dpgen2.exploration.selector import ConfSelector
 
+
 class StageScheduler(ABC):
     """
     The scheduler for an exploration stage.
     """
 
     @abstractmethod
-    def converged(self)->bool:
+    def converged(self) -> bool:
         """
         Tell if the stage is converged
 
@@ -29,7 +30,7 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
-    def complete(self)->bool:
+    def complete(self) -> bool:
         """
         Tell if the stage is complete
 
@@ -49,7 +50,7 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
-    def next_iteration(self)->int:
+    def next_iteration(self) -> int:
         """
         Return the index of the next iteration
 
@@ -61,7 +62,7 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
-    def get_reports(self)->List[ExplorationReport]:
+    def get_reports(self) -> List[ExplorationReport]:
         """
         Return all exploration reports
 
@@ -74,14 +75,14 @@ class StageScheduler(ABC):
 
     @abstractmethod
     def plan_next_iteration(
-            self,
-            report : ExplorationReport,
-            trajs : List[Path],
-    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
+        self,
+        report: ExplorationReport,
+        trajs: List[Path],
+    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector]:
         """
         Make the plan for the next iteration of the stage.
 
-        It checks the report of the current and all historical iterations of the stage, and tells if the iterations are converged. If not converged, it will plan the next ieration for the stage. 
+        It checks the report of the current and all historical iterations of the stage, and tells if the iterations are converged. If not converged, it will plan the next ieration for the stage.
 
         Parameters
         ----------
@@ -90,7 +91,7 @@ class StageScheduler(ABC):
         report : ExplorationReport
             The exploration report of this iteration.
         confs: List[Path]
-            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration. 
+            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration.
 
         Returns
         -------

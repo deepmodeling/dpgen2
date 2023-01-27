@@ -2,7 +2,7 @@
 
 One may use dpgen2 through command line interface. A full documentation of the cli is found [here](fullcli)
 
-## Submit a workflow 
+## Submit a workflow
 The dpgen2 workflow can be submitted via the `submit` command
 ```bash
 dpgen2 submit input.json
@@ -11,7 +11,7 @@ where `input.json` is the input script. A guide of writing the script is found [
 When a workflow is submitted, a ID (WFID) of the workflow will be printed for later reference.
 
 ## Check the convergence of a workflow
-The convergence of stages of the workflow can be checked by the `status` command. It prints the indexes of the finished stages, iterations, and the accurate, candidate and failed ratio of explored configurations of each iteration. 
+The convergence of stages of the workflow can be checked by the `status` command. It prints the indexes of the finished stages, iterations, and the accurate, candidate and failed ratio of explored configurations of each iteration.
 ```bash
 $ dpgen2 status input.json WFID
 #   stage  id_stg.    iter.      accu.      cand.      fail.
@@ -20,7 +20,7 @@ $ dpgen2 status input.json WFID
         0        1        1     0.7593     0.2407     0.0000
         0        2        2     0.7778     0.2222     0.0000
         0        3        3     1.0000     0.0000     0.0000
-# Stage    0  converged YES  reached max numb iterations NO 
+# Stage    0  converged YES  reached max numb iterations NO
 # All stages converged
 ```
 
@@ -68,9 +68,8 @@ Each dpgen2 step is assigned a unique key. The keys of the finished steps can be
 
 ## Resubmit a workflow
 
-If a workflow stopped abnormally, one may submit a new workflow with some steps of the old workflow reused. 
+If a workflow stopped abnormally, one may submit a new workflow with some steps of the old workflow reused.
 ```bash
 dpgen2 resubmit input.json WFID --reuse 0-41
 ```
 The steps of workflow WDID 0-41 (0<=id<41, note that 41 is not included) will be reused in the new workflow. The indexes of the steps are printed by `dpgen2 showkey`. In the example, all the steps before the `iter-000001--run-fp-000000` will be used in the new workflow.
-

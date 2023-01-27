@@ -9,7 +9,10 @@ from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,
 )
 from typing import (
-    Optional, Dict, Union, List,
+    Optional,
+    Dict,
+    Union,
+    List,
 )
 from dpgen2.entrypoint.common import (
     global_config_workflow,
@@ -25,13 +28,14 @@ default_watching_keys = [
     "collect-data",
 ]
 
+
 def update_finished_steps(
-        wf,
-        finished_keys : Optional[List[str]] = None,
-        download : Optional[bool] = False,
-        watching_keys : Optional[List[str]] = None,
-        prefix : Optional[str] = None,
-        chk_pnt : bool = False,
+    wf,
+    finished_keys: Optional[List[str]] = None,
+    download: Optional[bool] = False,
+    watching_keys: Optional[List[str]] = None,
+    prefix: Optional[str] = None,
+    chk_pnt: bool = False,
 ):
     wf_keys = wf.query_keys_of_steps()
     wf_keys = matched_step_key(wf_keys, watching_keys)
@@ -40,25 +44,25 @@ def update_finished_steps(
         for kk in wf_keys:
             if not (kk in finished_keys):
                 diff_keys.append(kk)
-    else :
+    else:
         diff_keys = wf_keys
     for kk in diff_keys:
         logging.info(f'steps {kk.ljust(50,"-")} finished')
-        if download :
+        if download:
             download_dpgen2_artifacts(wf, kk, prefix=prefix, chk_pnt=chk_pnt)
             logging.info(f'steps {kk.ljust(50,"-")} downloaded')
     finished_keys = wf_keys
     return finished_keys
-                
+
 
 def watch(
-        workflow_id,
-        wf_config : Optional[Dict] = {},
-        watching_keys : Optional[List] = default_watching_keys,
-        frequency : float = 600.,
-        download : bool = False,
-        prefix : Optional[str] = None,
-        chk_pnt : bool = False,
+    workflow_id,
+    wf_config: Optional[Dict] = {},
+    watching_keys: Optional[List] = default_watching_keys,
+    frequency: float = 600.0,
+    download: bool = False,
+    prefix: Optional[str] = None,
+    chk_pnt: bool = False,
 ):
     wf_config = normalize_args(wf_config)
 
