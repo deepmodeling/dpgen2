@@ -103,16 +103,31 @@ class MockedBar:
         self.outputs = MockedFoo()
         self.outputs.parameters['exploration_scheduler'].value = xx*10
 
+    def __getitem__(self, key):
+        assert key == 'phase'
+        return 'Succeeded'
+
+def _get_step(key=None):
+    if key == 'init--scheduler':
+        return [MockedBar(2)]
+    elif key == 'iter-0--scheduler':
+        return [MockedBar(0)]
+    elif key == 'iter-1--scheduler':
+        return [MockedBar(1)]
+    else:
+        raise RuntimeError('unexpected key')    
+
+class MockedWFInfo:
+    def get_step(self, key=None):
+        return _get_step(key)
+
 class MockedWF:
     def query_step(self,key=None):
-        if key == 'init--scheduler':
-            return [MockedBar(2)]
-        elif key == 'iter-0--scheduler':
-            return [MockedBar(0)]
-        elif key == 'iter-1--scheduler':
-            return [MockedBar(1)]
-        else:
-            raise RuntimeError('unexpected key')
+        return _get_step(key)
+    
+    def query(self):
+        return MockedWFInfo()
+
 
 class TestDflowQuery(unittest.TestCase):
     def test_get_subkey(self):
