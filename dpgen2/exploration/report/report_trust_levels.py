@@ -223,7 +223,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         for tidx,tt in enumerate(self.traj_cand):
             for ff in tt:
                 self.traj_cand_picked.append((tidx, ff))
-        if max_nframes and max_nframes < len(self.traj_cand_picked):
+        if max_nframes is not None and max_nframes < len(self.traj_cand_picked):
             random.shuffle(self.traj_cand_picked)
             ret = sorted(self.traj_cand_picked[:max_nframes])
         else:

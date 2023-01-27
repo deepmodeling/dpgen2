@@ -293,7 +293,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 Candidate frames. A list of tuples: [(traj_idx, frame_idx), ...]
         """
         self.candi_picked = [(ii[0], ii[1]) for ii in self.candi]
-        if max_nframes and max_nframes < len(self.candi_picked):
+        if max_nframes is not None and max_nframes < len(self.candi_picked):
             random.shuffle(self.candi_picked)
             ret = sorted(self.candi_picked[:max_nframes])
         else:
