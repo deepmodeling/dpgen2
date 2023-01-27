@@ -1,18 +1,13 @@
-import sys, subprocess
+from dflow.utils import run_command as dflow_run_command
+from typing import Tuple, Union, List
+
 
 def run_command(
+    cmd: Union[str, List[str]],
+    shell: bool = False,
+) -> Tuple[int, str, str]:
+    return dflow_run_command(
         cmd,
-        shell: bool = False,
-):
-    pp = subprocess.Popen(
-        cmd, 
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.PIPE,
-        shell=shell,
+        raise_error=False,
+        try_bash=shell,
     )
-    out, err = pp.communicate()
-    return_code = pp.poll()
-    out = out.decode(sys.stdin.encoding)
-    err = err.decode(sys.stdin.encoding)
-    return return_code, out, err
-    

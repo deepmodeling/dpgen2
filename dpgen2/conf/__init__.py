@@ -9,6 +9,6 @@ from .file_conf import (
 )
 
 conf_styles = {
-    "alloy" : AlloyConfGenerator,
-    "file" : FileConfGenerator,
+    "alloy": AlloyConfGenerator,
+    "file": FileConfGenerator,
 }

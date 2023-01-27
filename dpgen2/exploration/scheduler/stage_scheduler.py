@@ -9,7 +9,8 @@ from typing import (
 from pathlib import Path
 from dpgen2.exploration.report import ExplorationReport
 from dpgen2.exploration.task import ExplorationTaskGroup, ExplorationStage
-from dpgen2.exploration.selector import ConfSelector, TrustLevel
+from dpgen2.exploration.selector import ConfSelector
+
 
 class StageScheduler(ABC):
     """
@@ -17,7 +18,7 @@ class StageScheduler(ABC):
     """
 
     @abstractmethod
-    def converged(self):
+    def converged(self) -> bool:
         """
         Tell if the stage is converged
 
@@ -29,15 +30,59 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
+    def complete(self) -> bool:
+        """
+        Tell if the stage is complete
+
+        Returns
+        -------
+        converged  bool
+                   if the stage is complete
+        """
+        pass
+
+    @abstractmethod
+    def force_complete(self):
+        """
+        For complete the stage
+
+        """
+        pass
+
+    @abstractmethod
+    def next_iteration(self) -> int:
+        """
+        Return the index of the next iteration
+
+        Returns
+        -------
+        index  int
+                   the index of the next iteration
+        """
+        pass
+
+    @abstractmethod
+    def get_reports(self) -> List[ExplorationReport]:
+        """
+        Return all exploration reports
+
+        Returns
+        -------
+        reports  List[ExplorationReport]
+                   the reports
+        """
+        pass
+
+    @abstractmethod
     def plan_next_iteration(
-            self,
-            report : ExplorationReport,
-            trajs : List[Path],
-    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
+        self,
+        report: ExplorationReport,
+        trajs: List[Path],
+    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector]:
         """
         Make the plan for the next iteration of the stage.
 
-        It checks the report of the current and all historical iterations of the stage, and tells if the iterations are converged. If not converged, it will plan the next ieration for the stage. 
+        It checks the report of the current and all historical iterations of the stage, and tells if the iterations are converged. If not converged, it will plan the next ieration for the stage.
 
         Parameters
         ----------
@@ -46,7 +91,7 @@ class StageScheduler(ABC):
         report : ExplorationReport
             The exploration report of this iteration.
         confs: List[Path]
-            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration. 
+            A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration.
 
         Returns
         -------

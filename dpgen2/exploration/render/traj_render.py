@@ -9,6 +9,7 @@ from typing import (
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from dpgen2.exploration.selector import ConfFilters
 
@@ -16,11 +17,11 @@ if TYPE_CHECKING:
 class TrajRender(ABC):
     @abstractmethod
     def get_model_devi(
-            self,
-            files : List[Path],
+        self,
+        files: List[Path],
     ) -> Tuple[List[np.ndarray], Union[List[np.ndarray], None]]:
         r"""Get model deviations from recording files.
-        
+
         Parameters
         ----------
         files:  List[Path]
@@ -39,17 +40,16 @@ class TrajRender(ABC):
         """
         pass
 
-
     @abstractmethod
     def get_confs(
-            self,
-            traj: List[Path],
-            id_selected: List[List[int]],
-            type_map: Optional[List[str]] = None,
-            conf_filters: Optional["ConfFilters"] = None,
-    ) -> dpdata.MultiSystems :
+        self,
+        traj: List[Path],
+        id_selected: List[List[int]],
+        type_map: Optional[List[str]] = None,
+        conf_filters: Optional["ConfFilters"] = None,
+    ) -> dpdata.MultiSystems:
         r"""Get configurations from trajectory by selection.
-        
+
         Parameters
         ----------
         traj:   List[Path]
@@ -59,7 +59,7 @@ class TrajRender(ABC):
                 from the ii-th trajectory. id_selected[ii] may be an empty list.
         type_map: List[str]
                 The type map.
-        
+
         Returns
         -------
         ms:     dpdata.MultiSystems

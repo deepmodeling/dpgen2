@@ -15,15 +15,15 @@ from .deepmd import (
 )
 
 fp_styles = {
-    "vasp" :  {
-        "inputs" : VaspInputs,
-        "prep" : PrepVasp,
-        "run" : RunVasp,
+    "vasp": {
+        "inputs": VaspInputs,
+        "prep": PrepVasp,
+        "run": RunVasp,
     },
-    "gaussian" : {
-        "inputs" : GaussianInputs,
-        "prep" : PrepGaussian,
-        "run" : RunGaussian,
+    "gaussian": {
+        "inputs": GaussianInputs,
+        "prep": PrepGaussian,
+        "run": RunGaussian,
     },
     "deepmd": {
         "inputs" : DeepmdInputs,

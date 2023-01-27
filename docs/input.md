@@ -16,7 +16,7 @@ For all the dpgen2 commands, one need to provide `dflow2` global configurations.
 	"endpoint" : "address.of.the.s3.sever:port"
     },
 ```
-The `dpgen` simply pass all keys of `"dflow_config"` to [`dflow.config`](https://deepmodeling.com/dflow/dflow.html#dflow.config.set_config) and all keys of `"dflow_s3_config"` to [`dflow.s3_config`](https://deepmodeling.com/dflow/dflow.html#dflow.utils.set_s3_config). 
+The `dpgen` simply pass all keys of `"dflow_config"` to [`dflow.config`](https://deepmodeling.com/dflow/dflow.html#dflow.config.set_config) and all keys of `"dflow_s3_config"` to [`dflow.s3_config`](https://deepmodeling.com/dflow/dflow.html#dflow.utils.set_s3_config).
 
 
 ## The input script for `submit` and `resubmit`
@@ -29,7 +29,7 @@ The definition of the workflow can be provided by the following sections:
 
 ### Inputs
 
-This section provides the inputs to start a dpgen2 workflow. An example for the Al-Mg alloy 
+This section provides the inputs to start a dpgen2 workflow. An example for the Al-Mg alloy
 ```json
 "inputs": {
 	"type_map":		["Al", "Mg"],
@@ -45,7 +45,7 @@ The key `"init_data_sys"` provides the initial training data to kick-off the tra
 
 ### Training
 
-This section defines how a model is trained. 
+This section defines how a model is trained.
 ```json
 "train" : {
 	"type" : "dp",
@@ -57,14 +57,14 @@ This section defines how a model is trained.
 	"_comment" : "all"
 }
 ```
-The `"type" : "dp"` tell the traning method is `"dp"`, i.e. calling [DeePMD-kit](https://github.com/deepmodeling/deepmd-kit) to train DP models. 
-The `"config"` key defines the training configs, see [the full documentation](rundptrainargs). 
-The `"template_script"` provides the template training script in `json` format. 
+The `"type" : "dp"` tell the traning method is `"dp"`, i.e. calling [DeePMD-kit](https://github.com/deepmodeling/deepmd-kit) to train DP models.
+The `"config"` key defines the training configs, see [the full documentation](rundptrainargs).
+The `"template_script"` provides the template training script in `json` format.
 
 
 ### Exploration
 
-This section defines how the configuration space is explored. 
+This section defines how the configuration space is explored.
 ```json
 "explore" : {
 	"type" : "lmp",
@@ -101,7 +101,7 @@ This section defines how the configuration space is explored.
 		{
 		    "_comment" : "stage 1, task group 0",
 		    "type" : "lmp-template",
-		    "lmp" : "template.lammps", "plm" : "template.plumed", 
+		    "lmp" : "template.lammps", "plm" : "template.plumed",
 		    "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [150, 200]},
 		    "conf_idx": [0], "n_sample" : 3
 		}
@@ -117,9 +117,9 @@ This section defines how the configuration space is explored.
 	],
 }
 ```
-The `"type" : "lmp"` means that configurations are explored by LAMMPS DPMD runs. 
-The `"config"` key defines the lmp configs, see [the full documentation](runlmpargs). 
-The `"configurations"` provides the initial configurations (coordinates of atoms and the simulation cell) of the DPMD simulations. It is a list. The elements of the list can be 
+The `"type" : "lmp"` means that configurations are explored by LAMMPS DPMD runs.
+The `"config"` key defines the lmp configs, see [the full documentation](runlmpargs).
+The `"configurations"` provides the initial configurations (coordinates of atoms and the simulation cell) of the DPMD simulations. It is a list. The elements of the list can be
 
 - `list[str]`: The strings provides the path to the configuration files.
 - `dict`: Automatic alloy configuration generator. See [the detailed doc](alloy_configs) of the allowed keys.
@@ -131,7 +131,7 @@ The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`.
 
 ### FP
 
-This section defines the first-principle (FP) calculation . 
+This section defines the first-principle (FP) calculation .
 
 ```json
 "fp" : {
@@ -145,8 +145,8 @@ This section defines the first-principle (FP) calculation .
 	"_comment" : "all"
 }
 ```
-The `"type" : "vasp"` means that first-principles are VASP calculations. 
-The `"config"` key defines the vasp configs, see [the full documentation](runvaspargs). 
+The `"type" : "vasp"` means that first-principles are VASP calculations.
+The `"config"` key defines the vasp configs, see [the full documentation](runvaspargs).
 The `"task_max"` key defines the maximal number of vasp calculations in each dpgen2 iteration.
 The `"pp_files"` and `"incar"` keys provides the pseudopotential files and the template incar file.
 

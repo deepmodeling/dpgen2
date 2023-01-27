@@ -10,18 +10,18 @@ from dflow.python import (
 from pathlib import Path
 from typing import (
     Optional,
-    Tuple, 
-    List, 
-    Set, 
+    Tuple,
+    List,
+    Set,
     Dict,
     Union,
 )
 import numpy as np
 import dpdata
 from dargs import (
-    dargs, 
-    Argument, 
-    Variant, 
+    dargs,
+    Argument,
+    Variant,
     ArgumentEncoder,
 )
 
@@ -35,17 +35,17 @@ from dpgen2.constants import (
 from dpgen2.utils.run_command import run_command
 
 # global static variables
-vasp_conf_name = 'POSCAR'
-vasp_input_name = 'INCAR'
-vasp_pot_name = 'POTCAR'
-vasp_kp_name = 'KPOINTS'
+vasp_conf_name = "POSCAR"
+vasp_input_name = "INCAR"
+vasp_pot_name = "POTCAR"
+vasp_kp_name = "KPOINTS"
 
 
 class PrepVasp(PrepFp):
     def prep_task(
-            self,
-            conf_frame: dpdata.System,
-            vasp_inputs: VaspInputs,
+        self,
+        conf_frame: dpdata.System,
+        vasp_inputs: VaspInputs,
     ):
         r"""Define how one Vasp task is prepared.
 
@@ -57,24 +57,18 @@ class PrepVasp(PrepFp):
             The VaspInputs object handels all other input files of the task.
         """
 
-        conf_frame.to('vasp/poscar', vasp_conf_name)
-        Path(vasp_input_name).write_text(
-            vasp_inputs.incar_template
-        )
+        conf_frame.to("vasp/poscar", vasp_conf_name)
+        Path(vasp_input_name).write_text(vasp_inputs.incar_template)
         # fix the case when some element have 0 atom, e.g. H0O2
-        tmp_frame = dpdata.System(vasp_conf_name, fmt='vasp/poscar')
-        Path(vasp_pot_name).write_text(
-            vasp_inputs.make_potcar(tmp_frame['atom_names'])
-        )
-        Path(vasp_kp_name).write_text(
-            vasp_inputs.make_kpoints(conf_frame['cells'][0])
-        )
+        tmp_frame = dpdata.System(vasp_conf_name, fmt="vasp/poscar")
+        Path(vasp_pot_name).write_text(vasp_inputs.make_potcar(tmp_frame["atom_names"]))
+        Path(vasp_kp_name).write_text(vasp_inputs.make_kpoints(conf_frame["cells"][0]))
 
-        
+
 class RunVasp(RunFp):
     def input_files(self) -> List[str]:
         r"""The mandatory input files to run a vasp task.
-        
+
         Returns
         -------
         files: List[str]
@@ -85,7 +79,7 @@ class RunVasp(RunFp):
 
     def optional_input_files(self) -> List[str]:
         r"""The optional input files to run a vasp task.
-        
+
         Returns
         -------
         files: List[str]
@@ -95,13 +89,13 @@ class RunVasp(RunFp):
         return []
 
     def run_task(
-            self,
-            command : str,
-            out: str,
-            log: str,
+        self,
+        command: str,
+        out: str,
+        log: str,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
-        
+
         Parameters
         ----------
         command: str
@@ -122,19 +116,16 @@ class RunVasp(RunFp):
         log_name = log
         out_name = out
         # run vasp
-        command = ' '.join([command, '>', log_name])
+        command = " ".join([command, ">", log_name])
         ret, out, err = run_command(command, shell=True)
         if ret != 0:
             raise TransientError(
-                'vasp failed\n',
-                'out msg', out, '\n',
-                'err msg', err, '\n'
-            )                    
+                "vasp failed\n", "out msg", out, "\n", "err msg", err, "\n"
+            )
         # convert the output to deepmd/npy format
-        sys = dpdata.LabeledSystem('OUTCAR')
-        sys.to('deepmd/npy', out_name)
+        sys = dpdata.LabeledSystem("OUTCAR")
+        sys.to("deepmd/npy", out_name)
         return out_name, log_name
-
 
     @staticmethod
     def args():
@@ -150,8 +141,15 @@ class RunVasp(RunFp):
         doc_vasp_log = "The log file name of VASP"
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
-            Argument("command", str, optional=True, default='vasp', doc=doc_vasp_cmd),
-            Argument("out", str, optional=True, default=fp_default_out_data_name, doc=doc_vasp_out),
-            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
+            Argument("command", str, optional=True, default="vasp", doc=doc_vasp_cmd),
+            Argument(
+                "out",
+                str,
+                optional=True,
+                default=fp_default_out_data_name,
+                doc=doc_vasp_out,
+            ),
+            Argument(
+                "log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log
+            ),
         ]
-

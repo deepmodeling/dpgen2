@@ -8,45 +8,47 @@ from dpgen2.entrypoint.workflow import (
     execute_workflow_subcommand,
 )
 
+
 class ParserTest(unittest.TestCase):
-    @mock.patch('dflow.Workflow.terminate')
+    @mock.patch("dflow.Workflow.terminate")
     def test_terminate(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("terminate", "foo", config)
         mocked_f.assert_called_with()
 
-    @mock.patch('dflow.Workflow.stop')
+    @mock.patch("dflow.Workflow.stop")
     def test_stop(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("stop", "foo", config)
         mocked_f.assert_called_with()
 
-    @mock.patch('dflow.Workflow.suspend')
+    @mock.patch("dflow.Workflow.suspend")
     def test_suspend(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("suspend", "foo", config)
         mocked_f.assert_called_with()
 
-    @mock.patch('dflow.Workflow.delete')
+    @mock.patch("dflow.Workflow.delete")
     def test_delete(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("delete", "foo", config)
         mocked_f.assert_called_with()
 
-    @mock.patch('dflow.Workflow.retry')
+    @mock.patch("dflow.Workflow.retry")
     def test_retry(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("retry", "foo", config)
         mocked_f.assert_called_with()
 
-    @mock.patch('dflow.Workflow.resume')
+    @mock.patch("dflow.Workflow.resume")
     def test_resume(self, mocked_f):
         config = json.loads(foo_str)
         execute_workflow_subcommand("resume", "foo", config)
         mocked_f.assert_called_with()
 
 
-foo_str = textwrap.dedent("""
+foo_str = textwrap.dedent(
+    """
 {
     "default_step_config" : {
 	"template_config" : {
@@ -86,10 +88,13 @@ foo_str = textwrap.dedent("""
 	    "command": "lmp -var restart 0"
 	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
+        "convergence":{
+                "type": "fixed-levels",
+                "level_f_lo":		0.05,
+                "level_f_hi":		0.50,
+                "conv_accuracy" :	0.9
+        },
 	"configuration_prefix": null, 
 	"configuration":	[
 	],
@@ -112,4 +117,5 @@ foo_str = textwrap.dedent("""
 	"_comment" : "all"
     }
 }
-""")
+"""
+)

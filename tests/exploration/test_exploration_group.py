@@ -4,19 +4,21 @@ import unittest
 
 from typing import Set, List
 from pathlib import Path
+
 try:
     from exploration.context import dpgen2
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from dpgen2.exploration.task import (
-    NPTTaskGroup, 
+    NPTTaskGroup,
     ExplorationStage,
 )
 from dpgen2.constants import lmp_conf_name, lmp_input_name
 from unittest.mock import Mock, patch
 
-in_template_npt = textwrap.dedent("""variable        NSTEPS          equal 1000
+in_template_npt = textwrap.dedent(
+    """variable        NSTEPS          equal 1000
 variable        THERMO_FREQ     equal 10
 variable        DUMP_FREQ       equal 10
 variable        TEMP            equal %f
@@ -48,9 +50,11 @@ fix             1 all npt temp ${TEMP} ${TEMP} ${TAU_T} iso ${PRES} ${PRES} ${TA
 
 timestep        0.001000
 run             ${NSTEPS} upto
-""")
+"""
+)
 
-in_template_nvt = textwrap.dedent("""variable        NSTEPS          equal 1000
+in_template_nvt = textwrap.dedent(
+    """variable        NSTEPS          equal 1000
 variable        THERMO_FREQ     equal 10
 variable        DUMP_FREQ       equal 10
 variable        TEMP            equal %f
@@ -80,8 +84,8 @@ fix             1 all nvt temp ${TEMP} ${TEMP} ${TAU_T}
 
 timestep        0.001000
 run             ${NSTEPS} upto
-""")
-
+"""
+)
 
 
 def swap_element(arg):
@@ -89,14 +93,15 @@ def swap_element(arg):
     arg[1] = bk[0]
     arg[0] = bk[1]
 
+
 class TestCPTGroup(unittest.TestCase):
     # def setUp(self):
     #     self.mock_random = Mock()
 
-    @patch('dpgen2.exploration.task.lmp.lmp_input.random')
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random")
     def test_npt(self, mock_random):
         mock_random.randrange.return_value = 1110
-        self.confs = ['foo', 'bar']
+        self.confs = ["foo", "bar"]
         self.tt = [100, 200]
         self.pp = [1, 10, 100]
         self.numb_model = 3
@@ -104,7 +109,7 @@ class TestCPTGroup(unittest.TestCase):
 
         cpt_group = NPTTaskGroup()
         cpt_group.set_md(
-            self.numb_model, 
+            self.numb_model,
             self.mass_map,
             self.tt,
             self.pp,
@@ -119,30 +124,30 @@ class TestCPTGroup(unittest.TestCase):
         for ii in range(ngroup):
             i_idx = ii // (len(self.tt) * len(self.pp))
             j_idx = (ii - len(self.tt) * len(self.pp) * i_idx) // len(self.pp)
-            k_idx = (ii - len(self.tt) * len(self.pp) * i_idx - len(self.pp) * j_idx)
+            k_idx = ii - len(self.tt) * len(self.pp) * i_idx - len(self.pp) * j_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
+                task_group[ii].files()[lmp_conf_name],
                 self.confs[i_idx],
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_npt % (self.tt[j_idx], self.pp[k_idx]),
             )
 
-    @patch('dpgen2.exploration.task.lmp.lmp_input.random')
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random")
     def test_nvt(self, mock_random):
         mock_random.randrange.return_value = 1110
-        self.confs = ['foo', 'bar']
+        self.confs = ["foo", "bar"]
         self.tt = [100, 200]
         self.numb_model = 3
         self.mass_map = [10, 20]
 
         cpt_group = NPTTaskGroup()
         cpt_group.set_md(
-            self.numb_model, 
+            self.numb_model,
             self.mass_map,
             self.tt,
-            ens = 'nvt',
+            ens="nvt",
         )
         cpt_group.set_conf(
             self.confs,
@@ -155,33 +160,32 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
+                task_group[ii].files()[lmp_conf_name],
                 self.confs[i_idx],
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
-
-    @patch('dpgen2.exploration.task.lmp.lmp_input.random')
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random")
     def test_nvt_sample(self, mock_random):
         mock_random.randrange.return_value = 1110
-        self.confs = ['foo', 'bar']
+        self.confs = ["foo", "bar"]
         self.tt = [100, 200]
         self.numb_model = 3
         self.mass_map = [10, 20]
 
         cpt_group = NPTTaskGroup()
         cpt_group.set_md(
-            self.numb_model, 
+            self.numb_model,
             self.mass_map,
             self.tt,
-            ens = 'nvt',
+            ens="nvt",
         )
         cpt_group.set_conf(
             self.confs,
-            n_sample = 1,
+            n_sample=1,
         )
 
         task_group = cpt_group.make_task()
@@ -191,11 +195,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'foo',
+                task_group[ii].files()[lmp_conf_name],
+                "foo",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -206,11 +210,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'bar',
+                task_group[ii].files()[lmp_conf_name],
+                "bar",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -221,11 +225,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'foo',
+                task_group[ii].files()[lmp_conf_name],
+                "foo",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -236,37 +240,36 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'bar',
+                task_group[ii].files()[lmp_conf_name],
+                "bar",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
-
-    @patch('dpgen2.exploration.task.npt_task_group.random.shuffle')
-    @patch('dpgen2.exploration.task.lmp.lmp_input.random.randrange')
+    @patch("dpgen2.exploration.task.npt_task_group.random.shuffle")
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random.randrange")
     def test_nvt_sample_random(self, mock_randrange, mock_shuffle):
         mock_randrange.return_value = 1110
         mock_shuffle.side_effect = swap_element
-        self.confs = ['foo', 'bar']
+        self.confs = ["foo", "bar"]
         self.tt = [100, 200]
         self.numb_model = 3
         self.mass_map = [10, 20]
 
         cpt_group = NPTTaskGroup()
         cpt_group.set_md(
-            self.numb_model, 
+            self.numb_model,
             self.mass_map,
             self.tt,
-            ens = 'nvt',
+            ens="nvt",
         )
         cpt_group.set_conf(
             self.confs,
-            n_sample = 1,
-            random_sample = True,
-        )            
+            n_sample=1,
+            random_sample=True,
+        )
 
         task_group = cpt_group.make_task()
         ngroup = len(task_group)
@@ -275,11 +278,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'bar',
+                task_group[ii].files()[lmp_conf_name],
+                "bar",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -290,11 +293,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'foo',
+                task_group[ii].files()[lmp_conf_name],
+                "foo",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -305,11 +308,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'bar',
+                task_group[ii].files()[lmp_conf_name],
+                "bar",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -320,11 +323,11 @@ class TestCPTGroup(unittest.TestCase):
             i_idx = ii // len(self.tt)
             j_idx = ii - len(self.tt) * i_idx
             self.assertEqual(
-                task_group[ii].files()[lmp_conf_name], 
-                'foo',
+                task_group[ii].files()[lmp_conf_name],
+                "foo",
             )
             self.assertEqual(
-                task_group[ii].files()[lmp_input_name], 
+                task_group[ii].files()[lmp_input_name],
                 in_template_nvt % (self.tt[j_idx]),
             )
 
@@ -333,7 +336,7 @@ class TestCPTStage(unittest.TestCase):
     # def setUp(self):
     #     self.mock_random = Mock()
 
-    @patch('dpgen2.exploration.task.lmp.lmp_input.random')
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random")
     def test(self, mock_random):
         mock_random.randrange.return_value = 1110
         self.numb_model = 3
@@ -343,54 +346,53 @@ class TestCPTStage(unittest.TestCase):
         cpt_group_p.set_md(
             self.numb_model,
             self.mass_map,
-            [100.],
-            [1., 10.],
+            [100.0],
+            [1.0, 10.0],
         )
         cpt_group_p.set_conf(
-            ['foo'],
+            ["foo"],
         )
 
         cpt_group_t = NPTTaskGroup()
         cpt_group_t.set_md(
-            self.numb_model, 
+            self.numb_model,
             self.mass_map,
-            [200., 300.],
-            ens = 'nvt',
+            [200.0, 300.0],
+            ens="nvt",
         )
         cpt_group_t.set_conf(
-            ['bar'],
+            ["bar"],
         )
 
         stage = ExplorationStage()
         stage.add_task_group(cpt_group_p).add_task_group(cpt_group_t)
 
         task_group = stage.make_task()
-        
+
         ngroup = len(task_group)
         self.assertEqual(ngroup, 4)
 
         ii = 0
-        self.assertEqual(task_group[ii].files()[lmp_conf_name], 'foo')
+        self.assertEqual(task_group[ii].files()[lmp_conf_name], "foo")
         self.assertEqual(
-            task_group[ii].files()[lmp_input_name], 
-            in_template_npt % (100., 1.),
+            task_group[ii].files()[lmp_input_name],
+            in_template_npt % (100.0, 1.0),
         )
-        ii+=1
-        self.assertEqual(task_group[ii].files()[lmp_conf_name], 'foo')
+        ii += 1
+        self.assertEqual(task_group[ii].files()[lmp_conf_name], "foo")
         self.assertEqual(
-            task_group[ii].files()[lmp_input_name], 
-            in_template_npt % (100., 10.),
+            task_group[ii].files()[lmp_input_name],
+            in_template_npt % (100.0, 10.0),
         )
-        ii+=1
-        self.assertEqual(task_group[ii].files()[lmp_conf_name], 'bar')
+        ii += 1
+        self.assertEqual(task_group[ii].files()[lmp_conf_name], "bar")
         self.assertEqual(
-            task_group[ii].files()[lmp_input_name], 
-            in_template_nvt % (200.),
+            task_group[ii].files()[lmp_input_name],
+            in_template_nvt % (200.0),
         )
-        ii+=1
-        self.assertEqual(task_group[ii].files()[lmp_conf_name], 'bar')
+        ii += 1
+        self.assertEqual(task_group[ii].files()[lmp_conf_name], "bar")
         self.assertEqual(
-            task_group[ii].files()[lmp_input_name], 
-            in_template_nvt % (300.),
+            task_group[ii].files()[lmp_input_name],
+            in_template_nvt % (300.0),
         )
-    
