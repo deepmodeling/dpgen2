@@ -2,12 +2,7 @@
 from dflow.python import (
     TransientError,
 )
-from typing import (
-    Tuple,
-    List,
-    Any,
-    Optional
-)
+from typing import Tuple, List, Any, Optional
 import dpdata
 from dargs import (
     dargs,
@@ -82,11 +77,11 @@ class RunDeepmd(RunFp):
         return []
 
     def run_task(
-            self,
-            teacher_model_path: BinaryFileInput,
-            out: str,
-            log: str,
-            type_map: Optional[List[str]] = None,
+        self,
+        teacher_model_path: BinaryFileInput,
+        out: str,
+        log: str,
+        type_map: Optional[List[str]] = None,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
 
@@ -120,9 +115,10 @@ class RunDeepmd(RunFp):
 
         return out_name, log_name
 
-
-    def _get_dp_model(self, teacher_model_path: BinaryFileInput, type_map: Optional[List[str]]):
-        from deepmd.infer import DeepPot # type: ignore
+    def _get_dp_model(
+        self, teacher_model_path: BinaryFileInput, type_map: Optional[List[str]]
+    ):
+        from deepmd.infer import DeepPot  # type: ignore
 
         teacher_model_path.save_as_file(deepmd_teacher_model)
         dp = DeepPot(deepmd_teacher_model)
