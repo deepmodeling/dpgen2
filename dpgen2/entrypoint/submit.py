@@ -367,11 +367,10 @@ def workflow_concurrent_learning(
             else config["train"].get("init_models_paths", None)
         )
     elif train_style == "dp-dist" and not old_style:
-        init_models_paths = (
-            config["train"]["student_model_path"]
-            if "student_model_path" in config["train"]
-            else None)
+        init_models_paths = [config["train"].get("student_model_path", None)]
         config["train"]["numb_models"] = 1
+    else:
+        raise RuntimeError(f'unknown params, train_style: {train_style}, old_style: {old_style}')
 
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]

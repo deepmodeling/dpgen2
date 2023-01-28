@@ -18,7 +18,7 @@ from pathlib import Path
 import warnings
 
 class BinaryFileInput:
-    def __init__(self, path: Union[str, Path], ext: str = None) -> None:
+    def __init__(self, path: Union[str, Path], ext: Optional[str] = None) -> None:
         path = str(path)
         assert os.path.exists(path), f"No such file: {str(path)}"
         if ext and not ext.startswith('.'): ext = '.' + ext

@@ -100,7 +100,7 @@ class RunLmp(OP):
         config = ip["config"] if ip["config"] is not None else {}
         config = RunLmp.normalize_config(config)
         command = config["command"]
-        teacher_model: Optional(BinaryFileInput) = config["teacher_model_path"]
+        teacher_model: Optional[BinaryFileInput] = config["teacher_model_path"]
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         models = ip["models"]
