@@ -359,7 +359,7 @@ def workflow_concurrent_learning(
         else config["step_configs"]["cl_step_config"]
     )
     upload_python_packages = config.get("upload_python_packages", None)
-    
+
     if train_style == "dp":
         init_models_paths = (
             config.get("training_iter0_model_path", None)
@@ -370,7 +370,8 @@ def workflow_concurrent_learning(
         init_models_paths = (
             config["train"]["student_model_path"]
             if "student_model_path" in config["train"]
-            else None)
+            else None
+        )
         config["train"]["numb_models"] = 1
 
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
@@ -414,9 +415,12 @@ def workflow_concurrent_learning(
         config.get("lmp_config", {}) if old_style else config["explore"]["config"]
     )
     if "teacher_model_path" in lmp_config:
-        assert os.path.exists(lmp_config["teacher_model_path"]), \
-            f"No such file: {lmp_config['teacher_model_path']}"
-        lmp_config["teacher_model_path"] = BinaryFileInput(lmp_config["teacher_model_path"], "pb")
+        assert os.path.exists(
+            lmp_config["teacher_model_path"]
+        ), f"No such file: {lmp_config['teacher_model_path']}"
+        lmp_config["teacher_model_path"] = BinaryFileInput(
+            lmp_config["teacher_model_path"], "pb"
+        )
 
     fp_config = config.get("fp_config", {}) if old_style else {}
     if old_style:
@@ -436,12 +440,15 @@ def workflow_concurrent_learning(
     fp_config["inputs"] = fp_inputs
     fp_config["run"] = config["fp"]["run_config"]
     if fp_style == "deepmd":
-        assert "teacher_model_path" in fp_config["run"], \
-            f"Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
-        assert os.path.exists(fp_config["run"]["teacher_model_path"]), \
-            f"No such file: {fp_config['run']['teacher_model_path']}"
-        fp_config["run"]["teacher_model_path"] = \
-            BinaryFileInput(fp_config["run"]["teacher_model_path"], "pb")
+        assert (
+            "teacher_model_path" in fp_config["run"]
+        ), f"Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
+        assert os.path.exists(
+            fp_config["run"]["teacher_model_path"]
+        ), f"No such file: {fp_config['run']['teacher_model_path']}"
+        fp_config["run"]["teacher_model_path"] = BinaryFileInput(
+            fp_config["run"]["teacher_model_path"], "pb"
+        )
 
     init_data_prefix = (
         config.get("init_data_prefix")
