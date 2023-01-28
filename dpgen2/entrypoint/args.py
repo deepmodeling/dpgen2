@@ -21,12 +21,23 @@ def dp_dist_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
     doc_config = "Configuration of training"
     doc_template_script = "File names of the template training script. It can be a `List[Dict]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `Dict`, the models share the same template training script. "
-    
+
     return [
-        Argument("config", dict, RunDPTrain.training_args(), optional=True, default=RunDPTrain.normalize_config({}), doc=doc_config),
+        Argument(
+            "config",
+            dict,
+            RunDPTrain.training_args(),
+            optional=True,
+            default=RunDPTrain.normalize_config({}),
+            doc=doc_config,
+        ),
         Argument("numb_models", int, optional=True, default=4, doc=doc_numb_models),
-        Argument("template_script", [list,str], optional=False, doc=doc_template_script),
-        Argument("student_model_path", [list,str], optional=False, doc=doc_template_script),
+        Argument(
+            "template_script", [list, str], optional=False, doc=doc_template_script
+        ),
+        Argument(
+            "student_model_path", [list, str], optional=False, doc=doc_template_script
+        ),
     ]
 
 
