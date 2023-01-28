@@ -1,0 +1,187 @@
+{
+    "bohrium_config": {
+        "username": "",
+        "password": "",
+        "project_id": 1,
+        "host": "https://workflow.dp.tech/",
+        "k8s_api_server": "https://workflows.deepmodeling.com",
+        "repo_key": "oss-bohrium",
+        "_comment": "all"
+    },
+    "default_step_config": {
+        "template_config": {
+            "image": "",
+            "_comment": "all"
+        },
+        "executor": {
+            "type": "dispatcher",
+            "image_pull_policy": "IfNotPresent",
+            "machine_dict": {
+                "batch_type": "Bohrium",
+                "context_type": "Bohrium",
+                "remote_profile": {
+                    "input_data": {
+                        "job_type": "container",
+                        "platform": "ali",
+                        "scass_type": "c2_m4_cpu"
+                    }
+                }
+            }
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "upload_python_packages": [
+        "/path/to/dpgen2"
+    ],
+    "inputs": {
+        "type_map": [
+            "H",
+            "C"
+        ],
+        "mass_map": [
+            4,
+            12
+        ],
+        "init_data_prefix": null,
+        "init_data_sys": [
+            "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+        ],
+        "_comment": "all"
+    },
+    "train": {
+        "student_model_path": "student_model.pb",
+        "type": "dp-dist",
+        "config": {
+            "init_model_policy": "yes",
+            "init_model_old_ratio": 0.5,
+            "init_model_numb_steps": 200000,
+            "init_model_start_lr": 1e-4,
+            "init_model_start_pref_e": 0.25,
+            "init_model_start_pref_f": 100,
+            "_comment": "all"
+        },
+        "template_script": "train.json",
+        "_comment": "all"
+    },
+    "fp" : {
+        "type" :	"deepmd",
+        "task_max":	2,
+        "run_config" : {
+            "teacher_model_path": "teacher_model.pb",
+            "type_map": ["H", "C"]
+        },
+        "inputs_config" : {},
+        "_comment" : "all"
+    },
+    "explore": {
+        "type": "lmp",
+        "config": {
+            "teacher_model_path": "teacher_model.pb",
+            "command": "lmp -var restart 0"
+        },
+        "convergence": {
+            "type" :	"fixed-levels",
+            "conv_accuracy" :	0.9,
+            "level_f_lo":	0.05,
+            "level_f_hi":	0.50,
+            "_comment" : "all"
+        },
+        "max_numb_iter": 2,
+        "fatal_at_max": false,
+        "output_nopbc": false,
+        "configuration_prefix": null,
+        "configurations": [
+            {
+                "type": "file",
+                "files": [
+                    "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+                ],
+                "fmt": "deepmd/npy"
+            }
+        ],
+        "stages": [
+            [
+            {
+                "type" : "lmp-md",
+                "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+                "conf_idx": [0], "n_sample" : 3
+            },
+            {
+                "type" : "lmp-template",
+                "lmp" : "template.lammps", "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [100, 200]},
+                "conf_idx": [0], "n_sample" : 3
+            }
+            ]
+        ],
+        "_comment": "all"
+    }
+}
