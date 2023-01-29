@@ -117,7 +117,7 @@ class RunDeepmd(RunFp):
     def _get_dp_model(self, teacher_model_path: BinaryFileInput):
         from deepmd.infer import DeepPot  # type: ignore
 
-        teacher_model_path.save_as_file()
+        teacher_model_path.save_as_file(deepmd_teacher_model)
         dp = DeepPot(deepmd_teacher_model)
 
         type_map_teacher = dp.get_type_map()
