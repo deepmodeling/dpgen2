@@ -78,50 +78,52 @@ class TestRunDeepmd(unittest.TestCase):
         run_deepmd = RunDeepmd()
         out_name = self.task_path / "test_out"
         self.system.to("deepmd/npy", deepmd_input_path)
-        
+
         # test1
         self.assertRaisesRegex(
             AssertionError,
             "Error: the type map of system",
             run_deepmd._prep_input,
             ["O"],
-            out_name
+            out_name,
         )
-        
+
         # test2
         self.assertRaisesRegex(
             AssertionError,
             "Error: the type map of system",
             run_deepmd._prep_input,
             ["H"],
-            out_name
+            out_name,
         )
-        
+
         # test3
-        if out_name.is_dir(): shutil.rmtree(out_name)
+        if out_name.is_dir():
+            shutil.rmtree(out_name)
         run_deepmd._prep_input(["H", "O"], out_name)
         self.assertTrue(out_name.is_dir())
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(out_name)
         self.assertTrue(ss["atom_names"] == ["H", "O"])
-        
-        #test4
-        if out_name.is_dir(): shutil.rmtree(out_name)
+
+        # test4
+        if out_name.is_dir():
+            shutil.rmtree(out_name)
         run_deepmd._prep_input(["O", "H"], out_name)
         self.assertTrue(out_name.is_dir())
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(out_name)
         self.assertTrue(ss["atom_names"] == ["O", "H"])
-        
-        #test5
-        if out_name.is_dir(): shutil.rmtree(out_name)
+
+        # test5
+        if out_name.is_dir():
+            shutil.rmtree(out_name)
         run_deepmd._prep_input(["O", "C", "H", "N"], out_name)
         self.assertTrue(out_name.is_dir())
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(out_name)
         self.assertTrue(ss["atom_names"] == ["O", "H"])
-        
-        
+
     def test_get_dp_model(self):
         # from deepmd.infer import DeepPot
         deepmd = Mock()
@@ -170,7 +172,9 @@ class TestRunDeepmd(unittest.TestCase):
         self._set_mock_dp_eval(dp)
         with patch.dict("sys.modules", modules):
             prep_deepmd.run_task(
-                self.teacher_model, str(out_name), str(log_name),
+                self.teacher_model,
+                str(out_name),
+                str(log_name),
             )
             self.assertTrue(log_name.is_file())
             self.assertTrue(out_name.is_dir())

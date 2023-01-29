@@ -114,9 +114,7 @@ class RunDeepmd(RunFp):
 
         return out_name, log_name
 
-    def _get_dp_model(
-        self, teacher_model_path: BinaryFileInput
-    ):
+    def _get_dp_model(self, teacher_model_path: BinaryFileInput):
         from deepmd.infer import DeepPot  # type: ignore
 
         teacher_model_path.save_as_file()
@@ -130,22 +128,22 @@ class RunDeepmd(RunFp):
     def _prep_input(self, type_map_teacher, out_name):
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(deepmd_input_path)
-        type_map = ss['atom_names']
-        assert set(type_map).issubset(set(type_map_teacher)), \
-            f"Error: the type map of system ({type_map}) is not subset of " + \
-            f"the type map ({type_map_teacher}) of the teacher model."
-        
+        type_map = ss["atom_names"]
+        assert set(type_map).issubset(set(type_map_teacher)), (
+            f"Error: the type map of system ({type_map}) is not subset of "
+            + f"the type map ({type_map_teacher}) of the teacher model."
+        )
+
         # make sure the order of elements in sys_type_map
-        #is the same as that in type_map_teacher
-        sys_type_map = [ele for ele in type_map_teacher
-                        if ele in set(type_map)]
-        
+        # is the same as that in type_map_teacher
+        sys_type_map = [ele for ele in type_map_teacher if ele in set(type_map)]
+
         ss.apply_type_map(sys_type_map)
         ss.to("deepmd/npy", out_name)
 
     def _dp_infer(self, dp, type_map_teacher, out_name):
-        self._prep_input(type_map_teacher, out_name)    
-    
+        self._prep_input(type_map_teacher, out_name)
+
         ss = dpdata.System()
         ss = ss.from_deepmd_npy(out_name, type_map=type_map_teacher)
 
