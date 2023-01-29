@@ -14,6 +14,13 @@ import dflow
 
 
 class TestStepConfig(unittest.TestCase):
+    def setUp(self):
+        self.DFLOW_DEBUG = os.environ.pop('DFLOW_DEBUG', None)
+
+    def tearDown(self):
+        if self.DFLOW_DEBUG:
+            os.environ['DFLOW_DEBUG'] = self.DFLOW_DEBUG
+
     def test_success(self):
         idict = {
             "template_config": {
