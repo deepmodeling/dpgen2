@@ -106,7 +106,7 @@ class RunLmp(OP):
         model_files = [Path(ii).resolve() for ii in models]
         work_dir = Path(task_name)
 
-        if teacher_model:
+        if teacher_model is not None:
             assert (
                 len(model_files) == 1
             ), "One model is enough in knowledge distillation"
@@ -123,7 +123,7 @@ class RunLmp(OP):
                 mname = model_name_pattern % (idx)
                 Path(mname).symlink_to(mm)
 
-            if teacher_model:
+            if teacher_model is not None:
                 add_teacher_model(lmp_input_name)
 
             # run lmp

@@ -81,7 +81,6 @@ class RunDeepmd(RunFp):
         teacher_model_path: BinaryFileInput,
         out: str,
         log: str,
-        type_map: Optional[List[str]] = None,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
 
@@ -102,10 +101,10 @@ class RunDeepmd(RunFp):
         log_name = log
         out_name = out
 
-        dp, type_map = self._get_dp_model(teacher_model_path, type_map)
+        dp, type_map_teacher = self._get_dp_model(teacher_model_path)
 
         # Run deepmd
-        self._dp_infer(dp, type_map, out_name)
+        self._dp_infer(dp, type_map_teacher, out_name)
 
         ret, out, err = run_command(f'echo "job finished!" > {log_name}', shell=True)
         if ret != 0:
@@ -116,31 +115,39 @@ class RunDeepmd(RunFp):
         return out_name, log_name
 
     def _get_dp_model(
-        self, teacher_model_path: BinaryFileInput, type_map: Optional[List[str]]
+        self, teacher_model_path: BinaryFileInput
     ):
         from deepmd.infer import DeepPot  # type: ignore
 
-        teacher_model_path.save_as_file(deepmd_teacher_model)
+        teacher_model_path.save_as_file()
         dp = DeepPot(deepmd_teacher_model)
 
-        if type_map is None:
-            assert (
-                dp.model_type == "ener"
-            ), 'type_map should be defined or model type should be "ener"'
-            type_map = dp.get_type_map()
-        elif dp.model_type == "ener":
-            # models with model_type != "ener" do not have function *get_type_map*
-            assert (
-                type_map == dp.get_type_map()
-            ), f"type_map({type_map}) and deepmd model type_map{dp.get_type_map()} are not the same!"
+        type_map_teacher = dp.get_type_map()
 
         os.remove(deepmd_teacher_model)
-        return dp, type_map
+        return dp, type_map_teacher
 
-    def _dp_infer(self, dp, type_map, out_name):
+    def _prep_input(self, type_map_teacher, out_name):
         ss = dpdata.System()
-        ss = ss.from_deepmd_npy(deepmd_input_path, type_map=type_map)
+        ss = ss.from_deepmd_npy(deepmd_input_path)
+        type_map = ss['atom_names']
+        assert set(type_map).issubset(set(type_map_teacher)), \
+            f"Error: the type map of system ({type_map}) is not subset of " + \
+            f"the type map ({type_map_teacher}) of the teacher model."
+        
+        # make sure the order of elements in sys_type_map
+        #is the same as that in type_map_teacher
+        sys_type_map = [ele for ele in type_map_teacher
+                        if ele in set(type_map)]
+        
+        ss.apply_type_map(sys_type_map)
         ss.to("deepmd/npy", out_name)
+
+    def _dp_infer(self, dp, type_map_teacher, out_name):
+        self._prep_input(type_map_teacher, out_name)    
+    
+        ss = dpdata.System()
+        ss = ss.from_deepmd_npy(out_name, type_map=type_map_teacher)
 
         coord_npy_path_list = list(Path(out_name).glob("*/coord.npy"))
         assert len(coord_npy_path_list) == 1, coord_npy_path_list
@@ -176,7 +183,6 @@ class RunDeepmd(RunFp):
         doc_deepmd_teacher_model = (
             "The path of teacher model, which can be loaded by deepmd.infer.DeepPot"
         )
-        doc_deepmd_type_map = 'The type map of teacher model. It can be set automatically when the type of teacher model is "ener", otherwise it should be provided by the user.'
         doc_deepmd_log = "The log file name of dp"
         doc_deepmd_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
@@ -185,9 +191,6 @@ class RunDeepmd(RunFp):
                 [str, BinaryFileInput],
                 optional=False,
                 doc=doc_deepmd_teacher_model,
-            ),
-            Argument(
-                "type_map", list, optional=True, default=None, doc=doc_deepmd_type_map
             ),
             Argument(
                 "out",

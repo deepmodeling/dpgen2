@@ -51,11 +51,11 @@ class TestRunDeepmd(unittest.TestCase):
     def setUp(self):
         self.system = dpdata.System(
             data={
-                "atom_names": ["H"],
-                "atom_numbs": [1],
-                "atom_types": np.zeros(1, dtype=int),
+                "atom_names": ["H", "O"],
+                "atom_numbs": [1, 1],
+                "atom_types": np.array([0, 1]),
                 "cells": np.eye(3).reshape(1, 3, 3),
-                "coords": np.zeros((1, 1, 3)),
+                "coords": np.zeros((1, 2, 3)),
                 "orig": np.zeros(3),
             }
         )
@@ -74,6 +74,54 @@ class TestRunDeepmd(unittest.TestCase):
         if Path(deepmd_teacher_model).is_dir():
             shutil.rmtree(deepmd_teacher_model)
 
+    def test_prep_input(self):
+        run_deepmd = RunDeepmd()
+        out_name = self.task_path / "test_out"
+        self.system.to("deepmd/npy", deepmd_input_path)
+        
+        # test1
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: the type map of system",
+            run_deepmd._prep_input,
+            ["O"],
+            out_name
+        )
+        
+        # test2
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: the type map of system",
+            run_deepmd._prep_input,
+            ["H"],
+            out_name
+        )
+        
+        # test3
+        if out_name.is_dir(): shutil.rmtree(out_name)
+        run_deepmd._prep_input(["H", "O"], out_name)
+        self.assertTrue(out_name.is_dir())
+        ss = dpdata.System()
+        ss = ss.from_deepmd_npy(out_name)
+        self.assertTrue(ss["atom_names"] == ["H", "O"])
+        
+        #test4
+        if out_name.is_dir(): shutil.rmtree(out_name)
+        run_deepmd._prep_input(["O", "H"], out_name)
+        self.assertTrue(out_name.is_dir())
+        ss = dpdata.System()
+        ss = ss.from_deepmd_npy(out_name)
+        self.assertTrue(ss["atom_names"] == ["O", "H"])
+        
+        #test5
+        if out_name.is_dir(): shutil.rmtree(out_name)
+        run_deepmd._prep_input(["O", "C", "H", "N"], out_name)
+        self.assertTrue(out_name.is_dir())
+        ss = dpdata.System()
+        ss = ss.from_deepmd_npy(out_name)
+        self.assertTrue(ss["atom_names"] == ["O", "H"])
+        
+        
     def test_get_dp_model(self):
         # from deepmd.infer import DeepPot
         deepmd = Mock()
@@ -83,40 +131,12 @@ class TestRunDeepmd(unittest.TestCase):
         with patch.dict("sys.modules", modules):
             run_deepmd = RunDeepmd()
             # test1
-            dp.model_type = "ener"
             dp.get_type_map.return_value = ["H", "C"]
-            _dp, _type_map = run_deepmd._get_dp_model(self.teacher_model, None)
+            _dp, _type_map = run_deepmd._get_dp_model(self.teacher_model)
             self.assertTrue(_dp is dp)
             self.assertEqual(_type_map, ["H", "C"])
             deepmd.infer.DeepPot.assert_called_once_with(deepmd_teacher_model)
-
-            # test2
-            dp.model_type = ""
-            self.assertRaisesRegex(
-                AssertionError,
-                "type_map should be",
-                run_deepmd._get_dp_model,
-                self.teacher_model,
-                None,
-            )
-
-            # test3
-            dp.model_type = "ener"
-            dp.get_type_map.return_value = ["H", "C"]
-            self.assertRaisesRegex(
-                AssertionError,
-                "not the same!",
-                run_deepmd._get_dp_model,
-                self.teacher_model,
-                ["H"],
-            )
-
-            # test4
-            deepmd.infer.DeepPot.reset_mock()
-            dp.model_type = ""
-            dp.get_type_map.return_value = ["H", "C"]
-            _dp, _type_map = run_deepmd._get_dp_model(self.teacher_model, ["C"])
-            dp.get_type_map.assert_not_called()
+            self.assertFalse(Path(deepmd_teacher_model).is_file())
 
     def test_dp_infer(self):
         self.system.to("deepmd/npy", deepmd_input_path)
@@ -127,7 +147,7 @@ class TestRunDeepmd(unittest.TestCase):
         self._set_mock_dp_eval(dp)
 
         run_deepmd = RunDeepmd()
-        run_deepmd._dp_infer(dp, ["H"], str(out_name))
+        run_deepmd._dp_infer(dp, ["H", "O"], str(out_name))
 
     def test_run_task(self):
         # run prep_task
@@ -148,10 +168,9 @@ class TestRunDeepmd(unittest.TestCase):
         deepmd.infer.DeepPot = Mock()
         dp = deepmd.infer.DeepPot.return_value
         self._set_mock_dp_eval(dp)
-        dp.model_type == "ener"
         with patch.dict("sys.modules", modules):
             prep_deepmd.run_task(
-                self.teacher_model, str(out_name), str(log_name), ["H"]
+                self.teacher_model, str(out_name), str(log_name),
             )
             self.assertTrue(log_name.is_file())
             self.assertTrue(out_name.is_dir())
@@ -160,12 +179,14 @@ class TestRunDeepmd(unittest.TestCase):
     def _set_mock_dp_eval(self, dp):
         energy, force, virial_foce = self._get_labels()
         dp.eval.return_value = (energy, force, virial_foce)
+        dp.get_type_map.return_value = ["O", "H"]
 
     def _check_output_system(self, path):
         ss = dpdata.LabeledSystem(path, fmt="deepmd/npy")
         energy, force, virial_foce = self._get_labels()
 
-        self.assertTrue(ss["atom_numbs"] == [1])
+        self.assertTrue(ss["atom_numbs"] == [1, 1])
+        self.assertTrue(np.allclose(ss["atom_types"], np.array([1, 0])))
         self.assertTrue(np.allclose(ss["energies"], energy))
         self.assertTrue(np.allclose(ss["forces"], force))
         self.assertTrue(np.allclose(ss["virials"], virial_foce))
