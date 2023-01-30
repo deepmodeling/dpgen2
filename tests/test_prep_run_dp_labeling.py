@@ -72,7 +72,7 @@ class TestRunDeepmd(unittest.TestCase):
         shutil.rmtree(deepmd_input_path, ignore_errors=True)
 
         shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
-        
+
         shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
 
     def test_prep_input(self):
@@ -82,42 +82,36 @@ class TestRunDeepmd(unittest.TestCase):
 
         # test1
         self.assertRaisesRegex(
-            FatalError,
-            "is not subset",
-            run_deepmd._prep_input,
-            ["O"]
+            FatalError, "is not subset", run_deepmd._prep_input, ["O"]
         )
 
         # test2
         self.assertRaisesRegex(
-            FatalError,
-            "is not subset",
-            run_deepmd._prep_input,
-            ["H"]
+            FatalError, "is not subset", run_deepmd._prep_input, ["H"]
         )
 
         # test3
         shutil.rmtree(out_name, ignore_errors=True)
         shutil.rmtree(deepmd_temp_path, ignore_errors=True)
         run_deepmd._prep_input(["H", "O"])
-        
-        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
+
+        ss = dpdata.System(deepmd_temp_path, fmt="deepmd/npy")
         self.assertTrue(ss["atom_names"] == ["H", "O"])
 
         # test4
         shutil.rmtree(out_name, ignore_errors=True)
         shutil.rmtree(deepmd_temp_path, ignore_errors=True)
         run_deepmd._prep_input(["O", "H"])
-        
-        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
+
+        ss = dpdata.System(deepmd_temp_path, fmt="deepmd/npy")
         self.assertTrue(ss["atom_names"] == ["O", "H"])
 
         # test5
         shutil.rmtree(out_name, ignore_errors=True)
         shutil.rmtree(deepmd_temp_path, ignore_errors=True)
         run_deepmd._prep_input(["O", "C", "H", "N"])
-        
-        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
+
+        ss = dpdata.System(deepmd_temp_path, fmt="deepmd/npy")
         self.assertTrue(ss["atom_names"] == ["O", "H"])
 
     def test_get_dp_model(self):

@@ -1,8 +1,5 @@
 """Prep and Run Gaussian tasks."""
-from dflow.python import (
-    TransientError,
-    FatalError
-)
+from dflow.python import TransientError, FatalError
 from typing import Tuple, List, Any, Optional
 import dpdata
 from dargs import (
@@ -126,15 +123,15 @@ class RunDeepmd(RunFp):
         return dp, type_map_teacher
 
     def _prep_input(self, type_map_teacher):
-        ss = dpdata.System(deepmd_input_path, fmt='deepmd/npy')
+        ss = dpdata.System(deepmd_input_path, fmt="deepmd/npy")
         conf_type_map = ss["atom_names"]
-        
+
         if not set(conf_type_map).issubset(set(type_map_teacher)):
-            err_message = f"the type map of system ({conf_type_map}) is not subset of " + \
-                          f"the type map of the teacher model ({type_map_teacher})."
-            raise FatalError(
-                "deepmd labeling failed\n", "err msg", err_message, "\n"
+            err_message = (
+                f"the type map of system ({conf_type_map}) is not subset of "
+                + f"the type map of the teacher model ({type_map_teacher})."
             )
+            raise FatalError("deepmd labeling failed\n", "err msg", err_message, "\n")
 
         # make sure the order of elements in sys_type_map
         # is the same as that in type_map_teacher
@@ -147,7 +144,9 @@ class RunDeepmd(RunFp):
     def _dp_infer(self, dp, type_map_teacher, out_name):
         conf_type_map, temp_type_map = self._prep_input(type_map_teacher)
 
-        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy', type_map=type_map_teacher)
+        ss = dpdata.System(
+            deepmd_temp_path, fmt="deepmd/npy", type_map=type_map_teacher
+        )
 
         coord_npy_path_list = list(Path(deepmd_temp_path).glob("*/coord.npy"))
         assert len(coord_npy_path_list) == 1, coord_npy_path_list
@@ -170,7 +169,9 @@ class RunDeepmd(RunFp):
         with open(virial_npy_path, "wb") as f:
             np.save(f, virial_force)
 
-        ss = dpdata.LabeledSystem(deepmd_temp_path, fmt='deepmd/npy', type_map=temp_type_map)
+        ss = dpdata.LabeledSystem(
+            deepmd_temp_path, fmt="deepmd/npy", type_map=temp_type_map
+        )
         ss.apply_type_map(conf_type_map)
         ss.to("deepmd/npy", out_name)
 
