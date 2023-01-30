@@ -4,10 +4,12 @@ from pathlib import Path
 
 from dpgen2.fp.deepmd import (
     deepmd_input_path,
+    deepmd_temp_path,
     deepmd_teacher_model,
     PrepDeepmd,
     RunDeepmd,
 )
+from dflow.python import FatalError
 from dpgen2.utils import BinaryFileInput
 from dargs import Argument
 
@@ -65,14 +67,13 @@ class TestRunDeepmd(unittest.TestCase):
         self.teacher_model = BinaryFileInput(self.task_path / "teacher-model.pb")
 
     def tearDown(self):
-        if self.task_path.is_dir():
-            shutil.rmtree(self.task_path)
+        shutil.rmtree(self.task_path, ignore_errors=True)
 
-        if Path(deepmd_input_path).is_dir():
-            shutil.rmtree(deepmd_input_path)
+        shutil.rmtree(deepmd_input_path, ignore_errors=True)
 
-        if Path(deepmd_teacher_model).is_dir():
-            shutil.rmtree(deepmd_teacher_model)
+        shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
+        
+        shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
 
     def test_prep_input(self):
         run_deepmd = RunDeepmd()
@@ -81,47 +82,42 @@ class TestRunDeepmd(unittest.TestCase):
 
         # test1
         self.assertRaisesRegex(
-            AssertionError,
-            "Error: the type map of system",
+            FatalError,
+            "is not subset",
             run_deepmd._prep_input,
-            ["O"],
-            out_name,
+            ["O"]
         )
 
         # test2
         self.assertRaisesRegex(
-            AssertionError,
-            "Error: the type map of system",
+            FatalError,
+            "is not subset",
             run_deepmd._prep_input,
-            ["H"],
-            out_name,
+            ["H"]
         )
 
         # test3
-        if out_name.is_dir():
-            shutil.rmtree(out_name)
-        run_deepmd._prep_input(["H", "O"], out_name)
-        self.assertTrue(out_name.is_dir())
-        ss = dpdata.System()
-        ss = ss.from_deepmd_npy(out_name)
+        shutil.rmtree(out_name, ignore_errors=True)
+        shutil.rmtree(deepmd_temp_path, ignore_errors=True)
+        run_deepmd._prep_input(["H", "O"])
+        
+        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
         self.assertTrue(ss["atom_names"] == ["H", "O"])
 
         # test4
-        if out_name.is_dir():
-            shutil.rmtree(out_name)
-        run_deepmd._prep_input(["O", "H"], out_name)
-        self.assertTrue(out_name.is_dir())
-        ss = dpdata.System()
-        ss = ss.from_deepmd_npy(out_name)
+        shutil.rmtree(out_name, ignore_errors=True)
+        shutil.rmtree(deepmd_temp_path, ignore_errors=True)
+        run_deepmd._prep_input(["O", "H"])
+        
+        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
         self.assertTrue(ss["atom_names"] == ["O", "H"])
 
         # test5
-        if out_name.is_dir():
-            shutil.rmtree(out_name)
-        run_deepmd._prep_input(["O", "C", "H", "N"], out_name)
-        self.assertTrue(out_name.is_dir())
-        ss = dpdata.System()
-        ss = ss.from_deepmd_npy(out_name)
+        shutil.rmtree(out_name, ignore_errors=True)
+        shutil.rmtree(deepmd_temp_path, ignore_errors=True)
+        run_deepmd._prep_input(["O", "C", "H", "N"])
+        
+        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy')
         self.assertTrue(ss["atom_names"] == ["O", "H"])
 
     def test_get_dp_model(self):
@@ -189,8 +185,8 @@ class TestRunDeepmd(unittest.TestCase):
         ss = dpdata.LabeledSystem(path, fmt="deepmd/npy")
         energy, force, virial_foce = self._get_labels()
 
-        self.assertTrue(ss["atom_numbs"] == [1, 1])
-        self.assertTrue(np.allclose(ss["atom_types"], np.array([1, 0])))
+        self.assertTrue(ss["atom_numbs"] == self.system["atom_numbs"])
+        self.assertTrue(np.allclose(ss["atom_types"], self.system["atom_types"]))
         self.assertTrue(np.allclose(ss["energies"], energy))
         self.assertTrue(np.allclose(ss["forces"], force))
         self.assertTrue(np.allclose(ss["virials"], virial_foce))

@@ -1,6 +1,7 @@
 """Prep and Run Gaussian tasks."""
 from dflow.python import (
     TransientError,
+    FatalError
 )
 from typing import Tuple, List, Any, Optional
 import dpdata
@@ -21,6 +22,9 @@ import numpy as np
 
 # global static variables
 deepmd_input_path = "one_frame_input"
+
+# global static variables
+deepmd_temp_path = "one_frame_temp"
 
 # global static variables
 deepmd_teacher_model = "teacher_model.pb"
@@ -106,11 +110,7 @@ class RunDeepmd(RunFp):
         # Run deepmd
         self._dp_infer(dp, type_map_teacher, out_name)
 
-        ret, out, err = run_command(f'echo "job finished!" > {log_name}', shell=True)
-        if ret != 0:
-            raise TransientError(
-                "vasp failed\n", "out msg", out, "\n", "err msg", err, "\n"
-            )
+        run_command(f'echo "job finished!" > {log_name}', shell=True)
 
         return out_name, log_name
 
@@ -125,29 +125,31 @@ class RunDeepmd(RunFp):
         os.remove(deepmd_teacher_model)
         return dp, type_map_teacher
 
-    def _prep_input(self, type_map_teacher, out_name):
-        ss = dpdata.System()
-        ss = ss.from_deepmd_npy(deepmd_input_path)
-        type_map = ss["atom_names"]
-        assert set(type_map).issubset(set(type_map_teacher)), (
-            f"Error: the type map of system ({type_map}) is not subset of "
-            + f"the type map ({type_map_teacher}) of the teacher model."
-        )
+    def _prep_input(self, type_map_teacher):
+        ss = dpdata.System(deepmd_input_path, fmt='deepmd/npy')
+        conf_type_map = ss["atom_names"]
+        
+        if not set(conf_type_map).issubset(set(type_map_teacher)):
+            err_message = f"the type map of system ({conf_type_map}) is not subset of " + \
+                          f"the type map of the teacher model ({type_map_teacher})."
+            raise FatalError(
+                "deepmd labeling failed\n", "err msg", err_message, "\n"
+            )
 
         # make sure the order of elements in sys_type_map
         # is the same as that in type_map_teacher
-        sys_type_map = [ele for ele in type_map_teacher if ele in set(type_map)]
+        temp_type_map = [ele for ele in type_map_teacher if ele in set(conf_type_map)]
 
-        ss.apply_type_map(sys_type_map)
-        ss.to("deepmd/npy", out_name)
+        ss.apply_type_map(temp_type_map)
+        ss.to("deepmd/npy", deepmd_temp_path)
+        return conf_type_map, temp_type_map
 
     def _dp_infer(self, dp, type_map_teacher, out_name):
-        self._prep_input(type_map_teacher, out_name)
+        conf_type_map, temp_type_map = self._prep_input(type_map_teacher)
 
-        ss = dpdata.System()
-        ss = ss.from_deepmd_npy(out_name, type_map=type_map_teacher)
+        ss = dpdata.System(deepmd_temp_path, fmt='deepmd/npy', type_map=type_map_teacher)
 
-        coord_npy_path_list = list(Path(out_name).glob("*/coord.npy"))
+        coord_npy_path_list = list(Path(deepmd_temp_path).glob("*/coord.npy"))
         assert len(coord_npy_path_list) == 1, coord_npy_path_list
         coord_npy_path = coord_npy_path_list[0]
         energy_npy_path = coord_npy_path.parent / "energy.npy"
@@ -167,6 +169,10 @@ class RunDeepmd(RunFp):
             np.save(f, force)
         with open(virial_npy_path, "wb") as f:
             np.save(f, virial_force)
+
+        ss = dpdata.LabeledSystem(deepmd_temp_path, fmt='deepmd/npy', type_map=temp_type_map)
+        ss.apply_type_map(conf_type_map)
+        ss.to("deepmd/npy", out_name)
 
     @staticmethod
     def args() -> List[dargs.Argument]:
