@@ -26,7 +26,7 @@ def global_config_workflow(
     # dflow_config, dflow_s3_config
     workflow_config_from_dict(wf_config)
 
-    if os.getenv('DFLOW_DEBUG'):
+    if os.getenv("DFLOW_DEBUG"):
         dflow.config["mode"] = "debug"
         return None
 

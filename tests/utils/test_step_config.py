@@ -21,7 +21,7 @@ from copy import deepcopy
 
 
 @contextmanager
-def dflow_mode(mode: str = 'default'):
+def dflow_mode(mode: str = "default"):
     _mode = dflow.config["mode"]
     dflow.config["mode"] = mode
     try:
@@ -102,14 +102,13 @@ class TestStepConfig(unittest.TestCase):
             },
         }
         odict = normalize(idict)
-        with dflow_mode('debug'):
+        with dflow_mode("debug"):
             ret = init_executor(deepcopy(odict).pop("executor"))
             self.assertTrue(ret is None)
 
-        with dflow_mode('default'):
+        with dflow_mode("default"):
             ret = init_executor(deepcopy(odict).pop("executor"))
             self.assertTrue(isinstance(ret, dflow.plugins.lebesgue.LebesgueExecutor))
-
 
     def test_init_executor_notype(self):
         idict = {
@@ -130,10 +129,12 @@ class TestStepConfig(unittest.TestCase):
         }
         odict = normalize(idict)
         self.assertEqual(odict["executor"], idict["executor"])
-        with dflow_mode('debug'):
+        with dflow_mode("debug"):
             ret = init_executor(deepcopy(odict).pop("executor"))
             self.assertTrue(ret is None)
 
-        with dflow_mode('default'):
+        with dflow_mode("default"):
             ret = init_executor(deepcopy(odict).pop("executor"))
-            self.assertTrue(isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor))
+            self.assertTrue(
+                isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor)
+            )
