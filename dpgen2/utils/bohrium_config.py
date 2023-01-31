@@ -7,7 +7,7 @@ import os
 def bohrium_config_from_dict(
     bohrium_config,
 ):
-    if os.getenv('DFLOW_DEBUG'):
+    if os.getenv("DFLOW_DEBUG"):
         config["mode"] = "debug"
         return
 

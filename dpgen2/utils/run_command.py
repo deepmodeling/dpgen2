@@ -7,10 +7,7 @@ def run_command(
     cmd: Union[str, List[str]],
     shell: bool = False,
 ) -> Tuple[int, str, str]:
-    interactive = False if os.getenv('DFLOW_DEBUG') else True
+    interactive = False if os.getenv("DFLOW_DEBUG") else True
     return dflow_run_command(
-        cmd,
-        raise_error=False,
-        try_bash=shell,
-        interactive=interactive
+        cmd, raise_error=False, try_bash=shell, interactive=interactive
     )

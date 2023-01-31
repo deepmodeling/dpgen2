@@ -22,16 +22,15 @@ from copy import deepcopy
 
 @contextmanager
 def disable_debug_mode():
-    DFLOW_DEBUG = os.environ.pop('DFLOW_DEBUG', None)
+    DFLOW_DEBUG = os.environ.pop("DFLOW_DEBUG", None)
     try:
         yield
     finally:
         if DFLOW_DEBUG:
-            os.environ['DFLOW_DEBUG'] = DFLOW_DEBUG
+            os.environ["DFLOW_DEBUG"] = DFLOW_DEBUG
 
 
 class TestStepConfig(unittest.TestCase):
-
     def test_success(self):
         idict = {
             "template_config": {
@@ -131,7 +130,9 @@ class TestStepConfig(unittest.TestCase):
         self.assertEqual(odict["executor"], idict["executor"])
         with disable_debug_mode():
             ret = init_executor(deepcopy(odict).pop("executor"))
-            self.assertTrue(isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor))
-        
+            self.assertTrue(
+                isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor)
+            )
+
         ret = init_executor(deepcopy(odict).pop("executor"))
         self.assertTrue(ret is None)
