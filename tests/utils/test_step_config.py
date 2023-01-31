@@ -31,7 +31,6 @@ def dflow_mode(mode: str = 'default'):
 
 
 class TestStepConfig(unittest.TestCase):
-
     def test_success(self):
         idict = {
             "template_config": {
