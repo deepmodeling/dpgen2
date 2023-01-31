@@ -7,10 +7,6 @@ import os
 def bohrium_config_from_dict(
     bohrium_config,
 ):
-    if os.getenv('DFLOW_DEBUG'):
-        config["mode"] = "debug"
-        return
-
     config["host"] = bohrium_config["host"]
     config["k8s_api_server"] = bohrium_config["k8s_api_server"]
     bohrium.config["username"] = bohrium_config["username"]

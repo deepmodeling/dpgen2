@@ -21,13 +21,13 @@ from copy import deepcopy
 
 
 @contextmanager
-def disable_debug_mode():
-    DFLOW_DEBUG = os.environ.pop('DFLOW_DEBUG', None)
+def dflow_mode(mode: str = 'default'):
+    _mode = dflow.config["mode"]
+    dflow.config["mode"] = mode
     try:
         yield
     finally:
-        if DFLOW_DEBUG:
-            os.environ['DFLOW_DEBUG'] = DFLOW_DEBUG
+        dflow.config["mode"] = _mode
 
 
 class TestStepConfig(unittest.TestCase):
@@ -103,12 +103,14 @@ class TestStepConfig(unittest.TestCase):
             },
         }
         odict = normalize(idict)
-        with disable_debug_mode():
+        with dflow_mode('debug'):
+            ret = init_executor(deepcopy(odict).pop("executor"))
+            self.assertTrue(ret is None)
+
+        with dflow_mode('default'):
             ret = init_executor(deepcopy(odict).pop("executor"))
             self.assertTrue(isinstance(ret, dflow.plugins.lebesgue.LebesgueExecutor))
 
-        ret = init_executor(deepcopy(odict).pop("executor"))
-        self.assertTrue(ret is None)
 
     def test_init_executor_notype(self):
         idict = {
@@ -129,9 +131,10 @@ class TestStepConfig(unittest.TestCase):
         }
         odict = normalize(idict)
         self.assertEqual(odict["executor"], idict["executor"])
-        with disable_debug_mode():
+        with dflow_mode('debug'):
+            ret = init_executor(deepcopy(odict).pop("executor"))
+            self.assertTrue(ret is None)
+
+        with dflow_mode('default'):
             ret = init_executor(deepcopy(odict).pop("executor"))
             self.assertTrue(isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor))
-        
-        ret = init_executor(deepcopy(odict).pop("executor"))
-        self.assertTrue(ret is None)
