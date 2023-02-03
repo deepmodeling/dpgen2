@@ -156,9 +156,9 @@ def _prep_run_lmp(
             run_op,
             slices=Slices(
                 "int('{{item}}')",
-                input_parameter = ["task_name"],
-                input_artifact = ["task_path"],
-                output_artifact = ["log", "traj", "model_devi", "plm_output"],
+                input_parameter=["task_name"],
+                input_artifact=["task_path"],
+                output_artifact=["log", "traj", "model_devi", "plm_output"],
                 pool_size=pool_size,
                 group_size=group_size
             ),
@@ -166,19 +166,19 @@ def _prep_run_lmp(
             **run_template_config,
         ),
         parameters={
-            "task_name" : prep_lmp.outputs.parameters["task_names"],
-            "config" : prep_run_steps.inputs.parameters["lmp_config"]
+            "task_name": prep_lmp.outputs.parameters["task_names"],
+            "config": prep_run_steps.inputs.parameters["lmp_config"]
         },
         artifacts={
-            "task_path" : prep_lmp.outputs.artifacts["task_paths"],
-            "models" : prep_run_steps.inputs.artifacts["models"],
+            "task_path": prep_lmp.outputs.artifacts["task_paths"],
+            "models": prep_run_steps.inputs.artifacts["models"],
         },
         with_sequence=argo_sequence(
             argo_len(prep_lmp.outputs.parameters["task_names"]),
             format=lmp_index_pattern,
         ),
-        key = step_keys["run-lmp"],
-        executor = run_executor,
+        key=step_keys["run-lmp"],
+        executor=run_executor,
         **run_config,
     )
     prep_run_steps.add(run_lmp)
