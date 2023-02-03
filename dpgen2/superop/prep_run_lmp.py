@@ -160,14 +160,14 @@ def _prep_run_lmp(
                 input_artifact=["task_path"],
                 output_artifact=["log", "traj", "model_devi", "plm_output"],
                 pool_size=pool_size,
-                group_size=group_size
+                group_size=group_size,
             ),
             python_packages=upload_python_packages,
             **run_template_config,
         ),
         parameters={
             "task_name": prep_lmp.outputs.parameters["task_names"],
-            "config": prep_run_steps.inputs.parameters["lmp_config"]
+            "config": prep_run_steps.inputs.parameters["lmp_config"],
         },
         artifacts={
             "task_path": prep_lmp.outputs.artifacts["task_paths"],

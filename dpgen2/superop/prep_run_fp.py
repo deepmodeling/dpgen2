@@ -148,7 +148,7 @@ def _prep_run_fp(
         **prep_config,
     )
     prep_run_steps.add(prep_fp)
-    
+
     run_fp = Step(
         "run-fp",
         template=PythonOPTemplate(
@@ -159,7 +159,7 @@ def _prep_run_fp(
                 input_artifact=["task_path"],
                 output_artifact=["log", "labeled_data"],
                 pool_size=pool_size,
-                group_size=group_size
+                group_size=group_size,
             ),
             python_packages=upload_python_packages,
             **run_template_config,
