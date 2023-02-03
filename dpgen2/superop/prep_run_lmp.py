@@ -129,6 +129,8 @@ def _prep_run_lmp(
     run_template_config = run_config.pop("template_config")
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
+    group_size = run_config.pop("group_size") if "group_size" in run_config else None
+    pool_size = run_config.pop("pool_size") if "pool_size" in run_config else None
 
     prep_lmp = Step(
         "prep-lmp",
@@ -154,28 +156,29 @@ def _prep_run_lmp(
             run_op,
             slices=Slices(
                 "int('{{item}}')",
-                input_parameter=["task_name"],
-                input_artifact=["task_path"],
-                output_artifact=["log", "traj", "model_devi", "plm_output"],
+                input_parameter = ["task_name"],
+                input_artifact = ["task_path"],
+                output_artifact = ["log", "traj", "model_devi", "plm_output"],
+                pool_size=pool_size,
+                group_size=group_size
             ),
             python_packages=upload_python_packages,
             **run_template_config,
         ),
         parameters={
-            "task_name": prep_lmp.outputs.parameters["task_names"],
-            "config": prep_run_steps.inputs.parameters["lmp_config"],
+            "task_name" : prep_lmp.outputs.parameters["task_names"],
+            "config" : prep_run_steps.inputs.parameters["lmp_config"]
         },
         artifacts={
-            "task_path": prep_lmp.outputs.artifacts["task_paths"],
-            "models": prep_run_steps.inputs.artifacts["models"],
+            "task_path" : prep_lmp.outputs.artifacts["task_paths"],
+            "models" : prep_run_steps.inputs.artifacts["models"],
         },
         with_sequence=argo_sequence(
             argo_len(prep_lmp.outputs.parameters["task_names"]),
             format=lmp_index_pattern,
         ),
-        # with_param=argo_range(argo_len(prep_lmp.outputs.parameters["task_names"])),
-        key=step_keys["run-lmp"],
-        executor=run_executor,
+        key = step_keys["run-lmp"],
+        executor = run_executor,
         **run_config,
     )
     prep_run_steps.add(run_lmp)

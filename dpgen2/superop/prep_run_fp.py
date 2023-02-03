@@ -125,6 +125,8 @@ def _prep_run_fp(
     run_template_config = run_config.pop("template_config")
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
+    group_size = run_config.pop("group_size") if "group_size" in run_config else None
+    pool_size = run_config.pop("pool_size") if "pool_size" in run_config else None
 
     prep_fp = Step(
         "prep-fp",
@@ -146,7 +148,7 @@ def _prep_run_fp(
         **prep_config,
     )
     prep_run_steps.add(prep_fp)
-
+    
     run_fp = Step(
         "run-fp",
         template=PythonOPTemplate(
@@ -156,6 +158,8 @@ def _prep_run_fp(
                 input_parameter=["task_name"],
                 input_artifact=["task_path"],
                 output_artifact=["log", "labeled_data"],
+                pool_size=pool_size,
+                group_size=group_size
             ),
             python_packages=upload_python_packages,
             **run_template_config,
