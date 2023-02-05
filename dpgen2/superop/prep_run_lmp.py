@@ -129,9 +129,7 @@ def _prep_run_lmp(
     run_template_config = run_config.pop("template_config")
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
-    template_slice_config = run_config.pop("template_slice_config", None)
-    group_size = template_slice_config.get("group_size", None) if template_slice_config else None
-    pool_size = template_slice_config.get("pool_size", None) if template_slice_config else None
+    template_slice_config = run_config.pop("template_slice_config", {})
 
     prep_lmp = Step(
         "prep-lmp",
@@ -160,8 +158,7 @@ def _prep_run_lmp(
                 input_parameter=["task_name"],
                 input_artifact=["task_path"],
                 output_artifact=["log", "traj", "model_devi", "plm_output"],
-                pool_size=pool_size,
-                group_size=group_size,
+                **template_slice_config
             ),
             python_packages=upload_python_packages,
             **run_template_config,
