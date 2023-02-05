@@ -158,7 +158,7 @@ def _prep_run_lmp(
                 input_parameter=["task_name"],
                 input_artifact=["task_path"],
                 output_artifact=["log", "traj", "model_devi", "plm_output"],
-                **template_slice_config
+                **template_slice_config,
             ),
             python_packages=upload_python_packages,
             **run_template_config,
