@@ -129,8 +129,9 @@ def _prep_run_lmp(
     run_template_config = run_config.pop("template_config")
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
-    group_size = run_config.pop("group_size") if "group_size" in run_config else None
-    pool_size = run_config.pop("pool_size") if "pool_size" in run_config else None
+    template_slice_config = run_config.pop("template_slice_config", None)
+    group_size = template_slice_config.get("group_size", None) if template_slice_config else None
+    pool_size = template_slice_config.get("pool_size", None) if template_slice_config else None
 
     prep_lmp = Step(
         "prep-lmp",
