@@ -83,6 +83,7 @@ def template_conf_args():
         Argument("envs", dict, optional=True, default=None, doc=doc_envs),
     ]
 
+
 def template_slice_conf_args():
     doc_group_size = "The number of tasks running on a single node. It is efficient for a large number of short tasks."
     doc_pool_size = "The number of tasks running at the same time on one node."
