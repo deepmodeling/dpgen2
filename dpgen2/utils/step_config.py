@@ -83,9 +83,18 @@ def template_conf_args():
         Argument("envs", dict, optional=True, default=None, doc=doc_envs),
     ]
 
+def template_slice_conf_args():
+    doc_group_size = "The number of tasks running on a single node. It is efficient for a large number of short tasks."
+    doc_pool_size = "The number of tasks running at the same time on one node."
+    return [
+        Argument("group_size", int, optional=True, default=None, doc=doc_group_size),
+        Argument("pool_size", int, optional=True, default=None, doc=doc_pool_size),
+    ]
+
 
 def step_conf_args():
     doc_template = "The configs passed to the PythonOPTemplate."
+    doc_template_slice = "The configs passed to the Slices."
     doc_executor = "The executor of the step."
     doc_continue_on_failed = "If continue the the step is failed (FatalError, TransientError, A certain number of retrial is reached...)."
     doc_continue_on_num_success = "Only in the sliced OP case. Continue the workflow if a certain number of the sliced jobs are successful."
@@ -100,6 +109,13 @@ def step_conf_args():
             optional=True,
             default={"image": default_image},
             doc=doc_template,
+        ),
+        Argument(
+            "template_slice_config",
+            dict,
+            template_slice_conf_args(),
+            optional=True,
+            doc=doc_template_slice,
         ),
         Argument(
             "continue_on_failed",
