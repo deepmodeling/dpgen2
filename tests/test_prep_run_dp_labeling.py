@@ -88,7 +88,6 @@ class TestRunDeepmd(unittest.TestCase):
 
         shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
 
-
     def test_prep_input(self):
         run_deepmd = RunDeepmd()
         out_name = self.task_path / "test_out"

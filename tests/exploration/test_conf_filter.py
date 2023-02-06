@@ -3,6 +3,9 @@ import unittest
 
 import dpdata
 import numpy as np
+from fake_data_set import (
+    fake_system,
+)
 from mock import (
     patch,
 )
@@ -12,9 +15,6 @@ from dpgen2.exploration.selector import (
     ConfFilters,
 )
 
-from fake_data_set import (
-    fake_system,
-)
 from .context import (
     dpgen2,
 )

@@ -19,6 +19,10 @@ from dflow.python import (
     OPIOSign,
     TransientError,
 )
+from fake_data_set import (
+    fake_multi_sys,
+    fake_system,
+)
 
 from dpgen2.constants import (
     fp_task_pattern,
@@ -35,10 +39,6 @@ from dpgen2.utils import (
     dump_object_to_file,
 )
 
-from fake_data_set import (
-    fake_multi_sys,
-    fake_system,
-)
 from .context import (
     dpgen2,
 )

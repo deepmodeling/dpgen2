@@ -15,6 +15,10 @@ from dflow.python import (
     OPIOSign,
     TransientError,
 )
+from fake_data_set import (
+    fake_multi_sys,
+    fake_system,
+)
 from mock import (
     call,
     patch,
@@ -29,11 +33,6 @@ from dpgen2.constants import (
 )
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
-)
-
-from fake_data_set import (
-    fake_multi_sys,
-    fake_system,
 )
 
 
