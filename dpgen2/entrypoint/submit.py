@@ -418,7 +418,10 @@ def workflow_concurrent_learning(
     lmp_config = (
         config.get("lmp_config", {}) if old_style else config["explore"]["config"]
     )
-    if "teacher_model_path" in lmp_config and lmp_config["teacher_model_path"] is not None:
+    if (
+        "teacher_model_path" in lmp_config
+        and lmp_config["teacher_model_path"] is not None
+    ):
         assert os.path.exists(
             lmp_config["teacher_model_path"]
         ), f"No such file: {lmp_config['teacher_model_path']}"
