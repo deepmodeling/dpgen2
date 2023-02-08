@@ -464,7 +464,7 @@ input_std = textwrap.dedent(
     },
     "train":{
 	"type" :	"dp",
-	"numb_models" : 4,
+	"numb_models" : 2,
 	"config" : {},
 	"template_script" : "foo",
 "init_models_paths" : ["bar", "tar"],
