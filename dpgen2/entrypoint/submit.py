@@ -370,9 +370,10 @@ def workflow_concurrent_learning(
             if old_style
             else config["train"].get("init_models_paths", None)
         )
-        numb_models = config["numb_models"] if old_style else config["train"]["numb_models"]
-        if init_models_paths is not None and\
-           len(init_models_paths) != numb_models:
+        numb_models = (
+            config["numb_models"] if old_style else config["train"]["numb_models"]
+        )
+        if init_models_paths is not None and len(init_models_paths) != numb_models:
             raise RuntimeError(
                 f"{len(init_models_paths)} init models provided, which does "
                 "not match numb_models={numb_models}"
@@ -581,7 +582,7 @@ def submit_concurrent_learning(
     reuse_step: Optional[List[Step]] = None,
     old_style: bool = False,
     replace_scheduler: bool = False,
-    no_submission: bool=False,
+    no_submission: bool = False,
 ):
     # normalize args
     wf_config = normalize_args(wf_config)

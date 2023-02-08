@@ -16,8 +16,8 @@ from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
     print_list_steps,
-    update_reuse_step_scheduler,
     submit_concurrent_learning,
+    update_reuse_step_scheduler,
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,
@@ -337,16 +337,26 @@ class TestSubmitCmdStd(unittest.TestCase):
         from dflow import (
             config,
         )
+
         config["mode"] = "debug"
-        self.touched_files = ['foo', 'init', 'bar', 'tar', 'INCAR', 'POTCAR.Al', 'POTCAR.Mg']
+        self.touched_files = [
+            "foo",
+            "init",
+            "bar",
+            "tar",
+            "INCAR",
+            "POTCAR.Al",
+            "POTCAR.Mg",
+        ]
         for ii in self.touched_files:
-            Path(ii).touch()        
-    
+            Path(ii).touch()
+
     def tearDown(self):
         from dflow import (
             config,
         )
-        config["mode"] = None        
+
+        config["mode"] = None
         for ii in self.touched_files:
             os.remove(ii)
 
@@ -360,21 +370,25 @@ class TestSubmitCmdDist(unittest.TestCase):
         from dflow import (
             config,
         )
+
         config["mode"] = "debug"
-        self.touched_files = ['foo', 'init', 
-                              'teacher_model.pb',
-                              'student_model.pb',
-                              ]
+        self.touched_files = [
+            "foo",
+            "init",
+            "teacher_model.pb",
+            "student_model.pb",
+        ]
         for ii in self.touched_files:
             Path(ii).touch()
-        Path('POSCAR').write_text(ifc0)
-    
+        Path("POSCAR").write_text(ifc0)
+
     def tearDown(self):
         from dflow import (
             config,
         )
-        config["mode"] = None        
-        for ii in self.touched_files + ['POSCAR']:
+
+        config["mode"] = None
+        for ii in self.touched_files + ["POSCAR"]:
             os.remove(ii)
 
     def test(self):
@@ -382,10 +396,8 @@ class TestSubmitCmdDist(unittest.TestCase):
         submit_concurrent_learning(wf_config, no_submission=True)
 
 
-
-
 input_std = textwrap.dedent(
-"""
+    """
 {
     "default_step_config" : {
 	"template_config" : {
@@ -524,10 +536,11 @@ input_std = textwrap.dedent(
 	"_comment" : "all"
     }
 }
-""")
+"""
+)
 
 input_dist = textwrap.dedent(
-"""
+    """
 {
     "default_step_config": {
         "template_config": {
@@ -701,4 +714,5 @@ input_dist = textwrap.dedent(
         "_comment": "all"
     }
 }
-""")
+"""
+)
