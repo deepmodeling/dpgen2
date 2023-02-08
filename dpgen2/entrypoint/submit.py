@@ -222,6 +222,16 @@ def make_naive_exploration_scheduler(
     convergence = config["explore"]["convergence"]
     output_nopbc = False if old_style else config["explore"]["output_nopbc"]
     scheduler = ExplorationScheduler()
+    # report
+    conv_style = convergence.pop("type")
+    report = conv_styles[conv_style](**convergence)
+    render = TrajRenderLammps(nopbc=output_nopbc)
+    # selector
+    selector = ConfSelectorFrames(
+        render,
+        report,
+        fp_task_max,
+    )
 
     sys_configs_lmp = []
     for sys_config in sys_configs:
@@ -256,16 +266,6 @@ def make_naive_exploration_scheduler(
             )
             tasks = tgroup.make_task()
             stage.add_task_group(tasks)
-        # report
-        conv_style = convergence.pop("type")
-        report = conv_styles[conv_style](**convergence)
-        render = TrajRenderLammps(nopbc=output_nopbc)
-        # selector
-        selector = ConfSelectorFrames(
-            render,
-            report,
-            fp_task_max,
-        )
         # stage_scheduler
         stage_scheduler = ConvergenceCheckStageScheduler(
             stage,
@@ -694,10 +694,8 @@ def resubmit_concurrent_learning(
     if reuse is None:
         return None
     reuse_idx = expand_idx(reuse)
-    reuse_step = []
-    old_wf_info = old_wf.query()
-    for ii in reuse_idx:
-        reuse_step += old_wf_info.get_step(key=all_step_keys[ii])
+    reuse_keys = [all_step_keys[ii] for ii in reuse_idx]
+    reuse_step = wf.query_step_by_key(reuse_keys)
 
     wf = submit_concurrent_learning(
         wf_config,
