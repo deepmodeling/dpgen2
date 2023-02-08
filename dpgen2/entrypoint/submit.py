@@ -694,8 +694,10 @@ def resubmit_concurrent_learning(
     if reuse is None:
         return None
     reuse_idx = expand_idx(reuse)
-    reuse_keys = [all_step_keys[ii] for ii in reuse_idx]
-    reuse_step = wf.query_step_by_key(reuse_keys)
+    reuse_step = []
+    old_wf_info = old_wf.query()
+    for ii in reuse_idx:
+        reuse_step += old_wf_info.get_step(key=all_step_keys[ii])
 
     wf = submit_concurrent_learning(
         wf_config,
