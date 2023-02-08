@@ -3,6 +3,7 @@ import os
 import random
 import shutil
 import tempfile
+import textwrap
 import unittest
 from pathlib import (
     Path,
@@ -16,6 +17,7 @@ from dpgen2.entrypoint.submit import (
     expand_idx,
     print_list_steps,
     update_reuse_step_scheduler,
+    submit_concurrent_learning,
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,
@@ -328,3 +330,375 @@ class TestSubmit(unittest.TestCase):
             ),
             scheduler_new.print_convergence(),
         )
+
+
+class TestSubmitCmdStd(unittest.TestCase):
+    def setUp(self):
+        from dflow import (
+            config,
+        )
+        config["mode"] = "debug"
+        self.touched_files = ['foo', 'init', 'bar', 'tar', 'INCAR', 'POTCAR.Al', 'POTCAR.Mg']
+        for ii in self.touched_files:
+            Path(ii).touch()        
+    
+    def tearDown(self):
+        from dflow import (
+            config,
+        )
+        config["mode"] = None        
+        for ii in self.touched_files:
+            os.remove(ii)
+
+    def test(self):
+        wf_config = json.loads(input_std)
+        submit_concurrent_learning(wf_config, no_submission=True)
+
+
+class TestSubmitCmdDist(unittest.TestCase):
+    def setUp(self):
+        from dflow import (
+            config,
+        )
+        config["mode"] = "debug"
+        self.touched_files = ['foo', 'init', 
+                              'teacher_model.pb',
+                              'student_model.pb',
+                              ]
+        for ii in self.touched_files:
+            Path(ii).touch()
+        Path('POSCAR').write_text(ifc0)
+    
+    def tearDown(self):
+        from dflow import (
+            config,
+        )
+        config["mode"] = None        
+        for ii in self.touched_files + ['POSCAR']:
+            os.remove(ii)
+
+    def test(self):
+        wf_config = json.loads(input_dist)
+        submit_concurrent_learning(wf_config, no_submission=True)
+
+
+
+
+input_std = textwrap.dedent(
+"""
+{
+    "default_step_config" : {
+	"template_config" : {
+	    "image" : "dflow:1.1.4",
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "step_configs":{
+	"run_train_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c6_m64_1 * NVIDIA 3090",
+		    "machine_type": "c6_m64_1 * NVIDIA 3090",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"run_explore_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c8_m32_cpu",
+		    "machine_type": "c8_m32_cpu",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"run_fp_config" : {
+	    "template_config" : {
+		"image" : "vasp:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
+		"type" : "lebesgue_v2",
+		"extra" : {
+		    "scass_type": "c16_m64_cpu",
+		    "machine_type": "c16_m64_cpu",
+		    "platform": "paratera",
+		    "program_id": "xxxx",
+		    "job_type": "container",
+		    "region" : "default"
+		}
+	    },
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
+    },
+
+    "inputs": {
+	"type_map":		["Al", "Mg"],
+	"mass_map":		[27, 24],
+	"init_data_prefix":	null,
+	"init_data_sys":	[
+	    "init"
+	],
+	"_comment" : "all"
+    },
+    "train":{
+	"type" :	"dp",
+	"numb_models" : 4,
+	"config" : {},
+	"template_script" : "foo",
+"init_models_paths" : ["bar", "tar"],
+	"_comment" : "all"
+    },
+
+    "explore" : {
+	"type" : "lmp",
+	"config" : {
+	    "command": "lmp -var restart 0"
+	},
+	"convergence": {
+	    "type" :	"fixed-levels",
+	    "conv_accuracy" :	0.9,
+	    "level_f_lo":	0.05,
+	    "level_f_hi":	0.50,
+	    "_comment" : "all"
+	},
+	"max_numb_iter" :	5,
+	"fatal_at_max" :	false,
+	"output_nopbc":		false,
+	"configuration_prefix": null,
+	"configurations":	[
+	    {
+		"type": "alloy",
+		"lattice" : ["fcc", 4.57],
+		"replicate" : [2, 2, 2],
+		"numb_confs" : 30,
+		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+	    }
+	],
+	"_comment" : "Stage is of type List[List[dict]]. ",
+	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
+	"stages":	[
+	    [
+		{
+		    "type" : "lmp-md",
+		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+		    "conf_idx": [0], "n_sample" : 3
+		}
+	    ]
+	],
+	"_comment" : "all"
+    },
+    "fp" : {
+	"type" :	"vasp",
+	"task_max":	2,
+	"inputs_config" : {
+	    "pp_files":	{"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
+	    "incar":    "INCAR",
+	    "kspacing":	0.32,
+	    "kgamma":	true
+	},
+	"run_config" : {
+	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+	},
+	"_comment" : "all"
+    }
+}
+""")
+
+input_dist = textwrap.dedent(
+"""
+{
+    "default_step_config": {
+        "template_config": {
+            "image": "",
+            "_comment": "all"
+        },
+        "executor": {
+            "type": "dispatcher",
+            "image_pull_policy": "IfNotPresent",
+            "machine_dict": {
+                "batch_type": "Bohrium",
+                "context_type": "Bohrium",
+                "remote_profile": {
+                    "input_data": {
+                        "job_type": "container",
+                        "platform": "ali",
+                        "scass_type": "c2_m4_cpu"
+                    }
+                }
+            }
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "upload_python_packages": [
+    ],
+    "inputs": {
+        "type_map": [
+            "H",
+            "C",
+            "Al"
+        ],
+        "mass_map": [
+            4,
+            12
+        ],
+        "init_data_prefix": null,
+        "init_data_sys": [
+            "init"
+        ],
+        "_comment": "all"
+    },
+    "train": {
+        "student_model_path": "student_model.pb",
+        "type": "dp-dist",
+        "config": {
+            "init_model_policy": "yes",
+            "init_model_old_ratio": 0.5,
+            "init_model_numb_steps": 200000,
+            "init_model_start_lr": 1e-4,
+            "init_model_start_pref_e": 0.25,
+            "init_model_start_pref_f": 100,
+            "_comment": "all"
+        },
+        "template_script": "foo",
+        "_comment": "all"
+    },
+    "fp" : {
+        "type" :	"deepmd",
+        "task_max":	2,
+        "run_config" : {
+            "teacher_model_path": "teacher_model.pb",
+            "type_map": ["H", "C"]
+        },
+        "inputs_config" : {},
+        "_comment" : "all"
+    },
+    "explore": {
+        "type": "lmp",
+        "config": {
+            "teacher_model_path": "teacher_model.pb",
+            "command": "lmp -var restart 0"
+        },
+        "convergence": {
+            "type" :	"fixed-levels",
+            "conv_accuracy" :	0.9,
+            "level_f_lo":	0.05,
+            "level_f_hi":	0.50,
+            "_comment" : "all"
+        },
+        "max_numb_iter": 2,
+        "fatal_at_max": false,
+        "output_nopbc": false,
+        "configuration_prefix": null,
+        "configurations": [
+            {
+                "type": "file",
+                "files": [
+                    "POSCAR"
+                ],
+                "fmt": "vasp/poscar"
+            }
+        ],
+        "stages": [
+            [
+            {
+                "type" : "lmp-md",
+                "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+                "conf_idx": [0], "n_sample" : 3
+            }
+            ]
+        ],
+        "_comment": "all"
+    }
+}
+""")

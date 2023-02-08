@@ -78,6 +78,7 @@ def dp_train_args():
             "init_models_paths",
             list,
             optional=True,
+            default=None,
             doc=doc_init_models_paths,
             alias=["training_iter0_model_path"],
         ),

@@ -574,6 +574,7 @@ def submit_concurrent_learning(
     reuse_step: Optional[List[Step]] = None,
     old_style: bool = False,
     replace_scheduler: bool = False,
+    no_submission: bool=False,
 ):
     # normalize args
     wf_config = normalize_args(wf_config)
@@ -622,7 +623,9 @@ def submit_concurrent_learning(
     wf = Workflow(name="dpgen", context=context)
     wf.add(dpgen_step)
 
-    wf.submit(reuse_step=reuse_step)
+    # for debug purpose, we may not really submit the wf
+    if not no_submission:
+        wf.submit(reuse_step=reuse_step)
 
     return wf
 
