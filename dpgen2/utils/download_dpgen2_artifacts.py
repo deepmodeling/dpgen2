@@ -100,26 +100,23 @@ def download_dpgen2_artifacts(
     input_def = dsetting.input_def
     output_def = dsetting.output_def
 
-    step = wf.query_step(key=key)
-    if len(step) == 0:
-        raise RuntimeError(f"key {key} does not match any step")
-    step = step[0]
+    dld_input = not(len(input_def) == 0 or (
+        chk_pnt and (mypath / subkey / "inputs" / "done").is_file()))
+    dld_output = not(len(output_def) == 0 or (
+        chk_pnt and (mypath / subkey / "outputs" / "done").is_file()))
+    
+    if dld_input or dld_output:
+        step = wf.query_step(key=key)
+        if len(step) == 0:
+            raise RuntimeError(f"key {key} does not match any step")
+        step = step[0]
 
-    # download inputs
-    if len(input_def) == 0 or (
-        chk_pnt and (mypath / subkey / "inputs" / "done").is_file()
-    ):
-        pass
-    else:
+    if dld_input:
         _dload_input_lower(step, mypath, key, subkey, input_def)
         if chk_pnt:
             (mypath / subkey / "inputs" / "done").touch()
-    # download outputs
-    if len(output_def) == 0 or (
-        chk_pnt and (mypath / subkey / "outputs" / "done").is_file()
-    ):
-        pass
-    else:
+
+    if dld_output:
         _dload_output_lower(step, mypath, key, subkey, output_def)
         if chk_pnt:
             (mypath / subkey / "outputs" / "done").touch()
