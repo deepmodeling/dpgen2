@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import textwrap
 from typing import (
     List,
     Optional,
@@ -21,6 +22,10 @@ from dpgen2 import (
 
 from .download import (
     download,
+    download_by_def,
+)
+from dpgen2.utils.download_dpgen2_artifacts import (
+    print_op_download_setting,
 )
 from .showkey import (
     showkey,
@@ -43,6 +48,9 @@ from .workflow import (
     add_subparser_workflow_subcommand,
     execute_workflow_subcommand,
     workflow_subcommands,
+)
+from .common import (
+    expand_idx,
 )
 
 
@@ -146,20 +154,25 @@ def main_parser() -> argparse.ArgumentParser:
         "download",
         help=(
             "Download the artifacts of DPGEN2 steps.\n"
-            "Typically there are three ways of using the command\n"
-            "1. list all supported steps and their input/output artifacts\n"
-            "dpgen2 download CONFIG ID -l\n\n"
-            "2. donwload all the input/output of certain steps."
-            "The user provides the keys of the steps.\n"
-            "dpgen2 download CONFIG ID -k "
-            "iter-000000--prep-run-train iter-000001--prep-run-lmp\n\n"
-            "3. donwload specified input/output artifacts of certain steps.\n"
-            "dpgen2 download CONFIG ID -i 0-10 -d "
-            "prep-run-train/input/init_data prep-run-lmp/output/trajs\n"
-            "The command will download the init_data of prep-run-train's input"
-            "and trajs of the prep-run-lmp's output from iterations 0 to 9."
         ),
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=(
+            textwrap.dedent("""
+            Typically there are three ways of using the command
+
+            1. list all supported steps and their input/output artifacts
+            $ dpgen2 download CONFIG ID -l
+
+            2. donwload all the input/output of all the steps.
+            $ dpgen2 download CONFIG ID
+
+            3. donwload specified input/output artifacts of certain steps. For example
+            $ dpgen2 download CONFIG ID -i 0-8 8 9 -d prep-run-train/input/init_data prep-run-lmp/output/trajs
+
+            The command will download the init_data of prep-run-train's input and trajs of the prep-run-lmp's output from iterations 0 to 9 (by -i 0-8 8 9).
+            The supported step and the names of input/output can be checked by the -l flag.
+            """)
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser_download.add_argument("CONFIG", help="the config file in json format.")
     parser_download.add_argument("ID", help="the ID of the existing workflow.")
@@ -180,6 +193,7 @@ def main_parser() -> argparse.ArgumentParser:
         "-i",
         "--iterations",
         type=str,
+        nargs="+",
         help="the iterations to be downloaded, support ranging expression as 0-10.",
     )
     parser_download.add_argument(
@@ -325,7 +339,7 @@ def main():
         with open(args.CONFIG) as fp:
             config = json.load(fp)
         wfid = args.ID
-        if args.list_supported is not None:
+        if args.list_supported is not None and args.list_supported:
             print(print_op_download_setting())
         elif args.keys is not None:            
             download(
@@ -339,7 +353,8 @@ def main():
             download_by_def(
                 wfid,
                 config,
-                iterations=args.iterations,
+                iterations=(expand_idx(args.iterations) 
+                            if args.iterations is not None else None),
                 step_defs=args.step_definitions,
                 prefix=args.prefix,
                 chk_pnt=args.no_check_point,

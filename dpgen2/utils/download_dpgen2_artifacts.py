@@ -96,6 +96,7 @@ def print_op_download_setting(op_download_setting=op_download_setting):
     return "\n".join(ret)
 
 
+
 def download_dpgen2_artifacts(
     wf: Workflow,
     key: str,
@@ -164,12 +165,14 @@ def download_dpgen2_artifacts_by_def(
         prefix: Optional[str] = None,
         chk_pnt: bool = False,
 ):
+    wf_step_keys = wf.query_keys_of_steps()
+
     if prefix is not None:
         prefix = prefix
     else:
         prefix = "."
     if iterations is None:
-        iterations = _get_all_iterations(step_keys)
+        iterations = _get_all_iterations(wf_step_keys)
     if step_defs is None:
         step_defs = _get_all_step_defs()
     step_defs = _filter_def_by_availability(step_defs)
@@ -180,9 +183,10 @@ def download_dpgen2_artifacts_by_def(
         dld_items = _filter_if_complished(prefix, dld_items)
 
     # get all steps
-    wf_step_keys = wf.query_keys_of_steps()
     step_keys = _get_all_queried_steps(wf_step_keys, dld_items)
-    wf_steps = wf.query_step_by_key(step_keys)
+    wf_info = wf.query()
+    wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
+    #wf_steps = wf.query_step_by_key(step_keys)
     if not (len(wf_steps) == len(step_keys)):
         raise RuntimeError("cannot get all the steps ",
                            str(step_keys),
@@ -256,10 +260,10 @@ def _get_all_step_defs():
     ret = []
     for kk,vv in op_download_setting.items():
         idef = vv.input_def
-        for ik,iv in idef:
+        for ik,iv in idef.items():
             ret.append(f'{kk}{global_step_def_split}input{global_step_def_split}{ik}')
         odef = vv.output_def
-        for ik,iv in odef:
+        for ik,iv in odef.items():
             ret.append(f'{kk}{global_step_def_split}output{global_step_def_split}{ik}')
     return ret
 
@@ -267,8 +271,10 @@ def _get_all_step_defs():
 def _get_all_iterations(step_keys):
     ret = []
     for kk in step_keys:
-        ii = int(get_iteration(kk))
-        ret.append(ii)
+        ii = get_iteration(kk)
+        if ii != 'init':
+            ii = int(ii.split('-')[1])
+            ret.append(ii)
     ret = sorted(list(set(ret)))
     return ret
 
@@ -313,6 +319,8 @@ def _filter_if_complished(
         item_path = _item_path(prefix, tt)
         if not (item_path / "done").is_file():
             ret.append(tt)
+        else:
+            logging.info(f"{item_path} exists")
     return ret
 
             
