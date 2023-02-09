@@ -1,10 +1,11 @@
-import logging, itertools
+import itertools
+import logging
 from pathlib import (
     Path,
 )
 from typing import (
-    Optional,
     List,
+    Optional,
 )
 
 import numpy as np
@@ -19,6 +20,7 @@ from dpgen2.utils.dflow_query import (
 )
 
 global_step_def_split = "/"
+
 
 class DownloadDefinition:
     def __init__(self):
@@ -69,32 +71,26 @@ op_download_setting = {
     "collect-data": DownloadDefinition().add_output("iter_data"),
 }
 
+
 def print_op_download_setting(op_download_setting=op_download_setting):
     ret = []
     for kk in op_download_setting.keys():
-        ret.append(
-            f"step: {kk}"
-        )
+        ret.append(f"step: {kk}")
         idef = op_download_setting[kk].input_def
         if len(idef) > 0:
-            ret.append(
-                "  input:"
-            )
+            ret.append("  input:")
             str_keys = []
             for ik in idef.keys():
                 str_keys.append(f"{ik}")
             ret.append("    " + " ".join(str_keys))
         odef = op_download_setting[kk].output_def
         if len(odef) > 0:
-            ret.append(
-                "  output:"
-            )
+            ret.append("  output:")
             str_keys = []
             for ik in odef.keys():
                 str_keys.append(f"{ik}")
             ret.append("    " + " ".join(str_keys))
     return "\n".join(ret)
-
 
 
 def download_dpgen2_artifacts(
@@ -159,11 +155,11 @@ def download_dpgen2_artifacts(
 
 
 def download_dpgen2_artifacts_by_def(
-        wf:Workflow,
-        iterations: Optional[List[int]] = None,
-        step_defs: Optional[List[str]] = None,
-        prefix: Optional[str] = None,
-        chk_pnt: bool = False,
+    wf: Workflow,
+    iterations: Optional[List[int]] = None,
+    step_defs: Optional[List[str]] = None,
+    prefix: Optional[str] = None,
+    chk_pnt: bool = False,
 ):
     wf_step_keys = wf.query_keys_of_steps()
 
@@ -176,14 +172,14 @@ def download_dpgen2_artifacts_by_def(
     if step_defs is None:
         step_defs = _get_all_step_defs()
     step_defs = _filter_def_by_availability(step_defs)
-    if len(step_defs) == 0: 
+    if len(step_defs) == 0:
         return
 
     # mk download items
     dld_items = _get_dld_items(iterations, step_defs)
     if chk_pnt:
         dld_items = _filter_if_complished(prefix, dld_items)
-    if len(dld_items) == 0: 
+    if len(dld_items) == 0:
         return
 
     # get all steps
@@ -192,12 +188,13 @@ def download_dpgen2_artifacts_by_def(
     # wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
     wf_steps = wf.query_step_by_key(step_keys)
     if not (len(wf_steps) == len(step_keys)):
-        raise RuntimeError("cannot get all the steps ",
-                           str(step_keys),
-                           )
+        raise RuntimeError(
+            "cannot get all the steps ",
+            str(step_keys),
+        )
     # make step dict
     step_dict = {}
-    for kk,ss in zip(step_keys, wf_steps):
+    for kk, ss in zip(step_keys, wf_steps):
         step_dict[kk] = ss
 
     # download all items
@@ -258,17 +255,17 @@ def _dload_output_lower(
             logging.warning(
                 f"cannot download input artifact  {kk}  of  {key}, it may be empty"
             )
-        
+
 
 def _get_all_step_defs(op_download_setting=op_download_setting):
     ret = []
-    for kk,vv in op_download_setting.items():
+    for kk, vv in op_download_setting.items():
         idef = vv.input_def
-        for ik,iv in idef.items():
-            ret.append(f'{kk}{global_step_def_split}input{global_step_def_split}{ik}')
+        for ik, iv in idef.items():
+            ret.append(f"{kk}{global_step_def_split}input{global_step_def_split}{ik}")
         odef = vv.output_def
-        for ik,iv in odef.items():
-            ret.append(f'{kk}{global_step_def_split}output{global_step_def_split}{ik}')
+        for ik, iv in odef.items():
+            ret.append(f"{kk}{global_step_def_split}output{global_step_def_split}{ik}")
     return ret
 
 
@@ -276,8 +273,8 @@ def _get_all_iterations(step_keys):
     ret = []
     for kk in step_keys:
         ii = get_iteration(kk)
-        if ii != 'init':
-            ii = int(ii.split('-')[1])
+        if ii != "init":
+            ii = int(ii.split("-")[1])
             ret.append(ii)
     ret = sorted(list(set(ret)))
     return ret
@@ -293,33 +290,32 @@ def _get_all_queried_steps(wf_step_keys, dld_items):
 
 
 def _get_dld_items(
-        iterations, 
-        step_defs,
+    iterations,
+    step_defs,
 ):
     items = []
-    for ii,jj in itertools.product(iterations, step_defs):
-        items.append(
-            f"iter-{ii:06d}--" + jj
-        )
+    for ii, jj in itertools.product(iterations, step_defs):
+        items.append(f"iter-{ii:06d}--" + jj)
     return items
 
+
 def _item_path(
-        prefix,
-        item,
+    prefix,
+    item,
 ):
     ret = Path(prefix)
     for ii in item.split(global_step_def_split):
-        for jj in ii.split('--'):
+        for jj in ii.split("--"):
             ret = ret / jj
     return ret
 
 
 def _filter_if_complished(
-        prefix,
-        items,
+    prefix,
+    items,
 ):
     ret = []
-    for tt in items:        
+    for tt in items:
         item_path = _item_path(prefix, tt)
         if not (item_path / "done").is_file():
             ret.append(tt)
@@ -327,9 +323,9 @@ def _filter_if_complished(
             logging.info(f"{item_path} exists")
     return ret
 
-            
+
 def _filter_def_by_availability(
-        defs,
+    defs,
 ):
     ret = []
     for dd in defs:
@@ -338,16 +334,17 @@ def _filter_def_by_availability(
             raise RuntimeError(
                 "the step definition should be in format "
                 "stepkey/input_or_output/item_name.\n"
-                "for example prep-run-dp-train/output/logs")
+                "for example prep-run-dp-train/output/logs"
+            )
         [subkey, io, name] = splitted
         if io in ["input"]:
-            avail = ((subkey in op_download_setting.keys()) and
-                     (name in op_download_setting[subkey].input_def.keys())
-                     )
+            avail = (subkey in op_download_setting.keys()) and (
+                name in op_download_setting[subkey].input_def.keys()
+            )
         elif io in ["output"]:
-            avail = ((subkey in op_download_setting.keys()) and
-                     (name in op_download_setting[subkey].output_def.keys())
-                     )
+            avail = (subkey in op_download_setting.keys()) and (
+                name in op_download_setting[subkey].output_def.keys()
+            )
         else:
             raise RuntimeError("unknown io style {io}")
         if not avail:
@@ -358,10 +355,10 @@ def _filter_def_by_availability(
 
 
 def _dl_step_item(
-        step,
-        item,
-        prefix,
-        ckpt,
+    step,
+    item,
+    prefix,
+    ckpt,
 ):
     [step_key, io, name] = item.split(global_step_def_split)
     pref = _item_path(prefix, item)
@@ -379,13 +376,9 @@ def _dl_step_item(
         )
     except (NotImplementedError, FileNotFoundError):
         # NotImplementedError to be compatible with old versions of dflow
-        logging.warning(
-            f"cannot download item {pref}, it may be empty"
-        )
+        logging.warning(f"cannot download item {pref}, it may be empty")
     if ckpt:
         pref.mkdir(parents=True, exist_ok=True)
         (pref / "done").touch()
 
     logging.info(f"{pref} downloaded")
-
-

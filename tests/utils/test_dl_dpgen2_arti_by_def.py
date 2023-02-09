@@ -18,11 +18,11 @@ from utils.context import (
 )
 
 from dpgen2.utils.download_dpgen2_artifacts import (
-    download_dpgen2_artifacts_by_def,
-    print_op_download_setting,
     DownloadDefinition,
     _get_all_iterations,
     _get_all_step_defs,
+    download_dpgen2_artifacts_by_def,
+    print_op_download_setting,
 )
 
 
@@ -48,6 +48,7 @@ class MockedStep:
     ):
         return "Succeeded"
 
+
 class Mockedwf:
     keys = [
         "iter-000000--prep-run-train",
@@ -56,7 +57,7 @@ class Mockedwf:
     ]
 
     def query_step_by_key(self, key):
-        if (key == sorted(self.keys)):
+        if key == sorted(self.keys):
             return [MockedStep(), MockedStep(), MockedStep()]
         else:
             return [MockedStep() for kk in key]
@@ -64,27 +65,28 @@ class Mockedwf:
     def query_keys_of_steps(self):
         return self.keys
 
+
 class TestDownloadDpgen2Artifact(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree("foo", ignore_errors=True)
 
     def test_get_all_iterations(self):
         step_keys = [
-            'init--scheduler', 'iter-000000--foo', 'iter-000000--bar',
-            'iter-000002--tar',
+            "init--scheduler",
+            "iter-000000--foo",
+            "iter-000000--bar",
+            "iter-000002--tar",
         ]
         iterations = _get_all_iterations(step_keys)
-        self.assertEqual(iterations, [0,2])
+        self.assertEqual(iterations, [0, 2])
 
     def test_get_step_defs(self):
         setting = {
-            "foo" : DownloadDefinition()
+            "foo": DownloadDefinition()
             .add_input("i0")
             .add_input("i1")
             .add_output("o0"),
-            "bar" : DownloadDefinition()
-            .add_output("o0")
-            .add_output("o1"),
+            "bar": DownloadDefinition().add_output("o0").add_output("o1"),
         }
         expected = [
             "foo/input/i0",
@@ -98,10 +100,10 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
 
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download(self, mocked_dl):
-        with self.assertLogs(level='WARN') as log:
+        with self.assertLogs(level="WARN") as log:
             download_dpgen2_artifacts_by_def(
-                Mockedwf(), 
-                iterations=[0,1,2],
+                Mockedwf(),
+                iterations=[0, 1, 2],
                 step_defs=[
                     "prep-run-train/input/init_models",
                     "prep-run-train/output/logs",
@@ -114,7 +116,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(log.output), 1)
         self.assertEqual(len(log.records), 1)
         self.assertIn(
-            'cannot find download settings for prep-run-lmp/input/foo',
+            "cannot find download settings for prep-run-lmp/input/foo",
             log.output[0],
         )
         expected = [
@@ -148,13 +150,12 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         for ii, jj in zip(mocked_dl.call_args_list, expected):
             self.assertEqual(ii, jj)
 
-
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download_empty(self, mocked_dl):
-        with self.assertLogs(level='WARN') as log:
+        with self.assertLogs(level="WARN") as log:
             download_dpgen2_artifacts_by_def(
-                Mockedwf(), 
-                iterations=[0,1,2],
+                Mockedwf(),
+                iterations=[0, 1, 2],
                 step_defs=[
                     "foo/input/init_models",
                     "prep-run-train/output/bar",
@@ -165,26 +166,24 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(log.output), 2)
         self.assertEqual(len(log.records), 2)
         self.assertIn(
-            'cannot find download settings for foo/input/init_models',
+            "cannot find download settings for foo/input/init_models",
             log.output[0],
         )
         self.assertIn(
-            'cannot find download settings for prep-run-train/output/bar',
+            "cannot find download settings for prep-run-train/output/bar",
             log.output[1],
         )
-        expected = [
-        ]
+        expected = []
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
         for ii, jj in zip(mocked_dl.call_args_list, expected):
             self.assertEqual(ii, jj)
 
-
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download_with_ckpt(self, mocked_dl):
-        with self.assertLogs(level='WARN') as log:
+        with self.assertLogs(level="WARN") as log:
             download_dpgen2_artifacts_by_def(
-                Mockedwf(), 
-                iterations=[0,1,2],
+                Mockedwf(),
+                iterations=[0, 1, 2],
                 step_defs=[
                     "prep-run-train/input/init_models",
                     "prep-run-train/output/logs",
@@ -197,7 +196,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(log.output), 1)
         self.assertEqual(len(log.records), 1)
         self.assertIn(
-            'cannot find download settings for prep-run-lmp/input/foo',
+            "cannot find download settings for prep-run-lmp/input/foo",
             log.output[0],
         )
         expected = [
@@ -230,10 +229,10 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
         for ii, jj in zip(mocked_dl.call_args_list, expected):
             self.assertEqual(ii, jj)
-        
+
         download_dpgen2_artifacts_by_def(
-            Mockedwf(), 
-            iterations=[0,1],
+            Mockedwf(),
+            iterations=[0, 1],
             step_defs=[
                 "prep-run-train/input/init_models",
                 "prep-run-train/output/logs",
@@ -254,20 +253,18 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         for ii, jj in zip(mocked_dl.call_args_list[5:], expected):
             self.assertEqual(ii, jj)
 
-
     def test_print_op_dld_setting(self):
         setting = {
-            "foo" : DownloadDefinition()
+            "foo": DownloadDefinition()
             .add_input("i0")
             .add_input("i1")
             .add_output("o0"),
-            "bar" : DownloadDefinition()
-            .add_output("o0")
-            .add_output("o1"),
+            "bar": DownloadDefinition().add_output("o0").add_output("o1"),
         }
         ret = print_op_download_setting(setting)
 
-        expected = textwrap.dedent("""step: foo
+        expected = textwrap.dedent(
+            """step: foo
   input:
     i0 i1
   output:
@@ -275,5 +272,6 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
 step: bar
   output:
     o0 o1
-""")
+"""
+        )
         self.assertEqual(ret.rstrip(), expected.rstrip())

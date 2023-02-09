@@ -19,13 +19,16 @@ from dflow import (
 from dpgen2 import (
     __version__,
 )
+from dpgen2.utils.download_dpgen2_artifacts import (
+    print_op_download_setting,
+)
 
+from .common import (
+    expand_idx,
+)
 from .download import (
     download,
     download_by_def,
-)
-from dpgen2.utils.download_dpgen2_artifacts import (
-    print_op_download_setting,
 )
 from .showkey import (
     showkey,
@@ -48,9 +51,6 @@ from .workflow import (
     add_subparser_workflow_subcommand,
     execute_workflow_subcommand,
     workflow_subcommands,
-)
-from .common import (
-    expand_idx,
 )
 
 
@@ -152,11 +152,10 @@ def main_parser() -> argparse.ArgumentParser:
     # download
     parser_download = subparsers.add_parser(
         "download",
-        help=(
-            "Download the artifacts of DPGEN2 steps.\n"
-        ),
+        help=("Download the artifacts of DPGEN2 steps.\n"),
         description=(
-            textwrap.dedent("""
+            textwrap.dedent(
+                """
             Typically there are three ways of using the command
 
             1. list all supported steps and their input/output artifacts
@@ -170,7 +169,8 @@ def main_parser() -> argparse.ArgumentParser:
 
             The command will download the init_data of prep-run-train's input and trajs of the prep-run-lmp's output from iterations 0 to 9 (by -i 0-8 8 9).
             The supported step and the names of input/output can be checked by the -l flag.
-            """)
+            """
+            )
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -341,7 +341,7 @@ def main():
         wfid = args.ID
         if args.list_supported is not None and args.list_supported:
             print(print_op_download_setting())
-        elif args.keys is not None:            
+        elif args.keys is not None:
             download(
                 wfid,
                 config,
@@ -353,8 +353,9 @@ def main():
             download_by_def(
                 wfid,
                 config,
-                iterations=(expand_idx(args.iterations) 
-                            if args.iterations is not None else None),
+                iterations=(
+                    expand_idx(args.iterations) if args.iterations is not None else None
+                ),
                 step_defs=args.step_definitions,
                 prefix=args.prefix,
                 chk_pnt=args.no_check_point,
