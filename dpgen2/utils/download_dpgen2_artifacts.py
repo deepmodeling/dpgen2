@@ -105,6 +105,7 @@ def download_dpgen2_artifacts(
     dld_output = not(len(output_def) == 0 or (
         chk_pnt and (mypath / subkey / "outputs" / "done").is_file()))
     
+    step = None
     if dld_input or dld_output:
         step = wf.query_step(key=key)
         if len(step) == 0:
