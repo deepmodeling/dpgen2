@@ -18,7 +18,7 @@ from utils.context import (
 )
 
 from dpgen2.utils.download_dpgen2_artifacts import (
-    download_artifacts_by_def,
+    download_dpgen2_artifacts_by_def,
     print_op_download_setting,
     DownloadDefinition,
 )
@@ -69,7 +69,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download(self, mocked_dl):
         with self.assertLogs(level='WARN') as log:
-            download_artifacts_by_def(
+            download_dpgen2_artifacts_by_def(
                 Mockedwf(), 
                 iterations=[0,1,2],
                 step_defs=[
@@ -122,7 +122,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download_with_ckpt(self, mocked_dl):
         with self.assertLogs(level='WARN') as log:
-            download_artifacts_by_def(
+            download_dpgen2_artifacts_by_def(
                 Mockedwf(), 
                 iterations=[0,1,2],
                 step_defs=[
@@ -171,7 +171,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         for ii, jj in zip(mocked_dl.call_args_list, expected):
             self.assertEqual(ii, jj)
         
-        download_artifacts_by_def(
+        download_dpgen2_artifacts_by_def(
             Mockedwf(), 
             iterations=[0,1],
             step_defs=[

@@ -144,17 +144,50 @@ def main_parser() -> argparse.ArgumentParser:
     # download
     parser_download = subparsers.add_parser(
         "download",
-        help="Download the artifacts of DPGEN2 steps",
+        help=(
+            "Download the artifacts of DPGEN2 steps.\n"
+            "Typically there are three ways of using the command\n"
+            "1. list all supported steps and their input/output artifacts\n"
+            "dpgen2 download CONFIG ID -l\n\n"
+            "2. donwload all the input/output of certain steps."
+            "The user provides the keys of the steps.\n"
+            "dpgen2 download CONFIG ID -k "
+            "iter-000000--prep-run-train iter-000001--prep-run-lmp\n\n"
+            "3. donwload specified input/output artifacts of certain steps.\n"
+            "dpgen2 download CONFIG ID -i 0-10 -d "
+            "prep-run-train/input/init_data prep-run-lmp/output/trajs\n"
+            "The command will download the init_data of prep-run-train's input"
+            "and trajs of the prep-run-lmp's output from iterations 0 to 9."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_download.add_argument("CONFIG", help="the config file in json format.")
     parser_download.add_argument("ID", help="the ID of the existing workflow.")
+    parser_download.add_argument(
+        "-l",
+        "--list-supported",
+        action="store_true",
+        help="list all supported steps artifacts",
+    )
     parser_download.add_argument(
         "-k",
         "--keys",
         type=str,
         nargs="+",
         help="the keys of the downloaded steps. If not provided download all artifacts",
+    )
+    parser_download.add_argument(
+        "-i",
+        "--iterations",
+        type=str,
+        help="the iterations to be downloaded, support ranging expression as 0-10.",
+    )
+    parser_download.add_argument(
+        "-d",
+        "--step-definitions",
+        type=str,
+        nargs="+",
+        help="the definition for downloading step artifacts",
     )
     parser_download.add_argument(
         "-p",
@@ -292,13 +325,25 @@ def main():
         with open(args.CONFIG) as fp:
             config = json.load(fp)
         wfid = args.ID
-        download(
-            wfid,
-            config,
-            wf_keys=args.keys,
-            prefix=args.prefix,
-            chk_pnt=args.no_check_point,
-        )
+        if args.list_supported is not None:
+            print(print_op_download_setting())
+        elif args.keys is not None:            
+            download(
+                wfid,
+                config,
+                wf_keys=args.keys,
+                prefix=args.prefix,
+                chk_pnt=args.no_check_point,
+            )
+        else:
+            download_by_def(
+                wfid,
+                config,
+                iterations=args.iterations,
+                step_defs=args.step_definitions,
+                prefix=args.prefix,
+                chk_pnt=args.no_check_point,
+            )
     elif args.command == "watch":
         with open(args.CONFIG) as fp:
             config = json.load(fp)

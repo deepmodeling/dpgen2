@@ -69,7 +69,7 @@ op_download_setting = {
     "collect-data": DownloadDefinition().add_output("iter_data"),
 }
 
-def print_op_download_setting(op_download_setting):
+def print_op_download_setting(op_download_setting=op_download_setting):
     ret = []
     for kk in op_download_setting.keys():
         ret.append(
@@ -157,6 +157,51 @@ def download_dpgen2_artifacts(
     return
 
 
+def download_dpgen2_artifacts_by_def(
+        wf:Workflow,
+        iterations: Optional[List[int]] = None,
+        step_defs: Optional[List[str]] = None,
+        prefix: Optional[str] = None,
+        chk_pnt: bool = False,
+):
+    if prefix is not None:
+        prefix = prefix
+    else:
+        prefix = "."
+    if iterations is None:
+        iterations = _get_all_iterations(step_keys)
+    if step_defs is None:
+        step_defs = _get_all_step_defs()
+    step_defs = _filter_def_by_availability(step_defs)
+
+    # mk download items
+    dld_items = _get_dld_items(iterations, step_defs)
+    if chk_pnt:
+        dld_items = _filter_if_complished(prefix, dld_items)
+
+    # get all steps
+    wf_step_keys = wf.query_keys_of_steps()
+    step_keys = _get_all_queried_steps(wf_step_keys, dld_items)
+    wf_steps = wf.query_step_by_key(step_keys)
+    if not (len(wf_steps) == len(step_keys)):
+        raise RuntimeError("cannot get all the steps ",
+                           str(step_keys),
+                           )
+    # make step dict
+    step_dict = {}
+    for kk,ss in zip(step_keys, wf_steps):
+        step_dict[kk] = ss
+
+    # download all items
+    for ii in dld_items:
+        [step_key, io, item] = ii.split(global_step_def_split)
+        step = step_dict.get(step_key)
+        # skip all problematic steps
+        if step is None or step["phase"] != "Succeeded":
+            continue
+        _dl_step_item(step, ii, prefix, chk_pnt)
+
+
 def _dload_input_lower(
     step,
     mypath,
@@ -205,51 +250,6 @@ def _dload_output_lower(
             logging.warning(
                 f"cannot download input artifact  {kk}  of  {key}, it may be empty"
             )
-
-
-def download_dpgen2_artifacts_by_def(
-        wf:Workflow,
-        iterations: Optional[List[int]] = None,
-        step_defs: Optional[List[str]] = None,
-        prefix: Optional[str] = None,
-        chk_pnt: bool = False,
-):
-    if prefix is not None:
-        prefix = prefix
-    else:
-        prefix = "."
-    if iterations is None:
-        iterations = _get_all_iterations(step_keys)
-    if step_defs is None:
-        step_defs = _get_all_step_defs()
-    step_defs = _filter_def_by_availability(step_defs)
-
-    # mk download items
-    dld_items = _get_dld_items(iterations, step_defs)
-    if chk_pnt:
-        dld_items = _filter_if_complished(prefix, dld_items)
-
-    # get all steps
-    wf_step_keys = wf.query_keys_of_steps()
-    step_keys = _get_all_queried_steps(wf_step_keys, dld_items)
-    wf_steps = wf.query_step_by_key(step_keys)
-    if not (len(wf_steps) == len(step_keys)):
-        raise RuntimeError("cannot get all the steps ",
-                           str(step_keys),
-                           )
-    # make step dict
-    step_dict = {}
-    for kk,ss in zip(step_keys, wf_steps):
-        step_dict[kk] = ss
-
-    # download all items
-    for ii in dld_items:
-        [step_key, io, item] = ii.split(global_step_def_split)
-        step = step_dict.get(step_key)
-        # skip all problematic steps
-        if step is None or step["phase"] != "Succeeded":
-            continue
-        _dl_step_item(step, ii, prefix, chk_pnt)
         
 
 def _get_all_step_defs():
