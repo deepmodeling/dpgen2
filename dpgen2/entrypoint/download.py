@@ -19,7 +19,9 @@ from dpgen2.utils.dflow_query import (
 )
 from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,
+    download_dpgen2_artifacts_by_def,
 )
+
 
 def download_by_def(
         workflow_id,

@@ -176,17 +176,21 @@ def download_dpgen2_artifacts_by_def(
     if step_defs is None:
         step_defs = _get_all_step_defs()
     step_defs = _filter_def_by_availability(step_defs)
+    if len(step_defs) == 0: 
+        return
 
     # mk download items
     dld_items = _get_dld_items(iterations, step_defs)
     if chk_pnt:
         dld_items = _filter_if_complished(prefix, dld_items)
+    if len(dld_items) == 0: 
+        return
 
     # get all steps
     step_keys = _get_all_queried_steps(wf_step_keys, dld_items)
-    wf_info = wf.query()
-    wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
-    #wf_steps = wf.query_step_by_key(step_keys)
+    # wf_info = wf.query()
+    # wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
+    wf_steps = wf.query_step_by_key(step_keys)
     if not (len(wf_steps) == len(step_keys)):
         raise RuntimeError("cannot get all the steps ",
                            str(step_keys),
@@ -256,7 +260,7 @@ def _dload_output_lower(
             )
         
 
-def _get_all_step_defs():
+def _get_all_step_defs(op_download_setting=op_download_setting):
     ret = []
     for kk,vv in op_download_setting.items():
         idef = vv.input_def
@@ -329,7 +333,13 @@ def _filter_def_by_availability(
 ):
     ret = []
     for dd in defs:
-        [subkey, io, name] = dd.split(global_step_def_split)
+        splitted = dd.split(global_step_def_split)
+        if len(splitted) != 3:
+            raise RuntimeError(
+                "the step definition should be in format "
+                "stepkey/input_or_output/item_name.\n"
+                "for example prep-run-dp-train/output/logs")
+        [subkey, io, name] = splitted
         if io in ["input"]:
             avail = ((subkey in op_download_setting.keys()) and
                      (name in op_download_setting[subkey].input_def.keys())

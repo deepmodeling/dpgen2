@@ -21,6 +21,8 @@ from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts_by_def,
     print_op_download_setting,
     DownloadDefinition,
+    _get_all_iterations,
+    _get_all_step_defs,
 )
 
 
@@ -65,6 +67,34 @@ class Mockedwf:
 class TestDownloadDpgen2Artifact(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree("foo", ignore_errors=True)
+
+    def test_get_all_iterations(self):
+        step_keys = [
+            'init--scheduler', 'iter-000000--foo', 'iter-000000--bar',
+            'iter-000002--tar',
+        ]
+        iterations = _get_all_iterations(step_keys)
+        self.assertEqual(iterations, [0,2])
+
+    def test_get_step_defs(self):
+        setting = {
+            "foo" : DownloadDefinition()
+            .add_input("i0")
+            .add_input("i1")
+            .add_output("o0"),
+            "bar" : DownloadDefinition()
+            .add_output("o0")
+            .add_output("o1"),
+        }
+        expected = [
+            "foo/input/i0",
+            "foo/input/i1",
+            "foo/output/o0",
+            "bar/output/o0",
+            "bar/output/o1",
+        ]
+        step_defs = _get_all_step_defs(setting)
+        self.assertEqual(step_defs, expected)
 
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_download(self, mocked_dl):
@@ -113,6 +143,36 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 path=Path("foo/iter-000001/prep-run-train/output/logs"),
                 skip_exists=True,
             ),
+        ]
+        self.assertEqual(len(mocked_dl.call_args_list), len(expected))
+        for ii, jj in zip(mocked_dl.call_args_list, expected):
+            self.assertEqual(ii, jj)
+
+
+    @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
+    def test_download_empty(self, mocked_dl):
+        with self.assertLogs(level='WARN') as log:
+            download_dpgen2_artifacts_by_def(
+                Mockedwf(), 
+                iterations=[0,1,2],
+                step_defs=[
+                    "foo/input/init_models",
+                    "prep-run-train/output/bar",
+                ],
+                prefix="foo",
+                chk_pnt=False,
+            )
+        self.assertEqual(len(log.output), 2)
+        self.assertEqual(len(log.records), 2)
+        self.assertIn(
+            'cannot find download settings for foo/input/init_models',
+            log.output[0],
+        )
+        self.assertIn(
+            'cannot find download settings for prep-run-train/output/bar',
+            log.output[1],
+        )
+        expected = [
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
         for ii, jj in zip(mocked_dl.call_args_list, expected):
