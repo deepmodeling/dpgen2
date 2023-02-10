@@ -184,14 +184,11 @@ def download_dpgen2_artifacts_by_def(
 
     # get all steps
     step_keys = _get_all_queried_steps(wf_step_keys, dld_items)
-    # wf_info = wf.query()
-    # wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
     wf_steps = wf.query_step_by_key(step_keys)
     if not (len(wf_steps) == len(step_keys)):
-        raise RuntimeError(
-            "cannot get all the steps ",
-            str(step_keys),
-        )
+        # fall back to the wf.query to get the steps.
+        wf_info = wf.query()
+        wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
     # make step dict
     step_dict = {}
     for kk, ss in zip(step_keys, wf_steps):
