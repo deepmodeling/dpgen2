@@ -127,7 +127,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 "numb_candi_f", int, optional=True, default=200, doc=doc_numb_candi_f
             ),
             Argument(
-                "rate_candi_f", float, optional=True, default=0.01, doc=doc_rate_candi_v
+                "rate_candi_f", float, optional=True, default=0.01, doc=doc_rate_candi_f
             ),
             Argument(
                 "level_v_hi", float, optional=True, default=None, doc=doc_level_v_hi
