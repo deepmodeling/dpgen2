@@ -588,9 +588,7 @@ def submit_concurrent_learning(
     # normalize args
     wf_config = normalize_args(wf_config)
 
-    do_lebesgue = wf_config.get("lebesgue_context_config", None) is not None
-
-    context = global_config_workflow(wf_config, do_lebesgue=do_lebesgue)
+    global_config_workflow(wf_config)
 
     dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
 
@@ -629,7 +627,7 @@ def submit_concurrent_learning(
             selector,
         )
 
-    wf = Workflow(name="dpgen", context=context)
+    wf = Workflow(name="dpgen")
     wf.add(dpgen_step)
 
     # for debug purpose, we may not really submit the wf
@@ -694,7 +692,7 @@ def resubmit_concurrent_learning(
 ):
     wf_config = normalize_args(wf_config)
 
-    context = global_config_workflow(wf_config)
+    global_config_workflow(wf_config)
 
     old_wf = Workflow(id=wfid)
     all_step_keys = get_resubmit_keys(old_wf)

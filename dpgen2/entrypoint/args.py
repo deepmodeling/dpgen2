@@ -3,9 +3,6 @@ from dargs import (
     Argument,
     Variant,
 )
-from dflow.plugins.lebesgue import (
-    LebesgueExecutor,
-)
 
 import dpgen2
 from dpgen2.conf import (
@@ -271,20 +268,6 @@ def dflow_conf_args():
     ]
 
 
-def lebesgue_conf_args():
-    doc_lebesgue_context_config = "Configuration passed to dflow Lebesgue context"
-
-    return [
-        Argument(
-            "lebesgue_context_config",
-            dict,
-            optional=True,
-            default=None,
-            doc=doc_lebesgue_context_config,
-        ),
-    ]
-
-
 def bohrium_conf_args():
     doc_username = "The username of the Bohrium platform"
     doc_password = "The password of the Bohrium platform"
@@ -440,7 +423,6 @@ def submit_args(default_step_config=normalize_step_dict({})):
 
     return (
         dflow_conf_args()
-        + lebesgue_conf_args()
         + default_step_config_args()
         + [
             Argument(
@@ -490,7 +472,7 @@ def normalize(data):
 
     base = Argument("base", dict, defs)
     data = base.normalize_value(data, trim_pattern="_*")
-    # not possible to strictly check Lebesgue_executor_args, dirty hack!
+    # not possible to strictly check arguments, dirty hack!
     base.check_value(data, strict=False)
     return data
 

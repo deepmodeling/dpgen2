@@ -175,15 +175,8 @@ old_str = textwrap.dedent(
 	    "_comment" : "all"
 	},
 	"executor" : {
-	    "type" : "lebesgue_v2",
-	    "extra" : {
-		"scass_type": "c6_m64_1 * NVIDIA 3090",
-		"machine_type": "c6_m64_1 * NVIDIA 3090",
-		"platform": "paratera",
-		"program_id": "xxxx",
-		"job_type": "container",
-		"region" : "default"
-	    }
+                "type": "dispatcher",
+                "username": "foo"
 	},
 	"_comment" : "all"
     },
@@ -193,15 +186,8 @@ old_str = textwrap.dedent(
 	    "_comment" : "all"
 	},
 	"executor" : {
-	    "type" : "lebesgue_v2",
-	    "extra" : {
-		"scass_type": "c8_m32_cpu",
-		"machine_type": "c8_m32_cpu",
-		"platform": "paratera",
-		"program_id": "xxxx",
-		"job_type": "container",
-		"region" : "default"
-	    }
+                "type": "dispatcher",
+                "username": "foo"
 	},
 	"_comment" : "all"
     },
@@ -211,15 +197,8 @@ old_str = textwrap.dedent(
 	    "_comment" : "all"
 	},
 	"executor" : {
-	    "type" : "lebesgue_v2",
-	    "extra" : {
-		"scass_type": "c16_m64_cpu",
-		"machine_type": "c16_m64_cpu",
-		"platform": "paratera",
-		"program_id": "xxxx",
-		"job_type": "container",
-		"region" : "default"
-	    }
+                "type": "dispatcher",
+                "username": "foo"
 	},
 	"_comment" : "all"
     },
@@ -237,22 +216,6 @@ old_str = textwrap.dedent(
 	"host" : "http://60.205.112.9:2746",
 	"s3_endpoint" : "60.205.112.9:9000",
 	"_catalog_file_name" : "dflow"
-    },
-
-    "lebesgue_context_config": {
-	"executor" : "lebesgue_v2",
-        "extra" : {
-	    "scass_type": "c8_m32_cpu",
-	    "machine_type": "c8_m32_cpu",
-            "platform": "xxxx",
-            "program_id": "xxxx",
-            "job_type": "container",
-	    "region" : "default"
-        },
-        "app_name" : "Default",
-        "org_id" : "xxx",
-        "user_id" : "xxx",
-        "tag" : ""
     },
 
     "_comment" : "upload the dpgen2 package if it is not in the images",
@@ -361,21 +324,6 @@ new_str = textwrap.dedent(
 	"s3_endpoint" : "address.of.the.s3.sever:port"
     },
 
-    "lebesgue_context_config": {
-	"executor" : "lebesgue_v2",
-        "extra" : {
-	    "scass_type": "c8_m32_cpu",
-	    "machine_type": "c8_m32_cpu",
-            "platform": "xxxx",
-            "program_id": "xxxx",
-            "job_type": "container",
-	    "region" : "default"
-        },
-        "app_name" : "Default",
-        "org_id" : "xxx",
-        "user_id" : "xxx",
-        "tag" : ""
-    },
 
     "default_step_config" : {
 	"template_config" : {
@@ -392,15 +340,8 @@ new_str = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c6_m64_1 * NVIDIA 3090",
-		    "machine_type": "c6_m64_1 * NVIDIA 3090",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},
@@ -410,15 +351,8 @@ new_str = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c8_m32_cpu",
-		    "machine_type": "c8_m32_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},
@@ -428,15 +362,8 @@ new_str = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c16_m64_cpu",
-		    "machine_type": "c16_m64_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},

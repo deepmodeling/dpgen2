@@ -25,7 +25,6 @@ from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 def global_config_workflow(
     wf_config,
-    do_lebesgue: bool = False,
 ):
     # dflow_config, dflow_s3_config
     workflow_config_from_dict(wf_config)
@@ -34,27 +33,9 @@ def global_config_workflow(
         dflow.config["mode"] = "debug"
         return None
 
-    # lebesgue context
-    lebesgue_context = None
-    if do_lebesgue:
-        from dflow.plugins.lebesgue import (
-            LebesgueContext,
-        )
-
-        lb_context_config = wf_config.get("lebesgue_context_config", None)
-        if lb_context_config:
-            lebesgue_context = LebesgueContext(
-                **lb_context_config,
-            )
-
     # bohrium configuration
     if wf_config.get("bohrium_config") is not None:
-        assert (
-            lebesgue_context is None
-        ), "cannot use bohrium and lebesgue at the same time"
         bohrium_config_from_dict(wf_config["bohrium_config"])
-
-    return lebesgue_context
 
 
 def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:

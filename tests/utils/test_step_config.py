@@ -50,11 +50,8 @@ class TestStepConfig(unittest.TestCase):
                 "image": "bula",
             },
             "executor": {
-                "type": "lebesgue_v2",
-                "extra": {
-                    "scass_type": "foo",
-                    "program_id": "bar",
-                },
+                "type": "dispatcher",
+                "username": "foo",
             },
         }
         expected_odict = {
@@ -69,13 +66,8 @@ class TestStepConfig(unittest.TestCase):
             "continue_on_num_success": None,
             "continue_on_success_ratio": None,
             "executor": {
-                "type": "lebesgue_v2",
-                "extra": {
-                    "scass_type": "foo",
-                    "program_id": "bar",
-                    "job_type": "container",
-                    "template_cover_cmd_escape_bug": True,
-                },
+                "type": "dispatcher",
+                "username": "foo",
             },
             "parallelism": None,
         }
@@ -107,11 +99,8 @@ class TestStepConfig(unittest.TestCase):
                 "image": "bula",
             },
             "executor": {
-                "type": "lebesgue_v2",
-                "extra": {
-                    "scass_type": "foo",
-                    "program_id": "bar",
-                },
+                "type": "dispatcher",
+                "username": "foo",
             },
         }
         odict = normalize(idict)
@@ -121,7 +110,9 @@ class TestStepConfig(unittest.TestCase):
 
         with dflow_mode("default"):
             ret = init_executor(deepcopy(odict).pop("executor"))
-            self.assertTrue(isinstance(ret, dflow.plugins.lebesgue.LebesgueExecutor))
+            self.assertTrue(
+                isinstance(ret, dflow.plugins.dispatcher.DispatcherExecutor)
+            )
 
     def test_init_executor_notype(self):
         idict = {
