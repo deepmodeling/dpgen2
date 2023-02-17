@@ -263,6 +263,7 @@ def make_naive_exploration_scheduler(
             tgroup.set_conf(
                 conf_list,
                 n_sample=n_sample,
+                random_sample=True,
             )
             tasks = tgroup.make_task()
             stage.add_task_group(tasks)
