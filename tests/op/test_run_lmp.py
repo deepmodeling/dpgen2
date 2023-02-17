@@ -1,3 +1,4 @@
+import os
 import json
 import shutil
 import unittest
@@ -32,6 +33,7 @@ from dpgen2.constants import (
 )
 from dpgen2.op.run_lmp import (
     RunLmp,
+    randomly_shuffle_models,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -218,3 +220,51 @@ run             3000 upto
 
         # The number of models have to be 2 in knowledge distillation
         self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
+
+
+def swap_element(arg):
+    bk = arg.copy()
+    arg[1] = bk[0]
+    arg[0] = bk[1]
+
+class TestRandomShuffleModels(unittest.TestCase):
+    def setUp(self):
+        self.input_name = Path("lmp.input")        
+
+    def tearDown(self):
+        os.remove(self.input_name)
+
+    @patch("dpgen2.op.run_lmp.random.shuffle")
+    def test(self, mock_shuffle):
+        mock_shuffle.side_effect = swap_element
+        lmp_config = (
+            "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out"
+        )
+        expected_output = (
+            "pair_style deepmd model.001.pb model.000.pb out_freq 10 out_file model_devi.out"
+        )
+        input_name = self.input_name
+        input_name.write_text(lmp_config)
+        randomly_shuffle_models(input_name)
+        self.assertEqual(input_name.read_text(), expected_output)
+
+    def test_failed(self):
+        lmp_config = (
+            "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out model.002.pb"
+        )
+        input_name = self.input_name
+        input_name = Path("lmp.input")
+        input_name.write_text(lmp_config)
+        with self.assertRaises(RuntimeError) as re:
+            randomly_shuffle_models(input_name)
+        
+    def test_failed_no_matching(self):
+        lmp_config = (
+            "pair_style      deepmd  out_freq 10 out_file model_devi.out"
+        )
+        input_name = self.input_name
+        input_name = Path("lmp.input")
+        input_name.write_text(lmp_config)
+        with self.assertRaises(RuntimeError) as re:
+            randomly_shuffle_models(input_name)
+        
