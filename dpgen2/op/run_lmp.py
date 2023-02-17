@@ -1,5 +1,7 @@
 import json
 import os
+import random
+import re
 from pathlib import (
     Path,
 )
@@ -33,6 +35,7 @@ from dpgen2.constants import (
     lmp_model_devi_name,
     lmp_traj_name,
     model_name_pattern,
+    model_name_match_pattern,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -110,6 +113,7 @@ class RunLmp(OP):
         config = RunLmp.normalize_config(config)
         command = config["command"]
         teacher_model: Optional[BinaryFileInput] = config["teacher_model_path"]
+        shuffle_models: Optional[bool] = config["shuffle_models"]
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         models = ip["models"]
@@ -138,6 +142,9 @@ class RunLmp(OP):
             if teacher_model is not None:
                 add_teacher_model(lmp_input_name)
 
+            if shuffle_models:
+                randomly_shuffle_models(lmp_input_name)
+
             # run lmp
             command = " ".join([command, "-i", lmp_input_name, "-log", lmp_log_name])
             ret, out, err = run_command(command, shell=True)
@@ -158,6 +165,7 @@ class RunLmp(OP):
     def lmp_args():
         doc_lmp_cmd = "The command of LAMMPS"
         doc_teacher_model = "The teacher model in `Knowledge Distillation`"
+        doc_shuffle_models = "Randomly pick a model from the group of models to drive theexploration MD simulation"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
             Argument(
@@ -167,6 +175,8 @@ class RunLmp(OP):
                 default=None,
                 doc=doc_teacher_model,
             ),
+            Argument("shuffle_models", bool, optional=True, default=False,
+                     doc=doc_shuffle_models)
         ]
 
     @staticmethod
@@ -195,6 +205,46 @@ def add_teacher_model(lmp_input_name: str):
     lmp_input_lines[idx] = lmp_input_lines[idx].replace(
         model0_pattern, " ".join([model_name_pattern % i for i in range(2)])
     )
+
+    with open(lmp_input_name, "w", encoding="utf8") as f:
+        f.write("".join(lmp_input_lines))
+
+
+def randomly_shuffle_models(lmp_input_name: str):
+    with open(lmp_input_name, encoding="utf8") as f:
+        lmp_input_lines = f.readlines()
+
+    idx = find_only_one_key(lmp_input_lines, ["pair_style", "deepmd"])
+    new_line_split = lmp_input_lines[idx].split()
+    match_first = -1
+    match_last = -1
+    pattern = model_name_match_pattern
+    for sidx,ii in enumerate(new_line_split):
+        if re.fullmatch(pattern, ii) is not None:
+            if match_first == -1:
+                match_first = sidx
+        else:
+            if match_first != -1:
+                match_last = sidx
+                break
+    if match_first == -1:
+        raise RuntimeError(
+            f'cannot file model pattern {pattern} in line '
+            f' {lmp_input_lines[idx]}'
+    )
+    if match_last == -1:
+        raise RuntimeError(
+            f'last matching index should not be -1, terribly wrong '
+    )
+    for ii in range(match_last, len(new_line_split)):
+        if re.fullmatch(pattern, new_line_split[ii]) is not None:
+            raise RuntimeError(
+                f'unexpected matching of model pattern {pattern} '
+                f'in line {lmp_input_lines[idx]}')
+    tmp = new_line_split[match_first:match_last]
+    random.shuffle(tmp)
+    new_line_split[match_first:match_last] = tmp    
+    lmp_input_lines[idx] = " ".join(new_line_split)
 
     with open(lmp_input_name, "w", encoding="utf8") as f:
         f.write("".join(lmp_input_lines))
