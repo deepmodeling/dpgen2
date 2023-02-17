@@ -414,15 +414,8 @@ input_std = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c6_m64_1 * NVIDIA 3090",
-		    "machine_type": "c6_m64_1 * NVIDIA 3090",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},
@@ -432,15 +425,8 @@ input_std = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c8_m32_cpu",
-		    "machine_type": "c8_m32_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},
@@ -450,15 +436,8 @@ input_std = textwrap.dedent(
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c16_m64_cpu",
-		    "machine_type": "c16_m64_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
-		}
+                "type": "dispatcher",
+                "username": "foo"
 	    },
 	    "_comment" : "all"
 	},
