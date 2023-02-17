@@ -11,10 +11,10 @@ from dflow import (
 from dflow.plugins.dispatcher import (
     DispatcherExecutor,
 )
+
 from dpgen2.constants import (
     default_image,
 )
-
 
 
 def dispatcher_args():

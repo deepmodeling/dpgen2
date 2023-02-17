@@ -3,6 +3,7 @@ from dargs import (
     Argument,
     Variant,
 )
+
 import dpgen2
 from dpgen2.conf import (
     conf_styles,
