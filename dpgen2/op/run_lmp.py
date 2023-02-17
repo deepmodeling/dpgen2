@@ -34,8 +34,8 @@ from dpgen2.constants import (
     lmp_log_name,
     lmp_model_devi_name,
     lmp_traj_name,
-    model_name_pattern,
     model_name_match_pattern,
+    model_name_pattern,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -175,8 +175,13 @@ class RunLmp(OP):
                 default=None,
                 doc=doc_teacher_model,
             ),
-            Argument("shuffle_models", bool, optional=True, default=False,
-                     doc=doc_shuffle_models)
+            Argument(
+                "shuffle_models",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_shuffle_models,
+            ),
         ]
 
     @staticmethod
@@ -219,7 +224,7 @@ def randomly_shuffle_models(lmp_input_name: str):
     match_first = -1
     match_last = -1
     pattern = model_name_match_pattern
-    for sidx,ii in enumerate(new_line_split):
+    for sidx, ii in enumerate(new_line_split):
         if re.fullmatch(pattern, ii) is not None:
             if match_first == -1:
                 match_first = sidx
@@ -229,21 +234,19 @@ def randomly_shuffle_models(lmp_input_name: str):
                 break
     if match_first == -1:
         raise RuntimeError(
-            f'cannot file model pattern {pattern} in line '
-            f' {lmp_input_lines[idx]}'
-    )
+            f"cannot file model pattern {pattern} in line " f" {lmp_input_lines[idx]}"
+        )
     if match_last == -1:
-        raise RuntimeError(
-            f'last matching index should not be -1, terribly wrong '
-    )
+        raise RuntimeError(f"last matching index should not be -1, terribly wrong ")
     for ii in range(match_last, len(new_line_split)):
         if re.fullmatch(pattern, new_line_split[ii]) is not None:
             raise RuntimeError(
-                f'unexpected matching of model pattern {pattern} '
-                f'in line {lmp_input_lines[idx]}')
+                f"unexpected matching of model pattern {pattern} "
+                f"in line {lmp_input_lines[idx]}"
+            )
     tmp = new_line_split[match_first:match_last]
     random.shuffle(tmp)
-    new_line_split[match_first:match_last] = tmp    
+    new_line_split[match_first:match_last] = tmp
     lmp_input_lines[idx] = " ".join(new_line_split)
 
     with open(lmp_input_name, "w", encoding="utf8") as f:
