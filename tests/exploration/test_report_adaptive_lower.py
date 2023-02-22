@@ -13,24 +13,35 @@ from dargs import (
     Argument,
 )
 
-from dpgen2.exploration.report import (
-    ExplorationReportAdaptiveLower,
-)
-
 from dpgen2.exploration.deviation import (
     DeviManager,
-    DeviManagerStd
+    DeviManagerStd,
+)
+from dpgen2.exploration.report import (
+    ExplorationReportAdaptiveLower,
 )
 
 
 class TestTrajsExplorationResport(unittest.TestCase):
     def test_fv(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
-        
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]))
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
+        )
 
         expected_fail_ = [[0, 2, 3, 4, 7, 8], [1, 2, 3, 4]]
         expected_fail = set()
@@ -106,8 +117,14 @@ class TestTrajsExplorationResport(unittest.TestCase):
 
     def test_f(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
 
         expected_fail_ = [[0, 2, 8], [2, 3, 4]]
         expected_fail = set()
@@ -146,11 +163,23 @@ class TestTrajsExplorationResport(unittest.TestCase):
 
     def test_v(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
-        
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
+        )
 
         expected_fail_ = [[0, 2, 8], [2, 3, 4]]
         expected_fail = set()
