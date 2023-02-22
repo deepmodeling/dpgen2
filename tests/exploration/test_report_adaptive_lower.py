@@ -17,17 +17,21 @@ from dpgen2.exploration.report import (
     ExplorationReportAdaptiveLower,
 )
 
+from dpgen2.exploration.deviation import (
+    DeviManager,
+    DeviManagerStd
+)
+
 
 class TestTrajsExplorationResport(unittest.TestCase):
     def test_fv(self):
-        md_f = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
-        md_v = [
-            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
-            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
-        ]
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+
         expected_fail_ = [[0, 2, 3, 4, 7, 8], [1, 2, 3, 4]]
         expected_fail = set()
         for idx, ii in enumerate(expected_fail_):
@@ -46,7 +50,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
             n_checked_steps=3,
             conv_tolerance=0.001,
         )
-        ter.record(md_f, md_v)
+        ter.record(model_devi)
         self.assertEqual(ter.candi, expected_cand)
         self.assertEqual(ter.accur, expected_accu)
         self.assertEqual(set(ter.failed), expected_fail)
@@ -101,10 +105,10 @@ class TestTrajsExplorationResport(unittest.TestCase):
         )
 
     def test_f(self):
-        md_f = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+
         expected_fail_ = [[0, 2, 8], [2, 3, 4]]
         expected_fail = set()
         for idx, ii in enumerate(expected_fail_):
@@ -122,7 +126,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
             n_checked_steps=2,
             conv_tolerance=0.1,
         )
-        ter.record(md_f)
+        ter.record(model_devi)
         self.assertFalse(ter.converged([]))
         self.assertEqual(ter.candi, expected_cand)
         self.assertEqual(ter.accur, expected_accu)
@@ -141,14 +145,13 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
 
     def test_v(self):
-        md_v = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
-        md_f = [
-            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
-            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
-        ]
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+
         expected_fail_ = [[0, 2, 8], [2, 3, 4]]
         expected_fail = set()
         for idx, ii in enumerate(expected_fail_):
@@ -169,7 +172,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
             n_checked_steps=3,
             conv_tolerance=0.001,
         )
-        ter.record(md_f, md_v)
+        ter.record(model_devi)
         self.assertEqual(ter.candi, expected_cand)
         self.assertEqual(ter.accur, expected_accu)
         self.assertEqual(set(ter.failed), expected_fail)
