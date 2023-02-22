@@ -17,17 +17,20 @@ from dpgen2.exploration.report import (
     ExplorationReportTrustLevels,
 )
 
+from dpgen2.exploration.deviation import (
+    DeviManager,
+    DeviManagerStd
+)
+
 
 class TestTrajsExplorationResport(unittest.TestCase):
     def test_fv(self):
-        md_f = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
-        md_v = [
-            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.41, 0.22, 0.82, 0.42]),
-            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
-        ]
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.41, 0.22, 0.82, 0.42]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+
         # id_f_accu = [ [3, 5, 1], [1, 7, 5] ]
         # id_f_cand = [ [4, 7, 6], [8, 6, 0] ]
         # id_f_fail = [ [2, 0, 8], [4, 2, 3] ]
@@ -43,7 +46,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         all_cand_sel = [(0, 6), (0, 5), (1, 8), (1, 6), (1, 0), (1, 5)]
 
         ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.9)
-        ter.record(md_f, md_v)
+        ter.record(model_devi)
         self.assertFalse(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
         self.assertEqual(ter.traj_accu, expected_accu)
@@ -62,11 +65,10 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(ter.failed_ratio(), 10.0 / 18.0)
 
     def test_f(self):
-        md_f = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
-        md_v = None
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+
         id_f_accu = [[3, 5, 1], [1, 7, 5]]
         id_f_cand = [[4, 7, 6], [8, 6, 0]]
         id_f_fail = [[2, 0, 8], [4, 2, 3]]
@@ -82,7 +84,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         all_cand_sel = [(0, 4), (0, 7), (0, 6), (1, 6), (1, 0), (1, 8)]
 
         ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.2)
-        ter.record(md_f, md_v)
+        ter.record(model_devi)
         self.assertTrue(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
         self.assertEqual(ter.traj_accu, expected_accu)
@@ -98,11 +100,10 @@ class TestTrajsExplorationResport(unittest.TestCase):
         self.assertEqual(npicked, 2)
 
     def test_f_max(self):
-        md_f = [
-            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
-            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
-        ]
-        md_v = None
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+
         id_f_accu = [[3, 5, 1], [1, 7, 5]]
         id_f_cand = [[4, 7, 6], [8, 6, 0]]
         id_f_fail = [[2, 0, 8], [4, 2, 3]]
@@ -118,7 +119,7 @@ class TestTrajsExplorationResport(unittest.TestCase):
         all_cand_sel = [(0, 4), (0, 7), (0, 6), (1, 6), (1, 0), (1, 8)]
 
         ter = ExplorationReportTrustLevels(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.2)
-        ter.record(md_f, md_v)
+        ter.record(model_devi)
         self.assertTrue(ter.converged())
         self.assertEqual(ter.traj_cand, expected_cand)
         self.assertEqual(ter.traj_accu, expected_accu)

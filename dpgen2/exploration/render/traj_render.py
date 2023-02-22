@@ -16,6 +16,8 @@ from typing import (
 import dpdata
 import numpy as np
 
+from ..deviation import DeviManager
+
 if TYPE_CHECKING:
     from dpgen2.exploration.selector import (
         ConfFilters,
@@ -27,7 +29,7 @@ class TrajRender(ABC):
     def get_model_devi(
         self,
         files: List[Path],
-    ) -> Tuple[List[np.ndarray], Union[List[np.ndarray], None]]:
+    ) -> DeviManager:
         r"""Get model deviations from recording files.
 
         Parameters
@@ -37,14 +39,7 @@ class TrajRender(ABC):
 
         Returns
         -------
-        model_devis: Tuple[List[np.array], Union[List[np.array],None]]
-            A tuple. model_devis[0] is the force model deviations,
-            model_devis[1] is the virial model deviations.
-            The model_devis[1] can be None.
-            If not None, model_devis[i] is List[np.array], where np.array is a
-            one-dimensional array.
-            The first dimension of model_devis[i] is the trajectory
-            (same size as len(files)), while the second dimension is the frame.
+        DeviManager: The class which is responsible for model deviation management.
         """
         pass
 

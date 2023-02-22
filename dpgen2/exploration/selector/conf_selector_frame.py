@@ -81,10 +81,10 @@ class ConfSelectorFrames(ConfSelector):
         ntraj = len(trajs)
         assert ntraj == len(model_devis)
 
-        mdf, mdv = self.traj_render.get_model_devi(model_devis)
+        md_model_devi = self.traj_render.get_model_devi(model_devis)
 
         self.report.clear()
-        self.report.record(mdf, mdv)
+        self.report.record(md_model_devi)
         id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
 
         ms = self.traj_render.get_confs(

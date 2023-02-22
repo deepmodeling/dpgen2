@@ -40,6 +40,10 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTaskGroup,
 )
+from dpgen2.exploration.deviation import (
+    DeviManager,
+    DeviManagerStd
+)
 
 # isort: off
 import exploration.context
@@ -273,13 +277,21 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler_1)
-
+        
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
         tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
-        tar_report.record([np.array([0.08, 0.05])])
+        tar_report.record(model_devi)
+
+        model_devi.clear()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
         foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        foo_report.record([np.array([0.3, 0.9])])
+        foo_report.record(model_devi)
+        
+        model_devi.clear()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
         bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        bar_report.record([np.array([0.1, 0.1])])
+        bar_report.record(model_devi)
 
         expected_output = [
             "#   stage  id_stg.    iter.      accu.      cand.      fail.   lvl_f_lo   lvl_f_hi    cvged",
@@ -329,12 +341,20 @@ class TestExplorationScheduler(unittest.TestCase):
         )
         scheduler.add_stage_scheduler(stage_scheduler_1)
 
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
         tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
-        tar_report.record([np.array([0.08, 0.05])])
+        tar_report.record(model_devi)
+        
+        model_devi.clear()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
         foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        foo_report.record([np.array([0.3, 0.9])])
+        foo_report.record(model_devi)
+        
+        model_devi.clear()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
         bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
-        bar_report.record([np.array([0.1, 0.1])])
+        bar_report.record(model_devi)
 
         expected_output = [
             "#   stage  id_stg.    iter.      accu.      cand.      fail.   lvl_f_lo   lvl_f_hi    cvged",

@@ -17,6 +17,10 @@ from . import (
     ExplorationReport,
 )
 
+from ..deviation import (
+    DeviManager,
+)
+
 
 class ExplorationReportTrustLevels(ExplorationReport):
     def __init__(
@@ -34,6 +38,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.conv_accuracy = conv_accuracy
         self.clear()
         self.v_level = (self.level_v_lo is not None) and (self.level_v_hi is not None)
+        self.model_devi = None
 
         print_tuple = (
             "stage",
@@ -91,17 +96,16 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.traj_accu = []
         self.traj_fail = []
         self.traj_cand_picked = []
+        self.model_devi = None
 
     def record(
         self,
-        md_f: List[np.ndarray],
-        md_v_: Optional[List[np.ndarray]] = None,
+        model_devi: DeviManager,
     ):
-        ntraj = len(md_f)
-        if md_v_ is None:
-            md_v = [None for ii in range(ntraj)]
-        else:
-            md_v = md_v_
+        ntraj = model_devi.ntraj
+        md_f = model_devi.get(DeviManager.MAX_DEVI_F)
+        md_v = model_devi.get(DeviManager.MAX_DEVI_V)
+
         for ii in range(ntraj):
             id_f_cand, id_f_accu, id_f_fail = self._get_indexes(
                 md_f[ii], self.level_f_lo, self.level_f_hi
@@ -121,6 +125,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         assert len(self.traj_cand) == ntraj
         assert len(self.traj_accu) == ntraj
         assert len(self.traj_fail) == ntraj
+        self.model_devi = model_devi
 
     def _get_indexes(
         self,

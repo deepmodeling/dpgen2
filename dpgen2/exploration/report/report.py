@@ -10,6 +10,8 @@ from typing import (
 
 import numpy as np
 
+from ..deviation import DeviManager
+
 
 class ExplorationReport(ABC):
     @abstractmethod
@@ -20,19 +22,20 @@ class ExplorationReport(ABC):
     @abstractmethod
     def record(
         self,
-        md_f: List[np.ndarray],
-        md_v: Optional[List[np.ndarray]] = None,
+        model_devi: DeviManager,
     ):
         r"""Record the model deviations of the trajectories
 
         Parameters
         ----------
-        mdf : List[np.ndarray]
-            The force model deviations. mdf[ii][jj] is the force model deviation
-            of the jj-th frame of the ii-th trajectory.
-        mdv : Optional[List[np.ndarray]]
-            The virial model deviations. mdv[ii][jj] is the virial model deviation
-            of the jj-th frame of the ii-th trajectory.
+        model_devi : DeviManager
+            The class which is responsible for model deviation management. 
+            Model deviations is stored as a List[Optional[np.ndarray]],
+            where np.array is a one-dimensional array.
+            List[np.ndarray][ii][jj] is the force model deviation of
+            the jj-th frame of the ii-th trajectory.
+            Model deviations can be List[None], where len(List[None]) is
+            the number of trajectory files.
         """
         pass
 

@@ -16,6 +16,11 @@ from .traj_render import (
     TrajRender,
 )
 
+from ..deviation import (
+    DeviManager,
+    DeviManagerStd
+)
+
 if TYPE_CHECKING:
     from dpgen2.exploration.selector import (
         ConfFilters,
@@ -32,19 +37,24 @@ class TrajRenderLammps(TrajRender):
     def get_model_devi(
         self,
         files: List[Path],
-    ) -> Tuple[List[np.ndarray], Union[List[np.ndarray], None]]:
-        nframes = len(files)
-        mdfs = []
-        mdvs = []
-        for ii in range(nframes):
-            mdf, mdv = self._load_one_model_devi(files[ii])
-            mdfs.append(mdf)
-            mdvs.append(mdv)
-        return mdfs, mdvs
+    ) -> DeviManager:
+        ntraj = len(files)
 
-    def _load_one_model_devi(self, fname):
+        model_devi = DeviManagerStd()
+        for ii in range(ntraj):
+            self._load_one_model_devi(files[ii], model_devi)
+        
+        return model_devi
+
+
+    def _load_one_model_devi(self, fname, model_devi):
         dd = np.loadtxt(fname)
-        return dd[:, 4], dd[:, 1]
+        model_devi.add(DeviManager.MAX_DEVI_V, dd[:, 1])
+        model_devi.add(DeviManager.MIN_DEVI_V, dd[:, 2])
+        model_devi.add(DeviManager.AVG_DEVI_V, dd[:, 3])
+        model_devi.add(DeviManager.MAX_DEVI_F, dd[:, 4])
+        model_devi.add(DeviManager.MIN_DEVI_F, dd[:, 5])
+        model_devi.add(DeviManager.AVG_DEVI_F, dd[:, 6])
 
     def get_confs(
         self,
