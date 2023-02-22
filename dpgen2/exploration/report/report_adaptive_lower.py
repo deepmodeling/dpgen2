@@ -18,6 +18,9 @@ from . import (
     ExplorationReport,
 )
 
+from ..deviation import (
+    DeviManager,
+)
 
 class ExplorationReportAdaptiveLower(ExplorationReport):
     r"""The exploration report that adapts the lower trust level.
@@ -85,6 +88,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             self.rate_candi_v = 0.0
         self.n_checked_steps = n_checked_steps
         self.conv_tolerance = conv_tolerance
+        self.model_devi = None
         self.clear()
 
         print_tuple = (
@@ -159,18 +163,17 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.accur = set()
         self.failed = []
         self.candi_picked = []
+        self.model_devi = None
 
     def record(
         self,
-        md_f: List[np.ndarray],
-        md_v_: Optional[List[np.ndarray]] = None,
+        model_devi: DeviManager,
     ):
-        ntraj = len(md_f)
+        ntraj = model_devi.ntraj
         self.ntraj += ntraj
-        if md_v_ is None:
-            md_v = [None for ii in range(ntraj)]
-        else:
-            md_v = md_v_
+        md_f = model_devi.get(DeviManager.MAX_DEVI_F)
+        md_v = model_devi.get(DeviManager.MAX_DEVI_V)
+
         # inits
         coll_f = []
         coll_v = []
@@ -214,12 +217,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             self.candi.add(tuple(coll_v[ii][1:]))
         # accurate set is substracted by the candidate set
         self.accur = self.accur - self.candi
+        self.model_devi = model_devi
 
     def _record_one_traj(
         self,
         tt,
-        md_f: np.ndarray,
-        md_v: Optional[np.ndarray] = None,
+        md_f,
+        md_v,
     ):
         """
         Record one trajctory.
