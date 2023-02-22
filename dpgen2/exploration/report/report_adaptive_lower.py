@@ -14,13 +14,13 @@ from dflow.python import (
     FatalError,
 )
 
+from ..deviation import (
+    DeviManager,
+)
 from . import (
     ExplorationReport,
 )
 
-from ..deviation import (
-    DeviManager,
-)
 
 class ExplorationReportAdaptiveLower(ExplorationReport):
     r"""The exploration report that adapts the lower trust level.

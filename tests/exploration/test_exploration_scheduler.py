@@ -22,6 +22,10 @@ from dflow.python import (
     FatalError,
 )
 
+from dpgen2.exploration.deviation import (
+    DeviManager,
+    DeviManagerStd,
+)
 from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
@@ -39,10 +43,6 @@ from dpgen2.exploration.selector import (
 from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTaskGroup,
-)
-from dpgen2.exploration.deviation import (
-    DeviManager,
-    DeviManagerStd
 )
 
 # isort: off
@@ -277,7 +277,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler_1)
-        
+
         model_devi = DeviManagerStd()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
         tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
@@ -287,7 +287,7 @@ class TestExplorationScheduler(unittest.TestCase):
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
         foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
         foo_report.record(model_devi)
-        
+
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
         bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
@@ -345,12 +345,12 @@ class TestExplorationScheduler(unittest.TestCase):
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
         tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
         tar_report.record(model_devi)
-        
+
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
         foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
         foo_report.record(model_devi)
-        
+
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
         bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)

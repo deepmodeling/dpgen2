@@ -13,12 +13,11 @@ from dflow.python import (
     FatalError,
 )
 
-from . import (
-    ExplorationReport,
-)
-
 from ..deviation import (
     DeviManager,
+)
+from . import (
+    ExplorationReport,
 )
 
 

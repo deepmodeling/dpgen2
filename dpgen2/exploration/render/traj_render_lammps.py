@@ -12,13 +12,12 @@ from typing import (
 import dpdata
 import numpy as np
 
-from .traj_render import (
-    TrajRender,
-)
-
 from ..deviation import (
     DeviManager,
-    DeviManagerStd
+    DeviManagerStd,
+)
+from .traj_render import (
+    TrajRender,
 )
 
 if TYPE_CHECKING:
@@ -43,9 +42,8 @@ class TrajRenderLammps(TrajRender):
         model_devi = DeviManagerStd()
         for ii in range(ntraj):
             self._load_one_model_devi(files[ii], model_devi)
-        
-        return model_devi
 
+        return model_devi
 
     def _load_one_model_devi(self, fname, model_devi):
         dd = np.loadtxt(fname)

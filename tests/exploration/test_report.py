@@ -13,23 +13,34 @@ from dargs import (
     Argument,
 )
 
-from dpgen2.exploration.report import (
-    ExplorationReportTrustLevels,
-)
-
 from dpgen2.exploration.deviation import (
     DeviManager,
-    DeviManagerStd
+    DeviManagerStd,
+)
+from dpgen2.exploration.report import (
+    ExplorationReportTrustLevels,
 )
 
 
 class TestTrajsExplorationResport(unittest.TestCase):
     def test_fv(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.41, 0.22, 0.82, 0.42]))
-        model_devi.add(DeviManager.MAX_DEVI_V, np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.41, 0.22, 0.82, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
+        )
 
         # id_f_accu = [ [3, 5, 1], [1, 7, 5] ]
         # id_f_cand = [ [4, 7, 6], [8, 6, 0] ]
@@ -66,8 +77,14 @@ class TestTrajsExplorationResport(unittest.TestCase):
 
     def test_f(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
 
         id_f_accu = [[3, 5, 1], [1, 7, 5]]
         id_f_cand = [[4, 7, 6], [8, 6, 0]]
@@ -101,8 +118,14 @@ class TestTrajsExplorationResport(unittest.TestCase):
 
     def test_f_max(self):
         model_devi = DeviManagerStd()
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]))
-        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]))
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.12, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
 
         id_f_accu = [[3, 5, 1], [1, 7, 5]]
         id_f_cand = [[4, 7, 6], [8, 6, 0]]

@@ -16,7 +16,9 @@ from typing import (
 import dpdata
 import numpy as np
 
-from ..deviation import DeviManager
+from ..deviation import (
+    DeviManager,
+)
 
 if TYPE_CHECKING:
     from dpgen2.exploration.selector import (

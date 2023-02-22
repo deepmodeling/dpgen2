@@ -10,7 +10,9 @@ from typing import (
 
 import numpy as np
 
-from ..deviation import DeviManager
+from ..deviation import (
+    DeviManager,
+)
 
 
 class ExplorationReport(ABC):
@@ -29,7 +31,7 @@ class ExplorationReport(ABC):
         Parameters
         ----------
         model_devi : DeviManager
-            The class which is responsible for model deviation management. 
+            The class which is responsible for model deviation management.
             Model deviations is stored as a List[Optional[np.ndarray]],
             where np.array is a one-dimensional array.
             List[np.ndarray][ii][jj] is the force model deviation of
