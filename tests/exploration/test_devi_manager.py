@@ -15,8 +15,8 @@ from dpgen2.exploration.deviation import (
 )
 
 
-class TestDeviManager(unittest.TestCase):
-    def test_devi_manager_std(self):
+class TestDeviManagerStd(unittest.TestCase):
+    def test_success(self):
         model_devi = DeviManagerStd()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))
@@ -33,3 +33,60 @@ class TestDeviManager(unittest.TestCase):
         self.assertEqual(model_devi.ntraj, 0)
         self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_F), [])
         self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_V), [])
+
+
+    def test_add_invalid_name(self):
+        model_devi = DeviManagerStd()
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: unknown deviation name foo",
+            model_devi.add,
+            "foo",
+            np.array([1, 2, 3]),
+        )
+    
+    def test_add_invalid_deviation(self):
+        model_devi = DeviManagerStd()
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: deviation\(shape: ",
+            model_devi.add,
+            DeviManager.MAX_DEVI_F,
+            np.array([[1], [2], [3]]),
+        )
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: deviation\(type: ",
+            model_devi.add,
+            DeviManager.MAX_DEVI_F,
+            "foo",
+        )
+
+
+    def test_devi_manager_std_check_data(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([4, 5, 6]))
+        
+        self.assertEqual(model_devi.ntraj, 2)
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: the number of model deviation",
+            model_devi.get,
+            DeviManager.MAX_DEVI_V
+        )
+        
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([1, 2, 3]))
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}",
+            model_devi.get,
+            DeviManager.MAX_DEVI_V
+        )

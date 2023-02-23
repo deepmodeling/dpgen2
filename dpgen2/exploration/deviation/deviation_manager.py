@@ -62,10 +62,11 @@ class DeviManager(ABC):
         name : str
             The name of the deviation. The name is restricted to
             (DeviManager.MAX_DEVI_V, DeviManager.MIN_DEVI_V,
-            DeviManager.AVG_DEVI_V, DeviManager.MAX_DEVI_F,
-            DeviManager.MIN_DEVI_F, DeviManager.AVG_DEVI_F)
+             DeviManager.AVG_DEVI_V, DeviManager.MAX_DEVI_F,
+             DeviManager.MIN_DEVI_F, DeviManager.AVG_DEVI_F)
         """
         self._check_name(name)
+        self._check_data()
         return self._get(name)
 
     @abstractmethod
@@ -75,4 +76,9 @@ class DeviManager(ABC):
     @abstractmethod
     def clear(self) -> None:
         r"""Clear all data in this manager."""
+        pass
+    
+    @abstractmethod
+    def _check_data(self) -> None:
+        r"""Check if data is valid"""
         pass
