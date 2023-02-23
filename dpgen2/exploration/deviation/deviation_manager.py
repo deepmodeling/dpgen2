@@ -77,7 +77,7 @@ class DeviManager(ABC):
     def clear(self) -> None:
         r"""Clear all data in this manager."""
         pass
-    
+
     @abstractmethod
     def _check_data(self) -> None:
         r"""Check if data is valid"""

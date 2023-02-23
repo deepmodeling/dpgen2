@@ -33,11 +33,13 @@ class DeviManagerStd(DeviManager):
         self._data = defaultdict(list)
 
     def _add(self, name: str, deviation: np.ndarray) -> None:
-        assert isinstance(deviation, np.ndarray), \
-            f"Error: deviation(type: {type(deviation)}) is not a np.ndarray"
-        assert len(deviation.shape) == 1, \
-            f"Error: deviation(shape: {deviation.shape}) is not a " + \
-            f"one-dimensional array"
+        assert isinstance(
+            deviation, np.ndarray
+        ), f"Error: deviation(type: {type(deviation)}) is not a np.ndarray"
+        assert len(deviation.shape) == 1, (
+            f"Error: deviation(shape: {deviation.shape}) is not a "
+            + f"one-dimensional array"
+        )
 
         self._data[name].append(deviation)
         self.ntraj = max(self.ntraj, len(self._data[name]))
@@ -57,17 +59,23 @@ class DeviManagerStd(DeviManager):
     def _check_data(self) -> None:
         r"""Check if data is valid"""
         model_devi_names = (
-            DeviManager.MAX_DEVI_V, DeviManager.MIN_DEVI_V,
-            DeviManager.AVG_DEVI_V, DeviManager.MAX_DEVI_F,
-            DeviManager.MIN_DEVI_F, DeviManager.AVG_DEVI_F)
+            DeviManager.MAX_DEVI_V,
+            DeviManager.MIN_DEVI_V,
+            DeviManager.AVG_DEVI_V,
+            DeviManager.MAX_DEVI_F,
+            DeviManager.MIN_DEVI_F,
+            DeviManager.AVG_DEVI_F,
+        )
         for name in model_devi_names:
             if len(self._data[name]) > 0:
-                assert len(self._data[name]) == self.ntraj, \
-                    f"Error: the number of model deviation {name} " + \
-                    f"({len(self._data[name])}) and trajectory files ({self.ntraj}) " + \
-                    f"are not equal."
+                assert len(self._data[name]) == self.ntraj, (
+                    f"Error: the number of model deviation {name} "
+                    + f"({len(self._data[name])}) and trajectory files ({self.ntraj}) "
+                    + f"are not equal."
+                )
             for ndarray in self._data[name]:
                 assert isinstance(ndarray, np.ndarray)
-        
-        assert len(self._data[DeviManager.MAX_DEVI_F]) == self.ntraj, \
-            f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}"
+
+        assert (
+            len(self._data[DeviManager.MAX_DEVI_F]) == self.ntraj
+        ), f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}"
