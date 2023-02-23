@@ -50,9 +50,9 @@ block_default_optional_parameter = {
 }
 
 def make_collect_data_optional_parameter(block_optional_parameter):
-    return InputParameter(value={
+    return {
         "mixed_type": block_optional_parameter.value["data_mixed_type"],
-    })
+    }
 
 class ConcurrentLearningBlock(Steps):
     def __init__(
@@ -251,6 +251,10 @@ def _block_cl(
     )
     block_steps.add(prep_run_fp)
 
+    raise RuntimeError(
+        f'============= {collect_data_optional_parameter}  '
+        f'============= {block_steps.inputs.parameters["optional_parameter"].value}  '
+    )
     collect_data = Step(
         name=name + "-collect-data",
         template=PythonOPTemplate(

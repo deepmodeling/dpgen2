@@ -57,6 +57,7 @@ from mock import (
 )
 from mocked_ops import (
     MockedCollectData,
+    MockedCollectDataCheckOptParam,
     MockedConfSelector,
     MockedExplorationReport,
     MockedExplorationTaskGroup,
@@ -300,3 +301,146 @@ class TestBlockCL(unittest.TestCase):
         self.assertEqual(report.accurate_ratio(), 0.8)
         self.assertEqual(report.failed_ratio(), 0.1)
         self.assertEqual(report.candidate_ratio(), 0.1)
+
+
+
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
+class TestBlockCLOptParam(unittest.TestCase):
+    def _setUp_ops(self):
+        self.prep_run_dp_train_op = PrepRunDPTrain(
+            "prep-run-dp-train",
+            MockedPrepDPTrain,
+            MockedRunDPTrain,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+        )
+        self.prep_run_lmp_op = PrepRunLmp(
+            "prep-run-lmp",
+            PrepLmp,
+            MockedRunLmp,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+        )
+        self.prep_run_fp_op = PrepRunFp(
+            "prep-run-fp",
+            MockedPrepVasp,
+            MockedRunVasp,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+        )
+
+    def _setUp_data(self):
+        self.numb_models = mocked_numb_models
+
+        tmp_models = make_mocked_init_models(self.numb_models)
+        self.init_models = upload_artifact(tmp_models)
+        self.str_init_models = tmp_models
+
+        tmp_init_data = make_mocked_init_data()
+        self.init_data = upload_artifact(tmp_init_data)
+        self.path_init_data = set(tmp_init_data)
+
+        tmp_iter_data = [Path("iter-000"), Path("iter-001")]
+        for ii in tmp_iter_data:
+            ii.mkdir(exist_ok=True, parents=True)
+            (ii / "a").write_text("data a")
+            (ii / "b").write_text("data b")
+        self.iter_data = upload_artifact(tmp_iter_data)
+        self.path_iter_data = set(tmp_iter_data)
+
+        self.template_script = mocked_template_script
+
+        self.task_group_list = MockedExplorationTaskGroup()
+
+        self.conf_selector = MockedConfSelector()
+        self.type_map = ["H", "O"]
+
+        self.incar = Path("incar")
+        self.incar.write_text(mocked_incar_template)
+        self.potcar = Path("potcar")
+        self.potcar.write_text("bar")
+        self.vasp_inputs = VaspInputs(
+            0.16,
+            self.incar,
+            {"foo": self.potcar},
+            True,
+        )
+
+    def setUp(self):
+        self.name = "iter-002"
+        self._setUp_ops()
+        self._setUp_data()
+        self.block_cl = ConcurrentLearningBlock(
+            self.name,
+            self.prep_run_dp_train_op,
+            self.prep_run_lmp_op,
+            MockedSelectConfs,
+            self.prep_run_fp_op,
+            MockedCollectDataCheckOptParam,
+            upload_python_packages=upload_python_packages,
+            select_confs_config=default_config,
+            collect_data_config=default_config,
+        )
+
+    def tearDown(self):
+        for ii in ["init_data", "iter_data", "iter-000", "iter-001", "models"]:
+            ii = Path(ii)
+            if ii.is_dir():
+                shutil.rmtree(ii)
+        for ii in range(self.numb_models):
+            name = Path(model_name_pattern % ii)
+            if name.is_file():
+                os.remove(name)
+        for ii in [self.incar, self.potcar]:
+            if ii.is_file():
+                os.remove(ii)
+
+    def test(self):
+        self.assertEqual(
+            self.block_cl.keys,
+            [
+                "prep-train",
+                "run-train",
+                "prep-lmp",
+                "run-lmp",
+                "select-confs",
+                "prep-fp",
+                "run-fp",
+                "collect-data",
+            ],
+        )
+
+        block_step = Step(
+            "step",
+            template=self.block_cl,
+            parameters={
+                "block_id": self.name,
+                "type_map": self.type_map,
+                "numb_models": self.numb_models,
+                "template_script": self.template_script,
+                "train_config": {},
+                "lmp_config": {},
+                "conf_selector": self.conf_selector,
+                "fp_config": {"inputs": self.vasp_inputs},
+                "lmp_task_grp": self.task_group_list,
+                "optional_parameter" : {"data_mixed_type":True},
+            },
+            artifacts={
+                "init_models": self.init_models,
+                "init_data": self.init_data,
+                "iter_data": self.iter_data,
+            },
+        )
+        wf = Workflow(name="block", host=default_host)
+        wf.add(block_step)
+        wf.submit()
+
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="step")[0]
+        self.assertEqual(step.phase, "Succeeded")
+
