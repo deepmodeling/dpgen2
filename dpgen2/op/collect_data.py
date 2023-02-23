@@ -15,6 +15,8 @@ from dflow.python import (
     OPIO,
     Artifact,
     OPIOSign,
+    Parameter,
+    BigParameter,
 )
 
 
@@ -29,12 +31,20 @@ class CollectData(OP):
 
     """
 
+    default_optional_parameter = {
+        "mixed_type" : False,
+    } 
+
     @classmethod
     def get_input_sign(cls):
         return OPIOSign(
             {
                 "name": str,
                 "type_map": List[str],
+                "optional_parameter" : BigParameter(
+                    dict,
+                    default=CollectData.default_optional_parameter,
+                ),
                 "labeled_data": Artifact(List[Path]),
                 "iter_data": Artifact(List[Path]),
             }
@@ -75,6 +85,7 @@ class CollectData(OP):
         """
         name = ip["name"]
         type_map = ip["type_map"]
+        mixed_type = ip["optional_parameter"]["mixed_type"]
         labeled_data = ip["labeled_data"]
         iter_data = ip["iter_data"]
 
@@ -86,7 +97,10 @@ class CollectData(OP):
         # NOTICE:
         # if ms.get_nframes() == 0, ms.to_deepmd_npy would not make the dir Path(name)
         Path(name).mkdir()
-        ms.to_deepmd_npy(name)
+        if mixed_type:
+            ms.to_deepmd_npy_mixed(name)
+        else:
+            ms.to_deepmd_npy(name)        
         iter_data.append(Path(name))
 
         return OPIO(

@@ -43,7 +43,16 @@ from dpgen2.utils.step_config import (
     init_executor,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+from dpgen2.op import CollectData
 
+block_default_optional_parameter = {
+    "data_mixed_type": False,
+}
+
+def make_collect_data_optional_parameter(block_optional_parameter):
+    return InputParameter(value={
+        "mixed_type": block_optional_parameter.value["data_mixed_type"],
+    })
 
 class ConcurrentLearningBlock(Steps):
     def __init__(
@@ -68,6 +77,7 @@ class ConcurrentLearningBlock(Steps):
             "conf_selector": InputParameter(),
             "fp_config": InputParameter(),
             "lmp_task_grp": InputParameter(),
+            "optional_parameter": InputParameter(type=dict, value=block_default_optional_parameter),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
@@ -163,6 +173,7 @@ def _block_cl(
     collect_data_template_config = collect_data_config.pop("template_config")
     select_confs_executor = init_executor(select_confs_config.pop("executor"))
     collect_data_executor = init_executor(collect_data_config.pop("executor"))
+    collect_data_optional_parameter = make_collect_data_optional_parameter(block_steps.inputs.parameters["optional_parameter"])
 
     prep_run_dp_train = Step(
         name + "-prep-run-dp-train",
@@ -251,6 +262,7 @@ def _block_cl(
         parameters={
             "name": block_steps.inputs.parameters["block_id"],
             "type_map": block_steps.inputs.parameters["type_map"],
+            "optional_parameter": collect_data_optional_parameter,
         },
         artifacts={
             "iter_data": block_steps.inputs.artifacts["iter_data"],
