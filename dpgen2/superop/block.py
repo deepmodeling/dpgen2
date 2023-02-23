@@ -251,10 +251,6 @@ def _block_cl(
     )
     block_steps.add(prep_run_fp)
 
-    raise RuntimeError(
-        f'============= {collect_data_optional_parameter}  '
-        f'============= {block_steps.inputs.parameters["optional_parameter"].value}  '
-    )
     collect_data = Step(
         name=name + "-collect-data",
         template=PythonOPTemplate(
