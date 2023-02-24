@@ -1328,7 +1328,9 @@ class TestLoopRestart(unittest.TestCase):
         step_fp = steps_0.pop(fpout_idx)
 
         self.assertEqual(step_fp["phase"], "Succeeded")
-        step_fp.download_sliced_output_artifact("labeled_data", path="failed_res")
+
+        # step_fp.download_sliced_output_artifact("labeled_data", path="failed_res")
+        download_artifact(step_fp.outputs.artifacts["labeled_data"], slice=1, path="failed_res")
         for modi_file in [
             Path("failed_res") / "task.000001" / "data_task.000001" / "data",
         ]:
@@ -1336,9 +1338,10 @@ class TestLoopRestart(unittest.TestCase):
             fc = "modified\n" + fc
             modi_file.write_text(fc)
         os.chdir("failed_res")
-        step_fp.upload_and_modify_sliced_output_artifact(
-            "labeled_data", ["task.000001/data_task.000001"]
-        )
+        # step_fp.upload_and_modify_sliced_output_artifact(
+        #     "labeled_data", ["task.000001/data_task.000001"]
+        # )
+        step_fp.modify_output_artifact("labeled_data", upload_artifact([None, "task.000001/data_task.000001"], archive=None))
         os.chdir("..")
         steps_0.append(step_fp)
 
