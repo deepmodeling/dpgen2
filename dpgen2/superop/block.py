@@ -51,7 +51,7 @@ block_default_optional_parameter = {
 
 def make_collect_data_optional_parameter(block_optional_parameter):
     return {
-        "mixed_type": block_optional_parameter.value["data_mixed_type"],
+        "mixed_type": block_optional_parameter["data_mixed_type"],
     }
 
 class ConcurrentLearningBlock(Steps):
@@ -173,7 +173,9 @@ def _block_cl(
     collect_data_template_config = collect_data_config.pop("template_config")
     select_confs_executor = init_executor(select_confs_config.pop("executor"))
     collect_data_executor = init_executor(collect_data_config.pop("executor"))
-    collect_data_optional_parameter = make_collect_data_optional_parameter(block_steps.inputs.parameters["optional_parameter"])
+    collect_data_optional_parameter = make_collect_data_optional_parameter(
+        block_steps.inputs.parameters["optional_parameter"]
+    )
 
     prep_run_dp_train = Step(
         name + "-prep-run-dp-train",
