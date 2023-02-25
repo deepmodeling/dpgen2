@@ -88,3 +88,21 @@ class TestDeviManagerStd(unittest.TestCase):
             model_devi.get,
             DeviManager.MAX_DEVI_V,
         )
+        
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([1, 2, 3]))
+        model_devi.add(DeviManager.MAX_DEVI_V, np.array([4, 5]))
+        self.assertRaisesRegex(
+            AssertionError,
+            f"Error: the number of frames in",
+            model_devi.get,
+            DeviManager.MAX_DEVI_F,
+        )
+        self.assertRaisesRegex(
+            AssertionError,
+            f"Error: the number of frames in",
+            model_devi.get,
+            DeviManager.MAX_DEVI_V,
+        )

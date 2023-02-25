@@ -66,6 +66,8 @@ class DeviManagerStd(DeviManager):
             DeviManager.MIN_DEVI_F,
             DeviManager.AVG_DEVI_F,
         )
+        # check the length of model deviations
+        frames = {}
         for name in model_devi_names:
             if len(self._data[name]) > 0:
                 assert len(self._data[name]) == self.ntraj, (
@@ -73,9 +75,27 @@ class DeviManagerStd(DeviManager):
                     + f"({len(self._data[name])}) and trajectory files ({self.ntraj}) "
                     + f"are not equal."
                 )
-            for ndarray in self._data[name]:
-                assert isinstance(ndarray, np.ndarray)
+            for idx, ndarray in enumerate(self._data[name]):
+                assert isinstance(ndarray, np.ndarray), \
+                    f"Error: model deviation in {name} is not ndarray, " + \
+                    f"index: {idx}, type: {type(ndarray)}"
 
+            frames[name] = [arr.shape[0] for arr in self._data[name]]
+            if len(frames[name]) == 0:
+                frames.pop(name)
+
+        # check if "max_devi_f" exists
         assert (
             len(self._data[DeviManager.MAX_DEVI_F]) == self.ntraj
         ), f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}"
+        
+        # check if the length of the arrays corresponding to the same
+        # trajectory has the same number of frames
+        non_empty_deviations  = list(frames.keys())
+        for name in non_empty_deviations[1:]:
+            assert frames[name] == frames[non_empty_deviations[0]], \
+                f"Error: the number of frames in {name} is different " + \
+                f"with that in {non_empty_deviations[0]}.\n" + \
+                f"{name}: {frames[name]}\n" + \
+                f"{non_empty_deviations[0]}: {frames[non_empty_deviations[0]]}\n"
+        
