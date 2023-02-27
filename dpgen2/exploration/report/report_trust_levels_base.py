@@ -197,8 +197,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self,
         reports: Optional[List[ExplorationReport]] = None,
     ) -> bool:
-        r"""Check if the exploration is converged.
-        """
+        pass
 
     def failed_ratio(
         self,
