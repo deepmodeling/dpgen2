@@ -18,31 +18,31 @@ from dpgen2.exploration.deviation import (
     DeviManagerStd,
 )
 from dpgen2.exploration.report import (
-    ExplorationReportTrustLevelsRandom,
     ExplorationReportTrustLevelsMax,
+    ExplorationReportTrustLevelsRandom,
 )
-
-from dpgen2.exploration.report.report_trust_levels_base import ExplorationReportTrustLevels
+from dpgen2.exploration.report.report_trust_levels_base import (
+    ExplorationReportTrustLevels,
+)
 
 
 class TestTrajsExplorationReport(unittest.TestCase):
     def test_exploration_report_trust_levels(self):
-        # class ExplorationReportTrustLevelsRandom and 
-        # ExplorationReportTrustLevelsMax have the same 
+        # class ExplorationReportTrustLevelsRandom and
+        # ExplorationReportTrustLevelsMax have the same
         # behavior in frames selection when traj_cand <= max_nframes
         self.fv_selection_test(ExplorationReportTrustLevelsRandom)
         self.fv_selection_test(ExplorationReportTrustLevelsMax)
-        
+
         self.f_selection_test(ExplorationReportTrustLevelsRandom)
         self.f_selection_test(ExplorationReportTrustLevelsMax)
-        
+
         self.f_max_selection_test(ExplorationReportTrustLevelsRandom)
         self.f_max_selection_test(ExplorationReportTrustLevelsMax)
-        
+
         self.args_test(ExplorationReportTrustLevelsRandom)
         self.args_test(ExplorationReportTrustLevelsMax)
-        
-        
+
     def fv_selection_test(self, exploration_report: ExplorationReportTrustLevels):
         model_devi = DeviManagerStd()
         model_devi.add(
@@ -189,7 +189,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertTrue(data["level_v_hi"] is None)
         self.assertAlmostEqual(data["conv_accuracy"], 0.9)
         exploration_report(*data)
-    
+
     def test_max_selection(self):
         model_devi = DeviManagerStd()
         model_devi.add(
@@ -213,8 +213,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
                 self.assertTrue(jj in expected_cand[ii])
                 npicked += 1
         self.assertEqual(npicked, 2)
-    
-    
+
     def test_random_selection_convergence(self):
         # case 1
         model_devi = DeviManagerStd()
@@ -253,7 +252,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         ter = ExplorationReportTrustLevelsRandom(0.3, 0.6, 0.3, 0.6, conv_accuracy=0.2)
         ter.record(model_devi)
         self.assertTrue(ter.converged())
-        
+
         # case 3
         model_devi = DeviManagerStd()
         model_devi.add(

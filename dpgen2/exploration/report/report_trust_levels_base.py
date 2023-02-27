@@ -1,4 +1,7 @@
 import random
+from abc import (
+    abstractmethod,
+)
 from typing import (
     List,
     Optional,
@@ -19,8 +22,6 @@ from ..deviation import (
 from . import (
     ExplorationReport,
 )
-
-from abc import abstractmethod
 
 
 class ExplorationReportTrustLevels(ExplorationReport):
@@ -226,7 +227,6 @@ class ExplorationReportTrustLevels(ExplorationReport):
         max_nframes: Optional[int] = None,
     ) -> List[List[int]]:
         pass
-
 
     def print_header(self) -> str:
         r"""Print the header of report"""

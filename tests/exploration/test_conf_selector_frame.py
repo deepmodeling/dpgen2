@@ -139,7 +139,9 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 1.0 / 3.0)
 
     def test_fv_0(self):
-        report = ExplorationReportTrustLevelsRandom(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(
+            0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9
+        )
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render,
@@ -166,7 +168,9 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 2.0 / 3.0)
 
     def test_fv_1(self):
-        report = ExplorationReportTrustLevelsRandom(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(
+            0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9
+        )
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render,

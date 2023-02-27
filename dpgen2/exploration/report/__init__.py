@@ -4,13 +4,11 @@ from .report import (
 from .report_adaptive_lower import (
     ExplorationReportAdaptiveLower,
 )
-
 from .report_trust_levels_max import (
-    ExplorationReportTrustLevelsMax
+    ExplorationReportTrustLevelsMax,
 )
-
 from .report_trust_levels_random import (
-    ExplorationReportTrustLevelsRandom
+    ExplorationReportTrustLevelsRandom,
 )
 
 conv_styles = {

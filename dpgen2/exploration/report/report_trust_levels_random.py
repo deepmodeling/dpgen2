@@ -19,11 +19,12 @@ from ..deviation import (
 from . import (
     ExplorationReport,
 )
-from .report_trust_levels_base import ExplorationReportTrustLevels
+from .report_trust_levels_base import (
+    ExplorationReportTrustLevels,
+)
 
 
 class ExplorationReportTrustLevelsRandom(ExplorationReportTrustLevels):
-
     def converged(
         self,
         reports: Optional[List[ExplorationReport]] = None,
@@ -41,7 +42,6 @@ class ExplorationReportTrustLevelsRandom(ExplorationReportTrustLevels):
             If the exploration is converged.
         """
         return self.accurate_ratio() >= self.conv_accuracy
-
 
     def get_candidate_ids(
         self,

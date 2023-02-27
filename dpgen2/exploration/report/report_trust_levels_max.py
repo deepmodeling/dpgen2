@@ -19,11 +19,12 @@ from ..deviation import (
 from . import (
     ExplorationReport,
 )
-from .report_trust_levels_base import ExplorationReportTrustLevels
+from .report_trust_levels_base import (
+    ExplorationReportTrustLevels,
+)
 
 
 class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
-
     def converged(
         self,
         reports: Optional[List[ExplorationReport]] = None,
@@ -41,7 +42,6 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
             If the exploration is converged.
         """
         return self.accurate_ratio() >= self.conv_accuracy
-
 
     def get_candidate_ids(
         self,
@@ -79,10 +79,12 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
                 self.traj_cand_picked.append((tidx, ff))
         if max_nframes is not None and max_nframes < len(self.traj_cand_picked):
             # select by maximum
-            max_devi_f = self.model_devi.get(DeviManager.MAX_DEVI_F) # type: ignore
-            ret = sorted(self.traj_cand_picked,
-                         key=lambda x: max_devi_f[x[0]][x[1]],
-                         reverse=True)
+            max_devi_f = self.model_devi.get(DeviManager.MAX_DEVI_F)  # type: ignore
+            ret = sorted(
+                self.traj_cand_picked,
+                key=lambda x: max_devi_f[x[0]][x[1]],
+                reverse=True,
+            )
             ret = ret[:max_nframes]
         else:
             ret = self.traj_cand_picked
