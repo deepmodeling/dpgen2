@@ -30,8 +30,7 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReport,
-    ExplorationReportTrustLevels,
+    ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.scheduler import (
     ConvergenceCheckStageScheduler,
@@ -60,7 +59,7 @@ from mocked_ops import (
 
 class TestConvergenceCheckStageScheduler(unittest.TestCase):
     def test_success(self):
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         self.selector = ConfSelectorFrames(traj_render, report)
         self.scheduler = ConvergenceCheckStageScheduler(
@@ -86,7 +85,7 @@ class TestConvergenceCheckStageScheduler(unittest.TestCase):
         self.assertTrue(sel is None)
 
     def test_step1(self):
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         self.selector = ConfSelectorFrames(traj_render, report)
         self.scheduler = ConvergenceCheckStageScheduler(
@@ -130,7 +129,7 @@ class TestConvergenceCheckStageScheduler(unittest.TestCase):
         # self.assertTrue(sel.report.level_v_hi is None)
 
     def test_max_numb_iter(self):
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         self.selector = ConfSelectorFrames(traj_render, report)
         self.scheduler = ConvergenceCheckStageScheduler(
@@ -171,7 +170,7 @@ class TestConvergenceCheckStageScheduler(unittest.TestCase):
 class TestExplorationScheduler(unittest.TestCase):
     def test_success(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -180,7 +179,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -259,7 +258,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_print_scheduler(self):
         scheduler = ExplorationScheduler()
-        report_0 = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report_0 = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render_0 = TrajRenderLammps()
         selector_0 = ConfSelectorFrames(traj_render_0, report_0)
         stage_scheduler_0 = ConvergenceCheckStageScheduler(
@@ -268,7 +267,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler_0)
-        report_1 = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report_1 = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render_1 = TrajRenderLammps()
         selector_1 = ConfSelectorFrames(traj_render_1, report_1)
         stage_scheduler_1 = ConvergenceCheckStageScheduler(
@@ -280,17 +279,17 @@ class TestExplorationScheduler(unittest.TestCase):
 
         model_devi = DeviManagerStd()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
-        tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        tar_report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         tar_report.record(model_devi)
 
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
-        foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        foo_report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         foo_report.record(model_devi)
 
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
-        bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        bar_report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         bar_report.record(model_devi)
 
         expected_output = [
@@ -322,7 +321,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_print_scheduler_last_iteration(self):
         scheduler = ExplorationScheduler()
-        report_0 = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report_0 = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render_0 = TrajRenderLammps()
         selector_0 = ConfSelectorFrames(traj_render_0, report_0)
         stage_scheduler_0 = ConvergenceCheckStageScheduler(
@@ -331,7 +330,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler_0)
-        report_1 = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report_1 = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render_1 = TrajRenderLammps()
         selector_1 = ConfSelectorFrames(traj_render_1, report_1)
         stage_scheduler_1 = ConvergenceCheckStageScheduler(
@@ -343,17 +342,17 @@ class TestExplorationScheduler(unittest.TestCase):
 
         model_devi = DeviManagerStd()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.08, 0.05]))
-        tar_report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        tar_report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         tar_report.record(model_devi)
 
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.3, 0.9]))
-        foo_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        foo_report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         foo_report.record(model_devi)
 
         model_devi.clear()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.1, 0.1]))
-        bar_report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        bar_report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         bar_report.record(model_devi)
 
         expected_output = [
@@ -386,7 +385,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_success_and_ratios(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -395,7 +394,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=4,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -480,7 +479,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_success_two_stages(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -490,7 +489,7 @@ class TestExplorationScheduler(unittest.TestCase):
         )
         scheduler.add_stage_scheduler(stage_scheduler)
 
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -581,7 +580,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_continue_adding_success(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -621,7 +620,7 @@ class TestExplorationScheduler(unittest.TestCase):
         self.assertTrue(scheduler.stage_schedulers[0].complete())
         self.assertTrue(scheduler.complete())
 
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -683,7 +682,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_failed_stage0(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -692,7 +691,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -743,7 +742,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_failed_stage0_not_fatal(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -753,7 +752,7 @@ class TestExplorationScheduler(unittest.TestCase):
             fatal_at_max=False,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -820,7 +819,7 @@ class TestExplorationScheduler(unittest.TestCase):
 
     def test_failed_stage1(self):
         scheduler = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -829,7 +828,7 @@ class TestExplorationScheduler(unittest.TestCase):
             max_numb_iter=2,
         )
         scheduler.add_stage_scheduler(stage_scheduler)
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(

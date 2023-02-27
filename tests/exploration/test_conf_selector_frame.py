@@ -16,7 +16,7 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReportTrustLevels,
+    ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
@@ -90,7 +90,7 @@ class TestConfSelectorFrames(unittest.TestCase):
                 shutil.rmtree(ii)
 
     def test_f_0(self):
-        report = ExplorationReportTrustLevels(0.1, 0.5, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render,
@@ -118,7 +118,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 0.0)
 
     def test_f_1(self):
-        report = ExplorationReportTrustLevels(0.25, 0.35, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.25, 0.35, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(traj_render, report)
         confs, report = conf_selector.select(
@@ -139,7 +139,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 1.0 / 3.0)
 
     def test_fv_0(self):
-        report = ExplorationReportTrustLevels(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render,
@@ -166,7 +166,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.failed_ratio(), 2.0 / 3.0)
 
     def test_fv_1(self):
-        report = ExplorationReportTrustLevels(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.25, 0.35, 0.05, 0.15, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(
             traj_render,

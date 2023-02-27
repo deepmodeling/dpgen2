@@ -22,7 +22,7 @@ from dpgen2.exploration.report import (
 )
 
 
-class TestTrajsExplorationResport(unittest.TestCase):
+class TestTrajsExplorationReport(unittest.TestCase):
     def test_fv(self):
         model_devi = DeviManagerStd()
         model_devi.add(

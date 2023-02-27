@@ -24,7 +24,7 @@ from dpgen2.exploration.render import (
 )
 from dpgen2.exploration.report import (
     ExplorationReport,
-    ExplorationReportTrustLevels,
+    ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.scheduler import (
     ConvergenceCheckStageScheduler,
@@ -138,7 +138,7 @@ class TestSubmit(unittest.TestCase):
     def test_copy_scheduler(self):
         scheduler = ExplorationScheduler()
         scheduler_new = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -154,7 +154,7 @@ class TestSubmit(unittest.TestCase):
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -233,7 +233,7 @@ class TestSubmit(unittest.TestCase):
     def test_copy_scheduler_complete(self):
         scheduler = ExplorationScheduler()
         scheduler_new = ExplorationScheduler()
-        report = ExplorationReportTrustLevels(0.1, 0.3, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.3, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(
@@ -250,7 +250,7 @@ class TestSubmit(unittest.TestCase):
         )
         scheduler_new.add_stage_scheduler(stage_scheduler)
 
-        report = ExplorationReportTrustLevels(0.2, 0.4, conv_accuracy=0.9)
+        report = ExplorationReportTrustLevelsRandom(0.2, 0.4, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         selector = ConfSelectorFrames(traj_render, report)
         stage_scheduler = ConvergenceCheckStageScheduler(

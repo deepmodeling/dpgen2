@@ -57,7 +57,7 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReportTrustLevels,
+    ExplorationReportTrustLevelsRandom,
     conv_styles,
 )
 from dpgen2.exploration.scheduler import (
