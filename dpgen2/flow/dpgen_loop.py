@@ -64,6 +64,14 @@ from dpgen2.utils.step_config import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
+cl_default_optional_parameter = {
+    "data_mixed_type": False,
+}
+
+def make_block_optional_parameter(cl_optional_parameter):
+    return {
+        "data_mixed_type": cl_optional_parameter["data_mixed_type"],
+    }
 
 class SchedulerWrapper(OP):
     @classmethod
@@ -161,7 +169,8 @@ class ConcurrentLearningLoop(Steps):
             "fp_config": InputParameter(),
             "exploration_scheduler": InputParameter(),
             "lmp_task_grp": InputParameter(),
-        }
+            "optional_parameter": InputParameter(type=dict),
+         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
             "init_data": InputArtifact(),
@@ -248,6 +257,7 @@ class ConcurrentLearning(Steps):
             "lmp_config": InputParameter(),
             "fp_config": InputParameter(),
             "exploration_scheduler": InputParameter(),
+            "optional_parameter": InputParameter(type=dict, value=cl_default_optional_parameter),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
@@ -325,7 +335,9 @@ def _loop(
 ):
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop("template_config")
-    step_executor = init_executor(step_config.pop("executor"))
+    step_executor = init_executor(step_config.pop("executor"))    
+    block_optional_parameter = make_block_optional_parameter(
+        steps.inputs.parameters["optional_parameter"])
 
     block_step = Step(
         name=name + "-block",
@@ -340,6 +352,7 @@ def _loop(
             "conf_selector": steps.inputs.parameters["conf_selector"],
             "fp_config": steps.inputs.parameters["fp_config"],
             "lmp_task_grp": steps.inputs.parameters["lmp_task_grp"],
+            "optional_parameter": block_optional_parameter,
         },
         artifacts={
             "init_models": steps.inputs.artifacts["init_models"],
@@ -408,6 +421,7 @@ def _loop(
                 "exploration_scheduler"
             ],
             "lmp_task_grp": scheduler_step.outputs.parameters["lmp_task_grp"],
+            "optional_parameter": steps.inputs.parameters["optional_parameter"],
         },
         artifacts={
             "init_models": block_step.outputs.artifacts["models"],
@@ -510,6 +524,7 @@ def _dpgen(
                 "exploration_scheduler"
             ],
             "lmp_task_grp": scheduler_step.outputs.parameters["lmp_task_grp"],
+            "optional_parameter": steps.inputs.parameters["optional_parameter"],
         },
         artifacts={
             "init_models": steps.inputs.artifacts["init_models"],
