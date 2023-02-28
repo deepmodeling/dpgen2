@@ -93,6 +93,7 @@
     "inputs": {
 	"type_map":		["Al", "Mg"],
 	"mass_map":		[27, 24],
+	"mixed_type":		false,
 	"init_data_prefix":	null,
 	"init_data_sys":	[
 	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",

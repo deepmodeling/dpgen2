@@ -70,6 +70,7 @@ from mocked_ops import (
     MockedPrepDPTrain,
     MockedPrepVasp,
     MockedRunDPTrain,
+    MockedRunDPTrainCheckOptParam,
     MockedRunLmp,
     MockedRunVasp,
     MockedRunVaspFail1,
@@ -381,7 +382,7 @@ class TestLoopCheckOptParam(unittest.TestCase):
         self.prep_run_dp_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
             MockedPrepDPTrain,
-            MockedRunDPTrain,
+            MockedRunDPTrainCheckOptParam,
             upload_python_packages=upload_python_packages,
             prep_config=default_config,
             run_config=default_config,

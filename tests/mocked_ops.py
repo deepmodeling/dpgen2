@@ -234,6 +234,16 @@ class MockedRunDPTrain(RunDPTrain):
             }
         )
 
+class MockedRunDPTrainCheckOptParam(RunDPTrain):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        if not ip["optional_parameter"]["mixed_type"]:
+            raise FatalError(f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} ")
+        return MockedRunDPTrain.execute(self, ip)
+
 
 class MockedRunDPTrainNoneInitModel(RunDPTrain):
     @OP.exec_sign_check

@@ -301,6 +301,13 @@ def get_kspacing_kgamma_from_incar(
     return ks, kg
 
 
+def make_optional_parameter(
+        mixed_type=False,
+):
+    return {
+        "data_mixed_type" : mixed_type
+    }
+
 def workflow_concurrent_learning(
     config: Dict,
     old_style: bool = False,
@@ -485,6 +492,10 @@ def workflow_concurrent_learning(
     else:
         init_models = None
 
+    optional_parameter = make_optional_parameter(
+        config["inputs"]["mixed_type"],
+    )
+
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
         "dpgen-step",
@@ -497,6 +508,7 @@ def workflow_concurrent_learning(
             "lmp_config": lmp_config,
             "fp_config": fp_config,
             "exploration_scheduler": scheduler,
+            "optional_parameter" : optional_parameter,
         },
         artifacts={
             "init_models": init_models,

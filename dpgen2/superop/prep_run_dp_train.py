@@ -60,6 +60,7 @@ class PrepRunDPTrain(Steps):
             "numb_models": InputParameter(type=int),
             "template_script": InputParameter(),
             "train_config": InputParameter(),
+            "run_optional_parameter": InputParameter(type=dict, value=run_train_op.default_optional_parameter),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
@@ -176,6 +177,7 @@ def _prep_run_dp_train(
         parameters={
             "config": train_steps.inputs.parameters["train_config"],
             "task_name": prep_train.outputs.parameters["task_names"],
+            "optional_parameter": train_steps.inputs.parameters["run_optional_parameter"],
         },
         artifacts={
             "task_path": prep_train.outputs.artifacts["task_paths"],
