@@ -302,11 +302,10 @@ def get_kspacing_kgamma_from_incar(
 
 
 def make_optional_parameter(
-        mixed_type=False,
+    mixed_type=False,
 ):
-    return {
-        "data_mixed_type" : mixed_type
-    }
+    return {"data_mixed_type": mixed_type}
+
 
 def workflow_concurrent_learning(
     config: Dict,
@@ -508,7 +507,7 @@ def workflow_concurrent_learning(
             "lmp_config": lmp_config,
             "fp_config": fp_config,
             "exploration_scheduler": scheduler,
-            "optional_parameter" : optional_parameter,
+            "optional_parameter": optional_parameter,
         },
         artifacts={
             "init_models": init_models,

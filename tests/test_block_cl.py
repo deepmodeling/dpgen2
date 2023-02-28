@@ -304,7 +304,6 @@ class TestBlockCL(unittest.TestCase):
         self.assertEqual(report.candidate_ratio(), 0.1)
 
 
-
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestBlockCLOptParam(unittest.TestCase):
     def _setUp_ops(self):
@@ -427,7 +426,7 @@ class TestBlockCLOptParam(unittest.TestCase):
                 "conf_selector": self.conf_selector,
                 "fp_config": {"inputs": self.vasp_inputs},
                 "lmp_task_grp": self.task_group_list,
-                "optional_parameter" : {"data_mixed_type":True},
+                "optional_parameter": {"data_mixed_type": True},
             },
             artifacts={
                 "init_models": self.init_models,
@@ -444,4 +443,3 @@ class TestBlockCLOptParam(unittest.TestCase):
         self.assertEqual(wf.query_status(), "Succeeded")
         step = wf.query_step(name="step")[0]
         self.assertEqual(step.phase, "Succeeded")
-

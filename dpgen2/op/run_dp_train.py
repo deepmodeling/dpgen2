@@ -50,8 +50,8 @@ class RunDPTrain(OP):
     """
 
     default_optional_parameter = {
-        "mixed_type" : False,
-    } 
+        "mixed_type": False,
+    }
 
     @classmethod
     def get_input_sign(cls):
@@ -59,7 +59,7 @@ class RunDPTrain(OP):
             {
                 "config": dict,
                 "task_name": BigParameter(str),
-                "optional_parameter" : BigParameter(
+                "optional_parameter": BigParameter(
                     dict,
                     default=RunDPTrain.default_optional_parameter,
                 ),
@@ -138,7 +138,11 @@ class RunDPTrain(OP):
 
         # auto prob style
         do_init_model = RunDPTrain.decide_init_model(
-            config, init_model, init_data, iter_data, mixed_type=mixed_type,
+            config,
+            init_model,
+            init_data,
+            iter_data,
+            mixed_type=mixed_type,
         )
         auto_prob_str = "prob_sys_size"
         if do_init_model:
@@ -315,7 +319,9 @@ class RunDPTrain(OP):
             elif "old_data_larger_than" in config["init_model_policy"]:
                 old_data_size_level = int(config["init_model_policy"].split(":")[-1])
                 init_data_size = _get_data_size_of_all_systems(init_data)
-                iter_data_old_size = _get_data_size_of_all_mult_sys(iter_data[:-1], mixed_type=mixed_type)
+                iter_data_old_size = _get_data_size_of_all_mult_sys(
+                    iter_data[:-1], mixed_type=mixed_type
+                )
                 old_data_size = init_data_size + iter_data_old_size
                 if old_data_size > old_data_size_level:
                     do_init_model = True

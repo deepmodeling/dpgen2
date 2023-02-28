@@ -14,9 +14,9 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    BigParameter,
     OPIOSign,
     Parameter,
-    BigParameter,
 )
 
 
@@ -32,8 +32,8 @@ class CollectData(OP):
     """
 
     default_optional_parameter = {
-        "mixed_type" : False,
-    } 
+        "mixed_type": False,
+    }
 
     @classmethod
     def get_input_sign(cls):
@@ -41,7 +41,7 @@ class CollectData(OP):
             {
                 "name": str,
                 "type_map": List[str],
-                "optional_parameter" : BigParameter(
+                "optional_parameter": BigParameter(
                     dict,
                     default=CollectData.default_optional_parameter,
                 ),
@@ -100,7 +100,7 @@ class CollectData(OP):
         if mixed_type:
             ms.to_deepmd_npy_mixed(name)
         else:
-            ms.to_deepmd_npy(name)        
+            ms.to_deepmd_npy(name)
         iter_data.append(Path(name))
 
         return OPIO(

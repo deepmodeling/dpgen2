@@ -39,25 +39,30 @@ from dflow.python import (
     Slices,
 )
 
+from dpgen2.op import (
+    CollectData,
+)
 from dpgen2.utils.step_config import (
     init_executor,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
-from dpgen2.op import CollectData
 
 block_default_optional_parameter = {
     "data_mixed_type": False,
 }
+
 
 def make_collect_data_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
     }
 
+
 def make_run_dp_train_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
     }
+
 
 class ConcurrentLearningBlock(Steps):
     def __init__(
@@ -82,7 +87,9 @@ class ConcurrentLearningBlock(Steps):
             "conf_selector": InputParameter(),
             "fp_config": InputParameter(),
             "lmp_task_grp": InputParameter(),
-            "optional_parameter": InputParameter(type=dict, value=block_default_optional_parameter),
+            "optional_parameter": InputParameter(
+                type=dict, value=block_default_optional_parameter
+            ),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),

@@ -36,6 +36,7 @@ from dpgen2.op.run_dp_train import (
     _get_data_size_of_all_mult_sys,
 )
 
+
 class TestRunDPTrain(unittest.TestCase):
     def setUp(self):
         self.atom_name = "foo"
@@ -225,7 +226,15 @@ class TestRunDPTrain(unittest.TestCase):
         }
 
     def tearDown(self):
-        for ii in ["init", "data-0", "data-1", "mixed-data-0", "mixed-data-1", self.task_path, self.task_name]:
+        for ii in [
+            "init",
+            "data-0",
+            "data-1",
+            "mixed-data-0",
+            "mixed-data-1",
+            self.task_path,
+            self.task_name,
+        ]:
             if Path(ii).exists():
                 shutil.rmtree(str(ii))
 
@@ -241,13 +250,13 @@ class TestRunDPTrain(unittest.TestCase):
 
     def test_get_size_of_all_mult_sys(self):
         cc = _get_data_size_of_all_mult_sys(self.iter_data)
-        self.assertEqual(cc, sum(self.nframes_0)+sum(self.nframes_1))
+        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
         cc = _get_data_size_of_all_mult_sys(self.mixed_iter_data, mixed_type=True)
-        self.assertEqual(cc, sum(self.nframes_0)+sum(self.nframes_1))
-        # read the mixed type systems as if they were standard system, 
+        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
+        # read the mixed type systems as if they were standard system,
         # should give the correct estimate of the data size
         cc = _get_data_size_of_all_mult_sys(self.mixed_iter_data, mixed_type=False)
-        self.assertEqual(cc, sum(self.nframes_0)+sum(self.nframes_1))
+        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
 
     def test_decide_init_model_no_model(self):
         do_init_model = RunDPTrain.decide_init_model(

@@ -234,6 +234,7 @@ class MockedRunDPTrain(RunDPTrain):
             }
         )
 
+
 class MockedRunDPTrainCheckOptParam(RunDPTrain):
     @OP.exec_sign_check
     def execute(
@@ -241,7 +242,9 @@ class MockedRunDPTrainCheckOptParam(RunDPTrain):
         ip: OPIO,
     ) -> OPIO:
         if not ip["optional_parameter"]["mixed_type"]:
-            raise FatalError(f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} ")
+            raise FatalError(
+                f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} "
+            )
         return MockedRunDPTrain.execute(self, ip)
 
 
@@ -344,7 +347,9 @@ class MockedRunLmp(RunLmp):
         task_id = int(ip["task_name"].split(".")[1])
         assert task_path.is_dir()
         assert ip["task_name"] in str(ip["task_path"])
-        assert len(models) == mocked_numb_models, f"{len(models)} == {mocked_numb_models}"
+        assert (
+            len(models) == mocked_numb_models
+        ), f"{len(models)} == {mocked_numb_models}"
         for ii in range(mocked_numb_models):
             assert ip["models"][ii].is_file()
             assert "model" in str(ip["models"][ii])
@@ -646,6 +651,7 @@ class MockedCollectData(CollectData):
             }
         )
 
+
 class MockedCollectDataCheckOptParam(CollectData):
     @OP.exec_sign_check
     def execute(
@@ -653,7 +659,9 @@ class MockedCollectDataCheckOptParam(CollectData):
         ip: OPIO,
     ) -> OPIO:
         if not ip["optional_parameter"]["mixed_type"]:
-            raise FatalError(f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} ")
+            raise FatalError(
+                f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} "
+            )
         return MockedCollectData.execute(self, ip)
 
 
