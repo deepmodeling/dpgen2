@@ -74,6 +74,17 @@ class TestRunDeepmd(unittest.TestCase):
                 "orig": np.zeros(3),
             }
         )
+        self.system_nopbc = dpdata.System(
+            data={
+                "atom_names": ["H", "O"],
+                "atom_numbs": [1, 1],
+                "atom_types": np.array([0, 1]),
+                "cells": np.eye(3).reshape(1, 3, 3),
+                "coords": np.zeros((1, 2, 3)),
+                "orig": np.zeros(3),
+                "nopbc": True
+            }
+        )
         self.task_path = Path("task")
         self.task_path.mkdir(parents=True, exist_ok=True)
         Path(self.task_path / "teacher-model.pb").write_bytes(b"0123456789")
@@ -203,3 +214,19 @@ class TestRunDeepmd(unittest.TestCase):
         force = np.zeros_like(self.system["coords"])
         virial_foce = np.zeros((self.system["coords"].shape[0], 3, 3))
         return energy, force, virial_foce
+
+    def test_dp_infer_with_nopbc(self):
+        self.system_nopbc.to("deepmd/npy", deepmd_input_path)
+
+        out_name = self.task_path / "test_out"
+
+        dp = Mock()
+        self._set_mock_dp_eval(dp)
+
+        run_deepmd = RunDeepmd()
+        run_deepmd._dp_infer(dp, ["H", "O"], str(out_name))
+        
+        dp.eval.assert_called_once()
+        self.assertTrue(np.allclose(dp.eval.call_args[0][0], self.system_nopbc["coords"]))
+        self.assertIsNone(dp.eval.call_args[0][1])
+        self.assertEqual(dp.eval.call_args[0][2], self.system_nopbc["atom_types"].tolist())

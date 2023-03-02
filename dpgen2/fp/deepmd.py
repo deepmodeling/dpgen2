@@ -179,7 +179,7 @@ class RunDeepmd(RunFp):
 
         nframe = ss.get_nframes()
         coord = ss["coords"]
-        cell = ss["cells"].reshape([nframe, -1])
+        cell = None if ss.nopbc else ss["cells"].reshape([nframe, -1])
         atype = ss["atom_types"].tolist()
 
         energy, force, virial_force = dp.eval(coord, cell, atype)
