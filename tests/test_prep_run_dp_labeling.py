@@ -82,7 +82,7 @@ class TestRunDeepmd(unittest.TestCase):
                 "cells": np.eye(3).reshape(1, 3, 3),
                 "coords": np.zeros((1, 2, 3)),
                 "orig": np.zeros(3),
-                "nopbc": True
+                "nopbc": True,
             }
         )
         self.task_path = Path("task")
@@ -225,8 +225,12 @@ class TestRunDeepmd(unittest.TestCase):
 
         run_deepmd = RunDeepmd()
         run_deepmd._dp_infer(dp, ["H", "O"], str(out_name))
-        
+
         dp.eval.assert_called_once()
-        self.assertTrue(np.allclose(dp.eval.call_args[0][0], self.system_nopbc["coords"]))
+        self.assertTrue(
+            np.allclose(dp.eval.call_args[0][0], self.system_nopbc["coords"])
+        )
         self.assertIsNone(dp.eval.call_args[0][1])
-        self.assertEqual(dp.eval.call_args[0][2], self.system_nopbc["atom_types"].tolist())
+        self.assertEqual(
+            dp.eval.call_args[0][2], self.system_nopbc["atom_types"].tolist()
+        )
