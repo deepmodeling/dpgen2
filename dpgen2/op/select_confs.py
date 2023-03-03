@@ -15,6 +15,7 @@ from dflow.python import (
     Artifact,
     BigParameter,
     OPIOSign,
+    FatalError,
 )
 
 from dpgen2.exploration.report import (
@@ -79,6 +80,7 @@ class SelectConfs(OP):
 
         trajs = ip["trajs"]
         model_devis = ip["model_devis"]
+        trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
 
         confs, report = conf_selector.select(
             trajs,
@@ -92,3 +94,29 @@ class SelectConfs(OP):
                 "confs": confs,
             }
         )
+
+
+    @staticmethod
+    def validate_trajs(
+            trajs,
+            model_devis,
+    ):
+        ntrajs = len(trajs)
+        if ntrajs != len(model_devis):
+            raise FatalError(
+                "length of trajs list is not equal to the "
+                "model_devis list"
+            )
+        rett = []
+        retm = []
+        for tt,mm in zip(trajs, model_devis):
+            if (tt is None and mm is not None) or\
+               (tt is not None and mm is None):
+                raise FatalError(
+                    "trajs frame is {tt} while model_devis frame is {mm}"
+                )
+            elif (tt is not None and mm is not None):
+                rett.append(tt)
+                retm.append(mm)
+        return rett, retm
+                
