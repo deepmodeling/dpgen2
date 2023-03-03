@@ -33,9 +33,9 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    FatalError,
     OPIOSign,
     PythonOPTemplate,
-    FatalError,
 )
 
 try:
@@ -126,26 +126,24 @@ class TestSelectConfs(unittest.TestCase):
         self.assertTrue(confs[0].read_text(), "conf of conf.0")
         self.assertTrue(confs[1].read_text(), "conf of conf.1")
 
-
     def test_validate_trajs(self):
-        trajs = ['foo', 'bar', None, 'tar']
-        model_devis = ['zar', 'par', None, 'mar']        
+        trajs = ["foo", "bar", None, "tar"]
+        model_devis = ["zar", "par", None, "mar"]
         trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
-        self.assertEqual(trajs, ['foo', 'bar', 'tar'])
-        self.assertEqual(model_devis, ['zar', 'par', 'mar'])
-        
-        trajs = ['foo', 'bar', None, 'tar']
-        model_devis = ['zar', 'par', None]
+        self.assertEqual(trajs, ["foo", "bar", "tar"])
+        self.assertEqual(model_devis, ["zar", "par", "mar"])
+
+        trajs = ["foo", "bar", None, "tar"]
+        model_devis = ["zar", "par", None]
         with self.assertRaises(FatalError) as context:
             trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
-        
-        trajs = ['foo', 'bar']
-        model_devis = ['zar', None]
+
+        trajs = ["foo", "bar"]
+        model_devis = ["zar", None]
         with self.assertRaises(FatalError) as context:
             trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
-        
-        trajs = ['foo', None]
-        model_devis = ['zar', 'par']
+
+        trajs = ["foo", None]
+        model_devis = ["zar", "par"]
         with self.assertRaises(FatalError) as context:
             trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
-            
