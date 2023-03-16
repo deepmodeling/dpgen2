@@ -41,7 +41,7 @@ class MockedDef:
 class MockedStep:
     inputs = MockedDef()
     outputs = MockedDef()
-    
+
     def __init__(self, key) -> None:
         self.key = key
 
@@ -61,7 +61,11 @@ class Mockedwf:
 
     def query_step_by_key(self, key):
         if key == sorted(self.keys):
-            return [MockedStep(self.keys[0]), MockedStep(self.keys[1]), MockedStep(self.keys[2])]
+            return [
+                MockedStep(self.keys[0]),
+                MockedStep(self.keys[1]),
+                MockedStep(self.keys[2]),
+            ]
         else:
             return [MockedStep(kk) for kk in key]
 
