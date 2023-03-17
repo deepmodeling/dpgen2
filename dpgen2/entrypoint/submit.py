@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import pickle
+import json
 from pathlib import (
     Path,
 )
@@ -426,9 +427,9 @@ def workflow_concurrent_learning(
         else config["train"]["template_script"]
     )
     if isinstance(template_script_, list):
-        template_script = [Path(ii).read_text() for ii in template_script_]
+        template_script = [json.loads(Path(ii).read_text()) for ii in template_script_]
     else:
-        template_script = Path(template_script_).read_text()
+        template_script = json.loads(Path(template_script_).read_text())
     train_config = {} if old_style else config["train"]["config"]
     lmp_config = (
         config.get("lmp_config", {}) if old_style else config["explore"]["config"]
