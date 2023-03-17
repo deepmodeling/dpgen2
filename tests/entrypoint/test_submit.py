@@ -341,6 +341,7 @@ class TestSubmitCmdStd(unittest.TestCase):
         config["mode"] = "debug"
         self.touched_files = [
             "foo",
+            "foo1",
             "init",
             "bar",
             "tar",
@@ -351,6 +352,7 @@ class TestSubmitCmdStd(unittest.TestCase):
         for ii in self.touched_files:
             Path(ii).touch()
         Path("foo").write_text("{}")
+        Path("foo1").write_text("{}")
 
     def tearDown(self):
         from dflow import (
@@ -459,7 +461,7 @@ input_std = textwrap.dedent(
 	"type" :	"dp",
 	"numb_models" : 2,
 	"config" : {},
-	"template_script" : "foo",
+	"template_script" : ["foo", "foo1"],
 "init_models_paths" : ["bar", "tar"],
 	"_comment" : "all"
     },
