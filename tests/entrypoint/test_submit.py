@@ -350,6 +350,7 @@ class TestSubmitCmdStd(unittest.TestCase):
         ]
         for ii in self.touched_files:
             Path(ii).touch()
+        Path("foo").write_text("{}")
 
     def tearDown(self):
         from dflow import (
@@ -381,6 +382,7 @@ class TestSubmitCmdDist(unittest.TestCase):
         for ii in self.touched_files:
             Path(ii).touch()
         Path("POSCAR").write_text(ifc0)
+        Path("foo").write_text("{}")
 
     def tearDown(self):
         from dflow import (
