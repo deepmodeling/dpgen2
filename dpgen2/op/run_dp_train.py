@@ -51,7 +51,7 @@ class RunDPTrain(OP):
 
     default_optional_parameter = {
         "mixed_type": False,
-        "do_finetine": "no",
+        "do_finetune": "no",
     }
 
     @classmethod
@@ -161,9 +161,9 @@ class RunDPTrain(OP):
             train_dict, config, do_init_model, major_version
         )
 
-        if RunDPTrain.skip_training(
-            work_dir, train_dict, init_model, iter_data, do_finetune
-        ):
+        print(f"--- finetune : {do_finetune}---\n")
+
+        if RunDPTrain.skip_training(work_dir, train_dict, init_model, iter_data, do_finetune):
             return OPIO(
                 {
                     "script": work_dir / train_script_name,
@@ -183,9 +183,9 @@ class RunDPTrain(OP):
             # dump train script
             with open(train_script_name, "w") as fp:
                 json.dump(train_dict, fp, indent=4)
-
+                           
             # train model
-            if do_init_model:
+            if do_init_model or do_finetune == "train-init":
                 command = [
                     "dp",
                     "train",
@@ -193,7 +193,7 @@ class RunDPTrain(OP):
                     str(init_model),
                     train_script_name,
                 ]
-            elif do_finetune:
+            elif do_finetune == "finetune":
                 command = [
                     "dp",
                     "train",
@@ -214,18 +214,12 @@ class RunDPTrain(OP):
             fplog.write("#=================== train std err ===================\n")
             fplog.write(err)
 
-            if do_finetune:
+            if do_finetune == "finetune":
                 command = ["cp", "input_v2_compat.json", train_script_name]
                 ret, out, err = run_command(command)
                 if ret != 0:
                     raise Warning(
-                        "replace model params with pretrained model for following steps failed, original train script will be used.\n",
-                        "out msg",
-                        out,
-                        "\n",
-                        "err msg",
-                        err,
-                        "\n",
+                        "replace model params with pretrained model for following steps failed, original train script will be used.\n", "out msg", out, "\n", "err msg", err, "\n"
                     )
 
             # freeze model
@@ -309,7 +303,7 @@ class RunDPTrain(OP):
         do_finetune,
     ):
         # we have init model and no iter data, skip training
-        if do_finetune:
+        if do_finetune is not None and (do_finetune == "train-init" or do_finetune == "finetune"):
             return False
         if (init_model is not None) and (iter_data is None or len(iter_data) == 0):
             with set_directory(work_dir):
@@ -374,7 +368,6 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )
-
         return [
             Argument(
                 "init_model_policy",

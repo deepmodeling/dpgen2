@@ -66,7 +66,7 @@ from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 cl_default_optional_parameter = {
     "data_mixed_type": False,
-    "do_finetune": False,
+    "do_finetune": "no",
 }
 
 

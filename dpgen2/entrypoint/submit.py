@@ -307,7 +307,7 @@ def get_kspacing_kgamma_from_incar(
 
 def make_optional_parameter(
     mixed_type=False,
-    do_finetune=False,
+    do_finetune="no",
 ):
     return {"data_mixed_type": mixed_type, "do_finetune": do_finetune}
 
@@ -499,7 +499,7 @@ def workflow_concurrent_learning(
     if config["inputs"]["do_finetune"]:
         finetune_optional_parameter = {
             "mixed_type": config["inputs"]["mixed_type"],
-            "do_finetune": True,
+            "do_finetune": "finetune",
         }
 
         finetune_op = Finetune(
@@ -536,7 +536,7 @@ def workflow_concurrent_learning(
 
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
-        do_finetune=False,
+        do_finetune="train-init",
     )
 
     # here the scheduler is passed as input parameter to the concurrent_learning_op
