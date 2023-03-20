@@ -161,8 +161,6 @@ class RunDPTrain(OP):
             train_dict, config, do_init_model, major_version
         )
 
-        print(f"--- finetune : {do_finetune}---\n")
-
         if RunDPTrain.skip_training(
             work_dir, train_dict, init_model, iter_data, do_finetune
         ):
