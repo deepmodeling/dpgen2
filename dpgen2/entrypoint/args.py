@@ -232,6 +232,7 @@ def input_args():
     doc_type_map = 'The type map. e.g. ["Al", "Mg"]. Al and Mg will have type 0 and 1, respectively.'
     doc_mass_map = "The mass map. e.g. [27., 24.]. Al and Mg will be set with mass 27. and 24. amu, respectively."
     doc_mixed_type = "Use `deepmd/npy/mixed` format for storing training data."
+    doc_do_finetune = "Finetune the pretrained model in the first iteration."
     doc_init_data_prefix = "The prefix of initial data systems"
     doc_init_sys = "The inital data systems"
 
@@ -246,6 +247,7 @@ def input_args():
             doc=doc_init_data_prefix,
         ),
         Argument("mixed_type", bool, optional=True, default=False, doc=doc_mixed_type),
+        Argument("do_finetune", bool, optional=True, default=False, doc=doc_do_finetune),
         Argument(
             "init_data_sys", [list, str], optional=False, default=None, doc=doc_init_sys
         ),

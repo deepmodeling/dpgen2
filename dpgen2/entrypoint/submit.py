@@ -10,6 +10,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
     Union,
 )
 
@@ -87,12 +88,14 @@ from dpgen2.op import (
     RunDPTrain,
     RunLmp,
     SelectConfs,
+    ModifyTrainScript, 
 )
 from dpgen2.superop import (
     ConcurrentLearningBlock,
     PrepRunDPTrain,
     PrepRunFp,
     PrepRunLmp,
+    Finetune,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -303,14 +306,17 @@ def get_kspacing_kgamma_from_incar(
 
 def make_optional_parameter(
     mixed_type=False,
+    do_finetune=False,
 ):
-    return {"data_mixed_type": mixed_type}
+    return {"data_mixed_type": mixed_type,
+            "do_finetune": do_finetune
+           }
 
 
 def workflow_concurrent_learning(
     config: Dict,
     old_style: bool = False,
-):
+) -> Tuple[Step, Step]:
     default_config = (
         normalize_step_dict(config.get("default_config", {}))
         if old_style
@@ -491,8 +497,48 @@ def workflow_concurrent_learning(
     else:
         init_models = None
 
+    if config["inputs"]["do_finetune"]:
+        finetune_optional_parameter = {
+            "mixed_type": config["inputs"]["mixed_type"],
+            "do_finetune": True,
+           }
+        
+        finetune_op = Finetune(
+            "finetune",
+            PrepDPTrain,
+            RunDPTrain,
+            ModifyTrainScript,
+            prep_config=prep_train_config,
+            run_config=run_train_config,
+            upload_python_packages=upload_python_packages,
+        )
+        
+        finetune_step = Step(
+            "finetune-step",
+            template=finetune_op,
+            parameters={
+                "block_id": "finetune",
+                "numb_models": numb_models,
+                "template_script": template_script,
+                "train_config": train_config,
+                "run_optional_parameter": finetune_optional_parameter,
+            },
+            artifacts={
+                "init_models": init_models,
+                "init_data": init_data,
+                "iter_data": iter_data,
+            },
+        )
+
+        init_models = finetune_step.outputs.artifacts["models"]
+        template_script = finetune_step.outputs.parameters["template_script"]
+    else:
+        finetune_step = None
+
+
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
+        do_finetune=False,
     )
 
     # here the scheduler is passed as input parameter to the concurrent_learning_op
@@ -515,7 +561,7 @@ def workflow_concurrent_learning(
             "iter_data": iter_data,
         },
     )
-    return dpgen_step
+    return dpgen_step, finetune_step
 
 
 def get_scheduler_ids(
@@ -601,7 +647,7 @@ def submit_concurrent_learning(
 
     global_config_workflow(wf_config)
 
-    dpgen_step = workflow_concurrent_learning(wf_config, old_style=old_style)
+    dpgen_step, finetune_step = workflow_concurrent_learning(wf_config, old_style=old_style)
 
     if reuse_step is not None and replace_scheduler:
         scheduler_new = copy.deepcopy(
@@ -637,8 +683,15 @@ def submit_concurrent_learning(
             "conf_selector",
             selector,
         )
+        wf_config["inputs"]["do_finetune"] = False
+        # finetune will not be done again if the old process is reused. 
 
     wf = Workflow(name="dpgen")
+
+    if wf_config["inputs"].get("do_finetune", False): 
+        assert finetune_step is not None
+        wf.add(finetune_step)
+
     wf.add(dpgen_step)
 
     # for debug purpose, we may not really submit the wf

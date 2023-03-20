@@ -10,3 +10,6 @@ from .prep_run_fp import (
 from .prep_run_lmp import (
     PrepRunLmp,
 )
+from .finetune import (
+    Finetune,
+)
