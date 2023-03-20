@@ -814,6 +814,8 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             json.dump(self.idict_v2, fp, indent=4)
         task_name = self.task_name
         work_dir = Path(task_name)
+        empty_data = Path("foo")
+        empty_data.mkdir(exist_ok=True)
 
         ptrain = RunDPTrain()
         out = ptrain.execute(
@@ -824,7 +826,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
                     "task_path": Path(task_path),
                     "init_model": Path(self.init_model),
                     "init_data": [Path(ii) for ii in self.init_data],
-                    "iter_data": [Path(ii) for ii in self.iter_data],
+                    "iter_data": [empty_data],
                     "optional_parameter": {
                         "mixed_type": False,
                         "do_finetune": "finetune",
