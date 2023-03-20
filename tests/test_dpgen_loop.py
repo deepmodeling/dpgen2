@@ -530,7 +530,7 @@ class TestLoopCheckOptParam(unittest.TestCase):
                 "lmp_config": {},
                 "fp_config": {"inputs": self.vasp_inputs},
                 "exploration_scheduler": self.scheduler,
-                "optional_parameter": {"data_mixed_type": True, "do_finetune": False},
+                "optional_parameter": {"data_mixed_type": True, "do_finetune": "no"},
             },
             artifacts={
                 "init_models": self.init_models,
