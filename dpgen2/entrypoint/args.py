@@ -247,7 +247,9 @@ def input_args():
             doc=doc_init_data_prefix,
         ),
         Argument("mixed_type", bool, optional=True, default=False, doc=doc_mixed_type),
-        Argument("do_finetune", bool, optional=True, default=False, doc=doc_do_finetune),
+        Argument(
+            "do_finetune", bool, optional=True, default=False, doc=doc_do_finetune
+        ),
         Argument(
             "init_data_sys", [list, str], optional=False, default=None, doc=doc_init_sys
         ),

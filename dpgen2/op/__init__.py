@@ -1,6 +1,9 @@
 from .collect_data import (
     CollectData,
 )
+from .modify_train_script import (
+    ModifyTrainScript,
+)
 from .prep_dp_train import (
     PrepDPTrain,
 )
@@ -15,7 +18,4 @@ from .run_lmp import (
 )
 from .select_confs import (
     SelectConfs,
-)
-from .modify_train_script import (
-    ModifyTrainScript,
 )

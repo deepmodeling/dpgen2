@@ -9,12 +9,12 @@ from typing import (
     Tuple,
     Union,
 )
+
 from dflow import (
     InputArtifact,
     InputParameter,
     OutputParameter,
 )
-
 from dflow.python import (
     OP,
     OPIO,
@@ -30,9 +30,7 @@ from dpgen2.constants import (
 
 
 class ModifyTrainScript(OP):
-    r"""[MARK]
-
-    """
+    r"""[MARK]"""
 
     @classmethod
     def get_input_sign(cls):

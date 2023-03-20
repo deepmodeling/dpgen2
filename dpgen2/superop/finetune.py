@@ -207,7 +207,7 @@ def _finetune(
         **run_config,
     )
     finetune_steps.add(run_train)
-    
+
     # print(modify_train_script_op.get_input_sign())
     modify_train_script = Step(
         "modify-train-script",
@@ -231,13 +231,15 @@ def _finetune(
     finetune_steps.outputs.artifacts["scripts"]._from = run_train.outputs.artifacts[
         "script"
     ]
-    finetune_steps.outputs.artifacts["models"]._from = run_train.outputs.artifacts["model"]
+    finetune_steps.outputs.artifacts["models"]._from = run_train.outputs.artifacts[
+        "model"
+    ]
     finetune_steps.outputs.artifacts["logs"]._from = run_train.outputs.artifacts["log"]
     finetune_steps.outputs.artifacts["lcurves"]._from = run_train.outputs.artifacts[
         "lcurve"
     ]
-    finetune_steps.outputs.parameters["template_script"].value_from_parameter = modify_train_script.outputs.parameters[
+    finetune_steps.outputs.parameters[
         "template_script"
-    ]
+    ].value_from_parameter = modify_train_script.outputs.parameters["template_script"]
 
     return finetune_steps

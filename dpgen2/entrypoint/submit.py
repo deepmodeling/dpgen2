@@ -83,19 +83,19 @@ from dpgen2.fp import (
 )
 from dpgen2.op import (
     CollectData,
+    ModifyTrainScript,
     PrepDPTrain,
     PrepLmp,
     RunDPTrain,
     RunLmp,
     SelectConfs,
-    ModifyTrainScript, 
 )
 from dpgen2.superop import (
     ConcurrentLearningBlock,
+    Finetune,
     PrepRunDPTrain,
     PrepRunFp,
     PrepRunLmp,
-    Finetune,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -308,9 +308,7 @@ def make_optional_parameter(
     mixed_type=False,
     do_finetune=False,
 ):
-    return {"data_mixed_type": mixed_type,
-            "do_finetune": do_finetune
-           }
+    return {"data_mixed_type": mixed_type, "do_finetune": do_finetune}
 
 
 def workflow_concurrent_learning(
@@ -501,8 +499,8 @@ def workflow_concurrent_learning(
         finetune_optional_parameter = {
             "mixed_type": config["inputs"]["mixed_type"],
             "do_finetune": True,
-           }
-        
+        }
+
         finetune_op = Finetune(
             "finetune",
             PrepDPTrain,
@@ -512,7 +510,7 @@ def workflow_concurrent_learning(
             run_config=run_train_config,
             upload_python_packages=upload_python_packages,
         )
-        
+
         finetune_step = Step(
             "finetune-step",
             template=finetune_op,
@@ -534,7 +532,6 @@ def workflow_concurrent_learning(
         template_script = finetune_step.outputs.parameters["template_script"]
     else:
         finetune_step = None
-
 
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
@@ -647,7 +644,9 @@ def submit_concurrent_learning(
 
     global_config_workflow(wf_config)
 
-    dpgen_step, finetune_step = workflow_concurrent_learning(wf_config, old_style=old_style)
+    dpgen_step, finetune_step = workflow_concurrent_learning(
+        wf_config, old_style=old_style
+    )
 
     if reuse_step is not None and replace_scheduler:
         scheduler_new = copy.deepcopy(
@@ -684,11 +683,11 @@ def submit_concurrent_learning(
             selector,
         )
         wf_config["inputs"]["do_finetune"] = False
-        # finetune will not be done again if the old process is reused. 
+        # finetune will not be done again if the old process is reused.
 
     wf = Workflow(name="dpgen")
 
-    if wf_config["inputs"].get("do_finetune", False): 
+    if wf_config["inputs"].get("do_finetune", False):
         assert finetune_step is not None
         wf.add(finetune_step)
 

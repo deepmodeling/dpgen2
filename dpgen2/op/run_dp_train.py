@@ -161,7 +161,9 @@ class RunDPTrain(OP):
             train_dict, config, do_init_model, major_version
         )
 
-        if RunDPTrain.skip_training(work_dir, train_dict, init_model, iter_data, do_finetune):
+        if RunDPTrain.skip_training(
+            work_dir, train_dict, init_model, iter_data, do_finetune
+        ):
             return OPIO(
                 {
                     "script": work_dir / train_script_name,
@@ -217,7 +219,13 @@ class RunDPTrain(OP):
                 ret, out, err = run_command(command)
                 if ret != 0:
                     raise Warning(
-                        "replace model params with pretrained model for following steps failed, original train script will be used.\n", "out msg", out, "\n", "err msg", err, "\n"
+                        "replace model params with pretrained model for following steps failed, original train script will be used.\n",
+                        "out msg",
+                        out,
+                        "\n",
+                        "err msg",
+                        err,
+                        "\n",
                     )
 
             # freeze model
