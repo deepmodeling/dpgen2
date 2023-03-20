@@ -190,9 +190,7 @@ def download_dpgen2_artifacts_by_def(
         wf_info = wf.query()
         wf_steps = [wf_info.get_step(key=kk)[0] for kk in step_keys]
     # make step dict
-    step_dict = {}
-    for kk, ss in zip(step_keys, wf_steps):
-        step_dict[kk] = ss
+    step_dict = {wf_step.key: wf_step for wf_step in wf_steps}
 
     # download all items
     for ii in dld_items:
