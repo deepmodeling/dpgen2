@@ -68,6 +68,9 @@ from dpgen2.fp.vasp import (
 from dpgen2.op.collect_data import (
     CollectData,
 )
+from dpgen2.op.modify_train_script import (
+    ModifyTrainScript,
+)
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
 )
@@ -895,3 +898,30 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
             conv_accuracy=conv_accuracy,
         )
         super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)
+
+class MockedModifyTrainScript(ModifyTrainScript):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        script = ip["script"]
+        numb_models = ip["numb_models"]
+        odict = []
+
+        assert numb_models == mocked_numb_models
+
+        for ii in range(numb_models):
+            subdir = Path(train_task_pattern % ii)
+            fname = subdir / "input.json"
+            with open(fname, "r") as fp:
+                train_dict = json.load(fp)
+            train_dict = {"foo"}
+            odict.append(train_dict)
+
+        op = OPIO(
+            {
+                "template_script": odict,
+            }
+        )
+        return op
