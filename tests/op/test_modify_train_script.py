@@ -1,7 +1,7 @@
 import json
+import os
 import shutil
 import unittest
-import os
 from pathlib import (
     Path,
 )
@@ -71,4 +71,3 @@ class TestModifyTrainScript(unittest.TestCase):
             with open(Path(train_task_pattern % ii) / train_script_name) as fp:
                 jdata = json.load(fp)
                 self.assertEqual(jdata["model"], template_script[ii]["model"])
-        
