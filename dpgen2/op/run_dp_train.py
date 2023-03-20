@@ -163,7 +163,9 @@ class RunDPTrain(OP):
 
         print(f"--- finetune : {do_finetune}---\n")
 
-        if RunDPTrain.skip_training(work_dir, train_dict, init_model, iter_data, do_finetune):
+        if RunDPTrain.skip_training(
+            work_dir, train_dict, init_model, iter_data, do_finetune
+        ):
             return OPIO(
                 {
                     "script": work_dir / train_script_name,
@@ -183,7 +185,7 @@ class RunDPTrain(OP):
             # dump train script
             with open(train_script_name, "w") as fp:
                 json.dump(train_dict, fp, indent=4)
-                           
+
             # train model
             if do_init_model or do_finetune == "train-init":
                 command = [
@@ -219,7 +221,13 @@ class RunDPTrain(OP):
                 ret, out, err = run_command(command)
                 if ret != 0:
                     raise Warning(
-                        "replace model params with pretrained model for following steps failed, original train script will be used.\n", "out msg", out, "\n", "err msg", err, "\n"
+                        "replace model params with pretrained model for following steps failed, original train script will be used.\n",
+                        "out msg",
+                        out,
+                        "\n",
+                        "err msg",
+                        err,
+                        "\n",
                     )
 
             # freeze model
@@ -303,7 +311,9 @@ class RunDPTrain(OP):
         do_finetune,
     ):
         # we have init model and no iter data, skip training
-        if do_finetune is not None and (do_finetune == "train-init" or do_finetune == "finetune"):
+        if do_finetune is not None and (
+            do_finetune == "train-init" or do_finetune == "finetune"
+        ):
             return False
         if (init_model is not None) and (iter_data is None or len(iter_data) == 0):
             with set_directory(work_dir):
