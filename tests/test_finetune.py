@@ -53,7 +53,6 @@ from mocked_ops import (
     MockedPrepDPTrain,
     MockedRunDPTrain,
     MockedModifyTrainScript,
-    MockedRunDPTrainNoneInitModel,
     make_mocked_init_data,
     make_mocked_init_models,
     mocked_numb_models,
@@ -121,7 +120,7 @@ class TestFinetune(unittest.TestCase):
                 os.remove(ii)
 
     def test_finetune(self):
-        steps = PrepRunDPTrain(
+        steps = Finetune(
             "finetune-steps",
             MockedPrepDPTrain,
             MockedRunDPTrain,
