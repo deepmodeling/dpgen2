@@ -50,14 +50,19 @@ from context import (
     upload_python_packages,
 )
 from mocked_ops import (
+    MockedModifyTrainScript,
     MockedPrepDPTrain,
     MockedRunDPTrain,
-    MockedModifyTrainScript,
     MockedRunDPTrainNoneInitModel,
     make_mocked_init_data,
     make_mocked_init_models,
     mocked_numb_models,
     mocked_template_script,
+)
+from test_prep_run_dp_train import (
+    TestMockedPrepDPTrain,
+    TestMockedRunDPTrain,
+    check_run_train_dp_output,
 )
 
 from dpgen2.constants import (
@@ -65,11 +70,6 @@ from dpgen2.constants import (
 )
 from dpgen2.superop.finetune import (
     Finetune,
-)
-from test_prep_run_dp_train import (
-    TestMockedPrepDPTrain,
-    TestMockedRunDPTrain,
-    check_run_train_dp_output,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
@@ -80,6 +80,7 @@ default_config = normalize_step_dict(
         }
     }
 )
+
 
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestFinetune(unittest.TestCase):
@@ -125,7 +126,7 @@ class TestFinetune(unittest.TestCase):
             "finetune-steps",
             MockedPrepDPTrain,
             MockedRunDPTrain,
-            MockedModifyTrainScript, 
+            MockedModifyTrainScript,
             upload_python_packages=upload_python_packages,
             prep_config=default_config,
             run_config=default_config,
@@ -156,7 +157,7 @@ class TestFinetune(unittest.TestCase):
         self.assertEqual(step.phase, "Succeeded")
 
         expected_list = [{"foo"} for i in range(self.numb_models)]
-        assert (new_template_script == expected_list)
+        assert new_template_script == expected_list
 
         download_artifact(step.outputs.artifacts["scripts"])
         download_artifact(step.outputs.artifacts["models"])

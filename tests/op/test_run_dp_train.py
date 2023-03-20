@@ -803,7 +803,6 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
-
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_finetune(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
@@ -826,7 +825,10 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
                     "init_model": Path(self.init_model),
                     "init_data": [Path(ii) for ii in self.init_data],
                     "iter_data": [Path(ii) for ii in self.iter_data],
-                    "optional_parameter": {"mixed_type" : False, "do_finetune" : "finetune"},
+                    "optional_parameter": {
+                        "mixed_type": False,
+                        "do_finetune": "finetune",
+                    },
                 }
             )
         )

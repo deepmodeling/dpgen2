@@ -899,6 +899,7 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
         )
         super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)
 
+
 class MockedModifyTrainScript(ModifyTrainScript):
     @OP.exec_sign_check
     def execute(
