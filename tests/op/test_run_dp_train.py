@@ -660,7 +660,7 @@ class TestRunDPTrain(unittest.TestCase):
                     str(self.init_model),
                 ]
             ),
-            call(['cp', 'input_v2_compat.json', 'input.json']),
+            call(["cp", "input_v2_compat.json", "input.json"]),
             call(["dp", "freeze", "-o", "frozen_model.pb"]),
         ]
         mocked_run.assert_has_calls(calls)
