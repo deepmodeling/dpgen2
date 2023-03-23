@@ -496,7 +496,7 @@ def workflow_concurrent_learning(
     else:
         init_models = None
 
-    if config["inputs"]["do_finetune"]:
+    if config["inputs"].get("do_finetune", False):
         finetune_optional_parameter = {
             "mixed_type": config["inputs"]["mixed_type"],
             "do_finetune": "finetune",
