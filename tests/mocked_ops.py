@@ -917,11 +917,11 @@ class MockedModifyTrainScript(ModifyTrainScript):
         assert numb_models == mocked_numb_models
 
         for ii in range(numb_models):
-            subdir = Path(train_task_pattern % ii)
+            subdir = Path(scripts) / Path(train_task_pattern % ii)
             fname = subdir / "input.json"
             with open(fname, "r") as fp:
                 train_dict = json.load(fp)
-            train_dict = {"foo"}
+            train_dict = {"foo": "bar"}
             odict.append(train_dict)
 
         op = OPIO(
