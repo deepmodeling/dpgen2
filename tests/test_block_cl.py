@@ -426,7 +426,8 @@ class TestBlockCLOptParam(unittest.TestCase):
                 "conf_selector": self.conf_selector,
                 "fp_config": {"inputs": self.vasp_inputs},
                 "lmp_task_grp": self.task_group_list,
-                "optional_parameter": {"data_mixed_type": True},
+                "optional_parameter": {"data_mixed_type": True, 
+                                       "do_finetune": "no"},
             },
             artifacts={
                 "init_models": self.init_models,
