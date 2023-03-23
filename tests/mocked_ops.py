@@ -910,7 +910,7 @@ class MockedModifyTrainScript(ModifyTrainScript):
         self,
         ip: OPIO,
     ) -> OPIO:
-        script = ip["script"]
+        scripts = ip["scripts"]
         numb_models = ip["numb_models"]
         odict = []
 
