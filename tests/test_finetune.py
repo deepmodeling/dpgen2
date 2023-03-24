@@ -154,10 +154,10 @@ class TestFinetune(unittest.TestCase):
         self.assertEqual(wf.query_status(), "Succeeded")
         step = wf.query_step(name="finetune-step")[0]
         self.assertEqual(step.phase, "Succeeded")
-        
+
         new_template_script = step.outputs.parameters["template_script"].value
         expected_list = [{"foo": "bar"} for i in range(self.numb_models)]
-        assert (new_template_script == expected_list)
+        assert new_template_script == expected_list
 
         download_artifact(step.outputs.artifacts["scripts"])
         download_artifact(step.outputs.artifacts["models"])
