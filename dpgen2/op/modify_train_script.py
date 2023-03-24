@@ -30,7 +30,14 @@ from dpgen2.constants import (
 
 
 class ModifyTrainScript(OP):
-    r"""[MARK]"""
+    r"""Modify the training scripts to prepare them for training 
+    tasks in dpgen step.
+    
+    Read the training scripts modified by finetune, and replace 
+    the original template scripts to be compatible with pre-trained models. 
+    New templates are returned as `op["template_script"]`.
+
+    """
 
     @classmethod
     def get_input_sign(cls):
@@ -45,7 +52,7 @@ class ModifyTrainScript(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "template_script": Union[dict, List[dict]],
+                "template_script": List[dict],
             }
         )
 
@@ -54,21 +61,23 @@ class ModifyTrainScript(OP):
         self,
         ip: OPIO,
     ) -> OPIO:
-        r"""[MARK]
+        r"""Execute the OP.
 
         Parameters
         ----------
         ip : dict
             Input dict with components:
 
-            - ...
+            - `scripts`: (`Artifact(Path)`) Training scripts from finetune. 
+            - `numb_models`: (`int`) Number of DP models to train.
 
         Returns
         -------
         op : dict
             Output dict with components:
 
-            - ...
+            - `template_script`: (`List[dict]`) One template from one finetuning task. The length of the list should be the same as `numb_models`.
+
         """
         scripts = ip["scripts"]
         new_template_script = []
