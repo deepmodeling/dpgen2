@@ -5,7 +5,7 @@ from dargs import (
     Argument,
     Variant,
 )
-from dflow import (
+from dflow.config import (
     config,
 )
 from dflow.plugins.dispatcher import (
