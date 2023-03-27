@@ -30,11 +30,11 @@ from dpgen2.constants import (
 
 
 class ModifyTrainScript(OP):
-    r"""Modify the training scripts to prepare them for training 
+    r"""Modify the training scripts to prepare them for training
     tasks in dpgen step.
-    
-    Read the training scripts modified by finetune, and replace 
-    the original template scripts to be compatible with pre-trained models. 
+
+    Read the training scripts modified by finetune, and replace
+    the original template scripts to be compatible with pre-trained models.
     New templates are returned as `op["template_script"]`.
 
     """
@@ -68,7 +68,7 @@ class ModifyTrainScript(OP):
         ip : dict
             Input dict with components:
 
-            - `scripts`: (`Artifact(Path)`) Training scripts from finetune. 
+            - `scripts`: (`Artifact(Path)`) Training scripts from finetune.
             - `numb_models`: (`int`) Number of DP models to train.
 
         Returns
