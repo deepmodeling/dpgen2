@@ -334,7 +334,7 @@ class TestSubmit(unittest.TestCase):
 
 class TestSubmitCmdStd(unittest.TestCase):
     def setUp(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
@@ -370,7 +370,7 @@ class TestSubmitCmdStd(unittest.TestCase):
 
 class TestSubmitCmdDist(unittest.TestCase):
     def setUp(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 

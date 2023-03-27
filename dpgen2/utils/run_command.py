@@ -5,7 +5,7 @@ from typing import (
     Union,
 )
 
-from dflow import (
+from dflow.config import (
     config,
 )
 from dflow.utils import run_command as dflow_run_command

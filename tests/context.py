@@ -22,7 +22,7 @@ default_image = "dptechnology/dpgen2:latest"
 default_host = None
 dflow_config({})
 if os.getenv("DFLOW_DEBUG"):
-    from dflow import (
+    from dflow.config import (
         config,
     )
 
