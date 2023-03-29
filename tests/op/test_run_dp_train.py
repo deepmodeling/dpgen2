@@ -677,8 +677,6 @@ class TestRunDPTrain(unittest.TestCase):
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
-            print(jdata)
-            print(self.expected_odict_v2)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
     @patch("dpgen2.op.run_dp_train.run_command")

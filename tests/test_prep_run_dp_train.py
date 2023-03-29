@@ -392,3 +392,62 @@ class TestTrainDp(unittest.TestCase):
         self.assertEqual(wf.query_status(), "Succeeded")
         step = wf.query_step(name="train-step")[0]
         self.assertEqual(step.phase, "Succeeded")
+
+    def test_finetune(self):
+        steps = PrepRunDPTrain(
+            "finetune-steps",
+            MockedPrepDPTrain,
+            MockedRunDPTrain,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+            finetune=True,
+        )
+        finetune_step = Step(
+            "finetune-step",
+            template=steps,
+            parameters={
+                "numb_models": self.numb_models,
+                "template_script": self.template_script,
+                "train_config": {},
+                "run_optional_parameter": {"data_mixed_type": False,
+                                           "do_finetune": "finetune",
+                                          },
+            },
+            artifacts={
+                "init_models": self.init_models,
+                "init_data": self.init_data,
+                "iter_data": self.iter_data,
+            },
+        )
+        wf = Workflow(name="dp-finetune", host=default_host)
+        wf.add(finetune_step)
+        wf.submit()
+
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="finetune-step")[0]
+        self.assertEqual(step.phase, "Succeeded")
+        
+        new_template_script = step.outputs.parameters["template_script"].value
+        expected_list = [{"foo": "bar"} for i in range(self.numb_models)]
+        assert (new_template_script == expected_list)
+
+        download_artifact(step.outputs.artifacts["scripts"])
+        download_artifact(step.outputs.artifacts["models"])
+        download_artifact(step.outputs.artifacts["logs"])
+        download_artifact(step.outputs.artifacts["lcurves"])
+
+        for ii in range(3):
+            check_run_train_dp_output(
+                self,
+                self.task_names[ii],
+                self.train_scripts[ii],
+                self.str_init_models[ii],
+                self.path_init_data,
+                self.path_iter_data,
+                only_check_name=True,
+            )
+
