@@ -410,9 +410,10 @@ class TestTrainDp(unittest.TestCase):
                 "numb_models": self.numb_models,
                 "template_script": self.template_script,
                 "train_config": {},
-                "run_optional_parameter": {"data_mixed_type": False,
-                                           "do_finetune": "finetune",
-                                          },
+                "run_optional_parameter": {
+                    "data_mixed_type": False,
+                    "do_finetune": "finetune",
+                },
             },
             artifacts={
                 "init_models": self.init_models,
@@ -430,10 +431,10 @@ class TestTrainDp(unittest.TestCase):
         self.assertEqual(wf.query_status(), "Succeeded")
         step = wf.query_step(name="finetune-step")[0]
         self.assertEqual(step.phase, "Succeeded")
-        
+
         new_template_script = step.outputs.parameters["template_script"].value
         expected_list = [{"foo": "bar"} for i in range(self.numb_models)]
-        assert (new_template_script == expected_list)
+        assert new_template_script == expected_list
 
         download_artifact(step.outputs.artifacts["scripts"])
         download_artifact(step.outputs.artifacts["models"])
@@ -450,4 +451,3 @@ class TestTrainDp(unittest.TestCase):
                 self.path_iter_data,
                 only_check_name=True,
             )
-
