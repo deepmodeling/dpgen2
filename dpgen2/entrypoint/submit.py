@@ -84,7 +84,6 @@ from dpgen2.fp import (
 )
 from dpgen2.op import (
     CollectData,
-    ModifyTrainScript,
     PrepDPTrain,
     PrepLmp,
     RunDPTrain,
@@ -93,7 +92,6 @@ from dpgen2.op import (
 )
 from dpgen2.superop import (
     ConcurrentLearningBlock,
-    Finetune,
     PrepRunDPTrain,
     PrepRunFp,
     PrepRunLmp,
@@ -502,14 +500,14 @@ def workflow_concurrent_learning(
             "do_finetune": "finetune",
         }
 
-        finetune_op = Finetune(
+        finetune_op = PrepRunDPTrain(
             "finetune",
             PrepDPTrain,
             RunDPTrain,
-            ModifyTrainScript,
             prep_config=prep_train_config,
             run_config=run_train_config,
             upload_python_packages=upload_python_packages,
+            finetune=True,
         )
 
         finetune_step = Step(

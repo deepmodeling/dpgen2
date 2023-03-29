@@ -214,19 +214,8 @@ class RunDPTrain(OP):
             fplog.write("#=================== train std err ===================\n")
             fplog.write(err)
 
-            if do_finetune == "finetune":
-                command = ["cp", "input_v2_compat.json", train_script_name]
-                ret, out, err = run_command(command)
-                if ret != 0:
-                    raise Warning(
-                        "replace model params with pretrained model for following steps failed, original train script will be used.\n",
-                        "out msg",
-                        out,
-                        "\n",
-                        "err msg",
-                        err,
-                        "\n",
-                    )
+            if do_finetune == "finetune" and os.path.exists("input_v2_compat.json"):
+                shutil.copy2("input_v2_compat.json", train_script_name)
 
             # freeze model
             ret, out, err = run_command(["dp", "freeze", "-o", "frozen_model.pb"])

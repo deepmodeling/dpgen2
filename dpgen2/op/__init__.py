@@ -1,9 +1,6 @@
 from .collect_data import (
     CollectData,
 )
-from .modify_train_script import (
-    ModifyTrainScript,
-)
 from .prep_dp_train import (
     PrepDPTrain,
 )

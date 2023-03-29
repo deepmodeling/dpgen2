@@ -616,10 +616,10 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
+
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_finetune_finetune(self, mocked_run):
-        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", ""), (0, "far\n", "")]
-
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
         config = self.config.copy()
         task_path = self.task_path
         Path(task_path).mkdir(exist_ok=True)
@@ -660,7 +660,6 @@ class TestRunDPTrain(unittest.TestCase):
                     str(self.init_model),
                 ]
             ),
-            call(["cp", "input_v2_compat.json", "input.json"]),
             call(["dp", "freeze", "-o", "frozen_model.pb"]),
         ]
         mocked_run.assert_has_calls(calls)
@@ -673,7 +672,7 @@ class TestRunDPTrain(unittest.TestCase):
             "foo\n"
             "#=================== train std err ===================\n"
             "#=================== freeze std out ===================\n"
-            "far\n"
+            "bar\n"
             "#=================== freeze std err ===================\n",
         )
         with open(out["script"]) as fp:

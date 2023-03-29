@@ -68,7 +68,7 @@ from dpgen2.fp.vasp import (
 from dpgen2.op.collect_data import (
     CollectData,
 )
-from dpgen2.op.modify_train_script import (
+from dpgen2.superop.prep_run_dp_train import (
     ModifyTrainScript,
 )
 from dpgen2.op.prep_dp_train import (
