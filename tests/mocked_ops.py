@@ -68,9 +68,6 @@ from dpgen2.fp.vasp import (
 from dpgen2.op.collect_data import (
     CollectData,
 )
-from dpgen2.superop.prep_run_dp_train import (
-    ModifyTrainScript,
-)
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
 )
@@ -85,6 +82,9 @@ from dpgen2.op.run_lmp import (
 )
 from dpgen2.op.select_confs import (
     SelectConfs,
+)
+from dpgen2.superop.prep_run_dp_train import (
+    ModifyTrainScript,
 )
 
 mocked_template_script = {"seed": 1024, "data": []}

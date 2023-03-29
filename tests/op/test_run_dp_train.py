@@ -616,7 +616,6 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
-
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_finetune_finetune(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
