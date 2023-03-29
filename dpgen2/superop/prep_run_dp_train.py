@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from copy import (
     deepcopy,
 )
@@ -39,18 +39,15 @@ from dflow.python import (
 
 from dpgen2.constants import (
     train_index_pattern,
+    train_script_name,
+    train_task_pattern,
 )
 from dpgen2.utils.step_config import (
     init_executor,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
-from dpgen2.constants import (
-    train_script_name,
-    train_task_pattern,
-)
 
-    
 class ModifyTrainScript(OP):
     r"""Modify the training scripts to prepare them for training
     tasks in dpgen step.
@@ -284,7 +281,7 @@ def _prep_run_dp_train(
         **run_config,
     )
     train_steps.add(run_train)
-    
+
     if finetune is True:
         modify_train_script = Step(
             "modify-train-script",
@@ -304,13 +301,15 @@ def _prep_run_dp_train(
             **prep_config,
         )
         train_steps.add(modify_train_script)
-        train_steps.outputs.parameters["template_script"].value_from_parameter = modify_train_script.outputs.parameters[
+        train_steps.outputs.parameters[
+            "template_script"
+        ].value_from_parameter = modify_train_script.outputs.parameters[
             "template_script"
         ]
     else:
-        train_steps.outputs.parameters["template_script"].value_from_parameter = train_steps.inputs.parameters[
+        train_steps.outputs.parameters[
             "template_script"
-        ]
+        ].value_from_parameter = train_steps.inputs.parameters["template_script"]
     train_steps.outputs.artifacts["scripts"]._from = run_train.outputs.artifacts[
         "script"
     ]
