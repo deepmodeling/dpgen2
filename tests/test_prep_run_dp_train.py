@@ -50,9 +50,9 @@ from context import (
     upload_python_packages,
 )
 from mocked_ops import (
+    MockedModifyTrainScript,
     MockedPrepDPTrain,
     MockedRunDPTrain,
-    MockedModifyTrainScript,
     MockedRunDPTrainNoneInitModel,
     make_mocked_init_data,
     make_mocked_init_models,
