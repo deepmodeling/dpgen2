@@ -123,6 +123,7 @@ class PrepRunDPTrain(Steps):
         name: str,
         prep_train_op: OP,
         run_train_op: OP,
+        modify_train_script_op: OP = ModifyTrainScript,
         prep_config: dict = normalize_step_dict({}),
         run_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -182,6 +183,7 @@ class PrepRunDPTrain(Steps):
             self.step_keys,
             prep_train_op,
             run_train_op,
+            modify_train_script_op,
             prep_config=prep_config,
             run_config=run_config,
             upload_python_packages=upload_python_packages,
@@ -214,6 +216,7 @@ def _prep_run_dp_train(
     step_keys,
     prep_train_op: OP,
     run_train_op: OP,
+    modify_train_script_op: OP = ModifyTrainScript,
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -286,7 +289,7 @@ def _prep_run_dp_train(
         modify_train_script = Step(
             "modify-train-script",
             template=PythonOPTemplate(
-                ModifyTrainScript,
+                modify_train_script_op,
                 python_packages=upload_python_packages,
                 **prep_template_config,
             ),

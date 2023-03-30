@@ -52,6 +52,7 @@ from context import (
 from mocked_ops import (
     MockedPrepDPTrain,
     MockedRunDPTrain,
+    MockedModifyTrainScript,
     MockedRunDPTrainNoneInitModel,
     make_mocked_init_data,
     make_mocked_init_models,
@@ -398,6 +399,7 @@ class TestTrainDp(unittest.TestCase):
             "finetune-steps",
             MockedPrepDPTrain,
             MockedRunDPTrain,
+            MockedModifyTrainScript,
             upload_python_packages=upload_python_packages,
             prep_config=default_config,
             run_config=default_config,
