@@ -334,7 +334,7 @@ class TestSubmit(unittest.TestCase):
 
 class TestSubmitCmdStd(unittest.TestCase):
     def setUp(self):
-        from dflow.config import (
+        from dflow import (
             config,
         )
 
@@ -370,7 +370,7 @@ class TestSubmitCmdStd(unittest.TestCase):
 
 class TestSubmitCmdDist(unittest.TestCase):
     def setUp(self):
-        from dflow.config import (
+        from dflow import (
             config,
         )
 
@@ -399,6 +399,40 @@ class TestSubmitCmdDist(unittest.TestCase):
         wf_config = json.loads(input_dist)
         submit_concurrent_learning(wf_config, no_submission=True)
 
+class TestSubmitCmdFinetune(unittest.TestCase):
+    def setUp(self):
+        from dflow.config import (
+            config,
+        )
+
+        config["mode"] = "debug"
+        self.touched_files = [
+            "foo",
+            "foo1",
+            "init",
+            "bar",
+            "tar",
+            "INCAR",
+            "POTCAR.Al",
+            "POTCAR.Mg",
+        ]
+        for ii in self.touched_files:
+            Path(ii).touch()
+        Path("foo").write_text("{}")
+        Path("foo1").write_text("{}")
+
+    def tearDown(self):
+        from dflow import (
+            config,
+        )
+
+        config["mode"] = None
+        for ii in self.touched_files:
+            os.remove(ii)
+
+    def test(self):
+        wf_config = json.loads(input_std)
+        submit_concurrent_learning(wf_config, no_submission=True)
 
 input_std = textwrap.dedent(
     """
@@ -695,6 +729,194 @@ input_dist = textwrap.dedent(
             ]
         ],
         "_comment": "all"
+    }
+}
+"""
+)
+
+input_finetune = textwrap.dedent(
+"""
+    "default_step_config": {
+        "template_config": {
+            "image": "registry.dp.tech/dptech/prod-11881/dpgen2-utils:1.0",
+            "_comment": "all"
+        },
+        "executor": {
+            "type": "dispatcher",
+            "image_pull_policy": "IfNotPresent",
+            "machine_dict": {
+                "batch_type": "Bohrium",
+                "context_type": "Bohrium",
+                "remote_profile": {
+                    "input_data": {
+                        "job_type": "container",
+                        "platform": "ali",
+                        "scass_type": "c2_m4_cpu"
+                    }
+                }
+            }
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "registry.dp.tech/dptech/prod-150/deepmd-kit:2.2.0b1-devel",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "registry.dp.tech/dptech/prod-150/deepmd-kit:2.2.0b1-devel",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m31_1 * NVIDIA T4"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/vasp-native:v1",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "upload_python_packages": [
+        "/mnt/vepfs/users/jiameng/work-place-source/dpgen2-finetune-once-new/dpgen2",
+        "/mnt/vepfs/users/jiameng/work-place-source/dpdata/dpdata"
+    ],
+    "inputs": {
+        "type_map": [
+            "H",
+            "C"
+        ],
+        "mass_map": [
+            4,
+            12
+        ],
+        "init_data_prefix": "./dpgen2_ch4_example",
+        "init_data_sys": [
+            "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+        ],
+        "do_finetune": true,
+        "_comment": "all"
+    },
+    "train": {
+        "type": "dp",
+        "numb_models": 4,
+        "template_script": "train-ch4.json",
+        "init_models_paths": ["./0314-oc22_005-0.pb", "./0314-oc22_005-1.pb", "./0314-oc22_005-2.pb", "./0314-oc22_005-3.pb"],
+        "_comment": "all"
+    },
+    "explore": {
+        "type": "lmp",
+        "config": {
+            "command": "lmp -var restart 0"
+        },
+        "convergence": {
+            "type":                    "fixed-levels",
+            "conv_accuracy":            0.90,
+            "level_f_lo":                0.3,
+            "level_f_hi":                0.5,
+            "_command":      "all"
+         }, 
+        "max_numb_iter": 3,
+        "f_trust_lo":	0.05,
+        "f_trust_hi":	0.15,
+        "fatal_at_max": false,
+        "output_nopbc": true,
+        "configuration_prefix": "/mnt/vepfs/users/jiameng/workplace/dpgen2_finetune",
+        "configurations": [
+            {
+                "type": "file",
+                "files": [
+                    "dpgen2_ch4_example/CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+                ],
+                "fmt": "deepmd/npy"
+            }
+        ],
+        "stages": [
+            [
+                {
+                    "type": "lmp-md",
+                    "_idx": 0,
+                    "ensemble": "npt-iso",
+                    "nsteps": 1000,
+                    "press": [
+                        1.0
+                    ],
+                    "sys_idx": [
+                        0
+                    ],
+                    "temps": [
+                        50
+                    ],
+                    "trj_freq": 10,
+                    "n_sample": 1
+                }
+            ]
+        ],
+        "_comment": "all"
+    },
+    "fp" : {
+        "type" :	"vasp",
+        "task_max":	2,
+        "run_config" : {
+            "command": "ulimit -s unlimited && source /opt/intel/oneapi/setvars.sh && mpirun -n 4 vasp_std"
+        },
+        "inputs_config" : {
+            "pp_files":	{"C" : "dpgen2_ch4_example/POTCAR_C", "H" : "dpgen2_ch4_example/POTCAR_H"},
+            "incar":    "dpgen2_ch4_example/INCAR_methane",
+            "kspacing":	0.32,
+            "kgamma":	true
+        },
+        "_comment" : "all"
     }
 }
 """
