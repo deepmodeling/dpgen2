@@ -399,7 +399,6 @@ class TestSubmitCmdDist(unittest.TestCase):
         wf_config = json.loads(input_dist)
         submit_concurrent_learning(wf_config, no_submission=True)
 
-
 class TestSubmitCmdFinetune(unittest.TestCase):
     def setUp(self):
         from dflow.config import (
@@ -434,7 +433,6 @@ class TestSubmitCmdFinetune(unittest.TestCase):
     def test(self):
         wf_config = json.loads(input_std)
         submit_concurrent_learning(wf_config, no_submission=True)
-
 
 input_std = textwrap.dedent(
     """
@@ -559,7 +557,7 @@ input_std = textwrap.dedent(
 )
 
 input_dist = textwrap.dedent(
-    """
+"""
 {
     "default_step_config": {
         "template_config": {
