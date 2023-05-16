@@ -309,6 +309,7 @@ def make_optional_parameter(
 ):
     return {"data_mixed_type": mixed_type, "finetune_mode": finetune_mode}
 
+
 def make_finetune_step(
     config,
     prep_train_config,
@@ -541,17 +542,17 @@ def workflow_concurrent_learning(
     if config["inputs"].get("finetune_mode", False):
 
         finetune_step = make_finetune_step(
-                            config,
-                            prep_train_config,
-                            run_train_config,
-                            upload_python_packages,
-                            numb_models,
-                            template_script,
-                            train_config,
-                            init_models,
-                            init_data,
-                            iter_data,
-                        )
+            config,
+            prep_train_config,
+            run_train_config,
+            upload_python_packages,
+            numb_models,
+            template_script,
+            train_config,
+            init_models,
+            init_data,
+            iter_data,
+        )
 
         init_models = finetune_step.outputs.artifacts["models"]
         template_script = finetune_step.outputs.parameters["template_script"]
