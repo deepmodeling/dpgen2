@@ -422,7 +422,7 @@ class TestSubmitCmdFinetune(unittest.TestCase):
         Path("foo1").write_text("{}")
 
     def tearDown(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
