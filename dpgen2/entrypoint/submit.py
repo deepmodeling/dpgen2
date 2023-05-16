@@ -309,6 +309,50 @@ def make_optional_parameter(
 ):
     return {"data_mixed_type": mixed_type, "finetune_mode": finetune_mode}
 
+def make_finetune_step(
+    config,
+    prep_train_config,
+    run_train_config,
+    upload_python_packages,
+    numb_models,
+    template_script,
+    train_config,
+    init_models,
+    init_data,
+    iter_data,
+):
+    finetune_optional_parameter = {
+        "mixed_type": config["inputs"]["mixed_type"],
+        "finetune_mode": "finetune",
+    }
+
+    finetune_op = PrepRunDPTrain(
+        "finetune",
+        PrepDPTrain,
+        RunDPTrain,
+        prep_config=prep_train_config,
+        run_config=run_train_config,
+        upload_python_packages=upload_python_packages,
+        finetune=True,
+    )
+    finetune_step = Step(
+        "finetune-step",
+        template=finetune_op,
+        parameters={
+            "block_id": "finetune",
+            "numb_models": numb_models,
+            "template_script": template_script,
+            "train_config": train_config,
+            "run_optional_parameter": finetune_optional_parameter,
+        },
+        artifacts={
+            "init_models": init_models,
+            "init_data": init_data,
+            "iter_data": iter_data,
+        },
+    )
+    return finetune_step
+
 
 def workflow_concurrent_learning(
     config: Dict,
@@ -495,47 +539,29 @@ def workflow_concurrent_learning(
         init_models = None
 
     if config["inputs"].get("finetune_mode", False):
-        finetune_optional_parameter = {
-            "mixed_type": config["inputs"]["mixed_type"],
-            "finetune_mode": "finetune",
-        }
 
-        finetune_op = PrepRunDPTrain(
-            "finetune",
-            PrepDPTrain,
-            RunDPTrain,
-            prep_config=prep_train_config,
-            run_config=run_train_config,
-            upload_python_packages=upload_python_packages,
-            finetune=True,
-        )
-
-        finetune_step = Step(
-            "finetune-step",
-            template=finetune_op,
-            parameters={
-                "block_id": "finetune",
-                "numb_models": numb_models,
-                "template_script": template_script,
-                "train_config": train_config,
-                "run_optional_parameter": finetune_optional_parameter,
-            },
-            artifacts={
-                "init_models": init_models,
-                "init_data": init_data,
-                "iter_data": iter_data,
-            },
-        )
+        finetune_step = make_finetune_step(
+                            config,
+                            prep_train_config,
+                            run_train_config,
+                            upload_python_packages,
+                            numb_models,
+                            template_script,
+                            train_config,
+                            init_models,
+                            init_data,
+                            iter_data,
+                        )
 
         init_models = finetune_step.outputs.artifacts["models"]
         template_script = finetune_step.outputs.parameters["template_script"]
+
+        optional_parameter = make_optional_parameter(
+            config["inputs"]["mixed_type"],
+            finetune_mode="train-init",
+        )
     else:
         finetune_step = None
-
-    optional_parameter = make_optional_parameter(
-        config["inputs"]["mixed_type"],
-        finetune_mode="train-init",
-    )
 
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
