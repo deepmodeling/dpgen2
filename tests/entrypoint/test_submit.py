@@ -334,7 +334,7 @@ class TestSubmit(unittest.TestCase):
 
 class TestSubmitCmdStd(unittest.TestCase):
     def setUp(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
@@ -355,7 +355,7 @@ class TestSubmitCmdStd(unittest.TestCase):
         Path("foo1").write_text("{}")
 
     def tearDown(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
@@ -370,7 +370,7 @@ class TestSubmitCmdStd(unittest.TestCase):
 
 class TestSubmitCmdDist(unittest.TestCase):
     def setUp(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
@@ -387,7 +387,7 @@ class TestSubmitCmdDist(unittest.TestCase):
         Path("foo").write_text("{}")
 
     def tearDown(self):
-        from dflow import (
+        from dflow.config import (
             config,
         )
 
