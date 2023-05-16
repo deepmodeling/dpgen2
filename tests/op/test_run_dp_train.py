@@ -639,7 +639,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "iter_data": [Path(ii) for ii in self.iter_data],
                     "optional_parameter": {
                         "mixed_type": False,
-                        "do_finetune": "finetune",
+                        "finetune_mode": "finetune",
                     },
                 }
             )
@@ -702,7 +702,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "iter_data": [Path(ii) for ii in self.iter_data],
                     "optional_parameter": {
                         "mixed_type": False,
-                        "do_finetune": "train-init",
+                        "finetune_mode": "train-init",
                     },
                 }
             )

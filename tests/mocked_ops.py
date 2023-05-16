@@ -248,9 +248,9 @@ class MockedRunDPTrainCheckOptParam(RunDPTrain):
             raise FatalError(
                 f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} "
             )
-        if not ip["optional_parameter"]["do_finetune"]:
+        if not ip["optional_parameter"]["finetune_mode"]:
             raise FatalError(
-                f"the value of do_finetune is {ip['optional_parameter']['do_finetune']} "
+                f"the value of finetune_mode is {ip['optional_parameter']['finetune_mode']} "
             )
         return MockedRunDPTrain.execute(self, ip)
 

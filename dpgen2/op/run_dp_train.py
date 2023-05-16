@@ -51,7 +51,7 @@ class RunDPTrain(OP):
 
     default_optional_parameter = {
         "mixed_type": False,
-        "do_finetune": "no",
+        "finetune_mode": "no",
     }
 
     @classmethod
@@ -116,7 +116,7 @@ class RunDPTrain(OP):
             On the failure of training or freezing. Human intervention needed.
         """
         mixed_type = ip["optional_parameter"]["mixed_type"]
-        do_finetune = ip["optional_parameter"]["do_finetune"]
+        finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
         config = RunDPTrain.normalize_config(config)
         task_name = ip["task_name"]
@@ -162,7 +162,7 @@ class RunDPTrain(OP):
         )
 
         if RunDPTrain.skip_training(
-            work_dir, train_dict, init_model, iter_data, do_finetune
+            work_dir, train_dict, init_model, iter_data, finetune_mode
         ):
             return OPIO(
                 {
@@ -185,7 +185,7 @@ class RunDPTrain(OP):
                 json.dump(train_dict, fp, indent=4)
 
             # train model
-            if do_init_model or do_finetune == "train-init":
+            if do_init_model or finetune_mode == "train-init":
                 command = [
                     "dp",
                     "train",
@@ -193,7 +193,7 @@ class RunDPTrain(OP):
                     str(init_model),
                     train_script_name,
                 ]
-            elif do_finetune == "finetune":
+            elif finetune_mode == "finetune":
                 command = [
                     "dp",
                     "train",
@@ -214,7 +214,7 @@ class RunDPTrain(OP):
             fplog.write("#=================== train std err ===================\n")
             fplog.write(err)
 
-            if do_finetune == "finetune" and os.path.exists("input_v2_compat.json"):
+            if finetune_mode == "finetune" and os.path.exists("input_v2_compat.json"):
                 shutil.copy2("input_v2_compat.json", train_script_name)
 
             # freeze model
@@ -295,11 +295,11 @@ class RunDPTrain(OP):
         train_dict,
         init_model,
         iter_data,
-        do_finetune,
+        finetune_mode,
     ):
         # we have init model and no iter data, skip training
-        if do_finetune is not None and (
-            do_finetune == "train-init" or do_finetune == "finetune"
+        if finetune_mode is not None and (
+            finetune_mode == "train-init" or finetune_mode == "finetune"
         ):
             return False
         if (init_model is not None) and (iter_data is None or len(iter_data) == 0):

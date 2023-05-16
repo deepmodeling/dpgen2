@@ -49,7 +49,7 @@ from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 block_default_optional_parameter = {
     "data_mixed_type": False,
-    "do_finetune": "no",
+    "finetune_mode": "no",
 }
 
 
@@ -62,7 +62,7 @@ def make_collect_data_optional_parameter(block_optional_parameter):
 def make_run_dp_train_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
-        "do_finetune": block_optional_parameter["do_finetune"],
+        "finetune_mode": block_optional_parameter["finetune_mode"],
     }
 
 

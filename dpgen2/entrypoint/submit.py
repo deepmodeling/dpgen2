@@ -305,9 +305,9 @@ def get_kspacing_kgamma_from_incar(
 
 def make_optional_parameter(
     mixed_type=False,
-    do_finetune="no",
+    finetune_mode="no",
 ):
-    return {"data_mixed_type": mixed_type, "do_finetune": do_finetune}
+    return {"data_mixed_type": mixed_type, "finetune_mode": finetune_mode}
 
 
 def workflow_concurrent_learning(
@@ -494,10 +494,10 @@ def workflow_concurrent_learning(
     else:
         init_models = None
 
-    if config["inputs"].get("do_finetune", False):
+    if config["inputs"].get("finetune_mode", False):
         finetune_optional_parameter = {
             "mixed_type": config["inputs"]["mixed_type"],
-            "do_finetune": "finetune",
+            "finetune_mode": "finetune",
         }
 
         finetune_op = PrepRunDPTrain(
@@ -534,7 +534,7 @@ def workflow_concurrent_learning(
 
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
-        do_finetune="train-init",
+        finetune_mode="train-init",
     )
 
     # here the scheduler is passed as input parameter to the concurrent_learning_op
@@ -681,12 +681,12 @@ def submit_concurrent_learning(
             "conf_selector",
             selector,
         )
-        wf_config["inputs"]["do_finetune"] = False
+        wf_config["inputs"]["finetune_mode"] = False
         # finetune will not be done again if the old process is reused.
 
     wf = Workflow(name="dpgen")
 
-    if wf_config["inputs"].get("do_finetune", False):
+    if wf_config["inputs"].get("finetune_mode", False):
         assert finetune_step is not None
         wf.add(finetune_step)
 

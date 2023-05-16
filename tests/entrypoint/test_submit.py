@@ -846,7 +846,7 @@ input_finetune = textwrap.dedent(
         "init_data_sys": [
             "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
         ],
-        "do_finetune": true,
+        "finetune_mode": true,
         "_comment": "all"
     },
     "train": {

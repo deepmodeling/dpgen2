@@ -415,7 +415,7 @@ class TestTrainDp(unittest.TestCase):
                 "train_config": {},
                 "run_optional_parameter": {
                     "data_mixed_type": False,
-                    "do_finetune": "finetune",
+                    "finetune_mode": "finetune",
                 },
             },
             artifacts={
