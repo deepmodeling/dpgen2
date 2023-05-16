@@ -64,8 +64,8 @@ from dpgen2.constants import (
     train_task_pattern,
 )
 from dpgen2.superop.prep_run_dp_train import (
-    PrepRunDPTrain,
     ModifyTrainScript,
+    PrepRunDPTrain,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
@@ -455,6 +455,7 @@ class TestTrainDp(unittest.TestCase):
                 only_check_name=True,
             )
 
+
 class TestModifyTrainScript(unittest.TestCase):
     def setUp(self):
         self.numb_models = mocked_numb_models
@@ -470,7 +471,7 @@ class TestModifyTrainScript(unittest.TestCase):
         for ii in range(3):
             Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
             Path(self.train_scripts[ii]).write_text("{}")
-    
+
     def tearDown(self):
         for ii in self.task_names:
             if Path(ii).exists():
@@ -478,12 +479,7 @@ class TestModifyTrainScript(unittest.TestCase):
 
     def test(self):
         scripts = self.scripts
-        ip = OPIO(
-            {
-                "scripts": self.scripts,
-                "numb_models": self.numb_models
-            }
-        )
+        ip = OPIO({"scripts": self.scripts, "numb_models": self.numb_models})
         op = ModifyTrainScript().execute(ip)
         self.assertIsInstance(op, OPIO)
         self.assertIn("template_script", op)
@@ -491,6 +487,7 @@ class TestModifyTrainScript(unittest.TestCase):
         self.assertEqual(len(op["template_script"]), mocked_numb_models)
         for script in op["template_script"]:
             self.assertIsInstance(script, dict)
+
 
 class TestMockedModifyTrainScript(unittest.TestCase):
     def setUp(self):
@@ -507,7 +504,7 @@ class TestMockedModifyTrainScript(unittest.TestCase):
         for ii in range(3):
             Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
             Path(self.train_scripts[ii]).write_text("{}")
-    
+
     def tearDown(self):
         for ii in self.task_names:
             if Path(ii).exists():
@@ -515,12 +512,7 @@ class TestMockedModifyTrainScript(unittest.TestCase):
 
     def test(self):
         scripts = self.scripts
-        ip = OPIO(
-            {
-                "scripts": self.scripts,
-                "numb_models": self.numb_models
-            }
-        )
+        ip = OPIO({"scripts": self.scripts, "numb_models": self.numb_models})
         op = MockedModifyTrainScript().execute(ip)
         self.assertIsInstance(op, OPIO)
         self.assertIn("template_script", op)
