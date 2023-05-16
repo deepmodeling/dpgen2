@@ -65,6 +65,7 @@ from dpgen2.constants import (
 )
 from dpgen2.superop.prep_run_dp_train import (
     PrepRunDPTrain,
+    ModifyTrainScript,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
@@ -453,3 +454,79 @@ class TestTrainDp(unittest.TestCase):
                 self.path_iter_data,
                 only_check_name=True,
             )
+
+class TestModifyTrainScript(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+        self.scripts = Path(".")
+
+        for ii in range(3):
+            Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
+            Path(self.train_scripts[ii]).write_text("{}")
+    
+    def tearDown(self):
+        for ii in self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+
+    def test(self):
+        scripts = self.scripts
+        ip = OPIO(
+            {
+                "scripts": self.scripts,
+                "numb_models": self.numb_models
+            }
+        )
+        op = ModifyTrainScript().execute(ip)
+        self.assertIsInstance(op, OPIO)
+        self.assertIn("template_script", op)
+        self.assertIsInstance(op["template_script"], list)
+        self.assertEqual(len(op["template_script"]), mocked_numb_models)
+        for script in op["template_script"]:
+            self.assertIsInstance(script, dict)
+
+class TestMockedModifyTrainScript(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+        self.scripts = Path(".")
+
+        for ii in range(3):
+            Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
+            Path(self.train_scripts[ii]).write_text("{}")
+    
+    def tearDown(self):
+        for ii in self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+
+    def test(self):
+        scripts = self.scripts
+        ip = OPIO(
+            {
+                "scripts": self.scripts,
+                "numb_models": self.numb_models
+            }
+        )
+        op = MockedModifyTrainScript().execute(ip)
+        self.assertIsInstance(op, OPIO)
+        self.assertIn("template_script", op)
+        self.assertIsInstance(op["template_script"], list)
+        self.assertEqual(len(op["template_script"]), mocked_numb_models)
+        for script in op["template_script"]:
+            self.assertIsInstance(script, dict)
+            self.assertIn("foo", script)
+            self.assertEqual(script["foo"], "bar")
