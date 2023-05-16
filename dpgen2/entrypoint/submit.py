@@ -538,6 +538,11 @@ def workflow_concurrent_learning(
     else:
         init_models = None
 
+    finetune_step = None
+    optional_parameter = make_optional_parameter(
+        config["inputs"]["mixed_type"],
+    )
+    
     if config["inputs"].get("finetune_mode", False):
 
         finetune_step = make_finetune_step(
@@ -560,8 +565,6 @@ def workflow_concurrent_learning(
             config["inputs"]["mixed_type"],
             finetune_mode="train-init",
         )
-    else:
-        finetune_step = None
 
     # here the scheduler is passed as input parameter to the concurrent_learning_op
     dpgen_step = Step(
