@@ -59,7 +59,7 @@ class ConfFilters:
         self,
         conf: dpdata.System,
     ) -> bool:
-        natoms = sum(conf["atom_numbs"])
+        natoms = sum(list(map(int, conf["atom_numbs"])))
         selected_idx = np.arange(conf.get_nframes())
         for ff in self._filters:
             fsel = np.where(

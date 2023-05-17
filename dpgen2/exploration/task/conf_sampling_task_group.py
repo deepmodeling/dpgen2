@@ -56,7 +56,7 @@ class ConfSamplingTaskGroup(ExplorationTaskGroup):
 
     def _sample_confs(
         self,
-    ):
+    ) -> list:
         confs = []
         for ii in range(self.n_sample):
             if len(self.conf_queue) == 0:
