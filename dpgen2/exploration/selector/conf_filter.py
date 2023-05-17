@@ -74,4 +74,4 @@ class ConfFilters:
                 ]
             )[0]
             selected_idx = np.intersect1d(selected_idx, fsel)
-        return conf.sub_system(selected_idx)
+        return bool(conf.sub_system(selected_idx))

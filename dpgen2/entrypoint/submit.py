@@ -147,8 +147,8 @@ def make_concurrent_learning_op(
     if explore_style == "lmp":
         prep_run_explore_op = PrepRunLmp(
             "prep-run-lmp",
-            PrepLmp,
-            RunLmp,
+            PrepLmp(),
+            RunLmp(),
             prep_config=prep_explore_config,
             run_config=run_explore_config,
             upload_python_packages=upload_python_packages,
@@ -173,9 +173,9 @@ def make_concurrent_learning_op(
         "concurrent-learning-block",
         prep_run_train_op,
         prep_run_explore_op,
-        SelectConfs,
+        SelectConfs(),
         prep_run_fp_op,
-        CollectData,
+        CollectData(),
         select_confs_config=select_confs_config,
         collect_data_config=collect_data_config,
         upload_python_packages=upload_python_packages,
@@ -329,8 +329,8 @@ def make_finetune_step(
 
     finetune_op = PrepRunDPTrain(
         "finetune",
-        PrepDPTrain,
-        RunDPTrain,
+        PrepDPTrain(),
+        RunDPTrain(),
         prep_config=prep_train_config,
         run_config=run_train_config,
         upload_python_packages=upload_python_packages,
@@ -358,7 +358,7 @@ def make_finetune_step(
 def workflow_concurrent_learning(
     config: Dict,
     old_style: bool = False,
-) -> Tuple[Step, Step]:
+) -> Tuple[Step, Optional[Step]]:
     default_config = (
         normalize_step_dict(config.get("default_config", {}))
         if old_style

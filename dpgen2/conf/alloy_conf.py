@@ -166,8 +166,8 @@ class AlloyConf:
             sys = sys.replicate(replicate)
         # set atom types
         self.ntypes = len(type_map)
-        assert isinstance(sys["atom_numbs"], list)
-        self.natoms = sum(sys["atom_numbs"])
+        sys_atom_numbs : list[int] = sys["atom_numbs"]
+        self.natoms = sum(sys_atom_numbs)
         sys.data["atom_names"] = type_map
         sys.data["atom_numbs"] = [0] * self.ntypes
         sys.data["atom_numbs"][0] = self.natoms
