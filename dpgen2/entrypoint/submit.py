@@ -543,7 +543,7 @@ def workflow_concurrent_learning(
     optional_parameter = make_optional_parameter(
         config["inputs"]["mixed_type"],
     )
-    
+
     if config["inputs"].get("finetune_mode", False):
 
         finetune_step = make_finetune_step(
