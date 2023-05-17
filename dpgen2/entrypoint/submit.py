@@ -136,8 +136,8 @@ def make_concurrent_learning_op(
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
-            PrepDPTrain,
-            RunDPTrain,
+            PrepDPTrain(),
+            RunDPTrain(),
             prep_config=prep_train_config,
             run_config=run_train_config,
             upload_python_packages=upload_python_packages,
