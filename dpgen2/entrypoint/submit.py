@@ -138,8 +138,8 @@ def make_concurrent_learning_op(
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
             "prep-run-dp-train",
-            Type[PrepDPTrain],
-            Type[RunDPTrain],
+            PrepDPTrain,
+            RunDPTrain,
             prep_config=prep_train_config,
             run_config=run_train_config,
             upload_python_packages=upload_python_packages,
@@ -149,8 +149,8 @@ def make_concurrent_learning_op(
     if explore_style == "lmp":
         prep_run_explore_op = PrepRunLmp(
             "prep-run-lmp",
-            Type[PrepLmp],
-            Type[RunLmp],
+            PrepLmp,
+            RunLmp,
             prep_config=prep_explore_config,
             run_config=run_explore_config,
             upload_python_packages=upload_python_packages,
@@ -175,9 +175,9 @@ def make_concurrent_learning_op(
         "concurrent-learning-block",
         prep_run_train_op,
         prep_run_explore_op,
-        Type[SelectConfs],
+        SelectConfs,
         prep_run_fp_op,
-        Type[CollectData],
+        CollectData,
         select_confs_config=select_confs_config,
         collect_data_config=collect_data_config,
         upload_python_packages=upload_python_packages,
@@ -331,8 +331,8 @@ def make_finetune_step(
 
     finetune_op = PrepRunDPTrain(
         "finetune",
-        Type[PrepDPTrain],
-        Type[RunDPTrain],
+        PrepDPTrain,
+        RunDPTrain,
         prep_config=prep_train_config,
         run_config=run_train_config,
         upload_python_packages=upload_python_packages,
