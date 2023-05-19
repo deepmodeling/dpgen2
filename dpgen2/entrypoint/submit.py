@@ -544,7 +544,7 @@ def workflow_concurrent_learning(
         config["inputs"]["mixed_type"],
     )
 
-    if config["inputs"].get("finetune_mode", False):
+    if config["inputs"].get("do_finetune", False):
 
         finetune_step = make_finetune_step(
             config,
@@ -711,12 +711,12 @@ def submit_concurrent_learning(
             "conf_selector",
             selector,
         )
-        wf_config["inputs"]["finetune_mode"] = False
+        wf_config["inputs"]["do_finetune"] = False
         # finetune will not be done again if the old process is reused.
 
     wf = Workflow(name="dpgen")
 
-    if wf_config["inputs"].get("finetune_mode", False):
+    if wf_config["inputs"].get("do_finetune", False):
         assert finetune_step is not None
         wf.add(finetune_step)
 

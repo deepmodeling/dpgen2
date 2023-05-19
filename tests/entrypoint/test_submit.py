@@ -432,7 +432,7 @@ class TestSubmitCmdFinetune(unittest.TestCase):
             os.remove(ii)
 
     def test(self):
-        wf_config = json.loads(input_std)
+        wf_config = json.loads(input_finetune)
         submit_concurrent_learning(wf_config, no_submission=True)
 
 
@@ -738,187 +738,121 @@ input_dist = textwrap.dedent(
 
 input_finetune = textwrap.dedent(
     """
-    "default_step_config": {
-        "template_config": {
-            "image": "registry.dp.tech/dptech/prod-11881/dpgen2-utils:1.0",
-            "_comment": "all"
-        },
-        "executor": {
-            "type": "dispatcher",
-            "image_pull_policy": "IfNotPresent",
-            "machine_dict": {
-                "batch_type": "Bohrium",
-                "context_type": "Bohrium",
-                "remote_profile": {
-                    "input_data": {
-                        "job_type": "container",
-                        "platform": "ali",
-                        "scass_type": "c2_m4_cpu"
-                    }
-                }
-            }
-        },
-        "_comment": "all"
+{
+    "default_step_config" : {
+	"template_config" : {
+	    "image" : "dflow:1.1.4",
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
     },
-    "step_configs": {
-        "run_train_config": {
-            "template_config": {
-                "image": "registry.dp.tech/dptech/prod-150/deepmd-kit:2.2.0b1-devel",
-                "_comment": "all"
-            },
-            "executor": {
+
+    "step_configs":{
+	"run_train_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
                 "type": "dispatcher",
-                "image_pull_policy": "IfNotPresent",
-                "machine_dict": {
-                    "batch_type": "Bohrium",
-                    "context_type": "Bohrium",
-                    "remote_profile": {
-                        "input_data": {
-                            "job_type": "container",
-                            "platform": "ali",
-                            "scass_type": "c8_m31_1 * NVIDIA T4"
-                        }
-                    }
-                }
-            },
-            "_comment": "all"
-        },
-        "run_explore_config": {
-            "template_config": {
-                "image": "registry.dp.tech/dptech/prod-150/deepmd-kit:2.2.0b1-devel",
-                "_comment": "all"
-            },
-            "executor": {
+                "username": "foo"
+	    },
+	    "_comment" : "all"
+	},
+	"run_explore_config" : {
+	    "template_config" : {
+		"image" : "deepmd-kit:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
                 "type": "dispatcher",
-                "image_pull_policy": "IfNotPresent",
-                "machine_dict": {
-                    "batch_type": "Bohrium",
-                    "context_type": "Bohrium",
-                    "remote_profile": {
-                        "input_data": {
-                            "job_type": "container",
-                            "platform": "ali",
-                            "scass_type": "c8_m31_1 * NVIDIA T4"
-                        }
-                    }
-                }
-            },
-            "_comment": "all"
-        },
-        "run_fp_config": {
-            "template_config": {
-                "image": "dp-harbor-registry.cn-zhangjiakou.cr.aliyuncs.com/deepmd/vasp-native:v1",
-                "_comment": "all"
-            },
-            "executor": {
+                "username": "foo"
+	    },
+	    "_comment" : "all"
+	},
+	"run_fp_config" : {
+	    "template_config" : {
+		"image" : "vasp:wanghan",
+		"_comment" : "all"
+	    },
+	    "executor" : {
                 "type": "dispatcher",
-                "image_pull_policy": "IfNotPresent",
-                "machine_dict": {
-                    "batch_type": "Bohrium",
-                    "context_type": "Bohrium",
-                    "remote_profile": {
-                        "input_data": {
-                            "job_type": "container",
-                            "platform": "ali",
-                            "scass_type": "c8_m32_cpu"
-                        }
-                    }
-                }
-            },
-            "_comment": "all"
-        },
-        "_comment": "all"
+                "username": "foo"
+	    },
+	    "_comment" : "all"
+	},
+	"_comment" : "all"
     },
-    "upload_python_packages": [
-        "/mnt/vepfs/users/jiameng/work-place-source/dpgen2-finetune-once-new/dpgen2",
-        "/mnt/vepfs/users/jiameng/work-place-source/dpdata/dpdata"
-    ],
     "inputs": {
-        "type_map": [
-            "H",
-            "C"
-        ],
-        "mass_map": [
-            4,
-            12
-        ],
-        "init_data_prefix": "./dpgen2_ch4_example",
-        "init_data_sys": [
-            "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
-        ],
-        "finetune_mode": true,
-        "_comment": "all"
+	"type_map":		["Al", "Mg"],
+	"mass_map":		[27, 24],
+	"init_data_prefix":	null,
+	"init_data_sys":	[
+	    "init"
+	],
+	"_comment" : "all"
     },
-    "train": {
-        "type": "dp",
-        "numb_models": 4,
-        "template_script": "train-ch4.json",
-        "init_models_paths": ["./0314-oc22_005-0.pb", "./0314-oc22_005-1.pb", "./0314-oc22_005-2.pb", "./0314-oc22_005-3.pb"],
-        "_comment": "all"
+    "train":{
+	"type" :	"dp",
+	"numb_models" : 2,
+	"config" : {},
+	"template_script" : ["foo", "foo1"],
+"init_models_paths" : ["bar", "tar"],
+        "do_finetune": true,
+	"_comment" : "all"
     },
-    "explore": {
-        "type": "lmp",
-        "config": {
-            "command": "lmp -var restart 0"
-        },
-        "convergence": {
-            "type":                    "fixed-levels",
-            "conv_accuracy":            0.90,
-            "level_f_lo":                0.3,
-            "level_f_hi":                0.5,
-            "_command":      "all"
-         }, 
-        "max_numb_iter": 3,
-        "f_trust_lo":	0.05,
-        "f_trust_hi":	0.15,
-        "fatal_at_max": false,
-        "output_nopbc": true,
-        "configuration_prefix": "/mnt/vepfs/users/jiameng/workplace/dpgen2_finetune",
-        "configurations": [
-            {
-                "type": "file",
-                "files": [
-                    "dpgen2_ch4_example/CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
-                ],
-                "fmt": "deepmd/npy"
-            }
-        ],
-        "stages": [
-            [
-                {
-                    "type": "lmp-md",
-                    "_idx": 0,
-                    "ensemble": "npt-iso",
-                    "nsteps": 1000,
-                    "press": [
-                        1.0
-                    ],
-                    "sys_idx": [
-                        0
-                    ],
-                    "temps": [
-                        50
-                    ],
-                    "trj_freq": 10,
-                    "n_sample": 1
-                }
-            ]
-        ],
-        "_comment": "all"
+
+    "explore" : {
+	"type" : "lmp",
+	"config" : {
+	    "command": "lmp -var restart 0"
+	},
+	"convergence": {
+	    "type" :	"fixed-levels",
+	    "conv_accuracy" :	0.9,
+	    "level_f_lo":	0.05,
+	    "level_f_hi":	0.50,
+	    "_comment" : "all"
+	},
+	"max_numb_iter" :	5,
+	"fatal_at_max" :	false,
+	"output_nopbc":		false,
+	"configuration_prefix": null,
+	"configurations":	[
+	    {
+		"type": "alloy",
+		"lattice" : ["fcc", 4.57],
+		"replicate" : [2, 2, 2],
+		"numb_confs" : 30,
+		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+	    }
+	],
+	"_comment" : "Stage is of type List[List[dict]]. ",
+	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
+	"stages":	[
+	    [
+		{
+		    "type" : "lmp-md",
+		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+		    "conf_idx": [0], "n_sample" : 3
+		}
+	    ]
+	],
+	"_comment" : "all"
     },
     "fp" : {
-        "type" :	"vasp",
-        "task_max":	2,
-        "run_config" : {
-            "command": "ulimit -s unlimited && source /opt/intel/oneapi/setvars.sh && mpirun -n 4 vasp_std"
-        },
-        "inputs_config" : {
-            "pp_files":	{"C" : "dpgen2_ch4_example/POTCAR_C", "H" : "dpgen2_ch4_example/POTCAR_H"},
-            "incar":    "dpgen2_ch4_example/INCAR_methane",
-            "kspacing":	0.32,
-            "kgamma":	true
-        },
-        "_comment" : "all"
+	"type" :	"vasp",
+	"task_max":	2,
+	"inputs_config" : {
+	    "pp_files":	{"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
+	    "incar":    "INCAR",
+	    "kspacing":	0.32,
+	    "kgamma":	true
+	},
+	"run_config" : {
+	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+	},
+	"_comment" : "all"
     }
 }
 """

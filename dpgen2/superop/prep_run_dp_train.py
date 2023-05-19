@@ -285,7 +285,7 @@ def _prep_run_dp_train(
     )
     train_steps.add(run_train)
 
-    if finetune is True:
+    if finetune:
         modify_train_script = Step(
             "modify-train-script",
             template=PythonOPTemplate(
