@@ -166,7 +166,7 @@ class AlloyConf:
             sys = sys.replicate(replicate)
         # set atom types
         self.ntypes = len(type_map)
-        self.natoms = sum(list(map(int, sys["atom_numbs"])))
+        self.natoms = sum(sys["atom_numbs"])  # type: ignore
         sys.data["atom_names"] = type_map
         sys.data["atom_numbs"] = [0] * self.ntypes
         sys.data["atom_numbs"][0] = self.natoms

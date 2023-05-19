@@ -17,6 +17,7 @@ from typing import (
 
 import dpdata
 from dflow import (
+    ArgoStep,
     InputArtifact,
     InputParameter,
     Inputs,
@@ -663,7 +664,7 @@ def copy_scheduler_plans(
 
 def submit_concurrent_learning(
     wf_config,
-    reuse_step: Optional[List[Step]] = None,
+    reuse_step: Optional[List[ArgoStep]] = None,
     old_style: bool = False,
     replace_scheduler: bool = False,
     no_submission: bool = False,

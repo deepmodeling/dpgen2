@@ -75,7 +75,7 @@ class PrepVasp(PrepFp):
         # fix the case when some element have 0 atom, e.g. H0O2
         tmp_frame = dpdata.System(vasp_conf_name, fmt="vasp/poscar")
         Path(vasp_pot_name).write_text(vasp_inputs.make_potcar(tmp_frame["atom_names"]))
-        Path(vasp_kp_name).write_text(vasp_inputs.make_kpoints(conf_frame["cells"][0]))
+        Path(vasp_kp_name).write_text(vasp_inputs.make_kpoints(conf_frame["cells"][0]))  # type: ignore
 
 
 class RunVasp(RunFp):

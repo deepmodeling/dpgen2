@@ -137,7 +137,7 @@ class RunDeepmd(RunFp):
         from deepmd.infer import DeepPot  # type: ignore
 
         teacher_model_path.save_as_file(deepmd_teacher_model)
-        dp = DeepPot(deepmd_teacher_model)
+        dp = DeepPot(Path(deepmd_teacher_model))
 
         type_map_teacher = dp.get_type_map()
 
@@ -148,7 +148,7 @@ class RunDeepmd(RunFp):
         ss = dpdata.System(deepmd_input_path, fmt="deepmd/npy")
         conf_type_map = ss["atom_names"]
 
-        if not set(conf_type_map).issubset(set(type_map_teacher)):
+        if not set(conf_type_map).issubset(set(type_map_teacher)):  # type: ignore
             err_message = (
                 f"the type map of system ({conf_type_map}) is not subset of "
                 + f"the type map of the teacher model ({type_map_teacher})."
@@ -157,7 +157,7 @@ class RunDeepmd(RunFp):
 
         # make sure the order of elements in sys_type_map
         # is the same as that in type_map_teacher
-        temp_type_map = [ele for ele in type_map_teacher if ele in set(conf_type_map)]
+        temp_type_map = [ele for ele in type_map_teacher if ele in set(conf_type_map)]  # type: ignore
 
         ss.apply_type_map(temp_type_map)
         ss.to("deepmd/npy", deepmd_temp_path)
@@ -179,8 +179,8 @@ class RunDeepmd(RunFp):
 
         nframe = ss.get_nframes()
         coord = ss["coords"]
-        cell = None if ss.nopbc else ss["cells"].reshape([nframe, -1])
-        atype = ss["atom_types"].tolist()
+        cell = None if ss.nopbc else ss["cells"].reshape([nframe, -1])  # type: ignore
+        atype = ss["atom_types"].tolist()  # type: ignore
 
         energy, force, virial_force = dp.eval(coord, cell, atype)
 
