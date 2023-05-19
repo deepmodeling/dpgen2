@@ -115,7 +115,7 @@ class PrepFp(OP, ABC):
         # loop over list of MultiSystems
         for mm in confs:
             ms = dpdata.MultiSystems(type_map=type_map)
-            ms.from_deepmd_npy(mm, labeled=False)
+            ms.from_deepmd_npy(mm, labeled=False)  # type: ignore
             # loop over Systems in MultiSystems
             for ii in range(len(ms)):
                 ss = ms[ii]

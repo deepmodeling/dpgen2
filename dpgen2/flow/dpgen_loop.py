@@ -158,7 +158,7 @@ class ConcurrentLearningLoop(Steps):
     def __init__(
         self,
         name: str,
-        block_op: OPTemplate,
+        block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):
@@ -242,7 +242,7 @@ class ConcurrentLearning(Steps):
     def __init__(
         self,
         name: str,
-        block_op: OPTemplate,
+        block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):

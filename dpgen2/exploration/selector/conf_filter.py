@@ -58,8 +58,8 @@ class ConfFilters:
     def check(
         self,
         conf: dpdata.System,
-    ):
-        natoms = sum(list(map(int, conf["atom_numbs"])))
+    ) -> dpdata.System:
+        natoms = sum(conf["atom_numbs"])  # type: ignore
         selected_idx = np.arange(conf.get_nframes())
         for ff in self._filters:
             fsel = np.where(

@@ -444,9 +444,9 @@ def _get_data_size_of_all_systems(data_dirs):
 def _get_data_size_of_mult_sys(data_dir, mixed_type=False):
     ms = dpdata.MultiSystems()
     if mixed_type:
-        ms.from_deepmd_npy_mixed(data_dir)
+        ms.from_deepmd_npy_mixed(data_dir)  # type: ignore
     else:
-        ms.from_deepmd_npy(data_dir)
+        ms.from_deepmd_npy(data_dir)  # type: ignore
     return ms.get_nframes()
 
 

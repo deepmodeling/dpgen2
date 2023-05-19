@@ -10,6 +10,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Type,
 )
 
 from dflow import (
@@ -41,6 +42,9 @@ from dpgen2.constants import (
     train_index_pattern,
     train_script_name,
     train_task_pattern,
+)
+from dpgen2.op import (
+    RunDPTrain,
 )
 from dpgen2.utils.step_config import (
     init_executor,
@@ -121,9 +125,8 @@ class PrepRunDPTrain(Steps):
     def __init__(
         self,
         name: str,
-        prep_train_op: OP,
-        run_train_op: OP,
-        modify_train_script_op: OP = ModifyTrainScript,
+        prep_train_op: Type[OP],
+        run_train_op: Type[RunDPTrain],
         prep_config: dict = normalize_step_dict({}),
         run_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -214,9 +217,8 @@ class PrepRunDPTrain(Steps):
 def _prep_run_dp_train(
     train_steps,
     step_keys,
-    prep_train_op: OP,
-    run_train_op: OP,
-    modify_train_script_op: OP = ModifyTrainScript,
+    prep_train_op: Type[OP],
+    run_train_op: Type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
