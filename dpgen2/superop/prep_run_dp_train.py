@@ -218,9 +218,9 @@ class PrepRunDPTrain(Steps):
 def _prep_run_dp_train(
     train_steps,
     step_keys,
-    prep_train_op: OP,
-    run_train_op: OP,
-    modify_train_script_op: OP = ModifyTrainScript(),
+    prep_train_op: Type[OP],
+    run_train_op: Type[RunDPTrain],
+    modify_train_script_op: Type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
