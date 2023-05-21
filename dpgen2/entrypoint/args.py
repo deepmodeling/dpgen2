@@ -27,6 +27,7 @@ from dpgen2.utils import (
     normalize_step_dict,
     step_conf_args,
 )
+import textwrap
 
 
 def dp_dist_train_args():
@@ -241,6 +242,7 @@ def input_args():
                        is set to False by default, while the internal flag finetune_mode is set to "no," which means anything related
                        to finetuning will not be done.
                        """
+    doc_do_finetune = textwrap.dedent(doc_do_finetune)
     doc_init_data_prefix = "The prefix of initial data systems"
     doc_init_sys = "The inital data systems"
 
