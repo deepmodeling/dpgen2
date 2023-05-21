@@ -1,3 +1,5 @@
+import textwrap
+
 import dargs
 from dargs import (
     Argument,
@@ -27,7 +29,6 @@ from dpgen2.utils import (
     normalize_step_dict,
     step_conf_args,
 )
-import textwrap
 
 
 def dp_dist_train_args():
