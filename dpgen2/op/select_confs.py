@@ -107,7 +107,7 @@ class SelectConfs(OP):
             )
         rett = []
         retm = []
-        for tt, mm in zip(trajs, model_devis):
+        for tt, mm in zip(trajs, model_devis):  # type: ignore
             if (tt is None and mm is not None) or (tt is not None and mm is None):
                 raise FatalError("trajs frame is {tt} while model_devis frame is {mm}")
             elif tt is not None and mm is not None:

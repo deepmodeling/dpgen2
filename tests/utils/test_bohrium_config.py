@@ -12,7 +12,7 @@ import dflow
 import dpdata
 import numpy as np
 import pytest
-from dflow import (
+from dflow.config import (
     config,
     s3_config,
 )

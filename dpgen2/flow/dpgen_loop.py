@@ -66,12 +66,14 @@ from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 cl_default_optional_parameter = {
     "data_mixed_type": False,
+    "finetune_mode": "no",
 }
 
 
 def make_block_optional_parameter(cl_optional_parameter):
     return {
         "data_mixed_type": cl_optional_parameter["data_mixed_type"],
+        "finetune_mode": cl_optional_parameter["finetune_mode"],
     }
 
 
@@ -156,7 +158,7 @@ class ConcurrentLearningLoop(Steps):
     def __init__(
         self,
         name: str,
-        block_op: OPTemplate,
+        block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):
@@ -240,7 +242,7 @@ class ConcurrentLearning(Steps):
     def __init__(
         self,
         name: str,
-        block_op: OPTemplate,
+        block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):

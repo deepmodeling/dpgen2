@@ -11,6 +11,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Type,
 )
 
 from dflow import (
@@ -47,8 +48,19 @@ from dpgen2.utils.step_config import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
+from .prep_run_dp_train import (
+    PrepRunDPTrain,
+)
+from .prep_run_fp import (
+    PrepRunFp,
+)
+from .prep_run_lmp import (
+    PrepRunLmp,
+)
+
 block_default_optional_parameter = {
     "data_mixed_type": False,
+    "finetune_mode": "no",
 }
 
 
@@ -61,6 +73,7 @@ def make_collect_data_optional_parameter(block_optional_parameter):
 def make_run_dp_train_optional_parameter(block_optional_parameter):
     return {
         "mixed_type": block_optional_parameter["data_mixed_type"],
+        "finetune_mode": block_optional_parameter["finetune_mode"],
     }
 
 
@@ -68,11 +81,11 @@ class ConcurrentLearningBlock(Steps):
     def __init__(
         self,
         name: str,
-        prep_run_dp_train_op: OPTemplate,
-        prep_run_lmp_op: OPTemplate,
-        select_confs_op: OP,
-        prep_run_fp_op: OPTemplate,
-        collect_data_op: OP,
+        prep_run_dp_train_op: PrepRunDPTrain,
+        prep_run_lmp_op: PrepRunLmp,
+        select_confs_op: Type[OP],
+        prep_run_fp_op: PrepRunFp,
+        collect_data_op: Type[OP],
         select_confs_config: dict = normalize_step_dict({}),
         collect_data_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -172,9 +185,9 @@ def _block_cl(
     name: str,
     prep_run_dp_train_op: OPTemplate,
     prep_run_lmp_op: OPTemplate,
-    select_confs_op: OP,
+    select_confs_op: Type[OP],
     prep_run_fp_op: OPTemplate,
-    collect_data_op: OP,
+    collect_data_op: Type[OP],
     select_confs_config: dict = normalize_step_dict({}),
     collect_data_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,

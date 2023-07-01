@@ -93,6 +93,6 @@ class ConfSelectorFrames(ConfSelector):
 
         out_path = Path("confs")
         out_path.mkdir(exist_ok=True)
-        ms.to_deepmd_npy(out_path)
+        ms.to_deepmd_npy(out_path)  # type: ignore
 
         return [out_path], copy.deepcopy(self.report)

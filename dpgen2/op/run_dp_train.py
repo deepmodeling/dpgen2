@@ -51,6 +51,7 @@ class RunDPTrain(OP):
 
     default_optional_parameter = {
         "mixed_type": False,
+        "finetune_mode": "no",
     }
 
     @classmethod
@@ -115,6 +116,7 @@ class RunDPTrain(OP):
             On the failure of training or freezing. Human intervention needed.
         """
         mixed_type = ip["optional_parameter"]["mixed_type"]
+        finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
         config = RunDPTrain.normalize_config(config)
         task_name = ip["task_name"]
@@ -159,7 +161,9 @@ class RunDPTrain(OP):
             train_dict, config, do_init_model, major_version
         )
 
-        if RunDPTrain.skip_training(work_dir, train_dict, init_model, iter_data):
+        if RunDPTrain.skip_training(
+            work_dir, train_dict, init_model, iter_data, finetune_mode
+        ):
             return OPIO(
                 {
                     "script": work_dir / train_script_name,
@@ -181,13 +185,21 @@ class RunDPTrain(OP):
                 json.dump(train_dict, fp, indent=4)
 
             # train model
-            if do_init_model:
+            if do_init_model or finetune_mode == "train-init":
                 command = [
                     "dp",
                     "train",
                     "--init-frz-model",
                     str(init_model),
                     train_script_name,
+                ]
+            elif finetune_mode == "finetune":
+                command = [
+                    "dp",
+                    "train",
+                    train_script_name,
+                    "--finetune",
+                    str(init_model),
                 ]
             else:
                 command = ["dp", "train", train_script_name]
@@ -201,6 +213,9 @@ class RunDPTrain(OP):
             fplog.write(out)
             fplog.write("#=================== train std err ===================\n")
             fplog.write(err)
+
+            if finetune_mode == "finetune" and os.path.exists("input_v2_compat.json"):
+                shutil.copy2("input_v2_compat.json", train_script_name)
 
             # freeze model
             ret, out, err = run_command(["dp", "freeze", "-o", "frozen_model.pb"])
@@ -280,8 +295,13 @@ class RunDPTrain(OP):
         train_dict,
         init_model,
         iter_data,
+        finetune_mode,
     ):
         # we have init model and no iter data, skip training
+        if finetune_mode is not None and (
+            finetune_mode == "train-init" or finetune_mode == "finetune"
+        ):
+            return False
         if (init_model is not None) and (iter_data is None or len(iter_data) == 0):
             with set_directory(work_dir):
                 with open(train_script_name, "w") as fp:
@@ -345,7 +365,6 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )
-
         return [
             Argument(
                 "init_model_policy",
@@ -425,9 +444,9 @@ def _get_data_size_of_all_systems(data_dirs):
 def _get_data_size_of_mult_sys(data_dir, mixed_type=False):
     ms = dpdata.MultiSystems()
     if mixed_type:
-        ms.from_deepmd_npy_mixed(data_dir)
+        ms.from_deepmd_npy_mixed(data_dir)  # type: ignore
     else:
-        ms.from_deepmd_npy(data_dir)
+        ms.from_deepmd_npy(data_dir)  # type: ignore
     return ms.get_nframes()
 
 

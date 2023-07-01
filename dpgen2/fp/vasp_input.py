@@ -117,7 +117,7 @@ def make_kspacing_kpoints(box, kspacing, kgamma):
     rbox = _reciprocal_box(box)
     kpoints = [
         max(1, (np.ceil(2 * np.pi * np.linalg.norm(ii) / ks).astype(int)))
-        for ii, ks in zip(rbox, kspacing)
+        for ii, ks in zip(rbox, kspacing)  # type: ignore
     ]
     ret = _make_vasp_kpoints(kpoints, kgamma)
     return ret

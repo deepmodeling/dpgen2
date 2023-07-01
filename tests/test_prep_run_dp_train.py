@@ -50,6 +50,7 @@ from context import (
     upload_python_packages,
 )
 from mocked_ops import (
+    MockedModifyTrainScript,
     MockedPrepDPTrain,
     MockedRunDPTrain,
     MockedRunDPTrainNoneInitModel,
@@ -63,6 +64,7 @@ from dpgen2.constants import (
     train_task_pattern,
 )
 from dpgen2.superop.prep_run_dp_train import (
+    ModifyTrainScript,
     PrepRunDPTrain,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
@@ -392,3 +394,131 @@ class TestTrainDp(unittest.TestCase):
         self.assertEqual(wf.query_status(), "Succeeded")
         step = wf.query_step(name="train-step")[0]
         self.assertEqual(step.phase, "Succeeded")
+
+    def test_finetune(self):
+        steps = PrepRunDPTrain(
+            "finetune-steps",
+            MockedPrepDPTrain,
+            MockedRunDPTrain,
+            MockedModifyTrainScript,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+            finetune=True,
+        )
+        finetune_step = Step(
+            "finetune-step",
+            template=steps,
+            parameters={
+                "numb_models": self.numb_models,
+                "template_script": self.template_script,
+                "train_config": {},
+                "run_optional_parameter": {
+                    "data_mixed_type": False,
+                    "finetune_mode": "finetune",
+                },
+            },
+            artifacts={
+                "init_models": self.init_models,
+                "init_data": self.init_data,
+                "iter_data": self.iter_data,
+            },
+        )
+        wf = Workflow(name="dp-finetune", host=default_host)
+        wf.add(finetune_step)
+        wf.submit()
+
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="finetune-step")[0]
+        self.assertEqual(step.phase, "Succeeded")
+
+        new_template_script = step.outputs.parameters["template_script"].value
+        expected_list = [{"foo": "bar"} for i in range(self.numb_models)]
+        assert new_template_script == expected_list
+
+        download_artifact(step.outputs.artifacts["scripts"])
+        download_artifact(step.outputs.artifacts["models"])
+        download_artifact(step.outputs.artifacts["logs"])
+        download_artifact(step.outputs.artifacts["lcurves"])
+
+        for ii in range(3):
+            check_run_train_dp_output(
+                self,
+                self.task_names[ii],
+                self.train_scripts[ii],
+                self.str_init_models[ii],
+                self.path_init_data,
+                self.path_iter_data,
+                only_check_name=True,
+            )
+
+
+class TestModifyTrainScript(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+        self.scripts = Path(".")
+
+        for ii in range(3):
+            Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
+            Path(self.train_scripts[ii]).write_text("{}")
+
+    def tearDown(self):
+        for ii in self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+
+    def test(self):
+        scripts = self.scripts
+        ip = OPIO({"scripts": self.scripts, "numb_models": self.numb_models})
+        op = ModifyTrainScript().execute(ip)
+        self.assertIsInstance(op, OPIO)
+        self.assertIn("template_script", op)
+        self.assertIsInstance(op["template_script"], list)
+        self.assertEqual(len(op["template_script"]), mocked_numb_models)
+        for script in op["template_script"]:
+            self.assertIsInstance(script, dict)
+
+
+class TestMockedModifyTrainScript(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+        self.scripts = Path(".")
+
+        for ii in range(3):
+            Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
+            Path(self.train_scripts[ii]).write_text("{}")
+
+    def tearDown(self):
+        for ii in self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+
+    def test(self):
+        scripts = self.scripts
+        ip = OPIO({"scripts": self.scripts, "numb_models": self.numb_models})
+        op = MockedModifyTrainScript().execute(ip)
+        self.assertIsInstance(op, OPIO)
+        self.assertIn("template_script", op)
+        self.assertIsInstance(op["template_script"], list)
+        self.assertEqual(len(op["template_script"]), mocked_numb_models)
+        for script in op["template_script"]:
+            self.assertIsInstance(script, dict)
+            self.assertIn("foo", script)
+            self.assertEqual(script["foo"], "bar")

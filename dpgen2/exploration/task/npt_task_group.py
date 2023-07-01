@@ -95,7 +95,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         # clear all existing tasks
         self.clear()
         confs = self._sample_confs()
-        for cc, tt, pp in itertools.product(confs, self.temps, self.press):
+        for cc, tt, pp in itertools.product(confs, self.temps, self.press):  # type: ignore
             self.add_task(self._make_lmp_task(cc, tt, pp))
         return self
 

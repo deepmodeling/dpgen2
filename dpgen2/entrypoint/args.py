@@ -1,3 +1,5 @@
+import textwrap
+
 import dargs
 from dargs import (
     Argument,
@@ -232,6 +234,16 @@ def input_args():
     doc_type_map = 'The type map. e.g. ["Al", "Mg"]. Al and Mg will have type 0 and 1, respectively.'
     doc_mass_map = "The mass map. e.g. [27., 24.]. Al and Mg will be set with mass 27. and 24. amu, respectively."
     doc_mixed_type = "Use `deepmd/npy/mixed` format for storing training data."
+    doc_do_finetune = """Finetune the pretrained model before the first iteration. If it is set to True, then an additional step, finetune-step,
+                       which is based on a branch of "PrepRunDPTrain," will be added before the dpgen_step. In the
+                       finetune-step, the internal flag finetune_mode is set to "finetune," which means SuperOP "PrepRunDPTrain"
+                       is now used as the "Finetune." In this step, we finetune the pretrained model in the train step and modify
+                       the template after training. After that, in the normal dpgen-step, the flag do_finetune is set as "train-init,"
+                       which means we use --init-frz-model to train based on models from the previous iteration. The "do_finetune" flag
+                       is set to False by default, while the internal flag finetune_mode is set to "no," which means anything related
+                       to finetuning will not be done.
+                       """
+    doc_do_finetune = textwrap.dedent(doc_do_finetune)
     doc_init_data_prefix = "The prefix of initial data systems"
     doc_init_sys = "The inital data systems"
 
@@ -246,6 +258,9 @@ def input_args():
             doc=doc_init_data_prefix,
         ),
         Argument("mixed_type", bool, optional=True, default=False, doc=doc_mixed_type),
+        Argument(
+            "do_finetune", bool, optional=True, default=False, doc=doc_do_finetune
+        ),
         Argument(
             "init_data_sys", [list, str], optional=False, default=None, doc=doc_init_sys
         ),

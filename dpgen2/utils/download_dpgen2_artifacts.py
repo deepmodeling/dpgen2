@@ -289,7 +289,7 @@ def _get_dld_items(
     step_defs,
 ):
     items = []
-    for ii, jj in itertools.product(iterations, step_defs):
+    for ii, jj in itertools.product(iterations, step_defs):  # type: ignore
         items.append(f"iter-{ii:06d}--" + jj)
     return items
 

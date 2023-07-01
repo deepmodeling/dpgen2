@@ -2,7 +2,7 @@ import importlib
 import os
 
 import dflow
-from dflow import (
+from dflow.config import (
     config,
     s3_config,
 )

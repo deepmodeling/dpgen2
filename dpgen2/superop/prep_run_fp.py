@@ -9,6 +9,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Type,
 )
 
 from dflow import (
@@ -49,8 +50,8 @@ class PrepRunFp(Steps):
     def __init__(
         self,
         name: str,
-        prep_op: OP,
-        run_op: OP,
+        prep_op: Type[OP],
+        run_op: Type[OP],
         prep_config: dict = normalize_step_dict({}),
         run_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -124,8 +125,8 @@ class PrepRunFp(Steps):
 def _prep_run_fp(
     prep_run_steps,
     step_keys,
-    prep_op: OP,
-    run_op: OP,
+    prep_op: Type[OP],
+    run_op: Type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,

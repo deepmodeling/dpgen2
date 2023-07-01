@@ -616,6 +616,131 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
+    @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_finetune_finetune(self, mocked_run):
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
+        config = self.config.copy()
+        task_path = self.task_path
+        Path(task_path).mkdir(exist_ok=True)
+        with open(Path(task_path) / train_script_name, "w") as fp:
+            json.dump(self.idict_v2, fp, indent=4)
+        task_name = self.task_name
+        work_dir = Path(task_name)
+
+        ptrain = RunDPTrain()
+        out = ptrain.execute(
+            OPIO(
+                {
+                    "config": config,
+                    "task_name": task_name,
+                    "task_path": Path(task_path),
+                    "init_model": Path(self.init_model),
+                    "init_data": [Path(ii) for ii in self.init_data],
+                    "iter_data": [Path(ii) for ii in self.iter_data],
+                    "optional_parameter": {
+                        "mixed_type": False,
+                        "finetune_mode": "finetune",
+                    },
+                }
+            )
+        )
+        self.assertEqual(out["script"], work_dir / train_script_name)
+        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
+        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(out["log"], work_dir / "train.log")
+
+        calls = [
+            call(
+                [
+                    "dp",
+                    "train",
+                    train_script_name,
+                    "--finetune",
+                    str(self.init_model),
+                ]
+            ),
+            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+        ]
+        mocked_run.assert_has_calls(calls)
+
+        self.assertTrue(work_dir.is_dir())
+        self.assertTrue(out["log"].is_file())
+        self.assertEqual(
+            out["log"].read_text(),
+            "#=================== train std out ===================\n"
+            "foo\n"
+            "#=================== train std err ===================\n"
+            "#=================== freeze std out ===================\n"
+            "bar\n"
+            "#=================== freeze std err ===================\n",
+        )
+        with open(out["script"]) as fp:
+            jdata = json.load(fp)
+            self.assertDictEqual(jdata, self.expected_odict_v2)
+
+    @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_finetune_train_init(self, mocked_run):
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
+
+        config = self.config.copy()
+        task_path = self.task_path
+        Path(task_path).mkdir(exist_ok=True)
+        with open(Path(task_path) / train_script_name, "w") as fp:
+            json.dump(self.idict_v2, fp, indent=4)
+        task_name = self.task_name
+        work_dir = Path(task_name)
+
+        ptrain = RunDPTrain()
+        out = ptrain.execute(
+            OPIO(
+                {
+                    "config": config,
+                    "task_name": task_name,
+                    "task_path": Path(task_path),
+                    "init_model": Path(self.init_model),
+                    "init_data": [Path(ii) for ii in self.init_data],
+                    "iter_data": [Path(ii) for ii in self.iter_data],
+                    "optional_parameter": {
+                        "mixed_type": False,
+                        "finetune_mode": "train-init",
+                    },
+                }
+            )
+        )
+        self.assertEqual(out["script"], work_dir / train_script_name)
+        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
+        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(out["log"], work_dir / "train.log")
+
+        calls = [
+            call(
+                [
+                    "dp",
+                    "train",
+                    "--init-frz-model",
+                    str(self.init_model),
+                    train_script_name,
+                ]
+            ),
+            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+        ]
+        mocked_run.assert_has_calls(calls)
+
+        self.assertTrue(work_dir.is_dir())
+        self.assertTrue(out["log"].is_file())
+        self.assertEqual(
+            out["log"].read_text(),
+            "#=================== train std out ===================\n"
+            "foo\n"
+            "#=================== train std err ===================\n"
+            "#=================== freeze std out ===================\n"
+            "bar\n"
+            "#=================== freeze std err ===================\n",
+        )
+        with open(out["script"]) as fp:
+            jdata = json.load(fp)
+            self.assertDictEqual(jdata, self.expected_odict_v2)
+
 
 class TestRunDPTrainNullIterData(unittest.TestCase):
     def setUp(self):

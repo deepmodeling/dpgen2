@@ -166,7 +166,7 @@ class AlloyConf:
             sys = sys.replicate(replicate)
         # set atom types
         self.ntypes = len(type_map)
-        self.natoms = sum(sys["atom_numbs"])
+        self.natoms = sum(sys["atom_numbs"])  # type: ignore
         sys.data["atom_names"] = type_map
         sys.data["atom_numbs"] = [0] * self.ntypes
         sys.data["atom_numbs"][0] = self.natoms
@@ -222,7 +222,7 @@ class AlloyConf:
         concentration: Union[List[List[float]], List[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
-    ) -> List[str]:
+    ) -> List[dpdata.System]:
         """
         Parameters
         ----------

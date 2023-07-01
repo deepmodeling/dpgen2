@@ -81,7 +81,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             templates.append(self.plm_template)
         conts = self.make_cont(templates, self.revisions)
         nconts = len(conts[0])
-        for cc, ii in itertools.product(confs, range(nconts)):
+        for cc, ii in itertools.product(confs, range(nconts)):  # type: ignore
             if not self.plm_set:
                 self.add_task(self._make_lmp_task(cc, conts[0][ii]))
             else:
@@ -165,7 +165,7 @@ def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
 
 
 def revise_by_keys(lmp_lines, keys, values):
-    for kk, vv in zip(keys, values):
+    for kk, vv in zip(keys, values):  # type: ignore
         for ii in range(len(lmp_lines)):
             lmp_lines[ii] = lmp_lines[ii].replace(kk, str(vv))
     return lmp_lines

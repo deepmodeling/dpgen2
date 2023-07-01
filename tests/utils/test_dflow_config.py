@@ -10,7 +10,7 @@ from pathlib import (
 
 import dpdata
 import numpy as np
-from dflow import (
+from dflow.config import (
     config,
     s3_config,
 )

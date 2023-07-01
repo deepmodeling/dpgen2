@@ -151,7 +151,7 @@ class TestRunDeepmd(unittest.TestCase):
             _dp, _type_map = run_deepmd._get_dp_model(self.teacher_model)
             self.assertTrue(_dp is dp)
             self.assertEqual(_type_map, ["H", "C"])
-            deepmd.infer.DeepPot.assert_called_once_with(deepmd_teacher_model)
+            deepmd.infer.DeepPot.assert_called_once_with(Path(deepmd_teacher_model))
             self.assertFalse(Path(deepmd_teacher_model).is_file())
 
     def test_dp_infer(self):
