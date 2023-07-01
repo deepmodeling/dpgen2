@@ -1,31 +1,30 @@
 {
-    "dflow_config" : {
-	"host" : "http://address.of.the.host:port"
-    },
-    "dflow_s3_config" : {
-	"endpoint" : "address.of.the.s3.sever:port"
-    },
-
-    "lebesgue_context_config": {
-	"executor" : "lebesgue_v2",
-        "extra" : {
-	    "scass_type": "c8_m32_cpu",
-	    "machine_type": "c8_m32_cpu",
-            "platform": "xxxx",
-            "program_id": "xxxx",
-            "job_type": "container",
-	    "region" : "default"
-        },
-        "app_name" : "Default",
-        "org_id" : "xxx",
-        "user_id" : "xxx",
-        "tag" : ""
+    "bohrium_config": {
+	"username":	"__write your bohrium username",
+	"password":	"__write your bohrium password",
+	"project_id" :	"__write your bohrium project ID",
+	"_comment" : "all"
     },
 
-    "default_step_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
+    "default_step_config": {
+	"template_config": {
+	    "image" : "dpgen2:master",
 	    "_comment" : "all"
+	},
+	"executor" : {
+	    "type" : "dispatcher",
+	    "image_pull_policy" : "IfNotPresent",
+	    "machine_dict": {
+		"batch_type": "Bohrium",
+		"context_type": "Bohrium",
+		"remote_profile": {
+                    "input_data": {
+			"job_type": "container",
+			"platform": "ali",
+			"scass_type": "c2_m8_cpu"
+                    }
+		}
+	    }
 	},
 	"_comment" : "all"
     },
@@ -37,14 +36,18 @@
 		"_comment" : "all"
 	    },
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c6_m64_1 * NVIDIA 3090",
-		    "machine_type": "c6_m64_1 * NVIDIA 3090",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
+		"type" : "dispatcher",
+		"image_pull_policy" : "IfNotPresent",
+		"machine_dict": {
+		    "batch_type": "Bohrium",
+		    "context_type": "Bohrium",
+		    "remote_profile": {
+			"input_data": {
+			    "job_type": "container",
+			    "platform": "ali",
+			    "scass_type": "c2_m8_cpu"
+			}
+		    }
 		}
 	    },
 	    "_comment" : "all"
@@ -54,17 +57,27 @@
 		"image" : "deepmd-kit:wanghan",
 		"_comment" : "all"
 	    },
+            "continue_on_success_ratio" : 0.80,
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c8_m32_cpu",
-		    "machine_type": "c8_m32_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
+		"type" : "dispatcher",
+		"retry_on_submission_error": 10,
+		"image_pull_policy" : "IfNotPresent",
+		"machine_dict": {
+		    "batch_type": "Bohrium",
+		    "context_type": "Bohrium",
+		    "remote_profile": {
+			"input_data": {
+			    "job_type": "container",
+			    "platform": "ali",
+			    "scass_type": "c8_m32_1 * NVIDIA V100"
+			}
+		    }
 		}
 	    },
+  	    "template_slice_config":{
+  	   	"group_size":  20,
+  	   	"pool_size":  5
+  	    },
 	    "_comment" : "all"
 	},
 	"run_fp_config" : {
@@ -72,17 +85,27 @@
 		"image" : "vasp:wanghan",
 		"_comment" : "all"
 	    },
+            "continue_on_success_ratio" : 0.80,
 	    "executor" : {
-		"type" : "lebesgue_v2",
-		"extra" : {
-		    "scass_type": "c16_m64_cpu",
-		    "machine_type": "c16_m64_cpu",
-		    "platform": "paratera",
-		    "program_id": "xxxx",
-		    "job_type": "container",
-		    "region" : "default"
+		"type" : "dispatcher",
+		"retry_on_submission_error": 10,
+		"image_pull_policy" : "IfNotPresent",
+		"machine_dict": {
+		    "batch_type": "Bohrium",
+		    "context_type": "Bohrium",
+		    "remote_profile": {
+			"input_data": {
+			    "job_type": "container",
+			    "platform": "ali",
+			    "scass_type": "c16_m64_cpu"
+			}
+		    }
 		}
 	    },
+            "template_slice_config":{
+      	        "group_size":  20,
+      		"pool_size":  1
+      	    },
 	    "_comment" : "all"
 	},
 	"_comment" : "all"
