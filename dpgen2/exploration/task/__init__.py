@@ -4,6 +4,9 @@ from .conf_sampling_task_group import (
 from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
+from .customized_lmp_template_task_group import (
+    CustomizedLmpTemplateTaskGroup,
+)
 from .make_task_group_from_config import (
     make_task_group_from_config,
 )
