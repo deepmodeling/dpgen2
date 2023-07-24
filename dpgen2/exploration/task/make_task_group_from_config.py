@@ -11,6 +11,9 @@ from dpgen2.exploration.task.npt_task_group import (
     NPTTaskGroup,
 )
 
+doc_conf_idx = "The configurations of `configurations[conf_idx]` will be used to generate the initial configurations of the tasks. This key provides the index of selected item in the `configurations` array."
+doc_n_sample = "Number of configurations. If this number is smaller than the number of configruations in `configruations[conf_idx]`, then `n_sample` configruations are randomly sampled from `configruations[conf_idx]`, otherwise all configruations in `configruations[conf_idx]` will be used. If not provided, all configruations in `configruations[conf_idx]` will be used."
+
 
 def npt_task_group_args():
     doc_temps = "A list of temperatures in K. Also used to initialize the temperature"
@@ -29,6 +32,8 @@ def npt_task_group_args():
     doc_relative_v_epsilon = "Calculate relative virial model deviation"
 
     return [
+        Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
+        Argument("n_sample", int, optional=True, default=None, doc=doc_n_sample,),
         Argument("temps", list, optional=False, doc=doc_temps, alias=["Ts"]),
         Argument("press", list, optional=True, doc=doc_press, alias=["Ps"]),
         Argument(
@@ -76,6 +81,8 @@ def lmp_template_task_group_args():
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
 
     return [
+        Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
+        Argument("n_sample", int, optional=True, default=None, doc=doc_n_sample,),
         Argument(
             "lmp_template_fname",
             str,
@@ -125,13 +132,24 @@ def normalize(data):
     args.check_value(data, strict=False)
     return data
 
+def config_strip_confidx(
+    config,
+):
+    cc = config.copy()
+    cc.pop("conf_idx") if "conf_idx" in cc else None
+    cc.pop("n_sample") if "n_sample" in cc else None
+    return cc
 
 def make_task_group_from_config(
     numb_models,
     mass_map,
     config,
-):
+):    
+    # Work around the required conf_idx. 
+    # May not be a good design!!!
+    config["conf_idx"] = [] if "conf_idx" not in config else None
     config = normalize(config)
+    config = config_strip_confidx(config)
     if config["type"] == "lmp-md":
         tgroup = NPTTaskGroup()
         config.pop("type")
