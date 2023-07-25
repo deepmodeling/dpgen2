@@ -192,7 +192,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
             rate_candi_f=0.001,
             n_checked_steps=2,
             conv_tolerance=0.1,
-            candi_sel_style="inv_pop_f:2",
+            candi_sel_prob="inv_pop_f:2",
         )
         def faked_choices(
             candi,
@@ -311,5 +311,5 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertAlmostEqual(data["rate_candi_v"], 0.0)
         self.assertEqual(data["n_checked_steps"], 2)
         self.assertAlmostEqual(data["conv_tolerance"], 0.01)
-        self.assertAlmostEqual(data["candi_sel_style"], "uniform")
+        self.assertAlmostEqual(data["candi_sel_prob"], "uniform")
         ExplorationReportAdaptiveLower(*data)

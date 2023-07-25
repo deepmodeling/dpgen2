@@ -62,7 +62,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         The number of steps to check the convergence.
     conv_tolerance      float
         The convergence tolerance.
-    candi_sel_style     str
+    candi_sel_prob     str
         The method for selecting candidates. It can be 
         "uniform": all candidates are of the same probability. 
         "inv_pop_f" or "inv_pop_f:nhist": the probability is inversely
@@ -81,7 +81,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         rate_candi_v: float = 0.0,
         n_checked_steps: int = 2,
         conv_tolerance: float = 0.05,
-        candi_sel_style: str = "uniform",
+        candi_sel_prob: str = "uniform",
     ):
         self.level_f_hi = level_f_hi
         self.level_v_hi = level_v_hi
@@ -98,10 +98,10 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.conv_tolerance = conv_tolerance
         self.model_devi = None
         default_nhist = 10
-        self.candi_sel_style = candi_sel_style.split(":")[0]
-        if self.candi_sel_style == "inv_pop_f":
-          if len(candi_sel_style.split(":")) == 2:
-            self.nhist = int(candi_sel_style.split(":")[1])
+        self.candi_sel_prob = candi_sel_prob.split(":")[0]
+        if self.candi_sel_prob == "inv_pop_f":
+          if len(candi_sel_prob.split(":")) == 2:
+            self.nhist = int(candi_sel_prob.split(":")[1])
           else:
             self.nhist = default_nhist
         self.clear()
@@ -138,7 +138,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         doc_rate_candi_v = "The ratio of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
         doc_n_check_steps = "The number of steps to check the convergence."
         doc_conv_tolerance = "The convergence tolerance."
-        doc_candi_sel_style = \
+        doc_candi_sel_prob = \
           "The method for selecting candidates. It can be "\
           "'uniform': all candidates are of the same probability. "\
           "'inv_pop_f' or 'inv_pop_f:nhist': the probability is inversely "\
@@ -176,11 +176,11 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 doc=doc_conv_tolerance,
             ),
             Argument(
-                "candi_sel_style",
+                "candi_sel_prob",
                 str,
                 optional=True,
                 default="uniform",
-                doc=doc_candi_sel_style,
+                doc=doc_candi_sel_prob,
             ),
         ]
 
@@ -353,9 +353,9 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         max_nframes: Optional[int] = None,
     ) -> List[Tuple[int, int]]:
-        if self.candi_sel_style == "uniform":
+        if self.candi_sel_prob == "uniform":
             return self._get_candidates_uniform(max_nframes)
-        elif self.candi_sel_style == "inv_pop_f":
+        elif self.candi_sel_prob == "inv_pop_f":
             return self._get_candidates_inv_pop_f(max_nframes)
         else:
             raise FatalError("unknown candidate selection style")           
