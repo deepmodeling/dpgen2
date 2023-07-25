@@ -75,6 +75,7 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTask,
     LmpTemplateTaskGroup,
+    CustomizedLmpTemplateTaskGroup,
     NPTTaskGroup,
     normalize_task_group_config,
     make_task_group_from_config,
