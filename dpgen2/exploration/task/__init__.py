@@ -1,11 +1,11 @@
 from .conf_sampling_task_group import (
     ConfSamplingTaskGroup,
 )
-from .lmp_template_task_group import (
-    LmpTemplateTaskGroup,
-)
 from .customized_lmp_template_task_group import (
     CustomizedLmpTemplateTaskGroup,
+)
+from .lmp_template_task_group import (
+    LmpTemplateTaskGroup,
 )
 from .make_task_group_from_config import (
     make_task_group_from_config,

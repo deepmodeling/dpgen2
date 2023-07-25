@@ -72,13 +72,13 @@ from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
 from dpgen2.exploration.task import (
+    CustomizedLmpTemplateTaskGroup,
     ExplorationStage,
     ExplorationTask,
     LmpTemplateTaskGroup,
-    CustomizedLmpTemplateTaskGroup,
     NPTTaskGroup,
-    normalize_task_group_config,
     make_task_group_from_config,
+    normalize_task_group_config,
 )
 from dpgen2.flow import (
     ConcurrentLearning,
