@@ -115,7 +115,9 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
         self.lmp_template_fn = Path(input_lmp_tmpl_name)
         self.lmp_template_fc = Path(input_lmp_tmpl_name).read_text()
         if self.has_plm:
-            input_lmp_tmpl_name = input_lmp_tmpl_name if input_plm_tmpl_name is not None else ""
+            input_lmp_tmpl_name = (
+                input_lmp_tmpl_name if input_plm_tmpl_name is not None else ""
+            )
             self.plm_template_fn = Path(input_plm_tmpl_name)
             self.plm_template_fc = Path(input_plm_tmpl_name).read_text()
         tmp_input_extra_files = [Path(ii) for ii in input_extra_files]
