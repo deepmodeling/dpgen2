@@ -115,7 +115,8 @@ class ExplorationReportTrustLevels(ExplorationReport):
             id_v_cand, id_v_accu, id_v_fail = self._get_indexes(
                 md_v[ii], self.level_v_lo, self.level_v_hi
             )
-            self._record_one_traj(
+            nframes, set_accu, set_cand, set_fail = \
+              self._record_one_traj(
                 id_f_accu,
                 id_f_cand,
                 id_f_fail,
@@ -123,6 +124,11 @@ class ExplorationReportTrustLevels(ExplorationReport):
                 id_v_cand,
                 id_v_fail,
             )
+            # record
+            self.traj_nframes.append(nframes)
+            self.traj_cand.append(set_cand)
+            self.traj_accu.append(set_accu)
+            self.traj_fail.append(set_fail)
         assert len(self.traj_nframes) == ntraj
         assert len(self.traj_cand) == ntraj
         assert len(self.traj_accu) == ntraj
@@ -187,11 +193,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         assert 0 == len(set_accu & set_cand)
         assert 0 == len(set_accu & set_fail)
         assert 0 == len(set_cand & set_fail)
-        # record
-        self.traj_nframes.append(nframes)
-        self.traj_cand.append(set_cand)
-        self.traj_accu.append(set_accu)
-        self.traj_fail.append(set_fail)
+        return nframes, set_accu, set_cand, set_fail
 
     @abstractmethod
     def converged(

@@ -4,7 +4,7 @@ import unittest
 from collections import (
     Counter,
 )
-
+import mock
 import numpy as np
 from context import (
     dpgen2,
@@ -161,6 +161,70 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
         self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
 
+    def test_f_inv_pop(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.41, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+        md_f = model_devi.get(DeviManager.MAX_DEVI_F)
+
+        expected_fail_ = [[0, 2, 8], [2, 3, 4]]
+        expected_fail = set()
+        for idx, ii in enumerate(expected_fail_):
+            for jj in ii:
+                expected_fail.add((idx, jj))
+        expected_cand = set(
+          [(0, 6), (0, 7), (0, 5)] + 
+          [(0, 1), (0, 3), (0, 4), 
+           (1, 0), (1, 1), (1, 5), 
+           (1, 6), (1, 7), (1, 8)]
+        )
+        expected_accu = set([])
+
+        ter = ExplorationReportAdaptiveLower(
+            level_f_hi=0.7,
+            numb_candi_f=20,
+            rate_candi_f=0.001,
+            n_checked_steps=2,
+            conv_tolerance=0.1,
+            candi_sel_style="inv_pop_f:2",
+        )
+        def faked_choices(
+            candi,
+            weights=None,
+            k=0,
+        ):
+            # hist: 2bins, 0.1-0.4 5candi, 0.4-0.7 7candi
+            # only return those with mdf 0.1-0.4
+            self.assertEqual(len(weights), 12)
+            self.assertEqual(len(candi), 12)
+            ret = []
+            for ii in range(len(candi)):
+              tidx, fidx = candi[ii]
+              this_mdf = md_f[tidx][fidx]
+              if this_mdf < 0.4:
+                self.assertAlmostEqual(weights[ii], 1./5.)
+                ret.append(candi[ii])
+              else:
+                self.assertAlmostEqual(weights[ii], 1./7.)
+            return ret
+        ter.record(model_devi)
+        with mock.patch("random.choices", faked_choices):
+            picked = ter.get_candidate_ids(11)
+        self.assertFalse(ter.converged([]))
+        self.assertEqual(ter.candi, expected_cand)
+        self.assertEqual(ter.accur, expected_accu)
+        self.assertEqual(set(ter.failed), expected_fail)
+        self.assertEqual(len(picked), 2)
+        self.assertEqual(sorted(picked[0]), [1, 3])
+        self.assertEqual(sorted(picked[1]), [1, 5, 7])
+
+
     def test_v(self):
         model_devi = DeviManagerStd()
         model_devi.add(
@@ -247,4 +311,5 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertAlmostEqual(data["rate_candi_v"], 0.0)
         self.assertEqual(data["n_checked_steps"], 2)
         self.assertAlmostEqual(data["conv_tolerance"], 0.01)
+        self.assertAlmostEqual(data["candi_sel_style"], "uniform")
         ExplorationReportAdaptiveLower(*data)

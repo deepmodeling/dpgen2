@@ -62,6 +62,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         The number of steps to check the convergence.
     conv_tolerance      float
         The convergence tolerance.
+    candi_sel_style     str
+        The method for selecting candidates. It can be 
+        "uniform": all candidates are of the same probability. 
+        "inv_pop_f" or "inv_pop_f:nhist": the probability is inversely
+        propotional to the population of a histogram between 
+        leven_f_lo and level_f_hi. The number of bins in the histogram 
+        is set by nhist, which should be an integer. The default is 10.
     """
 
     def __init__(
@@ -74,6 +81,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         rate_candi_v: float = 0.0,
         n_checked_steps: int = 2,
         conv_tolerance: float = 0.05,
+        candi_sel_style: str = "uniform",
     ):
         self.level_f_hi = level_f_hi
         self.level_v_hi = level_v_hi
@@ -89,6 +97,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.n_checked_steps = n_checked_steps
         self.conv_tolerance = conv_tolerance
         self.model_devi = None
+        default_nhist = 10
+        self.candi_sel_style = candi_sel_style.split(":")[0]
+        if self.candi_sel_style == "inv_pop_f":
+          if len(candi_sel_style.split(":")) == 2:
+            self.nhist = int(candi_sel_style.split(":")[1])
+          else:
+            self.nhist = default_nhist
         self.clear()
 
         print_tuple = (
@@ -123,6 +138,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         doc_rate_candi_v = "The ratio of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
         doc_n_check_steps = "The number of steps to check the convergence."
         doc_conv_tolerance = "The convergence tolerance."
+        doc_candi_sel_style = \
+          "The method for selecting candidates. It can be "\
+          "'uniform': all candidates are of the same probability. "\
+          "'inv_pop_f' or 'inv_pop_f:nhist': the probability is inversely "\
+          "propotional to the population of a histogram between "\
+          "leven_f_lo and level_f_hi. The number of bins in the histogram "\
+          "is set by nhist, which should be an integer. The default is 10."
+
         return [
             Argument(
                 "level_f_hi", float, optional=True, default=0.5, doc=doc_level_f_hi
@@ -152,6 +175,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 default=0.05,
                 doc=doc_conv_tolerance,
             ),
+            Argument(
+                "candi_sel_style",
+                str,
+                optional=True,
+                default="uniform",
+                doc=doc_candi_sel_style,
+            ),
         ]
 
     def clear(
@@ -164,6 +194,8 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.failed = []
         self.candi_picked = []
         self.model_devi = None
+        self.md_f = []
+        self.md_v = []
 
     def record(
         self,
@@ -173,6 +205,8 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.ntraj += ntraj
         md_f = model_devi.get(DeviManager.MAX_DEVI_F)
         md_v = model_devi.get(DeviManager.MAX_DEVI_V)
+        self.md_f += md_f
+        self.md_v += md_v
 
         # inits
         coll_f = []
@@ -319,6 +353,17 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         max_nframes: Optional[int] = None,
     ) -> List[Tuple[int, int]]:
+        if self.candi_sel_style == "uniform":
+            return self._get_candidates_uniform(max_nframes)
+        elif self.candi_sel_style == "inv_pop_f":
+            return self._get_candidates_inv_pop_f(max_nframes)
+        else:
+            raise FatalError("unknown candidate selection style")           
+
+    def _get_candidates_uniform(
+        self,
+        max_nframes: Optional[int] = None,
+    ) -> List[Tuple[int, int]]:
         """
         Get candidates. If number of candidates is larger than `max_nframes`,
         then randomly pick `max_nframes` frames from the candidates.
@@ -340,6 +385,84 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         else:
             ret = self.candi_picked
         return ret
+
+    def _get_candidates_inv_pop_f(
+        self,
+        max_nframes: Optional[int] = None,
+    ) -> List[Tuple[int, int]]:
+        """
+        Get candidates. If number of candidates is larger than `max_nframes`,
+        then randomly pick `max_nframes` frames from the candidates. 
+        The probability of chose a frame is propotional to the inverse
+        population in force model deviation statistics.
+
+        Parameters
+        ----------
+        max_nframes
+            The maximal number of frames of candidates.
+
+        Returns
+        -------
+        cand_frames   List[Tuple[int,int]]
+            Candidate frames. A list of tuples: [(traj_idx, frame_idx), ...]
+        """
+        self.candi_picked = [(ii[0], ii[1]) for ii in self.candi]
+        if max_nframes is not None and max_nframes < len(self.candi_picked):
+            prob = self._choice_prob_inv_pop_f(self.candi_picked)
+            ret = random.choices(
+              self.candi_picked, 
+              weights=prob, 
+              k=max_nframes,
+            )
+        else:
+            ret = self.candi_picked
+        return ret
+
+    def _choice_prob_inv_pop_f(
+        self,
+        candi: List,
+    ):        
+        """Compute the probability of candi frames according to the inverse 
+        population in the model deviation statistics.
+        
+        Parameters
+        ----------
+        candi   List[Tuple[int,int]]
+            Candidate frames. A list of tuples: [(traj_idx, frame_idx), ...]
+        
+        Returns
+        -------
+        prob    List[float]
+            The probability of each candidate frame.
+        
+        """
+        histo = np.zeros(self.nhist)
+        for ii in candi:
+            frame_md_f = self.md_f[ii[0]][ii[1]]
+            hist_idx = self._histo_idx(frame_md_f)
+            histo[hist_idx] += 1
+        prob_tab = [ 1./float(ii) if ii > 0 else 0. for ii in histo ]
+        prob = []
+        for ii in candi:
+            frame_md_f = self.md_f[ii[0]][ii[1]]
+            hist_idx = self._histo_idx(frame_md_f)
+            prob.append(prob_tab[hist_idx])
+        return prob
+
+    def _histo_idx(
+        self,
+        devi_f : float,
+    )-> int:
+        """
+        return the index in histogram given a force  model deviation.
+        """
+        dh = (self.level_f_hi - self.level_f_lo) / self.nhist
+        hist_idx = int((devi_f - self.level_f_lo) / dh)
+        if hist_idx < 0: 
+          hist_idx = 0
+        elif hist_idx >= self.nhist:
+          hist_idx = self.nhist - 1
+        return hist_idx
 
     def print_header(self) -> str:
         r"""Print the header of report"""
