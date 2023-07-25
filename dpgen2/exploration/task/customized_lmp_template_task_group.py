@@ -1,4 +1,4 @@
-import os, tempfile, re
+import os, tempfile, re, logging
 from pathlib import (
   Path,
 )
@@ -173,6 +173,9 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
               break
           # no matched continue
           if matched_ff is None:
+            logging.info(
+              "No output dir matches the patter {self.output_dir_pattern} "
+            )
             continue
           with set_directory(Path(matched_ff)):
             lmp_tgroup = LmpTemplateTaskGroup()

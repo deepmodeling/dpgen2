@@ -158,8 +158,31 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         task_group[idx].files()[plm_input_name].split("\n"),
         eep,
       )
-      idx += 1
-      
+      idx += 1      
+
+  def test_no_match(self):
+    task_group = CustomizedLmpTemplateTaskGroup()
+    task_group.set_conf(self.confs)
+    task_group.set_lmp(
+      self.numb_models,
+      custom_shell_commands=self.shell_cmd,
+      revisions=self.lmp_rev_mat,
+      traj_freq=self.traj_freq,      
+      input_lmp_conf_name="foo.lmp",
+      input_lmp_tmpl_name=self.lmp_template_fname,
+      input_plm_tmpl_name=self.plm_template_fname,
+      input_extra_files=[self.py_script],
+      output_dir_pattern="aaa_*",
+      output_lmp_conf_name="bar.lmp",
+      output_lmp_tmpl_name="lmp.template",
+      output_plm_tmpl_name="plm.template",
+    )
+    task_group.make_task()
+    ngroup = len(task_group)
+    self.assertEqual(
+      ngroup, 0
+    )
+
 
 class TestLmpTemplateTaskGroupLmp(unittest.TestCase):
   def setUp(self):
