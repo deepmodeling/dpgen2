@@ -106,17 +106,17 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
     task_group.set_conf(self.confs)
     task_group.set_lmp(
       self.numb_models,
-      self.lmp_template_fname,
-      plm_template_fname=self.plm_template_fname,
+      custom_shell_commands=self.shell_cmd,
       revisions=self.lmp_rev_mat,
       traj_freq=self.traj_freq,      
-      custom_shell_commands=self.shell_cmd,
-      custom_extra_files=[self.py_script],
-      custom_output_pattern="task_*",
-      custom_lmp_input_conf_fname="foo.lmp",
-      custom_lmp_output_conf_fname="bar.lmp",
-      custom_lmp_input_fname="lmp.template",
-      custom_plm_input_fname="plm.template",
+      input_lmp_conf_name="foo.lmp",
+      input_lmp_tmpl_name=self.lmp_template_fname,
+      input_plm_tmpl_name=self.plm_template_fname,
+      input_extra_files=[self.py_script],
+      output_dir_pattern="task_*",
+      output_lmp_conf_name="bar.lmp",
+      output_lmp_tmpl_name="lmp.template",
+      output_plm_tmpl_name="plm.template",
     )
     task_group.make_task()
     ngroup = len(task_group)
@@ -186,16 +186,16 @@ class TestLmpTemplateTaskGroupLmp(unittest.TestCase):
     task_group.set_conf(self.confs)
     task_group.set_lmp(
       self.numb_models,
-      self.lmp_template_fname,
-      plm_template_fname=None,
+      custom_shell_commands=self.shell_cmd,
       revisions=self.lmp_rev_mat,
       traj_freq=self.traj_freq,      
-      custom_shell_commands=self.shell_cmd,
-      custom_extra_files=[self.py_script],
-      custom_output_pattern="task_*",
-      custom_lmp_input_conf_fname="foo.lmp",
-      custom_lmp_output_conf_fname="bar.lmp",
-      custom_lmp_input_fname="lmp.template",
+      input_lmp_conf_name="foo.lmp",
+      input_lmp_tmpl_name=self.lmp_template_fname,
+      input_plm_tmpl_name=None,
+      input_extra_files=[self.py_script],
+      output_dir_pattern="task_*",
+      output_lmp_conf_name="bar.lmp",
+      output_lmp_tmpl_name="lmp.template",
     )
     task_group.make_task()
     ngroup = len(task_group)

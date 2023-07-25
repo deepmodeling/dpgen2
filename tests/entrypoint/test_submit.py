@@ -360,9 +360,6 @@ class TestSubmitCmdStd(unittest.TestCase):
         self.plm_template_fname.write_text(in_plm_template)
         self.conf_fname = Path("conf.lmp")
         self.conf_fname.write_text("foo")
-        self.shell_cmd = [
-          "mkdir aaa && cp conf.lmp lmp.template plm.template aaa"
-        ]
         
 
     def tearDown(self):
@@ -554,12 +551,12 @@ input_std = textwrap.dedent(
 		},
 		{
 		    "type" : "customized-lmp-template",
-		    "lmp": "lmp.template", 
-                    "plm": "plm.template",
                     "custom_shell_commands": ["mkdir aaa && cp conf.lmp lmp.template plm.template aaa"],
-                    "custom_output_pattern": ["aaa"],
-                    "custom_lmp_input_fname": "lmp.template",
-                    "custom_plm_input_fname": "plm.template",
+		    "input_lmp_tmpl_name": "lmp.template", 
+                    "input_plm_tmpl_name": "plm.template",
+                    "output_dir_pattern": ["aaa"],
+                    "output_lmp_tmpl_name": "lmp.template",
+                    "output_plm_tmpl_name": "plm.template",
 		    "conf_idx": [0], "n_sample" : 3
 		}
 	    ]
