@@ -33,7 +33,7 @@ class TestMakeTaskGroupFromConfig(unittest.TestCase):
             "Ts": [100],
         }
         self.config_template = {
-            "type": "lmp-template", 
+            "type": "lmp-template",
             "lmp_template_fname": "foo",
         }
         from .test_lmp_templ_task_group import (

@@ -360,7 +360,6 @@ class TestSubmitCmdStd(unittest.TestCase):
         self.plm_template_fname.write_text(in_plm_template)
         self.conf_fname = Path("conf.lmp")
         self.conf_fname.write_text("foo")
-        
 
     def tearDown(self):
         from dflow.config import (
@@ -374,7 +373,6 @@ class TestSubmitCmdStd(unittest.TestCase):
         os.remove(self.lmp_template_fname)
         os.remove(self.plm_template_fname)
         os.remove(self.conf_fname)
-
 
     def test(self):
         wf_config = json.loads(input_std)
