@@ -182,7 +182,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
             lmp_tgroup.set_lmp(
               self.numb_models,
               self.custom_lmp_input_fname,
-              self.custom_plm_input_fname,
+              self.custom_plm_input_fname if self.has_plm else None,
               revisions = self.revisions,
               traj_freq = self.traj_freq,
             )

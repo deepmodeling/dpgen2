@@ -39,6 +39,7 @@ from .test_lmp_templ_task_group import (
   in_lmp_template,
   in_lmp_plm_template,
   in_plm_template,
+  expected_lmp_template,
   expected_lmp_plm_template,
 )
 
@@ -51,6 +52,21 @@ for ii in range(2):
     shutil.copy("foo.lmp", task_name/"bar.lmp")
     shutil.copy("lmp.template", task_name)
     shutil.copy("plm.template", task_name)
+    os.chdir(task_name)
+    ss = Path("lmp.template").read_text()
+    ss = ss.replace("0.500000", f"{ii}")
+    Path("lmp.template").write_text(ss)
+    os.chdir("..")
+""")
+
+in_extra_lmp_py_file = textwrap.dedent(
+"""from pathlib import Path
+import os,shutil
+for ii in range(2):
+    task_name = Path(f"task_{ii}")
+    task_name.mkdir(exist_ok=True)
+    shutil.copy("foo.lmp", task_name/"bar.lmp")
+    shutil.copy("lmp.template", task_name)
     os.chdir(task_name)
     ss = Path("lmp.template").read_text()
     ss = ss.replace("0.500000", f"{ii}")
@@ -145,3 +161,71 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
       idx += 1
       
 
+class TestLmpTemplateTaskGroupLmp(unittest.TestCase):
+  def setUp(self):
+    self.lmp_template_fname = Path("lmp.template")
+    self.lmp_template_fname.write_text(in_lmp_template)
+    self.numb_models = 4
+    self.confs = ["foo", "bar"]
+    self.lmp_rev_mat = {
+      "V_NSTEPS": [1000],
+      "V_TEMP": [50, 100],
+    }
+    self.rev_empty = {}
+    self.traj_freq = 20
+    self.py_script = Path("modify.py")
+    self.py_script.write_text(in_extra_lmp_py_file)
+    self.shell_cmd = ["python3 modify.py"]
+    
+  def tearDown(self):
+    os.remove(self.lmp_template_fname)
+    os.remove(self.py_script)
+
+  def test_lmp(self):
+    task_group = CustomizedLmpTemplateTaskGroup()
+    task_group.set_conf(self.confs)
+    task_group.set_lmp(
+      self.numb_models,
+      self.lmp_template_fname,
+      plm_template_fname=None,
+      revisions=self.lmp_rev_mat,
+      traj_freq=self.traj_freq,      
+      custom_shell_commands=self.shell_cmd,
+      custom_extra_files=[self.py_script],
+      custom_output_pattern="task_*",
+      custom_lmp_input_conf_fname="foo.lmp",
+      custom_lmp_output_conf_fname="bar.lmp",
+      custom_lmp_input_fname="lmp.template",
+    )
+    task_group.make_task()
+    ngroup = len(task_group)
+    self.assertEqual(
+      ngroup,
+      len(self.confs)
+      * len(self.lmp_rev_mat["V_NSTEPS"])
+      * len(self.lmp_rev_mat["V_TEMP"])
+      * 2,
+    )
+    idx = 0
+    for cc, dd, ii, jj in itertools.product(
+        range(len(self.confs)),
+        range(2),
+        range(len(self.lmp_rev_mat["V_NSTEPS"])),
+        range(len(self.lmp_rev_mat["V_TEMP"])),
+    ):
+      eel = expected_lmp_template.split("\n")
+      eel[0] = eel[0].replace(
+        "V_NSTEPS", str(self.lmp_rev_mat["V_NSTEPS"][ii])
+      )
+      eel[3] = eel[3].replace("V_TEMP", str(self.lmp_rev_mat["V_TEMP"][jj]))
+      # replaced by the shell script.
+      eel[6] = eel[6].replace("0.500000", str(dd))
+      self.assertEqual(
+        task_group[idx].files()[lmp_conf_name],
+        self.confs[cc],
+      )
+      self.assertEqual(
+        task_group[idx].files()[lmp_input_name].split("\n"),
+        eel,
+      )
+      idx += 1
