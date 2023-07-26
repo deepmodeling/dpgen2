@@ -1,6 +1,9 @@
 from .conf_sampling_task_group import (
     ConfSamplingTaskGroup,
 )
+from .customized_lmp_template_task_group import (
+    CustomizedLmpTemplateTaskGroup,
+)
 from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )

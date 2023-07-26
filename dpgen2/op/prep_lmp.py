@@ -63,7 +63,7 @@ class PrepLmp(OP):
         ----------
         ip : dict
             Input dict with components:
-            - `lmp_task_grp` : (`Artifact(Path)`) Can be pickle loaded as a ExplorationTaskGroup. Definitions for LAMMPS tasks
+            - `lmp_task_grp` : (`BigParameter(Path)`) Can be pickle loaded as a ExplorationTaskGroup. Definitions for LAMMPS tasks
 
         Returns
         -------

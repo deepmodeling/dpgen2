@@ -72,11 +72,13 @@ from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
 from dpgen2.exploration.task import (
+    CustomizedLmpTemplateTaskGroup,
     ExplorationStage,
     ExplorationTask,
     LmpTemplateTaskGroup,
     NPTTaskGroup,
     make_task_group_from_config,
+    normalize_task_group_config,
 )
 from dpgen2.flow import (
     ConcurrentLearning,
@@ -251,18 +253,16 @@ def make_naive_exploration_scheduler(
         # stage
         stage = ExplorationStage()
         for jj in job:
-            n_sample = jj.pop("n_sample")
+            jconf = normalize_task_group_config(jj)
+            n_sample = jconf.pop("n_sample")
             ##  ignore the expansion of sys_idx
             # get all file names of md initial configurations
-            try:
-                sys_idx = jj.pop("sys_idx")
-            except KeyError:
-                sys_idx = jj.pop("conf_idx")
+            sys_idx = jconf.pop("conf_idx")
             conf_list = []
             for ii in sys_idx:
                 conf_list += sys_configs_lmp[ii]
             # make task group
-            tgroup = make_task_group_from_config(numb_models, mass_map, jj)
+            tgroup = make_task_group_from_config(numb_models, mass_map, jconf)
             # add the list to task group
             tgroup.set_conf(
                 conf_list,

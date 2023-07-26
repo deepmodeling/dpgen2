@@ -354,6 +354,13 @@ class TestSubmitCmdStd(unittest.TestCase):
         Path("foo").write_text("{}")
         Path("foo1").write_text("{}")
 
+        self.lmp_template_fname = Path("lmp.template")
+        self.lmp_template_fname.write_text(in_lmp_plm_template)
+        self.plm_template_fname = Path("plm.template")
+        self.plm_template_fname.write_text(in_plm_template)
+        self.conf_fname = Path("conf.lmp")
+        self.conf_fname.write_text("foo")
+
     def tearDown(self):
         from dflow.config import (
             config,
@@ -362,6 +369,10 @@ class TestSubmitCmdStd(unittest.TestCase):
         config["mode"] = None
         for ii in self.touched_files:
             os.remove(ii)
+
+        os.remove(self.lmp_template_fname)
+        os.remove(self.plm_template_fname)
+        os.remove(self.conf_fname)
 
     def test(self):
         wf_config = json.loads(input_std)
@@ -534,6 +545,16 @@ input_std = textwrap.dedent(
 		{
 		    "type" : "lmp-md",
 		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+		    "conf_idx": [0], "n_sample" : 3
+		},
+		{
+		    "type" : "customized-lmp-template",
+                    "custom_shell_commands": ["mkdir aaa && cp conf.lmp lmp.template plm.template aaa"],
+		    "input_lmp_tmpl_name": "lmp.template", 
+                    "input_plm_tmpl_name": "plm.template",
+                    "output_dir_pattern": ["aaa"],
+                    "output_lmp_tmpl_name": "lmp.template",
+                    "output_plm_tmpl_name": "plm.template",
 		    "conf_idx": [0], "n_sample" : 3
 		}
 	    ]
@@ -855,5 +876,54 @@ input_finetune = textwrap.dedent(
 	"_comment" : "all"
     }
 }
+"""
+)
+
+
+in_lmp_plm_template = textwrap.dedent(
+    """variable        NSTEPS          equal V_NSTEPS
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        TEMP            equal V_TEMP
+variable        PRES            equal 0.0
+variable        TAU_T           equal 0.100000
+variable        TAU_P           equal 0.500000
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        1.0 bin
+
+box             tilt large
+read_data       conf.lmp
+change_box      all triclinic
+mass            1 27.000000
+mass            2 24.000000
+
+pair_style      deepmd ../graph.003.pb ../graph.001.pb ../graph.002.pb ../graph.000.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_coeff      * *
+
+fix             dpgen_plm
+
+thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
+thermo          ${THERMO_FREQ}
+
+dump            dpgen_dump
+
+velocity        all create ${TEMP} 826513
+fix             1 all npt temp ${TEMP} ${TEMP} ${TAU_T} iso ${PRES} ${PRES} ${TAU_P}
+
+timestep        0.002000
+run             ${NSTEPS}
+"""
+)
+
+in_plm_template = textwrap.dedent(
+    """FOO V_TEMP
+DISTANCE ATOMS=3,5 LABEL=d1
+DISTANCE ATOMS=2,4 LABEL=d2
+RESTRAINT ARG=d1,d2 AT=V_DIST0,bar KAPPA=150.0,150.0 LABEL=restraint
+PRINT ARG=restraint.bias
 """
 )
