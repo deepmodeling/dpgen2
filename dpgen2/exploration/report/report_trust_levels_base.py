@@ -115,8 +115,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
             id_v_cand, id_v_accu, id_v_fail = self._get_indexes(
                 md_v[ii], self.level_v_lo, self.level_v_hi
             )
-            nframes, set_accu, set_cand, set_fail = \
-              self._record_one_traj(
+            nframes, set_accu, set_cand, set_fail = self._record_one_traj(
                 id_f_accu,
                 id_f_cand,
                 id_f_fail,
