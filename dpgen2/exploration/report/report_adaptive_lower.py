@@ -67,7 +67,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         "uniform": all candidates are of the same probability.
         "inv_pop_f" or "inv_pop_f:nhist": the probability is inversely
         propotional to the population of a histogram between
-        leven_f_lo and level_f_hi. The number of bins in the histogram
+        level_f_lo and level_f_hi. The number of bins in the histogram
         is set by nhist, which should be an integer. The default is 10.
     """
 
