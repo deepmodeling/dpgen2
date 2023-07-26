@@ -1,0 +1,46 @@
+variable        NSTEPS          equal V_NSTEPS
+variable        TEMP            equal V_TEMP
+variable        PRES            equal 0
+variable        THERMO_FREQ     equal V_DUMPFREQ
+variable        DUMP            equal 10
+variable        TAU_T           equal 0.100000
+variable        TAU_P           equal 0.500000
+
+
+#Initialization
+units          metal
+dimension      3
+atom_style     atomic
+boundary	f f f
+
+read_data      conf.lmp
+mass           1 4.0
+mass           2 12.0
+mass           3 14.0
+mass           4 16.0
+mass           5 19.0
+mass           6 31.0
+mass           7 32.0
+mass           8 35.0
+
+#Interatomic potentials - DeepMD
+pair_style     deepmd 
+pair_coeff     * *
+
+
+#MD parameters
+timestep       0.001 #ps
+velocity       all create ${TEMP} 1815191 mom yes rot yes dist gaussian
+
+#Run MD - equil at 300K
+run_style      verlet #Velocity verlet
+fix             1 all nve
+fix             2 all temp/csvr ${TEMP} ${TEMP} ${TAU_T} 1305191
+#fix            1 all nvt temp ${TEMP} ${TEMP} 0.1 #NH thermostat - 300K with 100 fs frequency
+fix            3 all momentum 1 linear 0 0 0 #Remove total linear momentum of the system at each step
+fix            4 all recenter INIT INIT INIT
+thermo_style   custom step temp pe etotal press #Setting printing
+thermo         ${THERMO_FREQ} #Ouputing thermodynamic properties
+dump           dpgen_dump
+#dump          2 all custom 100 vel.xyz id type vx vy vz
+run            ${NSTEPS} #25 ps
