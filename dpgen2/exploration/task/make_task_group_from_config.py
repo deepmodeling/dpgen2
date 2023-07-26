@@ -170,7 +170,7 @@ def customized_lmp_template_task_group_args():
         Argument(
             "custom_shell_commands", list, optional=False, doc=doc_custom_shell_commands
         ),
-        Argument("revisions", dict, optional=True, default={}),
+        Argument("revisions", dict, optional=True, default={}, doc=doc_revisions),
         Argument(
             "traj_freq",
             int,
