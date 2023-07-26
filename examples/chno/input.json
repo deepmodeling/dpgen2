@@ -166,7 +166,7 @@
 	"max_numb_iter" :	12,
 	"fatal_at_max" :	false,
 	"output_nopbc":		true,
-	"configuration_prefix": null, 
+	"configuration_prefix": null,
 	"configurations":	[
 	    {
 		"type" : "file",
