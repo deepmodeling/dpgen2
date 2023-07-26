@@ -18,10 +18,6 @@ mass           1 4.0
 mass           2 12.0
 mass           3 14.0
 mass           4 16.0
-mass           5 19.0
-mass           6 31.0
-mass           7 32.0
-mass           8 35.0
 
 #Interatomic potentials - DeepMD
 pair_style     deepmd 
