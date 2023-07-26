@@ -437,7 +437,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             The probability of each candidate frame.
 
         """
-        histo = np.zeros(self.nhist)
+        histo = np.zeros(self.nhist, dtype=int)
         for ii in candi:
             frame_md_f = self.md_f[ii[0]][ii[1]]
             hist_idx = self._histo_idx(frame_md_f)
