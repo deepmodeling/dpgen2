@@ -24,7 +24,7 @@ mass           7 32.0
 mass           8 35.0
 
 #Interatomic potentials - DeepMD
-pair_style     deepmd 
+pair_style     deepmd
 pair_coeff     * *
 
 
