@@ -46,7 +46,7 @@ def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
     return matches
 
 
-def expand_idx(in_list):
+def expand_idx(in_list) -> List[int]:
     ret = []
     for ii in in_list:
         if isinstance(ii, int):
