@@ -149,7 +149,11 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
         if not self.lmp_set:
             raise RuntimeError("Lammps template and revisions are not set")
 
+        # clear all existing tasks
+        self.clear()
+        # sample confs
         confs = self._sample_confs()
+        # loop over confs to generate tasks
         for cc in confs:
             self._make_customized_task_group(cc)
 

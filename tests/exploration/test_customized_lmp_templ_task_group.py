@@ -249,3 +249,13 @@ class TestLmpTemplateTaskGroupLmp(unittest.TestCase):
                 eel,
             )
             idx += 1
+
+        task_group.make_task()
+        ngroup = len(task_group)
+        self.assertEqual(
+            ngroup,
+            len(self.confs)
+            * len(self.lmp_rev_mat["V_NSTEPS"])
+            * len(self.lmp_rev_mat["V_TEMP"])
+            * 2,
+        )
