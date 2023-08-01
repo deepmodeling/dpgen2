@@ -34,6 +34,7 @@ from dpgen2.constants import (
     lmp_log_name,
     lmp_model_devi_name,
     lmp_traj_name,
+    plm_output_name,
     model_name_match_pattern,
     model_name_pattern,
 )
@@ -117,8 +118,9 @@ class RunLmp(OP):
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         models = ip["models"]
-        input_files = [lmp_conf_name, lmp_input_name]
-        input_files = [(Path(task_path) / ii).resolve() for ii in input_files]
+        # input_files = [lmp_conf_name, lmp_input_name]
+        # input_files = [(Path(task_path) / ii).resolve() for ii in input_files]
+        input_files = [ii.resolve() for ii in Path(task_path).iterdir()]
         model_files = [Path(ii).resolve() for ii in models]
         work_dir = Path(task_name)
 
@@ -150,16 +152,20 @@ class RunLmp(OP):
             ret, out, err = run_command(command, shell=True)
             if ret != 0:
                 raise TransientError(
-                    "lmp failed\n", "out msg", out, "\n", "err msg", err, "\n"
+                    "lmp failed\n", "command was", command, "out msg", out, "\n", "err msg", err, "\n"
                 )
-
-        return OPIO(
-            {
+            
+        ret_dict = {
                 "log": work_dir / lmp_log_name,
                 "traj": work_dir / lmp_traj_name,
                 "model_devi": work_dir / lmp_model_devi_name,
-            }
-        )
+        }
+        plm_output = {'plm_output' : work_dir/plm_output_name} \
+            if (work_dir/plm_output_name).is_file() else {}
+        ret_dict.update(plm_output)
+
+        return OPIO(ret_dict)
+
 
     @staticmethod
     def lmp_args():

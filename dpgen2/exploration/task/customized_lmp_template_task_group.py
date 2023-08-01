@@ -10,7 +10,9 @@ from typing import (
     Optional,
     Union,
 )
-
+from dflow.python import (
+    FatalError,
+)
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -173,11 +175,11 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
                     Path(ff).write_text(cc)
                 # run all customized shell commands
                 for ss in self.custom_shell_commands:
-                    # run shell command with os.system
-                    ret = os.system(ss)
+                    # run shell command with dpgen2.utils.run_command
+                    ret, out, err = run_command(ss, shell=True)
                     if ret != 0:
-                        raise RuntimeError(
-                            f"execution of {ss} returns a non-zero value {ret}"
+                        raise FatalError(
+                            f"customized shell command {ss} failed with return code {ret}\n", "out msg", out, "\n", "err msg", err, "\n"
                         )
                 # loop over all pattern matched result dirs
                 for ff in [
@@ -191,7 +193,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
                     # no matched continue
                     if matched_ff is None:
                         logging.info(
-                            "No output dir matches the patter {self.output_dir_pattern} "
+                            f"Dir {ff} does not matches the patter {self.output_dir_pattern} "
                         )
                         continue
                     with set_directory(Path(matched_ff)):
