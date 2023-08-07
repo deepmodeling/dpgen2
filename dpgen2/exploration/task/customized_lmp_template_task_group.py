@@ -10,9 +10,11 @@ from typing import (
     Optional,
     Union,
 )
+
 from dflow.python import (
     FatalError,
 )
+
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -179,7 +181,13 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
                     ret, out, err = run_command(ss, shell=True)
                     if ret != 0:
                         raise FatalError(
-                            f"customized shell command {ss} failed with return code {ret}\n", "out msg", out, "\n", "err msg", err, "\n"
+                            f"customized shell command {ss} failed with return code {ret}\n",
+                            "out msg",
+                            out,
+                            "\n",
+                            "err msg",
+                            err,
+                            "\n",
                         )
                 # loop over all pattern matched result dirs
                 for ff in [
