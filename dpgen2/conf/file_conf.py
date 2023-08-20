@@ -78,7 +78,7 @@ class FileConfGenerator(ConfGenerator):
             )
         assert "deepmd/npy/mixed" == self.fmt
         ms = dpdata.MultiSystems(type_map=type_map)
-        ms.from_deepmd_npy_mixed(self.files[0], fmt="deepmd/npy/mixed", labeled=False) # type: ignore
+        ms.from_deepmd_npy_mixed(self.files[0], fmt="deepmd/npy/mixed", labeled=False)  # type: ignore
         return ms
 
     @staticmethod
