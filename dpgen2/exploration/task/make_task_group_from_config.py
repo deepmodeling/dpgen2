@@ -243,7 +243,7 @@ def customized_lmp_template_task_group_args():
 def variant_task_group():
     doc = "the type of the task group"
     doc_lmp_md = "Lammps MD tasks. DPGEN will generate the lammps input script"
-    doc_lmp_template = "Lammps MD tasks defined by templates. User provide lammps (and plumed) template for lammps tasks. The variables in templates are revised by the revisions key. Notice that the lines for pair style, dump and plumed are preserved for the revision of dpgen2, and the users should not write these lines by themselves. Rather, users notify dpgen2 the poistion of the line for `pair_style` by writting 'pair_style deepmd', the line for `dump` by writting 'dump dpgen_dump'. If plumed is used, the line for `fix plumed` shouldbe written exactly as 'fix dpgen_plm'. "
+    doc_lmp_template = "Lammps MD tasks defined by templates. User provide lammps (and plumed) template for lammps tasks. The variables in templates are revised by the revisions key. Notice that the lines for pair style, dump and plumed are reserved for the revision of dpgen2, and the users should not write these lines by themselves. Rather, users notify dpgen2 the poistion of the line for `pair_style` by writting 'pair_style deepmd', the line for `dump` by writting 'dump dpgen_dump'. If plumed is used, the line for `fix plumed` shouldbe written exactly as 'fix dpgen_plm'. "
     doc_customized_lmp_template = "Lammps MD tasks defined by user customized shell commands and templates. User provided shell script generates a series of folders, and each folder contains a lammps template task group. "
     return Variant(
         "type",
