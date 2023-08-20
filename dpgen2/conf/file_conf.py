@@ -48,12 +48,37 @@ class FileConfGenerator(ConfGenerator):
         self,
         type_map,
     ) -> dpdata.MultiSystems:
+        if self.fmt in ["deepmd/npy/mixed"]:
+            return self.generate_mixed(type_map)
+        else:
+            return self.generate_std(type_map)
+
+    def generate_std(
+        self,
+        type_map,
+    ) -> dpdata.MultiSystems:
         ms = dpdata.MultiSystems(type_map=type_map)
         for ff in self.files:
             ss = dpdata.System(ff, fmt=self.fmt, type_map=type_map)
             if self.remove_pbc:
                 ss.remove_pbc()
             ms.append(ss)
+        return ms
+
+    def generate_mixed(
+        self,
+        type_map,
+    ) -> dpdata.MultiSystems:
+        if len(self.files) > 1:
+            raise ValueError(
+                'the file format "deepmd/npy/mixed" is specified, '
+                "but more than one file is given, which is invalide "
+                "please provide one path that can be interpreted as "
+                "the dpdata.MultiSystems. "
+            )
+        assert "deepmd/npy/mixed" == self.fmt
+        ms = dpdata.MultiSystems(type_map=type_map)
+        ms.from_deepmd_npy_mixed(self.files[0], fmt="deepmd/npy/mixed", labeled=False)
         return ms
 
     @staticmethod

@@ -159,6 +159,27 @@ class TestFileConfGenerator(unittest.TestCase):
         )
         self.assertEqual(out_data, expected_out_data)
 
+    def test_deepmd_mixed(self):
+        type_map = ["Cu", "Al", "Mg"]
+        ms = dpdata.MultiSystems(type_map=type_map)
+        ms.append(
+            dpdata.System(Path(self.prefix) / Path("poscar.foo.0"), fmt="vasp/poscar")
+        )
+        ms.append(
+            dpdata.System(Path(self.prefix) / Path("poscar.foo.1"), fmt="vasp/poscar")
+        )
+        ms.to("deepmd/npy/mixed", "test_mixed")
+        fcg = FileConfGenerator("test_mixed", fmt="deepmd/npy/mixed")
+        ms1 = fcg.generate(type_map)
+        self.assertEqual(len(ms), len(ms1))
+        for tt in ["atom_names", "atom_numbs", "atom_types"]:
+            self.assertEqual(ms[0][tt], ms1[0][tt])
+            self.assertEqual(ms[1][tt], ms1[1][tt])
+        for tt in ["cells", "coords"]:
+            np.testing.assert_almost_equal(ms[0][tt], ms1[0][tt])
+            np.testing.assert_almost_equal(ms[1][tt], ms1[1][tt])
+        shutil.rmtree("test_mixed")
+
 
 class TestFileConfGeneratorContent(unittest.TestCase):
     def test_list_1(self):
