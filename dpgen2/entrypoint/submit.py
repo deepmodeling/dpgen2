@@ -713,7 +713,9 @@ def submit_concurrent_learning(
             "conf_selector",
             selector,
         )
-        wf_config["inputs"]["do_finetune"] = False
+        # the modify-train-script step will be added as reuse step.
+        # the following hack is not needed anymore.
+        # wf_config["inputs"]["do_finetune"] = False
         # finetune will not be done again if the old process is reused.
 
     wf = Workflow(name="dpgen")
@@ -759,6 +761,7 @@ def get_resubmit_keys(
         [
             "prep-train",
             "run-train",
+            "modify-train-script",
             "prep-lmp",
             "run-lmp",
             "select-confs",
