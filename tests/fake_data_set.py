@@ -10,7 +10,7 @@ def fake_system(
     ss = dpdata.LabeledSystem()
     ss.data["atom_names"] = [atom_name]
     ss.data["atom_numbs"] = [natoms]
-    ss.data["atom_types"] = [0 for ii in range(natoms)]
+    ss.data["atom_types"] = np.array([0 for ii in range(natoms)]).astype(int)
     # ss.data['cells'] = np.zeros([nframes, 3, 3])
     ss.data["cells"] = np.tile(np.eye(3), [nframes, 1, 1])
     ss.data["coords"] = np.zeros([nframes, natoms, 3])
