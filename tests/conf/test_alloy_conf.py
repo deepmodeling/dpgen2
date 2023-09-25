@@ -1,4 +1,3 @@
-import conf.context
 import json
 import os
 import random
@@ -9,7 +8,6 @@ from pathlib import (
     Path,
 )
 
-import context
 import dpdata
 import numpy as np
 
@@ -20,7 +18,7 @@ from dpgen2.conf.alloy_conf import (
     normalize,
 )
 
-from .context import (
+from conf.context import (
     dpgen2,
 )
 

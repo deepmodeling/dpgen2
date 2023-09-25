@@ -1,4 +1,3 @@
-import fp.context
 import glob
 import json
 import os
@@ -10,7 +9,6 @@ from pathlib import (
     Path,
 )
 
-import context
 import dpdata
 import numpy as np
 from dflow.python import (
@@ -41,7 +39,7 @@ from dpgen2.utils import (
     dump_object_to_file,
 )
 
-from .context import (
+from fp.context import (
     dpgen2,
 )
 
