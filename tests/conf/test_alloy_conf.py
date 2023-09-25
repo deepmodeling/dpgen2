@@ -1,4 +1,3 @@
-import context
 import json
 import os
 import random
@@ -9,6 +8,7 @@ from pathlib import (
     Path,
 )
 
+import context
 import dpdata
 import numpy as np
 

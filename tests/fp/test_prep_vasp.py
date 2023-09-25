@@ -1,4 +1,3 @@
-import context
 import glob
 import json
 import os
@@ -9,6 +8,8 @@ import unittest
 from pathlib import (
     Path,
 )
+
+import context
 import dpdata
 import numpy as np
 from dflow.python import (
