@@ -1,4 +1,4 @@
-import context
+import conf.context
 import json
 import os
 import random
