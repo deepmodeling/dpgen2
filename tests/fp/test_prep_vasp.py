@@ -23,9 +23,6 @@ from fake_data_set import (
     fake_multi_sys,
     fake_system,
 )
-from fp.context import (
-    dpgen2,
-)
 
 from dpgen2.constants import (
     fp_task_pattern,
