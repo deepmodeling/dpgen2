@@ -39,7 +39,7 @@ from dpgen2.utils import (
     dump_object_to_file,
 )
 
-from fp.context import (
+from .context import (
     dpgen2,
 )
 

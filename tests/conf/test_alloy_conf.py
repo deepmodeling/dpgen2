@@ -18,7 +18,7 @@ from dpgen2.conf.alloy_conf import (
     normalize,
 )
 
-from conf.context import (
+from .context import (
     dpgen2,
 )
 
