@@ -46,6 +46,7 @@ from .context import (
     dpgen2,
 )
 
+
 class TestPrepVasp(unittest.TestCase):
     def setUp(self):
         Path("template.incar").write_text("foo")
