@@ -10,6 +10,9 @@ from pathlib import (
 
 import dpdata
 import numpy as np
+from conf.context import (
+    dpgen2,
+)
 
 from dpgen2.conf.alloy_conf import (
     AlloyConf,
