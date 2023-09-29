@@ -12,14 +12,16 @@ from pathlib import (
 import dpdata
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.fp.vasp import (
     VaspInputs,
     make_kspacing_kpoints,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class TestVASPInputs(unittest.TestCase):

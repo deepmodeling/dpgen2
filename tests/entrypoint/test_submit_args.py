@@ -12,6 +12,10 @@ from pathlib import (
 import dpdata
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.entrypoint.args import (
     normalize,
 )
@@ -23,9 +27,7 @@ from dpgen2.utils import (
     normalize_step_dict,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class TestArgs(unittest.TestCase):

@@ -7,13 +7,14 @@ from collections import (
 
 import mock
 import numpy as np
-from context import (
-    dpgen2,
-)
 from dargs import (
     Argument,
 )
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
@@ -21,6 +22,8 @@ from dpgen2.exploration.deviation import (
 from dpgen2.exploration.report import (
     ExplorationReportAdaptiveLower,
 )
+
+# isort: on
 
 
 class TestTrajsExplorationReport(unittest.TestCase):

@@ -5,14 +5,17 @@ from pathlib import (
 )
 
 import numpy as np
-from context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
 )
+
+# isort: on
 
 
 class TestDeviManagerStd(unittest.TestCase):

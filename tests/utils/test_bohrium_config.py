@@ -19,13 +19,16 @@ from dflow.config import (
 from dflow.plugins import (
     bohrium,
 )
-from utils.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.utils import (
     bohrium_config_from_dict,
 )
+
+# isort: on
 
 
 @pytest.mark.server(

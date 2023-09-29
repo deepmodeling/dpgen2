@@ -17,10 +17,11 @@ import numpy as np
 from dflow.python import (
     OPIO,
 )
-from utils.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.constants import (
     default_image,
 )
@@ -31,6 +32,8 @@ from dpgen2.utils import (
     init_executor,
 )
 from dpgen2.utils import normalize_step_dict as normalize
+
+# isort: on
 
 
 @contextmanager

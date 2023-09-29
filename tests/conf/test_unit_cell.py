@@ -8,13 +8,15 @@ from pathlib import (
 
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.conf.unit_cells import (
     generate_unit_cell,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class TestGenerateUnitCell(unittest.TestCase):

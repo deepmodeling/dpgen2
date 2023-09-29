@@ -12,13 +12,15 @@ from pathlib import (
 import dpdata
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.conf.file_conf import (
     FileConfGenerator,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 pos0 = textwrap.dedent(
     """POSCAR file written by OVITO

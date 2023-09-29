@@ -8,10 +8,11 @@ from pathlib import (
 
 import dpdata
 import numpy as np
-from context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
@@ -21,6 +22,8 @@ from dpgen2.exploration.report import (
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
+
+# isort: on
 
 
 class TestConfSelectorFrames(unittest.TestCase):

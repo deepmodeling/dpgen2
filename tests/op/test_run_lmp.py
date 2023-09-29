@@ -19,10 +19,11 @@ from mock import (
     mock,
     patch,
 )
-from op.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -38,6 +39,8 @@ from dpgen2.op.run_lmp import (
 from dpgen2.utils import (
     BinaryFileInput,
 )
+
+# isort: on
 
 
 class TestRunLmp(unittest.TestCase):

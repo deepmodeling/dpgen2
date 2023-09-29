@@ -6,13 +6,14 @@ from collections import (
 )
 
 import numpy as np
-from context import (
-    dpgen2,
-)
 from dargs import (
     Argument,
 )
 
+# isort: off
+from context import (
+    dpgen2,
+)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
@@ -24,6 +25,8 @@ from dpgen2.exploration.report import (
 from dpgen2.exploration.report.report_trust_levels_base import (
     ExplorationReportTrustLevels,
 )
+
+# isort: on
 
 
 class TestTrajsExplorationReport(unittest.TestCase):

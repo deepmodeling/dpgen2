@@ -12,6 +12,10 @@ from pathlib import (
 import dpdata
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
@@ -37,11 +41,6 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTaskGroup,
 )
-
-# isort: off
-from .context import (
-    dpgen2,
-)
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,
@@ -51,6 +50,7 @@ from mocked_ops import (
 )
 
 # isort: on
+
 
 ifc0 = """Al1 
 1.0

@@ -14,14 +14,17 @@ from dflow.config import (
     config,
     s3_config,
 )
-from utils.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.utils import (
     dflow_config,
     dflow_s3_config,
 )
+
+# isort: on
 
 
 class TestDflowConfig(unittest.TestCase):

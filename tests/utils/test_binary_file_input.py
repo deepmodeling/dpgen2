@@ -7,9 +7,15 @@ from pathlib import (
 
 import numpy as np
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.utils import (
     BinaryFileInput,
 )
+
+# isort: on
 
 
 class TestBinaryFileInput(unittest.TestCase):

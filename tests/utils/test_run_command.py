@@ -7,13 +7,16 @@ from pathlib import (
 )
 
 import numpy as np
-from utils.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.utils.run_command import (
     run_command,
 )
+
+# isort: on
 
 
 class TestRunCommand(unittest.TestCase):

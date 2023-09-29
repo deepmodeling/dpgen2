@@ -12,16 +12,19 @@ import dflow
 import dpdata
 import mock
 import numpy as np
-from utils.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.entrypoint.watch import (
     update_finished_steps,
 )
 from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,
 )
+
+# isort: on
 
 
 class MockedArti:

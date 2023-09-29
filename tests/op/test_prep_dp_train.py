@@ -15,10 +15,11 @@ from dflow.python import (
 from mock import (
     mock,
 )
-from op.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.constants import (
     train_script_name,
     train_task_pattern,
@@ -26,6 +27,8 @@ from dpgen2.constants import (
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
 )
+
+# isort: on
 
 template_script_se_e2_a = {
     "model": {"descriptor": {"type": "se_e2_a", "seed": 1}, "fitting_net": {"seed": 1}},

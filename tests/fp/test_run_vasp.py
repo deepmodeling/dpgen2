@@ -19,6 +19,10 @@ from mock import (
     patch,
 )
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.constants import (
     fp_default_log_name,
     fp_default_out_data_name,
@@ -33,9 +37,7 @@ from dpgen2.fp.vasp import (
     vasp_pot_name,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class TestRunVasp(unittest.TestCase):

@@ -24,6 +24,10 @@ from fake_data_set import (
     fake_system,
 )
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.constants import (
     fp_task_pattern,
 )
@@ -39,9 +43,7 @@ from dpgen2.utils import (
     dump_object_to_file,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class TestPrepVasp(unittest.TestCase):

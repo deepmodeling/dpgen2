@@ -23,10 +23,11 @@ from mock import (
     call,
     patch,
 )
-from op.context import (
+
+# isort: off
+from .context import (
     dpgen2,
 )
-
 from dpgen2.constants import (
     train_script_name,
     train_task_pattern,
@@ -35,6 +36,8 @@ from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
 )
+
+# isort: on
 
 
 class TestRunDPTrain(unittest.TestCase):

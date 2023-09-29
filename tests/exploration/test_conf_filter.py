@@ -10,14 +10,16 @@ from mock import (
     patch,
 )
 
+# isort: off
+from .context import (
+    dpgen2,
+)
 from dpgen2.exploration.selector import (
     ConfFilter,
     ConfFilters,
 )
 
-from .context import (
-    dpgen2,
-)
+# isort: on
 
 
 class FooFilter(ConfFilter):
