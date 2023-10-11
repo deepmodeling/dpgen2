@@ -32,10 +32,7 @@ from dpgen2.utils import (
 
 
 def make_link(content, ref_key):
-    try:
-        raw_anchor = dargs.RAW_ANCHOR
-    except AttributeError:
-        raw_anchor = dargs.dargs.RAW_ANCHOR
+    raw_anchor = dargs.dargs.RAW_ANCHOR
     return (
         f"`{content} <{ref_key}_>`_" if not raw_anchor else f"`{content} <#{ref_key}>`_"
     )
