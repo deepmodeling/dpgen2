@@ -16,7 +16,7 @@ DPGEN2 is the 2nd generation of the Deep Potential GENerator.
    cli
    input.md
    submit_args
-   dpgen2_configs
+..   dpgen2_configs
 
 .. _developer-guide:
 

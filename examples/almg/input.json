@@ -127,9 +127,10 @@
     "train":{
 	"type" :	"dp",
 	"numb_models" : 4,
-	"config" : {},
-	"template_script" : {
+	"config" : {
+	    "init_model_policy" : "no"
 	},
+	"template_script" : "dp_template.json",
 	"_comment" : "all"
     },
 
@@ -148,7 +149,6 @@
 	"max_numb_iter" :	5,
 	"fatal_at_max" :	false,
 	"output_nopbc":		false,
-	"configuration_prefix": null,
 	"configurations":	[
 	    {
 		"type": "alloy",

@@ -89,3 +89,21 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
         else:
             ret = self.traj_cand_picked
         return ret
+
+    @staticmethod
+    def doc() -> str:
+        def make_class_doc_link(key):
+            from dpgen2.entrypoint.args import (
+                make_link,
+            )
+
+            return make_link(
+                key, f"explore[lmp]/convergence[fixed-levels-max-select]/{key}"
+            )
+
+        level_f_hi_link = make_class_doc_link("level_f_hi")
+        level_v_hi_link = make_class_doc_link("level_v_hi")
+        level_f_lo_link = make_class_doc_link("level_f_lo")
+        level_v_lo_link = make_class_doc_link("level_v_lo")
+        conv_accuracy_link = make_class_doc_link("conv_accuracy")
+        return f"The configurations with force model deviation between {level_f_lo_link}, {level_f_hi_link} or virial model deviation between {level_v_lo_link} and {level_v_hi_link} are treated as candidates (The virial model deviation check is optional). The configurations with maximal model deviation in the candidates are sent for FP calculations. If the ratio of accurate (below {level_f_lo_link} and {level_v_lo_link}) is higher then {conv_accuracy_link}, the stage is treated as converged."

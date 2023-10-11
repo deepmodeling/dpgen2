@@ -96,11 +96,24 @@ class AlloyConfGenerator(ConfGenerator):
         return ms
 
     @staticmethod
+    def doc() -> str:
+        from dpgen2.entrypoint.args import (
+            make_link,
+        )
+
+        return f"Generate alloys with {make_link('a certain lattice or user proided structure', 'explore[lmp]/configurations[alloy]/lattice')}, the elements randomly occuping the lattice with {make_link('user provided probability', 'explore[lmp]/configurations[alloy]/concentration')} ."
+
+    @staticmethod
     def args() -> List[Argument]:
+        from dpgen2.entrypoint.args import (
+            make_link,
+        )
+
+        link_to_type_map = make_link("type_map", "inputs/type_map")
         doc_numb_confs = "The number of configurations to generate"
-        doc_lattice = 'The lattice. Should be a list providing [ "lattice_type", lattice_const ], or a list providing [ "/path/to/dpdata/system", "fmt" ]. The two styles are distinguished by the type of the second element.'
+        doc_lattice = 'The lattice. Should be a list providing [ "lattice_type", lattice_const ], or a list providing [ "/path/to/dpdata/system", "fmt" ]. The two styles are distinguished by the type of the second element. Currently "lattice_type" can be "bcc", "fcc", "hcp", "sc" or "diamond".'
         doc_replicate = "The number of replicates in each direction"
-        doc_concentration = "The concentration of each element. If None all elements have the same concentration"
+        doc_concentration = f"The concentration of each element. `List[List[float]]` or `List[float]` or `None`. If `List[float]`, the concentrations of each element. The length of the list should be the same as the {link_to_type_map}. If `List[List[float]]`, a list of concentrations (`List[float]`) is randomly picked from the List. If `None`, the elements are assumed to be of equal concentration."
         doc_cell_pert_frac = "The faction of cell perturbation"
         doc_atom_pert_dist = "The distance of atomic position perturbation"
 

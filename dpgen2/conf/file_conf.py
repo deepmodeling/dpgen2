@@ -82,6 +82,10 @@ class FileConfGenerator(ConfGenerator):
         return ms
 
     @staticmethod
+    def doc() -> str:
+        return "Generate alloys from user provided file(s). The file(s) are assume to be load by `dpdata`."
+
+    @staticmethod
     def args() -> List[Argument]:
         doc_files = "The paths to the configuration files. widecards are supported."
         doc_prefix = "The prefix of file paths."

@@ -31,6 +31,16 @@ from dpgen2.utils import (
 )
 
 
+def make_link(content, ref_key):
+    try:
+        raw_anchor = dargs.RAW_ANCHOR
+    except AttributeError:
+        raw_anchor = dargs.dargs.RAW_ANCHOR
+    return (
+        f"`{content} <{ref_key}_>`_" if not raw_anchor else f"`{content} <#{ref_key}>`_"
+    )
+
+
 def dp_dist_train_args():
     doc_config = "Configuration of training"
     doc_template_script = "File names of the template training script. It can be a `List[str]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `str`, the models share the same template training script. "
@@ -97,10 +107,17 @@ def variant_train():
 
 
 def variant_conv():
-    doc = "the type of the convergence check"
+    doc = "the type of the condidate selection and convergence check method."
     var_list = []
     for kk in conv_styles.keys():
-        var_list.append(Argument(kk, dict, conv_styles[kk].args()))
+        var_list.append(
+            Argument(
+                kk,
+                dict,
+                conv_styles[kk].args(),
+                doc=conv_styles[kk].doc(),
+            )
+        )
     return Variant(
         "type",
         var_list,
@@ -109,10 +126,17 @@ def variant_conv():
 
 
 def variant_conf():
-    doc = "the type of the configuration generator"
+    doc = "the type of the initial configuration generator."
     var_list = []
     for kk in conf_styles.keys():
-        var_list.append(Argument(kk, dict, conf_styles[kk].args()))
+        var_list.append(
+            Argument(
+                kk,
+                dict,
+                conf_styles[kk].args(),
+                doc=conf_styles[kk].doc(),
+            )
+        )
     return Variant(
         "type",
         var_list,
@@ -130,7 +154,12 @@ def lmp_args():
     doc_convergence = "The method of convergence check."
     doc_configuration_prefix = "The path prefix of lmp initial configurations"
     doc_configuration = "A list of initial configurations."
-    doc_stages = "A list of exploration stages."
+    doc_stages = (
+        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
+        "The outer list provides the enumeration of the exploration stages. "
+        "Then each stage is defined by a list of exploration task groups. "
+        "The definition of each task group is described in :ref:`Task group definition` "
+    )
 
     return [
         Argument(
@@ -159,13 +188,6 @@ def lmp_args():
             doc=doc_convergence,
         ),
         Argument(
-            "configuration_prefix",
-            str,
-            optional=True,
-            default=None,
-            doc=doc_configuration_prefix,
-        ),
-        Argument(
             "configurations",
             list,
             [],
@@ -180,11 +202,12 @@ def lmp_args():
 
 
 def variant_explore():
-    doc = "the type of the exploration"
+    doc = "The type of the exploration"
+    doc_lmp = "The exploration by LAMMPS simulations"
     return Variant(
         "type",
         [
-            Argument("lmp", dict, lmp_args()),
+            Argument("lmp", dict, lmp_args(), doc=doc_lmp),
         ],
         doc=doc,
     )
@@ -234,15 +257,16 @@ def input_args():
     doc_type_map = 'The type map. e.g. ["Al", "Mg"]. Al and Mg will have type 0 and 1, respectively.'
     doc_mass_map = "The mass map. e.g. [27., 24.]. Al and Mg will be set with mass 27. and 24. amu, respectively."
     doc_mixed_type = "Use `deepmd/npy/mixed` format for storing training data."
-    doc_do_finetune = """Finetune the pretrained model before the first iteration. If it is set to True, then an additional step, finetune-step,
-                       which is based on a branch of "PrepRunDPTrain," will be added before the dpgen_step. In the
-                       finetune-step, the internal flag finetune_mode is set to "finetune," which means SuperOP "PrepRunDPTrain"
-                       is now used as the "Finetune." In this step, we finetune the pretrained model in the train step and modify
-                       the template after training. After that, in the normal dpgen-step, the flag do_finetune is set as "train-init,"
-                       which means we use --init-frz-model to train based on models from the previous iteration. The "do_finetune" flag
-                       is set to False by default, while the internal flag finetune_mode is set to "no," which means anything related
-                       to finetuning will not be done.
-                       """
+    doc_do_finetune = (
+        "Finetune the pretrained model before the first iteration. If it is set to True, then an additional step, finetune-step, "
+        'which is based on a branch of "PrepRunDPTrain," will be added before the dpgen_step. In the '
+        'finetune-step, the internal flag finetune_mode is set to "finetune," which means SuperOP "PrepRunDPTrain" '
+        'is now used as the "Finetune." In this step, we finetune the pretrained model in the train step and modify '
+        'the template after training. After that, in the normal dpgen-step, the flag do_finetune is set as "train-init," '
+        'which means we use `--init-frz-model` to train based on models from the previous iteration. The "do_finetune" flag '
+        'is set to False by default, while the internal flag finetune_mode is set to "no," which means anything related '
+        "to finetuning will not be done."
+    )
     doc_do_finetune = textwrap.dedent(doc_do_finetune)
     doc_init_data_prefix = "The prefix of initial data systems"
     doc_init_sys = "The inital data systems"

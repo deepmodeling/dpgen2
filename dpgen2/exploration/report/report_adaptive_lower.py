@@ -129,6 +129,27 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.header_str = "#" + self.fmt_str % print_tuple
 
     @staticmethod
+    def doc() -> str:
+        def make_class_doc_link(key):
+            from dpgen2.entrypoint.args import (
+                make_link,
+            )
+
+            return make_link(key, f"explore[lmp]/convergence[adaptive-lower]/{key}")
+
+        numb_candi_f_link = make_class_doc_link("numb_candi_f")
+        rate_candi_f_link = make_class_doc_link("rate_candi_f")
+        numb_candi_v_link = make_class_doc_link("numb_candi_v")
+        rate_candi_v_link = make_class_doc_link("rate_candi_v")
+        numb_candi_s = f"{numb_candi_f_link} or {numb_candi_v_link}"
+        rate_candi_s = f"{rate_candi_f_link} or {rate_candi_v_link}"
+        level_f_hi_link = make_class_doc_link("level_f_hi")
+        level_v_hi_link = make_class_doc_link("level_v_hi")
+        conv_tolerance_link = make_class_doc_link("conv_tolerance")
+        n_checked_steps_link = make_class_doc_link("n_checked_steps")
+        return f"The method of adaptive adjust the lower trust levels. In each step of iterations, a number (set by {numb_candi_s}) or a ratio (set by {rate_candi_s}) of configurations with a model deviation lower than the higher trust level ({level_f_hi_link}, {level_v_hi_link}) are treated as candidates. The lowest model deviation of the candidates are treated as the lower trust level. If the lower trust level does not change significant (controlled by {conv_tolerance_link}) in {n_checked_steps_link}, the stage is treated as converged. "
+
+    @staticmethod
     def args() -> List[Argument]:
         doc_level_f_hi = "The higher trust level of force model deviation"
         doc_numb_candi_f = "The number of force frames that has a model deviation lower than `level_f_hi` treated as candidate."

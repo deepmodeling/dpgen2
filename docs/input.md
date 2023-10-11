@@ -51,9 +51,7 @@ This section defines how a model is trained.
 	"type" : "dp",
 	"numb_models" : 4,
 	"config" : {},
-	"template_script" : {
-		"_comment" : "omitted content of tempalte script"
-	},
+	"template_script" : "/path/to/the/template/input.json",
 	"_comment" : "all"
 }
 ```
@@ -71,11 +69,15 @@ This section defines how the configuration space is explored.
 	"config" : {
 		"command": "lmp -var restart 0"
 	},
+	"convergence": {
+	    "type" :	"fixed-levels",
+	    "conv_accuracy" :	0.9,
+	    "level_f_lo":	0.05,
+	    "level_f_hi":	0.50,
+	    "_comment" : "all"
+	},
 	"max_numb_iter" :	5,
-	"conv_accuracy" :	0.9,
 	"fatal_at_max" :	false,
-	"f_trust_lo":		0.05,
-	"f_trust_hi":		0.50,
 	"configurations":	[
 		{
 		"lattice" : ["fcc", 4.57],
@@ -124,7 +126,7 @@ The `"configurations"` provides the initial configurations (coordinates of atoms
 - `list[str]`: The strings provides the path to the configuration files.
 - `dict`: Automatic alloy configuration generator. See [the detailed doc](alloy_configs) of the allowed keys.
 
-The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See [the full documentation of the target group](task_group_configs) for writting task groups.
+The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See [the full documentation of the task group](task_group_configs) for writting task groups.
 
 `"n_sample"` tells the number of confgiruations randomly sampled from the set picked by `"conf_idx"` from `configurations` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
