@@ -269,7 +269,7 @@ def variant_task_group():
 
 
 def task_group_args():
-    return Argument("task_group_configs", dict, [], [variant_task_group()])
+    return Argument("task_group", dict, [], [variant_task_group()])
 
 
 def normalize(data):

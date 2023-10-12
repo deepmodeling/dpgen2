@@ -1,13 +1,14 @@
+.. _submitargs:
+
 Arguments of the submit script
 ==============================
 
-.. _submitargs:
 .. dargs::
    :module: dpgen2.entrypoint.args
    :func: submit_args
 
 
-.. _task_group_configs:
+.. _task_group_sec:
 
 Task group definition
 ------------------

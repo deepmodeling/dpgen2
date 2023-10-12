@@ -156,6 +156,11 @@
 		"replicate" : [2, 2, 2],
 		"numb_confs" : 30,
 		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+	    },
+	    {
+		"type" : "file",
+		"files" : ["/path/to/confs/*"],
+		"fmt" : "deepmd/npy"
 	    }
 	],
 	"_comment" : "Stage is of type List[List[dict]]. ",
