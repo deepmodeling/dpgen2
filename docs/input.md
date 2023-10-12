@@ -88,7 +88,8 @@ This section defines how the configuration space is explored.
 		},
 		{
 		"type" : "file",
-		"files" : ["/path/to/confs/*"],
+	    "prefix": "/file/prefix",
+		"files" : ["relpath/to/confs/*"],
 		"fmt" : "deepmd/npy"
 		}
 	],
