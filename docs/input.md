@@ -85,7 +85,7 @@ This section defines how the configuration space is explored.
 		"replicate" : [2, 2, 2],
 		"numb_confs" : 30,
 		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-		}
+		},
 		{
 		"type" : "file",
 		"files" : ["/path/to/confs/*"],
@@ -115,8 +115,8 @@ This section defines how the configuration space is explored.
 		    "ensemble": "npt", "nsteps":  50, "press": [1e0], "temps": [50, 100, 200], "trj_freq": 10,
 		    "conf_idx": [1], "n_sample" : 3
 		}
-	    ],
-	],
+	    ]
+	]
 }
 ```
 The {dargs:argument}`"type" : "lmp"<explore>` means that configurations are explored by LAMMPS DPMD runs.
