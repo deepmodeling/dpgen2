@@ -155,7 +155,7 @@ def lmp_args():
         "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
         "The outer list provides the enumeration of the exploration stages. "
         "Then each stage is defined by a list of exploration task groups. "
-        "The definition of each task group is described in :ref:`Task group definition` "
+        "The definition of each task group is described in :ref:`Task group definition<task_group_configs>` "
     )
 
     return [

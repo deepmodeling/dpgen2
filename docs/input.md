@@ -120,13 +120,13 @@ This section defines how the configuration space is explored.
 }
 ```
 The `"type" : "lmp"` means that configurations are explored by LAMMPS DPMD runs.
-The `"config"` key defines the lmp configs, see [the full documentation](runlmpargs).
+The `"config"` key defines the lmp configs, see {ref}`the full documentation<explore[lmp]/config>`.
 The `"configurations"` provides the initial configurations (coordinates of atoms and the simulation cell) of the DPMD simulations. It is a list. The elements of the list can be
 
 - `list[str]`: The strings provides the path to the configuration files.
-- `dict`: Automatic alloy configuration generator. See [the detailed doc](alloy_configs) of the allowed keys.
+- `dict`: Automatic alloy configuration generator. See {ref}`the detailed doc<explore[lmp]/configurations[alloy]>` of the allowed keys.
 
-The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See [the full documentation of the task group](task_group_configs) for writting task groups.
+The `"stages"` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See {ref}`the full documentation of the task group<task_group_configs>` for writting task groups.
 
 `"n_sample"` tells the number of confgiruations randomly sampled from the set picked by `"conf_idx"` from `configurations` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 

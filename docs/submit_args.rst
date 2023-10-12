@@ -7,9 +7,11 @@ Arguments of the submit script
    :func: submit_args
 
 
+.. _task_group_configs:
+
 Task group definition
 ------------------
-.. _task_group_configs:
+
 .. dargs::
    :module: dpgen2.exploration.task
    :func: task_group_args
