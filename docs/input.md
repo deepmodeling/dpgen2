@@ -139,13 +139,13 @@ This section defines the first-principle (FP) calculation .
 ```json
 "fp" : {
 	"type": "vasp",
-    "task_max":	2,
+	"task_max":	2,
 	"run_config": {
 		"command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
 	"inputs_config": {
 		"pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	    "kspacing":	0.32,
+		"kspacing":	0.32,
 		"incar": "vasp/INCAR"
 	}
 }
