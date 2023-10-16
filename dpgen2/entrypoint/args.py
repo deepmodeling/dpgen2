@@ -147,7 +147,6 @@ def lmp_args():
     )
     doc_output_nopbc = "Remove pbc of the output configurations"
     doc_convergence = "The method of convergence check."
-    doc_configuration_prefix = "The path prefix of lmp initial configurations"
     doc_configuration = "A list of initial configurations."
     doc_stages = (
         "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "

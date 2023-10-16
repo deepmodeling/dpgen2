@@ -197,36 +197,18 @@ def make_concurrent_learning_op(
 
 def make_naive_exploration_scheduler(
     config,
-    old_style=False,
 ):
     # use npt task group
-    model_devi_jobs = (
-        config["model_devi_jobs"] if old_style else config["explore"]["stages"]
-    )
-    sys_configs = (
-        config["sys_configs"] if old_style else config["explore"]["configurations"]
-    )
-    sys_prefix = config["explore"].get("configuration_prefix")
-    if sys_prefix is not None:
-        for ii in range(len(sys_configs)):
-            if isinstance(sys_configs[ii], list):
-                sys_configs[ii] = [
-                    os.path.join(sys_prefix, jj) for jj in sys_prefix[ii]
-                ]
-    mass_map = config["mass_map"] if old_style else config["inputs"]["mass_map"]
-    type_map = config["type_map"] if old_style else config["inputs"]["type_map"]
-    numb_models = config["numb_models"] if old_style else config["train"]["numb_models"]
-    fp_task_max = config["fp_task_max"] if old_style else config["fp"]["task_max"]
-    max_numb_iter = (
-        config["max_numb_iter"] if old_style else config["explore"]["max_numb_iter"]
-    )
-    fatal_at_max = (
-        config.get("fatal_at_max", True)
-        if old_style
-        else config["explore"]["fatal_at_max"]
-    )
+    model_devi_jobs = config["explore"]["stages"]
+    sys_configs = config["explore"]["configurations"]
+    mass_map = config["inputs"]["mass_map"]
+    type_map = config["inputs"]["type_map"]
+    numb_models = config["train"]["numb_models"]
+    fp_task_max = config["fp"]["task_max"]
+    max_numb_iter = config["explore"]["max_numb_iter"]
+    fatal_at_max = config["explore"]["fatal_at_max"]
     convergence = config["explore"]["convergence"]
-    output_nopbc = False if old_style else config["explore"]["output_nopbc"]
+    output_nopbc = config["explore"]["output_nopbc"]
     scheduler = ExplorationScheduler()
     # report
     conv_style = convergence.pop("type")
@@ -359,83 +341,32 @@ def make_finetune_step(
 
 def workflow_concurrent_learning(
     config: Dict,
-    old_style: bool = False,
 ) -> Tuple[Step, Optional[Step]]:
-    default_config = (
-        normalize_step_dict(config.get("default_config", {}))
-        if old_style
-        else config["default_step_config"]
-    )
+    default_config = config["default_step_config"]
 
-    train_style = (
-        config.get("train_style", "dp") if old_style else config["train"]["type"]
-    )
-    explore_style = (
-        config.get("explore_style", "lmp") if old_style else config["explore"]["type"]
-    )
-    fp_style = config.get("fp_style", "vasp") if old_style else config["fp"]["type"]
-    prep_train_config = (
-        normalize_step_dict(config.get("prep_train_config", default_config))
-        if old_style
-        else config["step_configs"]["prep_train_config"]
-    )
-    run_train_config = (
-        normalize_step_dict(config.get("run_train_config", default_config))
-        if old_style
-        else config["step_configs"]["run_train_config"]
-    )
-    prep_explore_config = (
-        normalize_step_dict(config.get("prep_explore_config", default_config))
-        if old_style
-        else config["step_configs"]["prep_explore_config"]
-    )
-    run_explore_config = (
-        normalize_step_dict(config.get("run_explore_config", default_config))
-        if old_style
-        else config["step_configs"]["run_explore_config"]
-    )
-    prep_fp_config = (
-        normalize_step_dict(config.get("prep_fp_config", default_config))
-        if old_style
-        else config["step_configs"]["prep_fp_config"]
-    )
-    run_fp_config = (
-        normalize_step_dict(config.get("run_fp_config", default_config))
-        if old_style
-        else config["step_configs"]["run_fp_config"]
-    )
-    select_confs_config = (
-        normalize_step_dict(config.get("select_confs_config", default_config))
-        if old_style
-        else config["step_configs"]["select_confs_config"]
-    )
-    collect_data_config = (
-        normalize_step_dict(config.get("collect_data_config", default_config))
-        if old_style
-        else config["step_configs"]["collect_data_config"]
-    )
-    cl_step_config = (
-        normalize_step_dict(config.get("cl_step_config", default_config))
-        if old_style
-        else config["step_configs"]["cl_step_config"]
-    )
+    train_style = config["train"]["type"]
+    explore_style = config["explore"]["type"]
+    fp_style = config["fp"]["type"]
+    prep_train_config = config["step_configs"]["prep_train_config"]
+    run_train_config = config["step_configs"]["run_train_config"]
+    prep_explore_config = config["step_configs"]["prep_explore_config"]
+    run_explore_config = config["step_configs"]["run_explore_config"]
+    prep_fp_config = config["step_configs"]["prep_fp_config"]
+    run_fp_config = config["step_configs"]["run_fp_config"]
+    select_confs_config = config["step_configs"]["select_confs_config"]
+    collect_data_config = config["step_configs"]["collect_data_config"]
+    cl_step_config = config["step_configs"]["cl_step_config"]
     upload_python_packages = config.get("upload_python_packages", None)
 
     if train_style == "dp":
-        init_models_paths = (
-            config.get("training_iter0_model_path", None)
-            if old_style
-            else config["train"].get("init_models_paths", None)
-        )
-        numb_models = (
-            config["numb_models"] if old_style else config["train"]["numb_models"]
-        )
+        init_models_paths = config["train"].get("init_models_paths", None)
+        numb_models = config["train"]["numb_models"]
         if init_models_paths is not None and len(init_models_paths) != numb_models:
             raise RuntimeError(
                 f"{len(init_models_paths)} init models provided, which does "
                 "not match numb_models={numb_models}"
             )
-    elif train_style == "dp-dist" and not old_style:
+    elif train_style == "dp-dist":
         init_models_paths = (
             [config["train"]["student_model_path"]]
             if "student_model_path" in config["train"]
@@ -443,9 +374,7 @@ def workflow_concurrent_learning(
         )
         config["train"]["numb_models"] = 1
     else:
-        raise RuntimeError(
-            f"unknown params, train_style: {train_style}, old_style: {old_style}"
-        )
+        raise RuntimeError(f"unknown params, train_style: {train_style}")
 
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
@@ -470,23 +399,17 @@ def workflow_concurrent_learning(
         cl_step_config=cl_step_config,
         upload_python_packages=upload_python_packages,
     )
-    scheduler = make_naive_exploration_scheduler(config, old_style=old_style)
+    scheduler = make_naive_exploration_scheduler(config)
 
-    type_map = config["type_map"] if old_style else config["inputs"]["type_map"]
-    numb_models = config["numb_models"] if old_style else config["train"]["numb_models"]
-    template_script_ = (
-        config["default_training_param"]
-        if old_style
-        else config["train"]["template_script"]
-    )
+    type_map = config["inputs"]["type_map"]
+    numb_models = config["train"]["numb_models"]
+    template_script_ = config["train"]["template_script"]
     if isinstance(template_script_, list):
         template_script = [json.loads(Path(ii).read_text()) for ii in template_script_]
     else:
         template_script = json.loads(Path(template_script_).read_text())
-    train_config = {} if old_style else config["train"]["config"]
-    lmp_config = (
-        config.get("lmp_config", {}) if old_style else config["explore"]["config"]
-    )
+    train_config = config["train"]["config"]
+    lmp_config = config["explore"]["config"]
     if (
         "teacher_model_path" in lmp_config
         and lmp_config["teacher_model_path"] is not None
@@ -498,19 +421,8 @@ def workflow_concurrent_learning(
             lmp_config["teacher_model_path"], "pb"
         )
 
-    fp_config = config.get("fp_config", {}) if old_style else {}
-    if old_style:
-        potcar_names = config["fp_pp_files"]
-        incar_template_name = config["fp_incar"]
-        kspacing, kgamma = get_kspacing_kgamma_from_incar(incar_template_name)
-        fp_inputs_config = {
-            "kspacing": kspacing,
-            "kgamma": kgamma,
-            "incar_template_name": incar_template_name,
-            "potcar_names": potcar_names,
-        }
-    else:
-        fp_inputs_config = config["fp"]["inputs_config"]
+    fp_config = {}
+    fp_inputs_config = config["fp"]["inputs_config"]
     fp_inputs = fp_styles[fp_style]["inputs"](**fp_inputs_config)
 
     fp_config["inputs"] = fp_inputs
@@ -526,14 +438,8 @@ def workflow_concurrent_learning(
             fp_config["run"]["teacher_model_path"], "pb"
         )
 
-    init_data_prefix = (
-        config.get("init_data_prefix")
-        if old_style
-        else config["inputs"]["init_data_prefix"]
-    )
-    init_data = (
-        config["init_data_sys"] if old_style else config["inputs"]["init_data_sys"]
-    )
+    init_data_prefix = config["inputs"]["init_data_prefix"]
+    init_data = config["inputs"]["init_data_sys"]
     if init_data_prefix is not None:
         init_data = [os.path.join(init_data_prefix, ii) for ii in init_data]
     if isinstance(init_data, str):
@@ -670,7 +576,6 @@ def copy_scheduler_plans(
 def submit_concurrent_learning(
     wf_config,
     reuse_step: Optional[List[ArgoStep]] = None,
-    old_style: bool = False,
     replace_scheduler: bool = False,
     no_submission: bool = False,
 ):
@@ -680,7 +585,7 @@ def submit_concurrent_learning(
     global_config_workflow(wf_config)
 
     dpgen_step, finetune_step = workflow_concurrent_learning(
-        wf_config, old_style=old_style
+        wf_config,
     )
 
     if reuse_step is not None and replace_scheduler:
@@ -788,7 +693,6 @@ def resubmit_concurrent_learning(
     wfid,
     list_steps=False,
     reuse=None,
-    old_style=False,
     replace_scheduler=False,
 ):
     wf_config = normalize_args(wf_config)
@@ -816,7 +720,6 @@ def resubmit_concurrent_learning(
     wf = submit_concurrent_learning(
         wf_config,
         reuse_step=reuse_step,
-        old_style=old_style,
         replace_scheduler=replace_scheduler,
     )
 

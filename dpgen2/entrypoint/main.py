@@ -86,12 +86,6 @@ def main_parser() -> argparse.ArgumentParser:
     parser_run.add_argument(
         "CONFIG", help="the config file in json format defining the workflow."
     )
-    parser_run.add_argument(
-        "-o",
-        "--old-compatible",
-        action="store_true",
-        help="compatible with old-style input script used in dpgen2 < 0.0.6.",
-    )
 
     ##########################################
     # resubmit
@@ -123,12 +117,6 @@ def main_parser() -> argparse.ArgumentParser:
         "--keep-schedule",
         action="store_true",
         help="if set then keep schedule of the old workflow. otherwise use the schedule defined in the input file",
-    )
-    parser_resubmit.add_argument(
-        "-o",
-        "--old-compatible",
-        action="store_true",
-        help="compatible with old-style input script used in dpgen2 < 0.0.6.",
     )
 
     ##########################################
@@ -331,7 +319,6 @@ def main():
             config = json.load(fp)
         submit_concurrent_learning(
             config,
-            old_style=args.old_compatible,
         )
     elif args.command == "resubmit":
         with open(args.CONFIG) as fp:
@@ -342,7 +329,6 @@ def main():
             wfid,
             list_steps=args.list,
             reuse=args.reuse,
-            old_style=args.old_compatible,
             replace_scheduler=(not args.keep_schedule),
         )
     elif args.command == "status":
