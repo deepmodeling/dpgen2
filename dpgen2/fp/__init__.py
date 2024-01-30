@@ -19,6 +19,12 @@ from .vasp import (
     VaspInputs,
 )
 
+from .cp2k import (
+    PrepCp2k,
+    RunCp2k,
+    Cp2kInputs,
+)
+
 fp_styles = {
     "vasp": {
         "inputs": VaspInputs,
@@ -39,5 +45,10 @@ fp_styles = {
         "inputs": FpOpAbacusInputs,
         "prep": PrepFpOpAbacus,
         "run": RunFpOpAbacus,
+    },
+    "cp2k": {
+        "inputs": Cp2kInputs,
+        "prep": PrepCp2k,
+        "run": RunCp2k,
     },
 }
