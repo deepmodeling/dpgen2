@@ -169,6 +169,7 @@ class Cp2kInputs:
         string = "\n".join(input_str)
         return string
 
+    @staticmethod
     def make_cp2k_coord_cell(
         sys_data: dpdata.System
     ):

@@ -1,0 +1,44 @@
+GLOBAL:
+  PROJECT: DPGEN
+FORCE_EVAL:
+  METHOD: QS
+  STRESS_TENSOR: ANALYTICAL
+  DFT:
+    BASIS_SET_FILE_NAME: BASIS_MOLOPT
+    POTENTIAL_FILE_NAME: GTH_POTENTIALS
+    CHARGE: 0
+    UKS: F
+    MULTIPLICITY: 1
+    MGRID:
+      CUTOFF: 600
+      REL_CUTOFF: 50
+      NGRIDS: 4
+    QS:
+      EPS_DEFAULT: 1.0E-12
+    SCF:
+      SCF_GUESS: ATOMIC
+      EPS_SCF: 1.0E-6
+      MAX_SCF: 50
+    XC:
+      XC_FUNCTIONAL:
+        _: PBE
+  SUBSYS:
+    '@include': coord_n_cell.inc
+    KIND:
+      _:
+        - H
+        - C
+        - N
+      POTENTIAL:
+        - GTH-PBE-q1
+        - GTH-PBE-q4
+        - GTH-PBE-q5
+      BASIS_SET:
+        - DZVP-MOLOPT-GTH
+        - DZVP-MOLOPT-GTH
+        - DZVP-MOLOPT-GTH
+  PRINT:
+    FORCES:
+      _: ON
+    STRESS_TENSOR:
+      _: ON
