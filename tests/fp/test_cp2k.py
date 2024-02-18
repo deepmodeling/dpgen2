@@ -5,9 +5,12 @@ import shutil
 import sys
 import textwrap
 import unittest
-from unittest.mock import patch, MagicMock
 from pathlib import (
     Path,
+)
+from unittest.mock import (
+    MagicMock,
+    patch,
 )
 
 import dpdata
@@ -33,7 +36,7 @@ class TestCp2kInputs(unittest.TestCase):
 
         with open(self.data_path / "input.json") as f:
             data = json.load(f)
-        
+
         self.cp2k_input = Cp2kInputs(input_template=data)
 
     def test_make_cp2k_input(self):
@@ -49,6 +52,7 @@ class TestCp2kInputs(unittest.TestCase):
         with open(self.data_path / "coord_n_cell.inc") as f:
             expected = f.read()
         self.assertEqual(generated, expected)
+
 
 class TestRunCp2k(unittest.TestCase):
     @patch("dpgen2.fp.cp2k.run_command")
