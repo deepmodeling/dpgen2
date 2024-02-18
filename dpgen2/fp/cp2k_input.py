@@ -19,7 +19,6 @@ from dargs import (
     dargs,
 )
 
-
 default_config = {
     "GLOBAL": {"PROJECT": "DPGEN"},
     "FORCE_EVAL": {
@@ -49,10 +48,7 @@ default_config = {
 }
 
 
-def update_dict(
-    old_d: Dict[str, str],
-    update_d: Dict[str, str]
-):
+def update_dict(old_d: Dict[str, str], update_d: Dict[str, str]):
     """A method to recursively update a dictionary.
 
     Parameters
@@ -75,11 +71,7 @@ def update_dict(
             old_d[k] = update_d[k]
 
 
-def iterdict(
-    d: Dict[str, str],
-    out_list: list,
-    flag: Optional[str] = None
-):
+def iterdict(d: Dict[str, str], out_list: list, flag: Optional[str] = None):
     """Recursive expansion of dictionary into cp2k input.
 
     Parameters
@@ -110,7 +102,7 @@ def iterdict(
             # print("we have encountered the repeat section!")
             index = out_list.index("&" + flag)
             # delete the current constructed repeat section
-            del out_list[index: index + 2]
+            del out_list[index : index + 2]
             # do a loop over key and corresponding list
             k_tmp_list = []
             v_list_tmp_list = []
@@ -122,11 +114,9 @@ def iterdict(
                 out_list.insert(index + 1, "&END " + flag)
                 for idx, k_tmp in enumerate(k_tmp_list):
                     if k_tmp == "_":
-                        out_list[index] = "&" + flag + \
-                            " " + repeat_keyword[idx]
+                        out_list[index] = "&" + flag + " " + repeat_keyword[idx]
                     else:
-                        out_list.insert(index + 1, k_tmp +
-                                        " " + repeat_keyword[idx])
+                        out_list.insert(index + 1, k_tmp + " " + repeat_keyword[idx])
 
             break
 
@@ -170,9 +160,7 @@ class Cp2kInputs:
         return string
 
     @staticmethod
-    def make_cp2k_coord_cell(
-        sys_data: dpdata.System
-    ):
+    def make_cp2k_coord_cell(sys_data: dpdata.System):
         # get structral information
         atom_names = sys_data["atom_names"]
         atom_types = sys_data["atom_types"]

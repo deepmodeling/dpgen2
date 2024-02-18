@@ -37,14 +37,14 @@ from dpgen2.utils.run_command import (
     run_command,
 )
 
+from .cp2k_input import (
+    Cp2kInputs,
+)
 from .prep_fp import (
     PrepFp,
 )
 from .run_fp import (
     RunFp,
-)
-from .cp2k_input import (
-    Cp2kInputs,
 )
 
 # global static variables
