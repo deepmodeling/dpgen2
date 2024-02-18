@@ -13,6 +13,8 @@ from dpgen2.constants import (
 
 from .task import (
     ExplorationTask,
+)
+from .task_group import (
     ExplorationTaskGroup,
 )
 

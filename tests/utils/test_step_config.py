@@ -107,9 +107,6 @@ class TestStepConfig(unittest.TestCase):
             },
         }
         odict = normalize(idict)
-        with dflow_mode("debug"):
-            ret = init_executor(deepcopy(odict).pop("executor"))
-            self.assertTrue(ret is None)
 
         with dflow_mode("default"):
             ret = init_executor(deepcopy(odict).pop("executor"))
@@ -136,9 +133,6 @@ class TestStepConfig(unittest.TestCase):
         }
         odict = normalize(idict)
         self.assertEqual(odict["executor"], idict["executor"])
-        with dflow_mode("debug"):
-            ret = init_executor(deepcopy(odict).pop("executor"))
-            self.assertTrue(ret is None)
 
         with dflow_mode("default"):
             ret = init_executor(deepcopy(odict).pop("executor"))

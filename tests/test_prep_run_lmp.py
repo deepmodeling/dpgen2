@@ -69,8 +69,8 @@ from dpgen2.constants import (
     train_task_pattern,
 )
 from dpgen2.exploration.task import (
+    BaseExplorationTaskGroup,
     ExplorationTask,
-    ExplorationTaskGroup,
 )
 from dpgen2.op.prep_lmp import (
     PrepLmp,
@@ -90,7 +90,7 @@ default_config = normalize_step_dict(
 
 
 def make_task_group_list(ngrp, ntask_per_grp):
-    tgrp = ExplorationTaskGroup()
+    tgrp = BaseExplorationTaskGroup()
     for ii in range(ngrp):
         for jj in range(ntask_per_grp):
             tt = ExplorationTask()

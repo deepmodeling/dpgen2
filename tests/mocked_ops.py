@@ -789,6 +789,9 @@ class MockedExplorationTaskGroup(ExplorationTaskGroup):
             )
             self.add_task(tt)
 
+    def make_task(self):
+        raise NotImplementedError
+
 
 class MockedExplorationTaskGroup1(ExplorationTaskGroup):
     def __init__(self):
@@ -801,6 +804,9 @@ class MockedExplorationTaskGroup1(ExplorationTaskGroup):
             )
             self.add_task(tt)
 
+    def make_task(self):
+        raise NotImplementedError
+
 
 class MockedExplorationTaskGroup2(ExplorationTaskGroup):
     def __init__(self):
@@ -812,6 +818,9 @@ class MockedExplorationTaskGroup2(ExplorationTaskGroup):
                 lmp_input_name, f"mocked 2 input {jj}"
             )
             self.add_task(tt)
+
+    def make_task(self):
+        raise NotImplementedError
 
 
 class MockedStage(ExplorationStage):

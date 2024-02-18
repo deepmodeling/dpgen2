@@ -19,7 +19,6 @@ from .lmp import (
 )
 from .task import (
     ExplorationTask,
-    ExplorationTaskGroup,
 )
 
 
@@ -76,7 +75,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
 
     def make_task(
         self,
-    ) -> ExplorationTaskGroup:
+    ) -> "NPTTaskGroup":
         """
         Make the LAMMPS task group.
 

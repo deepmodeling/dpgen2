@@ -25,7 +25,6 @@ from .lmp import (
 )
 from .task import (
     ExplorationTask,
-    ExplorationTaskGroup,
 )
 
 
@@ -60,7 +59,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
 
     def make_task(
         self,
-    ) -> ExplorationTaskGroup:
+    ) -> "LmpTemplateTaskGroup":
         if not self.conf_set:
             raise RuntimeError("confs are not set")
         if not self.lmp_set:

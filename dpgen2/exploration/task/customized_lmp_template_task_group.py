@@ -37,7 +37,6 @@ from .lmp_template_task_group import (
 )
 from .task import (
     ExplorationTask,
-    ExplorationTaskGroup,
 )
 
 
@@ -147,7 +146,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
 
     def make_task(
         self,
-    ) -> ExplorationTaskGroup:
+    ) -> "CustomizedLmpTemplateTaskGroup":
         if not self.conf_set:
             raise RuntimeError("confs are not set")
         if not self.lmp_set:
@@ -166,7 +165,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
     def _make_customized_task_group(
         self,
         conf,
-    ) -> ExplorationTaskGroup:
+    ) -> "CustomizedLmpTemplateTaskGroup":
         with tempfile.TemporaryDirectory() as tmpdir:
             with set_directory(Path(tmpdir)):
                 Path(self.input_lmp_conf_name).write_text(conf)

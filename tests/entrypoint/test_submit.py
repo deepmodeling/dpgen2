@@ -376,7 +376,34 @@ class TestSubmitCmdStd(unittest.TestCase):
 
     def test(self):
         wf_config = json.loads(input_std)
+        remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
+
+
+def remove_executor_if_debug(conf):
+    from dflow.config import (
+        config,
+    )
+
+    if config["mode"] == "debug":
+        if "default_step_config" in conf and "executor" in conf["default_step_config"]:
+            del conf["default_step_config"]["executor"]
+        if "step_configs" in conf:
+            if (
+                "run_train_config" in conf["step_configs"]
+                and "executor" in conf["step_configs"]["run_train_config"]
+            ):
+                del conf["step_configs"]["run_train_config"]["executor"]
+            if (
+                "run_explore_config" in conf["step_configs"]
+                and "executor" in conf["step_configs"]["run_explore_config"]
+            ):
+                del conf["step_configs"]["run_explore_config"]["executor"]
+            if (
+                "run_fp_config" in conf["step_configs"]
+                and "executor" in conf["step_configs"]["run_fp_config"]
+            ):
+                del conf["step_configs"]["run_fp_config"]["executor"]
 
 
 class TestSubmitCmdDist(unittest.TestCase):
@@ -408,6 +435,7 @@ class TestSubmitCmdDist(unittest.TestCase):
 
     def test(self):
         wf_config = json.loads(input_dist)
+        remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
 
 
@@ -444,6 +472,7 @@ class TestSubmitCmdFinetune(unittest.TestCase):
 
     def test(self):
         wf_config = json.loads(input_finetune)
+        remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
 
 

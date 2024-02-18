@@ -18,6 +18,7 @@ from dpgen2.exploration.selector import (
     ConfSelector,
 )
 from dpgen2.exploration.task import (
+    BaseExplorationTaskGroup,
     ExplorationStage,
     ExplorationTaskGroup,
 )
@@ -67,7 +68,7 @@ class ConvergenceCheckStageScheduler(StageScheduler):
         self,
         report: Optional[ExplorationReport] = None,
         trajs: Optional[List[Path]] = None,
-    ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]]:
+    ) -> Tuple[bool, Optional[BaseExplorationTaskGroup], Optional[ConfSelector]]:
         if self.complete():
             raise FatalError("Cannot plan because the stage has completed.")
         if report is None:
