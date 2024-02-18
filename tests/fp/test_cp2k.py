@@ -27,13 +27,12 @@ from dpgen2.fp.cp2k import (
 
 class TestCp2kInputs(unittest.TestCase):
     def setUp(self) -> None:
-        from ruamel.yaml import YAML
-        yaml = YAML(typ="safe")
+        import json
 
         self.data_path = Path(__file__).parent / "data.cp2k"
 
-        with open(self.data_path / "input.yaml") as f:
-            data = yaml.load(f)
+        with open(self.data_path / "input.json") as f:
+            data = json.load(f)
         
         self.cp2k_input = Cp2kInputs(input_template=data)
 
