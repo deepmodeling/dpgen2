@@ -50,8 +50,8 @@ default_config = {
 
 
 def update_dict(
-    old_d: Dict[str, str],
-    update_d: Dict[str, str]
+    old_d: dict,
+    update_d: dict
 ):
     """A method to recursively update a dictionary.
 
@@ -108,25 +108,26 @@ def iterdict(
                 iterdict(v, out_list, k)
         elif isinstance(v, list):
             # print("we have encountered the repeat section!")
-            index = out_list.index("&" + flag)
-            # delete the current constructed repeat section
-            del out_list[index: index + 2]
-            # do a loop over key and corresponding list
-            k_tmp_list = []
-            v_list_tmp_list = []
-            for k_tmp, v_tmp in d.items():
-                k_tmp_list.append(str(k_tmp))
-                v_list_tmp_list.append(v_tmp)
-            for repeat_keyword in zip(*v_list_tmp_list):
-                out_list.insert(index, "&" + flag)
-                out_list.insert(index + 1, "&END " + flag)
-                for idx, k_tmp in enumerate(k_tmp_list):
-                    if k_tmp == "_":
-                        out_list[index] = "&" + flag + \
-                            " " + repeat_keyword[idx]
-                    else:
-                        out_list.insert(index + 1, k_tmp +
-                                        " " + repeat_keyword[idx])
+            if flag is not None:
+                index = out_list.index("&" + flag)
+                # delete the current constructed repeat section
+                del out_list[index: index + 2]
+                # do a loop over key and corresponding list
+                k_tmp_list = []
+                v_list_tmp_list = []
+                for k_tmp, v_tmp in d.items():
+                    k_tmp_list.append(str(k_tmp))
+                    v_list_tmp_list.append(v_tmp)
+                for repeat_keyword in zip(*v_list_tmp_list):
+                    out_list.insert(index, "&" + flag)
+                    out_list.insert(index + 1, "&END " + flag)
+                    for idx, k_tmp in enumerate(k_tmp_list):
+                        if k_tmp == "_":
+                            out_list[index] = "&" + flag + \
+                                " " + repeat_keyword[idx]
+                        else:
+                            out_list.insert(index + 1, k_tmp +
+                                            " " + repeat_keyword[idx])
 
             break
 
@@ -180,15 +181,15 @@ class Cp2kInputs:
         # write coordinate to xyz file used by cp2k input
         coord_list = sys_data["coords"][0]
         u = np.array(atom_names)
-        atom_list = u[atom_types]
+        atom_list = u[atom_types] # type: ignore
         x = "&COORD\n"
-        for kind, coord in zip(atom_list, coord_list):
+        for kind, coord in zip(atom_list, coord_list): # type: ignore
             x += str(kind) + " " + str(coord[:])[1:-1] + "\n"
         x += "&END COORD\n"
 
         # covert cell to cell string
         cell = sys_data["cells"][0]
-        cell = np.reshape(cell, [3, 3])
+        cell = np.reshape(cell, [3, 3]) # type: ignore
         cell_a = np.array2string(cell[0, :])
         cell_a = cell_a[1:-1]
         cell_b = np.array2string(cell[1, :])
