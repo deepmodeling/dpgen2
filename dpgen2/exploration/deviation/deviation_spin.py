@@ -41,6 +41,9 @@ class DeviManagerSpin(DeviManager):
 
     def _check_name(self, name: str):
         assert name in (
+            DeviManager.MAX_DEVI_V,
+            DeviManager.MIN_DEVI_V,
+            DeviManager.AVG_DEVI_V,
             self.MAX_DEVI_AF,
             self.MIN_DEVI_AF,
             self.AVG_DEVI_AF,
@@ -75,6 +78,9 @@ class DeviManagerSpin(DeviManager):
     def _check_data(self) -> None:
         r"""Check if data is valid"""
         model_devi_names = (
+            DeviManager.MAX_DEVI_V,
+            DeviManager.MIN_DEVI_V,
+            DeviManager.AVG_DEVI_V,
             self.MAX_DEVI_AF,
             self.MIN_DEVI_AF,
             self.AVG_DEVI_AF,
