@@ -4,3 +4,6 @@ from .deviation_manager import (
 from .deviation_std import (
     DeviManagerStd,
 )
+from .deviation_spin import (
+    DeviManagerSpin,
+)
