@@ -37,15 +37,13 @@ class TestDeviManagerSpin(unittest.TestCase):
                 model_devi.get(DeviManagerSpin.MAX_DEVI_MF), np.array([[7, 8, 9], [10, 11, 12]])
             )
         )
-        self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_F), [None, None])
-        self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_V), [None, None])
+        self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_V), [None, None])
 
         model_devi.clear()
         self.assertEqual(model_devi.ntraj, 0)
         self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_AF), [])
         self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_MF), [])
-        self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_F), [])
-        self.assertEqual(model_devi.get(DeviManagerSpin.MAX_DEVI_V), [])
+        self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_V), [])
 
 
     def test_add_invalid_name(self):
