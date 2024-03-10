@@ -19,6 +19,11 @@ from .vasp import (
     VaspInputs,
 )
 
+from .deltaspin import (
+    PrepDeltaSpin,
+    RunDeltaSpin,
+)
+
 fp_styles = {
     "vasp": {
         "inputs": VaspInputs,
@@ -39,5 +44,10 @@ fp_styles = {
         "inputs": FpOpAbacusInputs,
         "prep": PrepFpOpAbacus,
         "run": RunFpOpAbacus,
+    },
+    "deltaspin": {
+        "inputs": VaspInputs,
+        "prep": PrepDeltaSpin,
+        "run": RunDeltaSpin,
     },
 }

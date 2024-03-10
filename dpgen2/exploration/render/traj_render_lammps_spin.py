@@ -63,7 +63,7 @@ class TrajRenderLammpsSpin(TrajRender):
     ) -> dpdata.MultiSystems:
         del conf_filters  # by far does not support conf filters
         ntraj = len(trajs)
-        traj_fmt = "lammps/dump"
+        traj_fmt = "lammps/spin/dump"
         ms = dpdata.MultiSystems(type_map=type_map)
         for ii in range(ntraj):
             if len(id_selected[ii]) > 0:
