@@ -13,8 +13,18 @@ Arguments of the submit script
 .. _task_group_sec:
 
 Task group definition
-------------------
+---------------------
+
+LAMMPS task group
+^^^^^^^^^^^^^^^^^
 
 .. dargs::
    :module: dpgen2.exploration.task
-   :func: task_group_args
+   :func: lmp_task_group_args
+
+CALYPSO task group
+^^^^^^^^^^^^^^^^^^
+
+.. dargs::
+   :module: dpgen2.exploration.task
+   :func: caly_task_group_args

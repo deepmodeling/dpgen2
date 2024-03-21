@@ -213,6 +213,7 @@ def _prep_run_caly(
             "results": temp_value,
             "step": temp_value,
             "opt_results_dir": temp_value,
+            "qhull_input": temp_value,
         },
         key=step_keys["caly-evo-step-{{item}}"],
         with_sequence=argo_sequence(

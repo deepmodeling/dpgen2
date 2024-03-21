@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from pathlib import (
     Path,
 )
@@ -45,8 +48,8 @@ class RunCalyModelDevi(OP):
         return OPIOSign(
             {
                 "task_name": Parameter(str),
-                "traj": Artifact(Path),
-                "model_devi": Artifact(Path),
+                "traj": Artifact(List[Path]),
+                "model_devi": Artifact(List[Path]),
             }
         )
 
@@ -71,8 +74,8 @@ class RunCalyModelDevi(OP):
         Any
             Output dict with components:
             - `task_name`: (`str`) The name of task.
-            - `traj`: (`Artifact(Path)`) The output trajectory.
-            - `model_devi`: (`Artifact(Path)`) The model deviation. The order of recorded model deviations should be consistent with the order of frames in `traj`.
+            - `traj`: (`Artifact(List[Path])`) The output trajectory.
+            - `model_devi`: (`Artifact(List[Path])`) The model deviation. The order of recorded model deviations should be consistent with the order of frames in `traj`.
 
         """
 
@@ -92,45 +95,70 @@ class RunCalyModelDevi(OP):
         traj_dirs = ip["traj_dirs"]
         traj_dirs = [traj_dir.resolve() for traj_dir in traj_dirs]
 
-        dump_file_name = "traj.dump"
-        model_devi_file_name = "model_devi.out"
+        dump_file_name = "traj.%d.dump"
+        model_devi_file_name = "model_devi.%d.out"
 
-        Devis = []
         tcount = 0
         with set_directory(work_dir):
-            dump_file = Path().joinpath(dump_file_name)
-            model_devi_file = Path().joinpath(model_devi_file_name)
-            f = open(dump_file, "a")
+            dump_str_dict = defaultdict(list)  # key: natoms, value: dump_strs
+            devis_dict = defaultdict(list)  # key: natoms, value: Devis-s
             for traj_dir in traj_dirs:
                 for traj_name in traj_dir.rglob("*.traj"):
                     atoms_list = parse_traj(traj_name)
                     if atoms_list is None:
                         continue
                     for atoms in atoms_list:
-                        dump_str = atoms2lmpdump(atoms, tcount, type_map)
-                        f.write(dump_str)
+                        natoms = len(atoms)
+                        dump_str = atoms2lmpdump(atoms, tcount, type_map, ignore=True)
+                        dump_str_dict[natoms].append(dump_str)
+
                         pbc = np.all(atoms.get_pbc())
                         coord = atoms.get_positions().reshape(1, -1)
                         cell = atoms.get_cell().array.reshape(1, -1) if pbc else None
                         atype = [type_map.index(atom.symbol) for atom in atoms]  # type: ignore
                         devi = calc_model_devi(coord, cell, atype, graphs)[0]
-                        devi[0] = tcount
-                        Devis.append(devi)
+                        devis_dict[natoms].append(devi)
                         tcount += 1
-            f.close()
-            Devis = np.vstack(Devis)
-            write_model_devi_out(Devis, model_devi_file)
+
+            traj_file_list = []
+            model_devi_file_list = []
+            keys = dump_str_dict.keys()
+            for key in keys:
+                dump_file = Path().joinpath(dump_file_name % key)
+                model_devi_file = Path().joinpath(model_devi_file_name % key)
+
+                traj_str = dump_str_dict[key]
+                model_devis = devis_dict[key]
+                assert len(traj_str) == len(
+                    model_devis
+                ), "The length of traj_str and model_devis should be same."
+                for idx in range(len(model_devis)):
+                    traj_str[idx] = traj_str[idx] % idx
+                    model_devis[idx][0] = idx
+
+                traj_str = "".join(traj_str)
+                dump_file.write_text(traj_str)
+
+                model_devis = np.vstack(model_devis)
+                write_model_devi_out(model_devis, model_devi_file)
+
+                traj_file_list.append(dump_file)
+                model_devi_file_list.append(model_devi_file)
+
+        for idx in range(len(traj_file_list)):
+            traj_file_list[idx] = work_dir / traj_file_list[idx]
+            model_devi_file_list[idx] = work_dir / model_devi_file_list[idx]
 
         ret_dict = {
             "task_name": str(work_dir),
-            "traj": work_dir / dump_file,
-            "model_devi": work_dir / model_devi_file,
+            "traj": traj_file_list,
+            "model_devi": model_devi_file_list,
         }
 
         return OPIO(ret_dict)
 
 
-def atoms2lmpdump(atoms, struc_idx, type_map):
+def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     """down triangle cell can be obtained from
     cell params: a, b, c, alpha, beta, gamma.
     cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
@@ -154,7 +182,10 @@ def atoms2lmpdump(atoms, struc_idx, type_map):
     )
 
     dump_str = "ITEM: TIMESTEP\n"
-    dump_str += f"{struc_idx}\n"
+    if not ignore:
+        dump_str += f"{struc_idx}\n"
+    else:
+        dump_str += "%d\n"
     dump_str += "ITEM: NUMBER OF ATOMS\n"
     dump_str += f"{atoms.get_global_number_of_atoms()}\n"
 

@@ -73,6 +73,7 @@ class CalyEvoStep(Steps):
             "results": InputArtifact(optional=True),
             "step": InputArtifact(optional=True),
             "opt_results_dir": InputArtifact(optional=True),
+            "qhull_input": InputArtifact(optional=True),
         }
         self._output_parameters = {
             # "task_name": OutputParameter(),
@@ -177,6 +178,7 @@ def _caly_evo_step(
             "step": caly_evo_step_steps.inputs.artifacts["step"],
             "results": caly_evo_step_steps.inputs.artifacts["results"],
             "opt_results_dir": caly_evo_step_steps.inputs.artifacts["opt_results_dir"],
+            "qhull_input": caly_evo_step_steps.inputs.artifacts["qhull_input"],
         },
         key="%s--collect-run-calypso-%s-%s"
         % (
@@ -245,13 +247,14 @@ def _caly_evo_step(
             ],  # input.dat
             "results": collect_run_calypso.outputs.artifacts["results"],
             "step": collect_run_calypso.outputs.artifacts["step"],
+            "qhull_input": collect_run_calypso.outputs.artifacts["qhull_input"],
             "opt_results_dir": prep_run_dp_optim.outputs.artifacts["optim_results_dir"],
             "caly_run_opt_file": prep_run_dp_optim.outputs.artifacts[
                 "caly_run_opt_file"
-            ],  # input.dat
+            ],
             "caly_check_opt_file": prep_run_dp_optim.outputs.artifacts[
                 "caly_check_opt_file"
-            ],  # input.dat
+            ],
         },
         when="%s == false" % (collect_run_calypso.outputs.parameters["finished"]),
     )

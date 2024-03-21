@@ -69,6 +69,7 @@ class CollRunCaly(OP):
                 "opt_results_dir": Artifact(
                     type=Path, optional=True
                 ),  # dir contains POSCAR* CONTCAR* OUTCAR*
+                "qhull_input": Artifact(type=Path, optional=True),  # for vsc
             }
         )
 
@@ -82,6 +83,7 @@ class CollRunCaly(OP):
                 "input_file": Artifact(Path),  # input.dat
                 "results": Artifact(Path),  # calypso generated results
                 "step": Artifact(Path),  # step
+                "qhull_input": Artifact(Path),
             }
         )
 
@@ -104,6 +106,7 @@ class CollRunCaly(OP):
             - `step`: (`Path`) The step file from last calypso run
             - `results`: (`Path`) The results dir from last calypso run
             - `opt_results_dir`: (`Path`) The results dir contains POSCAR* CONTCAR* OUTCAR* from last calypso run
+            - `qhull_input`: (`Path`) qhull input file `test_qconvex.in`
 
         Returns
         -------
@@ -115,6 +118,7 @@ class CollRunCaly(OP):
             - `input_file`: (`Path`) The input file of the task (input.dat).
             - `step`: (`Path`) The step file.
             - `results`: (`Path`) The results dir.
+            - `qhull_input`: (`Path`) qhull input file.
 
         Raises
         ------
@@ -129,7 +133,7 @@ class CollRunCaly(OP):
         # input.dat
         _input_file = ip["input_file"]
         input_file = _input_file.resolve()
-        max_step = get_max_step(input_file)
+        max_step, vsc = get_value_from_inputdat(input_file)
         # work_dir name: calypso_task.idx
         work_dir = Path(ip["task_name"])
 
@@ -142,10 +146,15 @@ class CollRunCaly(OP):
             if ip["opt_results_dir"] is not None
             else ip["opt_results_dir"]
         )
+        qhull_input = (
+            ip["qhull_input"].resolve()
+            if ip["qhull_input"] is not None
+            else ip["qhull_input"]
+        )
 
         with set_directory(work_dir):
             # prep files/dirs from last calypso run
-            prep_last_calypso_file(step, results, opt_results_dir)
+            prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc)
             # copy input.dat
             Path(input_file.name).symlink_to(input_file)
             # run calypso
@@ -177,21 +186,19 @@ class CollRunCaly(OP):
 
             step = Path("step").read_text().strip()
             finished = "true" if int(cnt_num) == int(max_step) else "false"
-            # poscar_dir = "poscar_dir_none" if not finished else poscar_dir
-            # fake_traj = Path("traj_results_dir")
-            # fake_traj.mkdir(parents=True, exist_ok=True)
+
+            if not Path("test_qconvex.in").exists():
+                Path("test_qconvex.in").write_text("")
 
         ret_dict = {
             "task_name": str(work_dir),
             "finished": finished,
             "poscar_dir": work_dir.joinpath(poscar_dir),
-            # "input_file": ip["input_file"],
             "input_file": _input_file,
             "step": work_dir.joinpath("step"),
             "results": work_dir.joinpath("results"),
-            # "fake_traj_results_dir": work_dir.joinpath(fake_traj),
+            "qhull_input": work_dir.joinpath("test_qconvex.in"),
         }
-
         return OPIO(ret_dict)
 
     @staticmethod
@@ -219,19 +226,28 @@ class CollRunCaly(OP):
 config_args = CollRunCaly.calypso_args
 
 
-def prep_last_calypso_file(step, results, opt_results_dir):
+def prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc):
     if step is not None and results is not None or opt_results_dir is not None:
         Path(step.name).symlink_to(step)
         Path(results.name).symlink_to(results)
         for file_name in opt_results_dir.iterdir():
             Path(file_name.name).symlink_to(file_name)
 
+    if vsc and qhull_input is not None:
+        Path(qhull_input.name).symlink_to(qhull_input)
 
-def get_max_step(filename):
+
+def get_value_from_inputdat(filename):
+    max_step = 0
+    vsc = False
     with open(filename, "r") as f:
         lines = f.readlines()
         for line in lines:
             if "MaxStep" in line:
                 max_step = int(line.strip().split("#")[0].split("=")[1])
-                return max_step
-        raise ValueError(f"Key 'MaxStep' missed in {str(filename)}")
+                continue
+            if "VSC" in line:
+                vsc_str = line.strip().split("#")[0].split("=")[1].lower().strip()
+                if vsc_str.startswith("t"):
+                    vsc = True
+        return max_step, vsc

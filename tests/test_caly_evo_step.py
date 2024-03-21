@@ -61,7 +61,6 @@ from context import (
 from mocked_ops import (
     MockedCollRunCaly,
     MockedPrepRunDPOptim,
-    MockedRunLmp,
     mocked_numb_models,
 )
 
@@ -326,6 +325,7 @@ class TestCalyEvoStep(unittest.TestCase):
                 "results": None,
                 "step": None,
                 "opt_results_dir": None,
+                "qhull_input": None,
             },
         )
 
@@ -389,6 +389,7 @@ class TestCalyEvoStep(unittest.TestCase):
                 "results": None,
                 "step": None,
                 "opt_results_dir": None,
+                "qhull_input": None,
             },
         )
         wf = Workflow(name="caly-evo-step", host=default_host)

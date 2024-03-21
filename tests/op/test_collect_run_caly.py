@@ -28,7 +28,7 @@ from dpgen2.constants import (
     calypso_input_file,
     calypso_log_name,
 )
-from dpgen2.op.collect_run_caly import CollRunCaly, get_max_step
+from dpgen2.op.collect_run_caly import CollRunCaly, get_value_from_inputdat
 from dpgen2.utils import (
     BinaryFileInput,
 )
@@ -44,7 +44,7 @@ class TestCollRunCaly(unittest.TestCase):
         self.input_file_path = Path("input_file")
         self.input_file_path.mkdir(parents=True, exist_ok=True)
         self.input_file = self.input_file_path.joinpath(calypso_input_file)
-        self.input_file.write_text("input.dat\nMaxStep=3\n")
+        self.input_file.write_text("input.dat\nMaxStep=3\nVSC= T\n")
 
         self.step_file = self.input_file_path.joinpath("step")
         self.step_file.write_text("3")
@@ -69,12 +69,15 @@ class TestCollRunCaly(unittest.TestCase):
         shutil.rmtree(Path(self.task_name), ignore_errors=True)
 
     def test_get_max_step(self):
-        max_step = get_max_step(self.input_file)
+        max_step, vsc = get_value_from_inputdat(self.input_file)
         self.assertTrue(max_step == 3)
+        self.assertTrue(vsc == True)
 
         temp_input_file = self.input_file_path.joinpath("temp_input_dat")
         temp_input_file.write_text("input.dat\n")
-        self.assertRaises(ValueError, get_max_step, temp_input_file)
+        max_step, vsc = get_value_from_inputdat(temp_input_file)
+        self.assertTrue(max_step == 0)
+        self.assertTrue(vsc == False)
 
     @patch("dpgen2.op.collect_run_caly.run_command")
     def test_step_st_maxstep_01(self, mocked_run):
@@ -109,6 +112,7 @@ class TestCollRunCaly(unittest.TestCase):
         self.assertEqual(out["input_file"], self.input_file)
         self.assertEqual(out["step"], Path(self.task_name) / "step")
         self.assertEqual(out["results"], Path(self.task_name) / "results")
+        self.assertEqual(out["qhull_input"], Path(self.task_name) / "test_qconvex.in")
         self.assertEqual(out["finished"], "false")
 
     @patch("dpgen2.op.collect_run_caly.run_command")

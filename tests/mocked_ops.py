@@ -969,6 +969,11 @@ class MockedCollRunCaly(CollRunCaly):
         work_dir = Path(ip["task_name"])
         work_dir.mkdir(exist_ok=True, parents=True)
 
+        qhull_input = (
+            ip["qhull_input"].resolve()
+            if ip["qhull_input"] is not None
+            else ip["qhull_input"]
+        )
         step = ip["step"].resolve() if ip["step"] is not None else ip["step"]
         results = (
             ip["results"].resolve() if ip["results"] is not None else ip["results"]
@@ -998,6 +1003,9 @@ class MockedCollRunCaly(CollRunCaly):
         else:
             step_num = Path("step").read_text().strip()
             Path("step").write_text(f"{int(step_num)+1}")
+
+        if qhull_input is None:
+            Path("test_qconvex.in").write_text("")
 
         step_num = int(Path("step").read_text().strip())
 
@@ -1031,6 +1039,7 @@ class MockedCollRunCaly(CollRunCaly):
             "input_file": work_dir.joinpath(input_file.name),
             "results": work_dir.joinpath("results"),
             "step": work_dir.joinpath("step"),
+            "qhull_input": work_dir.joinpath("test_qconvex.in"),
         }
         return OPIO(ret_dict)
 
@@ -1157,7 +1166,7 @@ ITEM: ATOMS id type x y z fx fy fz
         return OPIO(
             {
                 "task_name": str(work_dir),
-                "traj": work_dir / dump_file_name,
-                "model_devi": work_dir / model_devi_file_name,
+                "traj": [work_dir / dump_file_name],
+                "model_devi": [work_dir / model_devi_file_name],
             }
         )

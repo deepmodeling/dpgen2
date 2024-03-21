@@ -57,9 +57,27 @@ class TestRunCalyModelDevi(unittest.TestCase):
         self.work_dir = Path().joinpath("caly_model_devi")
         self.work_dir.mkdir(parents=True, exist_ok=True)
 
-        self.atoms_normal = Atoms(
+        self.atoms_normal_2 = Atoms(
             numbers=[1, 2],
             scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+            cell=[[10, 0, 0], [0, 10, 0], [0, 0, 10]],
+        )
+        self.atoms_normal_1 = Atoms(
+            numbers=[1, 2, 3],
+            scaled_positions=[
+                [0, 0, 0],
+                [0.5, 0.5, 0.5],
+                [0.5, 0.0, 0.5],
+            ],
+            cell=[[10, 0, 0], [0, 10, 0], [0, 0, 10]],
+        )
+        self.atoms_normal_3 = Atoms(
+            numbers=[1, 2, 3],
+            scaled_positions=[
+                [0, 0, 0],
+                [0.0, 0.0, 0.5],
+                [0.5, 0.0, 0.5],
+            ],
             cell=[[10, 0, 0], [0, 10, 0], [0, 0, 10]],
         )
         self.atoms_abnormal = Atoms(
@@ -69,7 +87,11 @@ class TestRunCalyModelDevi(unittest.TestCase):
         )
         self.traj_file_1 = self.work_dir.joinpath("1.traj")
         self.traj_file_2 = self.work_dir.joinpath("2.traj")
-        write(self.traj_file_1, self.atoms_normal, format="traj")
+        write(
+            self.traj_file_1,
+            [self.atoms_normal_1, self.atoms_normal_2, self.atoms_normal_3],
+            format="traj",
+        )
         write(self.traj_file_2, self.atoms_abnormal, format="traj")
 
         self.ref_dump_str = """ITEM: TIMESTEP
@@ -84,7 +106,7 @@ ITEM: ATOMS id type x y z fx fy fz
     1     1        0.0000000000         0.0000000000         0.0000000000        0.0000000000         0.0000000000         0.0000000000
     2     2        5.0000000000         5.0000000000         5.0000000000        0.0000000000         0.0000000000         0.0000000000
 """
-        self.type_map = ["H", "He"]
+        self.type_map = ["H", "He", "Li"]
         self.task_name = self.work_dir.joinpath(calypso_task_pattern % 0)
         self.traj_dirs = [self.traj_file_1, self.traj_file_2]
 
@@ -99,14 +121,14 @@ ITEM: ATOMS id type x y z fx fy fz
 
     def test_00_parse_traj(self):
         atoms_list_1 = parse_traj(self.traj_file_1)
-        self.assertEqual(len(atoms_list_1), 1)
-        self.assertAlmostEqual(atoms_list_1[0], self.atoms_normal)
+        self.assertEqual(len(atoms_list_1), 2)
+        self.assertAlmostEqual(atoms_list_1[-1], self.atoms_normal_3)
 
         atoms_list_2 = parse_traj(self.traj_file_2)
         self.assertTrue(atoms_list_2 is None)
 
     def test_01_atoms2lmpdump(self):
-        dump_str = atoms2lmpdump(self.atoms_normal, 1, self.type_map)
+        dump_str = atoms2lmpdump(self.atoms_normal_2, 1, self.type_map)
         self.assertEqual(dump_str, self.ref_dump_str)
 
     # @patch("dpgen2.op.run_caly_model_devi.RunCalyModelDevi.import_deepmd_package.calc_model_devi")
@@ -137,5 +159,24 @@ ITEM: ATOMS id type x y z fx fy fz
             )
         )
         # check output
-        self.assertEqual(out["traj"], self.task_name / "traj.dump")
-        self.assertEqual(out["model_devi"], self.task_name / "model_devi.out")
+        self.assertEqual(len(out["traj"]), 2)
+        self.assertTrue(
+            self.task_name / "traj.2.dump" in out["traj"],
+        )
+        self.assertTrue(
+            self.task_name / "traj.1.dump" not in out["traj"],
+        )
+        self.assertTrue(
+            self.task_name / "traj.3.dump" in out["traj"],
+        )
+
+        self.assertEqual(len(out["model_devi"]), 2)
+        self.assertTrue(
+            self.task_name / "model_devi.2.out" in out["model_devi"],
+        )
+        self.assertTrue(
+            self.task_name / "model_devi.1.out" not in out["model_devi"],
+        )
+        self.assertTrue(
+            self.task_name / "model_devi.3.out" in out["model_devi"],
+        )

@@ -119,6 +119,12 @@ def main_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="if set then keep schedule of the old workflow. otherwise use the schedule defined in the input file",
     )
+    parser_resubmit.add_argument(
+        "-f",
+        "--fold",
+        action="store_true",
+        help="if set then super OPs are folded to be reused in the new workflow",
+    )
 
     ##########################################
     # show key
@@ -339,6 +345,7 @@ def main():
             list_steps=args.list,
             reuse=args.reuse,
             replace_scheduler=(not args.keep_schedule),
+            fold=args.fold,
         )
     elif args.command == "status":
         with open(args.CONFIG) as fp:
