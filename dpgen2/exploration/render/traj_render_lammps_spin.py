@@ -47,12 +47,12 @@ class TrajRenderLammpsSpin(TrajRender):
 
     def _load_one_model_devi(self, fname, model_devi):
         dd = np.loadtxt(fname)
-        model_devi.add(DeviManagerSpin.MAX_DEVI_AF, dd[:, 1])
-        model_devi.add(DeviManagerSpin.MIN_DEVI_AF, dd[:, 2])
-        model_devi.add(DeviManagerSpin.AVG_DEVI_AF, dd[:, 3])
-        model_devi.add(DeviManagerSpin.MAX_DEVI_MF, dd[:, 4])
-        model_devi.add(DeviManagerSpin.MIN_DEVI_MF, dd[:, 5])
-        model_devi.add(DeviManagerSpin.AVG_DEVI_MF, dd[:, 6])
+        model_devi.add(DeviManagerSpin.MAX_DEVI_AF, dd[:, 4])
+        model_devi.add(DeviManagerSpin.MIN_DEVI_AF, dd[:, 5])
+        model_devi.add(DeviManagerSpin.AVG_DEVI_AF, dd[:, 6])
+        model_devi.add(DeviManagerSpin.MAX_DEVI_MF, dd[:, 7])
+        model_devi.add(DeviManagerSpin.MIN_DEVI_MF, dd[:, 8])
+        model_devi.add(DeviManagerSpin.AVG_DEVI_MF, dd[:, 9])
 
     def get_confs(
         self,
@@ -63,7 +63,7 @@ class TrajRenderLammpsSpin(TrajRender):
     ) -> dpdata.MultiSystems:
         del conf_filters  # by far does not support conf filters
         ntraj = len(trajs)
-        traj_fmt = "lammps/spin/dump"
+        traj_fmt = "lammps/dump"
         ms = dpdata.MultiSystems(type_map=type_map)
         for ii in range(ntraj):
             if len(id_selected[ii]) > 0:

@@ -70,7 +70,8 @@ class PrepDeltaSpin(PrepFp):
             The VaspInputs object handels all other input files of the task.
         """
 
-        conf_frame.to("vasp/deltaspin_inputs", vasp_inputs.incar_template, vasp_conf_name, vasp_input_name)
+        Path(vasp_input_name).write_text(vasp_inputs.incar_template)
+        conf_frame.to("vasp_deltaspin/poscar", vasp_conf_name)
         # fix the case when some element have 0 atom, e.g. H0O2
         tmp_frame = dpdata.System(vasp_conf_name, fmt="vasp/poscar")
         Path(vasp_pot_name).write_text(vasp_inputs.make_potcar(tmp_frame["atom_names"]))
@@ -138,7 +139,7 @@ class RunDeltaSpin(RunFp):
             )
             raise TransientError("DeltaSpin failed")
         # convert the output to deepmd/npy format
-        sys = dpdata.LabeledSystem("deltaspin_outputs")
+        sys = dpdata.LabeledSystem("OUTCAR", fmt="vasp_deltaspin/outcar")
         sys.to("deepmd/npy", out_name)
         return out_name, log_name
 
