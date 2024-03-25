@@ -50,9 +50,9 @@ class TestPrepRunDPOptim(unittest.TestCase):
         self.models_dir = Path("models_dir")
         self.models_dir.mkdir(parents=True, exist_ok=True)
         for i in range(4):
-            self.models_dir.joinpath(model_name_pattern % i).write_text(
-                f"model.{str(i)}.pb"
-            )
+            path_name = self.models_dir.joinpath(f"task.{i}")
+            path_name.mkdir(exist_ok=True, parents=True)
+            path_name.joinpath("frozen_model.pb").write_text("frozen_model.pb")
 
         self.task_name = calypso_task_pattern % 0
 
@@ -85,6 +85,7 @@ class TestPrepRunDPOptim(unittest.TestCase):
         shutil.rmtree(self.ref_traj_results_dir)
         shutil.rmtree(Path(self.task_name))
         shutil.rmtree(self.poscar_dir)
+        shutil.rmtree(self.models_dir)
 
     @patch("dpgen2.op.prep_run_dp_optim.run_command")
     def test_success_00(self, mocked_run):

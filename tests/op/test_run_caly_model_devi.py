@@ -143,7 +143,7 @@ ITEM: ATOMS id type x y z fx fy fz
         mocked_run_1.side_effect = side_effect_1
 
         def side_effect_2(*args, **kwargs):
-            return [[1, 1, 1, 1, 1, 1, 1]]
+            return [[1, 1, 1, 1, 1, 1, 1, 1]]
 
         mocked_run_2.side_effect = side_effect_2
 

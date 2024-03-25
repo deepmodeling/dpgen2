@@ -18,6 +18,7 @@ from dpgen2.constants import (
 calypso_run_opt_str = """#!/usr/bin/env python3
 
 import os
+import sys
 import time
 import glob
 import numpy as np
@@ -100,7 +101,7 @@ def Write_Outcar(outcar, element, ele, volume, lat, pos, ene, force, stress, pst
 def run_opt(fmax, stress):
     # Using the ASE&DP to Optimize Configures
 
-    calc = DP(model='frozen_model.pb')    # init the model before iteration
+    calc = DP(model=sys.argv[1])    # init the model before iteration
 
     Opt_Step = 1000
     start = time.time()

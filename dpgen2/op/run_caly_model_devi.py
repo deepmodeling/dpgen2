@@ -273,7 +273,7 @@ def parse_traj(traj_file):
 
 
 def write_model_devi_out(devi: np.ndarray, fname: Union[str, Path], header: str = ""):
-    assert devi.shape[1] == 7
+    assert devi.shape[1] == 8
     header = "%s\n%10s" % (header, "step")
     for item in "vf":
         header += "%19s%19s%19s" % (
@@ -281,6 +281,7 @@ def write_model_devi_out(devi: np.ndarray, fname: Union[str, Path], header: str 
             f"min_devi_{item}",
             f"avg_devi_{item}",
         )
+        header += "%19s" % "devi_e"
     with open(fname, "ab") as fp:
         np.savetxt(
             fp,

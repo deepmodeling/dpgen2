@@ -117,17 +117,25 @@ class PrepRunDPOptim(OP):
         caly_run_opt_file = _caly_run_opt_file.resolve()
         caly_check_opt_file = _caly_check_opt_file.resolve()
         poscar_list = [poscar.resolve() for poscar in poscar_dir.rglob("POSCAR_*")]
-        model_list = [model.resolve() for model in models_dir.rglob("*model*pb")]
+
+        model_name = "frozen_model.pb"
+        model_list = [model.resolve() for model in models_dir.rglob(model_name)]
+        if len(model_list) == 0:
+            model_name = "model.ckpt.pt"
+            model_list = [model.resolve() for model in models_dir.rglob(model_name)]
+
         model_list = sorted(model_list, key=lambda x: str(x).split(".")[1])
         model_file = model_list[0]
 
         config = ip["config"] if ip["config"] is not None else {}
-        command = config.get("run_opt_command", "python -u calypso_run_opt.py")
+        command = config.get(
+            "run_opt_command", f"python -u calypso_run_opt.py {model_name}"
+        )
 
         with set_directory(work_dir):
             for idx, poscar in enumerate(poscar_list):
                 Path(poscar.name).symlink_to(poscar)
-            Path("frozen_model.pb").symlink_to(model_file)
+            Path(model_name).symlink_to(model_file)
             Path(caly_run_opt_file.name).symlink_to(caly_run_opt_file)
             Path(caly_check_opt_file.name).symlink_to(caly_check_opt_file)
 
