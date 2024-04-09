@@ -322,7 +322,7 @@ class RunDPTrain(OP):
                 json.dump(train_dict, fp, indent=4)
 
             # train model
-            command = _make_train_command_old(
+            command = _make_train_command(
                 dp_command,
                 train_script_name,
                 impl,
