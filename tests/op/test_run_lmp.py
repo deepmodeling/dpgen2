@@ -34,7 +34,7 @@ from dpgen2.constants import (
 )
 from dpgen2.op.run_lmp import (
     RunLmp,
-    randomly_shuffle_models,
+    set_models,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -206,7 +206,8 @@ run             3000 upto
         self.assertEqual((work_dir / lmp_conf_name).read_text(), "foo")
 
         lmp_config = TestRunLmpDist.lmp_config.replace(
-            "model.000.pb", "model.000.pb model.001.pb"
+            "pair_style      deepmd model.000.pb",
+            "pair_style deepmd model.000.pb model.001.pb",
         )
         self.assertEqual((work_dir / lmp_input_name).read_text(), lmp_config)
 
@@ -231,35 +232,34 @@ def swap_element(arg):
     arg[0] = bk[1]
 
 
-class TestRandomShuffleModels(unittest.TestCase):
+class TestSetModels(unittest.TestCase):
     def setUp(self):
         self.input_name = Path("lmp.input")
+        self.model_names = ["model.000.pth", "model.001.pb"]
 
     def tearDown(self):
         os.remove(self.input_name)
 
-    @patch("dpgen2.op.run_lmp.random.shuffle")
-    def test(self, mock_shuffle):
-        mock_shuffle.side_effect = swap_element
-        lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out"
-        expected_output = "pair_style deepmd model.001.pb model.000.pb out_freq 10 out_file model_devi.out"
+    def test(self):
+        lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out\n"
+        expected_output = "pair_style deepmd model.000.pth model.001.pb out_freq 10 out_file model_devi.out\n"
         input_name = self.input_name
         input_name.write_text(lmp_config)
-        randomly_shuffle_models(input_name)
+        set_models(input_name, self.model_names)
         self.assertEqual(input_name.read_text(), expected_output)
 
     def test_failed(self):
-        lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out model.002.pb"
+        lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out model.002.pb\n"
         input_name = self.input_name
         input_name = Path("lmp.input")
         input_name.write_text(lmp_config)
         with self.assertRaises(RuntimeError) as re:
-            randomly_shuffle_models(input_name)
+            set_models(input_name, self.model_names)
 
     def test_failed_no_matching(self):
-        lmp_config = "pair_style      deepmd  out_freq 10 out_file model_devi.out"
+        lmp_config = "pair_style      deepmd  out_freq 10 out_file model_devi.out\n"
         input_name = self.input_name
         input_name = Path("lmp.input")
         input_name.write_text(lmp_config)
         with self.assertRaises(RuntimeError) as re:
-            randomly_shuffle_models(input_name)
+            set_models(input_name, self.model_names)

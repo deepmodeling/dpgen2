@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import pickle
+import re
 from pathlib import (
     Path,
 )
@@ -77,8 +78,10 @@ from dpgen2.exploration.task import (
     ExplorationTask,
     LmpTemplateTaskGroup,
     NPTTaskGroup,
-    make_task_group_from_config,
-    normalize_task_group_config,
+    caly_normalize,
+    make_calypso_task_group_from_config,
+    make_lmp_task_group_from_config,
+    normalize_lmp_task_group_config,
 )
 from dpgen2.flow import (
     ConcurrentLearning,
@@ -88,14 +91,22 @@ from dpgen2.fp import (
 )
 from dpgen2.op import (
     CollectData,
+    CollRunCaly,
+    PrepCalyDPOptim,
+    PrepCalyInput,
+    PrepCalyModelDevi,
     PrepDPTrain,
     PrepLmp,
+    RunCalyDPOptim,
+    RunCalyModelDevi,
     RunDPTrain,
     RunLmp,
     SelectConfs,
 )
 from dpgen2.superop import (
+    CalyEvoStep,
     ConcurrentLearningBlock,
+    PrepRunCaly,
     PrepRunDPTrain,
     PrepRunFp,
     PrepRunLmp,
@@ -136,6 +147,7 @@ def make_concurrent_learning_op(
     collect_data_config: dict = default_config,
     cl_step_config: dict = default_config,
     upload_python_packages: Optional[List[os.PathLike]] = None,
+    valid_data: Optional[S3Artifact] = None,
 ):
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
@@ -145,6 +157,7 @@ def make_concurrent_learning_op(
             prep_config=prep_train_config,
             run_config=run_train_config,
             upload_python_packages=upload_python_packages,
+            valid_data=valid_data,
         )
     else:
         raise RuntimeError(f"unknown train_style {train_style}")
@@ -157,12 +170,32 @@ def make_concurrent_learning_op(
             run_config=run_explore_config,
             upload_python_packages=upload_python_packages,
         )
+    elif explore_style == "calypso":
+        caly_evo_step_op = CalyEvoStep(
+            "caly-evo-step",
+            collect_run_caly=CollRunCaly,
+            prep_dp_optim=PrepCalyDPOptim,
+            run_dp_optim=RunCalyDPOptim,
+            prep_config=prep_explore_config,
+            run_config=run_explore_config,
+            upload_python_packages=upload_python_packages,
+        )
+        prep_run_explore_op = PrepRunCaly(
+            "prep-run-calypso",
+            prep_caly_input_op=PrepCalyInput,
+            caly_evo_step_op=caly_evo_step_op,
+            prep_caly_model_devi_op=PrepCalyModelDevi,
+            run_caly_model_devi_op=RunCalyModelDevi,
+            prep_config=prep_explore_config,
+            run_config=run_explore_config,
+            upload_python_packages=upload_python_packages,
+        )
     else:
         raise RuntimeError(f"unknown explore_style {explore_style}")
 
     if fp_style in fp_styles.keys():
         prep_run_fp_op = PrepRunFp(
-            f"prep-run-fp",
+            "prep-run-fp",
             fp_styles[fp_style]["prep"],
             fp_styles[fp_style]["run"],
             prep_config=prep_fp_config,
@@ -199,6 +232,61 @@ def make_naive_exploration_scheduler(
     config,
 ):
     # use npt task group
+    explore_style = config["explore"]["type"]
+
+    if explore_style == "lmp":
+        return make_lmp_naive_exploration_scheduler(config)
+    elif explore_style == "calypso":
+        return make_calypso_naive_exploration_scheduler(config)
+
+
+def make_calypso_naive_exploration_scheduler(config):
+    model_devi_jobs = config["explore"]["stages"]
+    fp_task_max = config["fp"]["task_max"]
+    max_numb_iter = config["explore"]["max_numb_iter"]
+    fatal_at_max = config["explore"]["fatal_at_max"]
+    convergence = config["explore"]["convergence"]
+    output_nopbc = config["explore"]["output_nopbc"]
+    scheduler = ExplorationScheduler()
+    # report
+    conv_style = convergence.pop("type")
+    report = conv_styles[conv_style](**convergence)
+    render = TrajRenderLammps(nopbc=output_nopbc)
+    # selector
+    selector = ConfSelectorFrames(
+        render,
+        report,
+        fp_task_max,
+    )
+
+    for job_ in model_devi_jobs:
+        if not isinstance(job_, list):
+            job = [job_]
+        else:
+            job = job_
+        # stage
+        stage = ExplorationStage()
+        for jj in job:
+            jconf = caly_normalize(jj)
+            # make task group
+            tgroup = make_calypso_task_group_from_config(jconf)
+            # add the list to task group
+            tasks = tgroup.make_task()
+            stage.add_task_group(tasks)
+        # stage_scheduler
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            stage,
+            selector,
+            max_numb_iter=max_numb_iter,
+            fatal_at_max=fatal_at_max,
+        )
+        # scheduler
+        scheduler.add_stage_scheduler(stage_scheduler)
+
+    return scheduler
+
+
+def make_lmp_naive_exploration_scheduler(config):
     model_devi_jobs = config["explore"]["stages"]
     sys_configs = config["explore"]["configurations"]
     mass_map = config["inputs"]["mass_map"]
@@ -235,7 +323,7 @@ def make_naive_exploration_scheduler(
         # stage
         stage = ExplorationStage()
         for jj in job:
-            jconf = normalize_task_group_config(jj)
+            jconf = normalize_lmp_task_group_config(jj)
             n_sample = jconf.pop("n_sample")
             ##  ignore the expansion of sys_idx
             # get all file names of md initial configurations
@@ -244,7 +332,7 @@ def make_naive_exploration_scheduler(
             for ii in sys_idx:
                 conf_list += sys_configs_lmp[ii]
             # make task group
-            tgroup = make_task_group_from_config(numb_models, mass_map, jconf)
+            tgroup = make_lmp_task_group_from_config(numb_models, mass_map, jconf)
             # add the list to task group
             tgroup.set_conf(
                 conf_list,
@@ -305,6 +393,7 @@ def make_finetune_step(
     init_models,
     init_data,
     iter_data,
+    valid_data=None,
 ):
     finetune_optional_parameter = {
         "mixed_type": config["inputs"]["mixed_type"],
@@ -319,6 +408,7 @@ def make_finetune_step(
         run_config=run_train_config,
         upload_python_packages=upload_python_packages,
         finetune=True,
+        valid_data=valid_data,
     )
     finetune_step = Step(
         "finetune-step",
@@ -384,6 +474,15 @@ def workflow_concurrent_learning(
         ]
         upload_python_packages = _upload_python_packages
 
+    valid_data = config["inputs"]["valid_data_sys"]
+    if valid_data is not None:
+        valid_data_prefix = config["inputs"]["valid_data_prefix"]
+        valid_data = [valid_data] if isinstance(valid_data, str) else valid_data
+        assert isinstance(valid_data, list)
+        if valid_data_prefix is not None:
+            valid_data = [os.path.join(valid_data_prefix, ii) for ii in valid_data]
+        valid_data = [expand_sys_str(ii) for ii in valid_data]
+        valid_data = upload_artifact(valid_data)
     concurrent_learning_op = make_concurrent_learning_op(
         train_style,
         explore_style,
@@ -398,6 +497,7 @@ def workflow_concurrent_learning(
         collect_data_config=collect_data_config,
         cl_step_config=cl_step_config,
         upload_python_packages=upload_python_packages,
+        valid_data=valid_data,
     )
     scheduler = make_naive_exploration_scheduler(config)
 
@@ -409,16 +509,16 @@ def workflow_concurrent_learning(
     else:
         template_script = json.loads(Path(template_script_).read_text())
     train_config = config["train"]["config"]
-    lmp_config = config["explore"]["config"]
+    explore_config = config["explore"]["config"]
     if (
-        "teacher_model_path" in lmp_config
-        and lmp_config["teacher_model_path"] is not None
+        "teacher_model_path" in explore_config
+        and explore_config["teacher_model_path"] is not None
     ):
         assert os.path.exists(
-            lmp_config["teacher_model_path"]
-        ), f"No such file: {lmp_config['teacher_model_path']}"
-        lmp_config["teacher_model_path"] = BinaryFileInput(
-            lmp_config["teacher_model_path"], "pb"
+            explore_config["teacher_model_path"]
+        ), f"No such file: {explore_config['teacher_model_path']}"
+        explore_config["teacher_model_path"] = BinaryFileInput(
+            explore_config["teacher_model_path"]
         )
 
     fp_config = {}
@@ -435,15 +535,37 @@ def workflow_concurrent_learning(
             fp_config["run"]["teacher_model_path"]
         ), f"No such file: {fp_config['run']['teacher_model_path']}"
         fp_config["run"]["teacher_model_path"] = BinaryFileInput(
-            fp_config["run"]["teacher_model_path"], "pb"
+            fp_config["run"]["teacher_model_path"]
         )
 
-    init_data_prefix = config["inputs"]["init_data_prefix"]
-    init_data = config["inputs"]["init_data_sys"]
-    if init_data_prefix is not None:
-        init_data = [os.path.join(init_data_prefix, ii) for ii in init_data]
-    if isinstance(init_data, str):
-        init_data = expand_sys_str(init_data)
+    multitask = config["inputs"]["multitask"]
+    if multitask:
+        head = config["inputs"]["head"]
+        multi_init_data = config["inputs"]["multi_init_data"]
+        init_data = []
+        multi_init_data_idx = {}
+        for k, v in multi_init_data.items():
+            sys = v["sys"]
+            sys = [sys] if isinstance(sys, str) else sys
+            assert isinstance(sys, list)
+            if v["prefix"] is not None:
+                sys = [os.path.join(v["prefix"], ii) for ii in sys]
+            sys = [expand_sys_str(ii) for ii in sys]
+            istart = len(init_data)
+            init_data += sys
+            iend = len(init_data)
+            multi_init_data_idx[k] = list(range(istart, iend))
+        train_config["multitask"] = True
+        train_config["head"] = head
+        train_config["multi_init_data_idx"] = multi_init_data_idx
+        explore_config["head"] = head
+    else:
+        init_data_prefix = config["inputs"]["init_data_prefix"]
+        init_data = config["inputs"]["init_data_sys"]
+        if init_data_prefix is not None:
+            init_data = [os.path.join(init_data_prefix, ii) for ii in init_data]
+        if isinstance(init_data, str):
+            init_data = expand_sys_str(init_data)
     init_data = upload_artifact(init_data)
     iter_data = upload_artifact([])
     if init_models_paths is not None:
@@ -468,6 +590,7 @@ def workflow_concurrent_learning(
             init_models,
             init_data,
             iter_data,
+            valid_data=valid_data,
         )
 
         init_models = finetune_step.outputs.artifacts["models"]
@@ -487,7 +610,7 @@ def workflow_concurrent_learning(
             "numb_models": numb_models,
             "template_script": template_script,
             "train_config": train_config,
-            "lmp_config": lmp_config,
+            "explore_config": explore_config,
             "fp_config": fp_config,
             "exploration_scheduler": scheduler,
             "optional_parameter": optional_parameter,
@@ -601,7 +724,7 @@ def submit_concurrent_learning(
         )
         # plan next
         # hack! trajs is set to None...
-        conv, lmp_task_grp, selector = scheduler_new.plan_next_iteration(
+        conv, expl_task_grp, selector = scheduler_new.plan_next_iteration(
             exploration_report, trajs=None
         )
         # update output of the scheduler step
@@ -614,8 +737,8 @@ def submit_concurrent_learning(
             scheduler_new,
         )
         reuse_step[idx_old].modify_output_parameter(
-            "lmp_task_grp",
-            lmp_task_grp,
+            "expl_task_grp",
+            expl_task_grp,
         )
         reuse_step[idx_old].modify_output_parameter(
             "conf_selector",
@@ -651,13 +774,68 @@ def print_list_steps(
 
 
 def successful_step_keys(wf):
-    all_step_keys_ = wf.query_keys_of_steps()
-    wf_info = wf.query()
     all_step_keys = []
-    for ii in all_step_keys_:
-        if wf_info.get_step(key=ii)[0]["phase"] == "Succeeded":
-            all_step_keys.append(ii)
+    steps = wf.query_step()
+    # For reused steps whose startedAt are identical, sort them by key
+    steps.sort(key=lambda x: "%s-%s" % (x.startedAt, x.key))
+    for step in steps:
+        if step.key is not None and step.phase == "Succeeded":
+            all_step_keys.append(step.key)
     return all_step_keys
+
+
+def get_superop(key):
+    if "prep-train" in key:
+        return key.replace("prep-train", "prep-run-train")
+    elif "run-train-" in key:
+        return re.sub("run-train-[0-9]*", "prep-run-train", key)
+    elif "prep-lmp" in key:
+        return key.replace("prep-lmp", "prep-run-explore")
+    elif "run-lmp-" in key:
+        return re.sub("run-lmp-[0-9]*", "prep-run-explore", key)
+    elif "prep-fp" in key:
+        return key.replace("prep-fp", "prep-run-fp")
+    elif "run-fp-" in key:
+        return re.sub("run-fp-[0-9]*", "prep-run-fp", key)
+    elif "prep-caly-input" in key:
+        return key.replace("prep-caly-input", "prep-run-explore")
+    elif "collect-run-calypso-" in key:
+        return re.sub("collect-run-calypso-[0-9]*-[0-9]*", "prep-run-explore", key)
+    elif "prep-dp-optim-" in key:
+        return re.sub("prep-dp-optim-[0-9]*-[0-9]*", "prep-run-explore", key)
+    elif "run-dp-optim-" in key:
+        return re.sub("run-dp-optim-[0-9]*-[0-9]*-[0-9]*", "prep-run-explore", key)
+    elif "prep-caly-model-devi" in key:
+        return key.replace("prep-caly-model-devi", "prep-run-explore")
+    elif "run-caly-model-devi" in key:
+        return re.sub("run-caly-model-devi-[0-9]*", "prep-run-explore", key)
+    return None
+
+
+def fold_keys(all_step_keys):
+    folded_keys = {}
+    for key in all_step_keys:
+        is_superop = False
+        for superop in ["prep-run-train", "prep-run-explore", "prep-run-fp"]:
+            if superop in key:
+                if key not in folded_keys:
+                    folded_keys[key] = []
+                is_superop = True
+                break
+        if is_superop:
+            continue
+        superop = get_superop(key)
+        # if its super OP is succeeded, fold it into its super OP
+        if superop is not None and superop in all_step_keys:
+            if superop not in folded_keys:
+                folded_keys[superop] = []
+            folded_keys[superop].append(key)
+        else:
+            folded_keys[key] = [key]
+    for k, v in folded_keys.items():
+        if v == []:
+            folded_keys[k] = [k]
+    return folded_keys
 
 
 def get_resubmit_keys(
@@ -667,12 +845,21 @@ def get_resubmit_keys(
     all_step_keys = matched_step_key(
         all_step_keys,
         [
+            "prep-run-train",
             "prep-train",
             "run-train",
             "modify-train-script",
+            "prep-caly-input",
+            "collect-run-calypso",
+            "prep-dp-optim",
+            "run-dp-optim",
+            "prep-caly-model-devi",
+            "run-caly-model-devi",
+            "prep-run-explore",
             "prep-lmp",
             "run-lmp",
             "select-confs",
+            "prep-run-fp",
             "prep-fp",
             "run-fp",
             "collect-data",
@@ -684,7 +871,8 @@ def get_resubmit_keys(
         all_step_keys,
         ["run-train", "run-lmp", "run-fp"],
     )
-    return all_step_keys
+    folded_keys = fold_keys(all_step_keys)
+    return folded_keys
 
 
 def resubmit_concurrent_learning(
@@ -693,13 +881,15 @@ def resubmit_concurrent_learning(
     list_steps=False,
     reuse=None,
     replace_scheduler=False,
+    fold=False,
 ):
     wf_config = normalize_args(wf_config)
 
     global_config_workflow(wf_config)
 
     old_wf = Workflow(id=wfid)
-    all_step_keys = get_resubmit_keys(old_wf)
+    folded_keys = get_resubmit_keys(old_wf)
+    all_step_keys = sum(folded_keys.values(), [])
 
     if list_steps:
         prt_str = print_keys_in_nice_format(
@@ -711,10 +901,25 @@ def resubmit_concurrent_learning(
     if reuse is None:
         return None
     reuse_idx = expand_idx(reuse)
-    reuse_step = []
-    old_wf_info = old_wf.query()
-    for ii in reuse_idx:
-        reuse_step += old_wf_info.get_step(key=all_step_keys[ii])
+    reused_keys = [all_step_keys[ii] for ii in reuse_idx]
+    if fold:
+        reused_folded_keys = {}
+        for key in reused_keys:
+            superop = get_superop(key)
+            if superop is not None:
+                if superop not in reused_folded_keys:
+                    reused_folded_keys[superop] = []
+                reused_folded_keys[superop].append(key)
+            else:
+                reused_folded_keys[key] = [key]
+        for k, v in reused_folded_keys.items():
+            # reuse the super OP iif all steps within it are reused
+            if v != [k] and k in folded_keys and set(v) == set(folded_keys[k]):
+                reused_folded_keys[k] = [k]
+        reused_keys = sum(reused_folded_keys.values(), [])
+    reuse_step = old_wf.query_step(key=reused_keys)
+    # For reused steps whose startedAt are identical, sort them by key
+    reuse_step.sort(key=lambda x: "%s-%s" % (x.startedAt, x.key))
 
     wf = submit_concurrent_learning(
         wf_config,

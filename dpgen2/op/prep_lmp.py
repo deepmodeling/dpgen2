@@ -20,6 +20,7 @@ from dpgen2.constants import (
     lmp_task_pattern,
 )
 from dpgen2.exploration.task import (
+    BaseExplorationTaskGroup,
     ExplorationTaskGroup,
 )
 
@@ -39,7 +40,7 @@ class PrepLmp(OP):
     def get_input_sign(cls):
         return OPIOSign(
             {
-                "lmp_task_grp": BigParameter(Path),
+                "lmp_task_grp": BigParameter(BaseExplorationTaskGroup),
             }
         )
 

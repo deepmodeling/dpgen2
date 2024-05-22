@@ -30,6 +30,8 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from dpgen2.constants import (
+    calypso_check_opt_file,
+    calypso_run_opt_file,
     fp_task_pattern,
     lmp_conf_name,
     lmp_input_name,
@@ -68,11 +70,23 @@ from dpgen2.fp.vasp import (
 from dpgen2.op.collect_data import (
     CollectData,
 )
+from dpgen2.op.collect_run_caly import (
+    CollRunCaly,
+)
+from dpgen2.op.prep_caly_dp_optim import (
+    PrepCalyDPOptim,
+)
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
 )
 from dpgen2.op.prep_lmp import (
     PrepExplorationTaskGroup,
+)
+from dpgen2.op.run_caly_dp_optim import (
+    RunCalyDPOptim,
+)
+from dpgen2.op.run_caly_model_devi import (
+    RunCalyModelDevi,
 )
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
@@ -939,3 +953,285 @@ class MockedModifyTrainScript(ModifyTrainScript):
             }
         )
         return op
+
+
+class MockedCollRunCaly(CollRunCaly):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        cwd = os.getcwd()
+        cnt_num = ip["cnt_num"]
+        config = ip["config"] if ip["config"] is not None else {}
+        # config = CollRunCaly.normalize_config(config)
+        command = config.get("run_calypso_command", "calypso.x")
+        # input.dat
+        input_file = ip["input_file"].resolve()
+        max_step = Path(input_file).read_text().strip()
+
+        # work_dir name: calypso_task.idx
+        work_dir = Path(ip["task_name"])
+        work_dir.mkdir(exist_ok=True, parents=True)
+
+        qhull_input = (
+            ip["qhull_input"].resolve()
+            if ip["qhull_input"] is not None
+            else ip["qhull_input"]
+        )
+        step = ip["step"].resolve() if ip["step"] is not None else ip["step"]
+        results = (
+            ip["results"].resolve() if ip["results"] is not None else ip["results"]
+        )
+
+        opt_results_dir = []
+        if ip["opt_results_dir"] is not None:
+            for temp in ip["opt_results_dir"]:
+                opt_results_dir.append(Path(temp).resolve())
+
+        os.chdir(work_dir)
+        Path(input_file.name).symlink_to(input_file)
+        if step is not None and results is not None and opt_results_dir is not None:
+            step = ip["step"].resolve()
+            results = ip["results"].resolve()
+
+            for opt_results_name in opt_results_dir:
+                for file_name in opt_results_name.iterdir():
+                    Path(file_name.name).symlink_to(file_name)
+            # opt_results_dir = ip["opt_results_dir"].resolve()
+
+            Path(step.name).symlink_to(step)
+            Path(results.name).symlink_to(results)
+            # Path(opt_results_dir.name).symlink_to(opt_results_dir)
+
+        finished = "true" if int(cnt_num) == int(max_step) else "false"
+        if finished == "false":
+            for i in range(5):
+                Path(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+
+            if step is None:
+                Path("step").write_text("2")
+            else:
+                step_num = Path("step").read_text().strip()
+                Path("step").write_text(f"{int(step_num)+1}")
+
+            if qhull_input is None:
+                Path("test_qconvex.in").write_text("")
+
+            step_num = int(Path("step").read_text().strip())
+
+            if results is None:
+                Path("results").mkdir(parents=True, exist_ok=True)
+                for i in range(1, step_num):
+                    Path(f"results/pso_ini_{i}").write_text(f"pso_ini_{i}")
+                    Path(f"results/pso_opt_{i}").write_text(f"pso_opt_{i}")
+                    Path(f"results/pso_sor_{i}").write_text(f"pso_sor_{i}")
+            else:
+                i = step_num
+                Path(f"results/pso_ini_{i}").write_text(f"pso_ini_{i}")
+                Path(f"results/pso_opt_{i}").write_text(f"pso_opt_{i}")
+                Path(f"results/pso_sor_{i}").write_text(f"pso_sor_{i}")
+
+        poscar_dir = Path("poscar_dir")
+        poscar_dir.mkdir(parents=True, exist_ok=True)
+        for poscar in Path().glob("POSCAR_*"):
+            target = poscar_dir.joinpath(poscar.name)
+            shutil.copyfile(poscar, target)
+        # finished = "true" if int(cnt_num) == int(max_step) else "false"
+
+        os.chdir(cwd)
+        ret_dict = {
+            "task_name": work_dir.name,
+            "finished": finished,
+            "poscar_dir": work_dir.joinpath(poscar_dir),
+            "input_file": work_dir.joinpath(input_file.name),
+            "results": work_dir.joinpath("results"),
+            "step": work_dir.joinpath("step"),
+            "qhull_input": work_dir.joinpath("test_qconvex.in"),
+        }
+        return OPIO(ret_dict)
+
+
+class MockedPrepCalyDPOptim(PrepCalyDPOptim):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        cwd = os.getcwd()
+
+        finished = ip["finished"]
+        work_dir = Path(ip["task_name"])
+        work_dir.mkdir(parents=True, exist_ok=True)
+
+        poscar_dir = ip["poscar_dir"]
+        models_dir = ip["models_dir"]
+        caly_run_opt_file = ip["caly_run_opt_file"].resolve()
+        caly_check_opt_file = ip["caly_check_opt_file"].resolve()
+        poscar_list = [poscar.resolve() for poscar in poscar_dir.rglob("POSCAR_*")]
+        model_list = [model.resolve() for model in models_dir.rglob("*model*pb")]
+        model_list = sorted(model_list, key=lambda x: str(x).split(".")[1])
+        model_file = model_list[0]
+
+        os.chdir(work_dir)
+
+        group_size = 2
+
+        if finished == "false":
+            grouped_poscar_list = [
+                poscar_list[i : i + group_size]
+                for i in range(0, len(poscar_list), group_size)
+            ]
+            task_dirs = []
+            for idx, poscar_list in enumerate(grouped_poscar_list):
+                opt_path = Path(f"opt_path_{idx}")
+                task_dirs.append(work_dir / opt_path)
+
+                cwd = os.getcwd()
+                os.chdir(opt_path)
+                for poscar in poscar_list:
+                    Path(poscar.name).symlink_to(poscar)
+                Path(model_file.name).symlink_to(model_file)
+                Path(caly_run_opt_file.name).symlink_to(caly_run_opt_file)
+                Path(caly_check_opt_file.name).symlink_to(caly_check_opt_file)
+                os.chdir(cwd)
+
+            task_names = [str(task_dir) for task_dir in task_dirs]
+        else:
+            temp_dir = work_dir / "opt_path"
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            task_dirs = [temp_dir]
+            task_names = [str(task_dir) for task_dir in task_dirs]
+
+        os.chdir(cwd)
+        return OPIO(
+            {
+                "task_name": task_names,
+                "task_dirs": task_dirs,
+            }
+        )
+
+
+class MockedRunCalyDPOptim(RunCalyDPOptim):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        cwd = os.getcwd()
+
+        finished = ip["finished"]
+        work_dir = Path(ip["task_name"])
+        cnt_num = ip["cnt_num"]
+        work_dir.mkdir(parents=True, exist_ok=True)
+
+        config = ip["config"] if ip["config"] is not None else {}
+        command = config.get("run_opt_command", "python -u calypso_run_opt.py")
+
+        task_path = ip["task_dir"]
+        if task_path is not None:
+            input_files = [ii.resolve() for ii in Path(task_path).iterdir()]
+        else:
+            pass
+
+        os.chdir(work_dir)
+
+        if finished == "false":
+            for ii in input_files:
+                iname = ii.name
+                Path(iname).symlink_to(ii)
+
+            poscar_list = sorted(Path().rglob("POSCAR_*"))
+            cnt = 0
+            for poscar in poscar_list:
+                cnt += 1
+                poscar_name = poscar.name
+                num = poscar_name.strip("POSCAR_")
+                Path(poscar_name.replace("POSCAR", "CONTCAR")).write_text("")
+                Path(poscar_name.replace("POSCAR", "OUTCAR")).write_text("")
+                Path(f"{num}.traj").write_text("")
+
+            optim_results_dir = Path("optim_results_dir")
+            optim_results_dir.mkdir(parents=True, exist_ok=True)
+            for poscar in Path().glob("POSCAR_*"):
+                target = optim_results_dir.joinpath(poscar.name)
+                shutil.copyfile(poscar, target)
+            for contcar in Path().glob("CONTCAR_*"):
+                target = optim_results_dir.joinpath(contcar.name)
+                shutil.copyfile(contcar, target)
+            for outcar in Path().glob("OUTCAR_*"):
+                target = optim_results_dir.joinpath(outcar.name)
+                shutil.copyfile(outcar, target)
+
+            traj_results_dir = Path("traj_results")
+            traj_results_dir.mkdir(parents=True, exist_ok=True)
+            for traj in Path().glob("*.traj"):
+                target = traj_results_dir.joinpath(str(cnt_num) + "." + traj.name)
+                shutil.copyfile(traj, target)
+        else:
+            optim_results_dir = Path("optim_results_dir")
+            optim_results_dir.mkdir(parents=True, exist_ok=True)
+
+            traj_results_dir = Path("traj_results")
+            traj_results_dir.mkdir(parents=True, exist_ok=True)
+
+        os.chdir(cwd)
+        return OPIO(
+            {
+                "task_name": str(work_dir),
+                "optim_results_dir": work_dir / optim_results_dir,
+                "traj_results": work_dir / traj_results_dir,
+            }
+        )
+
+
+class MockedRunCalyModelDevi(RunCalyModelDevi):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        cwd = os.getcwd()
+
+        work_dir = Path(ip["task_name"])
+        work_dir.mkdir(parents=True, exist_ok=True)
+
+        type_map = ip["type_map"]
+
+        traj_dirs = ip["traj_dirs"]
+        traj_dirs = [traj_dir.resolve() for traj_dir in traj_dirs]
+
+        models_dir = ip["models"]
+        models_dir = [model.resolve() for model in models_dir]
+
+        dump_file_name = "traj.dump"
+        model_devi_file_name = "model_devi.out"
+
+        ref_dump_str = """ITEM: TIMESTEP
+1
+ITEM: NUMBER OF ATOMS
+2
+ITEM: BOX BOUNDS xy xz yz pp pp pp
+        0.0000000000        10.0000000000         0.0000000000
+        0.0000000000        10.0000000000         0.0000000000
+        0.0000000000        10.0000000000         0.0000000000
+ITEM: ATOMS id type x y z fx fy fz
+    1     1        0.0000000000         0.0000000000         0.0000000000        0.0000000000         0.0000000000         0.0000000000
+    2     2        5.0000000000         5.0000000000         5.0000000000        0.0000000000         0.0000000000         0.0000000000"""
+        os.chdir(work_dir)
+        f = open(dump_file_name, "a")
+        f.write(ref_dump_str)
+        f.close()
+
+        f = open(model_devi_file_name, "a")
+        f.write("# \n0 1 1 1 1 1 1")
+        f.close()
+
+        os.chdir(cwd)
+        return OPIO(
+            {
+                "task_name": str(work_dir),
+                "traj": [work_dir / dump_file_name],
+                "model_devi": [work_dir / model_devi_file_name],
+            }
+        )

@@ -103,21 +103,21 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
 
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_lmp_download(self, mocked_dl):
-        download_dpgen2_artifacts(Mockedwf(), "iter-000001--prep-run-lmp", None)
+        download_dpgen2_artifacts(Mockedwf(), "iter-000001--prep-run-explore", None)
         expected = [
             mock.call(
                 "arti-logs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-trajs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-model_devis",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
         ]
@@ -216,23 +216,23 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_update_finished_steps_exist_steps(self, mocked_dl):
         wf = Mockedwf()
-        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-lmp"]
+        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-explore"]
         finished_keys = update_finished_steps(wf, ["iter-000000--prep-run-train"], True)
         self.assertEqual(finished_keys, wf.keys)
         expected = [
             mock.call(
                 "arti-logs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-trajs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-model_devis",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
         ]
@@ -243,7 +243,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
     @mock.patch("dpgen2.utils.download_dpgen2_artifacts.download_artifact")
     def test_update_finished_steps_none_steps(self, mocked_dl):
         wf = Mockedwf()
-        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-lmp"]
+        wf.keys = ["iter-000000--prep-run-train", "iter-000001--prep-run-explore"]
         finished_keys = update_finished_steps(wf, None, True)
         self.assertEqual(finished_keys, wf.keys)
         expected = [
@@ -284,17 +284,17 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-logs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-trajs",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
             mock.call(
                 "arti-model_devis",
-                path=Path("iter-000001/prep-run-lmp/outputs"),
+                path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),
         ]

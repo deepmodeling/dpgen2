@@ -31,7 +31,8 @@ def showkey(
     global_config_workflow(wf_config)
 
     wf = Workflow(id=wf_id)
-    all_step_keys = get_resubmit_keys(wf)
+    folded_keys = get_resubmit_keys(wf)
+    all_step_keys = sum(folded_keys.values(), [])
     prt_str = print_keys_in_nice_format(
         all_step_keys,
         ["run-train", "run-lmp", "run-fp"],

@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Set,
     Type,
+    Union,
 )
 
 from dflow import (
@@ -48,6 +49,9 @@ from dpgen2.utils.step_config import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
+from .prep_run_calypso import (
+    PrepRunCaly,
+)
 from .prep_run_dp_train import (
     PrepRunDPTrain,
 )
@@ -82,7 +86,7 @@ class ConcurrentLearningBlock(Steps):
         self,
         name: str,
         prep_run_dp_train_op: PrepRunDPTrain,
-        prep_run_lmp_op: PrepRunLmp,
+        prep_run_explore_op: Union[PrepRunLmp, PrepRunCaly],
         select_confs_op: Type[OP],
         prep_run_fp_op: PrepRunFp,
         collect_data_op: Type[OP],
@@ -96,13 +100,13 @@ class ConcurrentLearningBlock(Steps):
             "numb_models": InputParameter(type=int),
             "template_script": InputParameter(),
             "train_config": InputParameter(),
-            "lmp_config": InputParameter(),
+            "explore_config": InputParameter(),
             "conf_selector": InputParameter(),
             "fp_config": InputParameter(),
-            "lmp_task_grp": InputParameter(),
             "optional_parameter": InputParameter(
                 type=dict, value=block_default_optional_parameter
             ),
+            "expl_task_grp": InputParameter(),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
@@ -133,7 +137,7 @@ class ConcurrentLearningBlock(Steps):
         self._my_keys = ["select-confs", "collect-data"]
         self._keys = (
             prep_run_dp_train_op.keys
-            + prep_run_lmp_op.keys
+            + prep_run_explore_op.keys
             + self._my_keys[:1]
             + prep_run_fp_op.keys
             + self._my_keys[1:2]
@@ -149,7 +153,7 @@ class ConcurrentLearningBlock(Steps):
             self.step_keys,
             name,
             prep_run_dp_train_op,
-            prep_run_lmp_op,
+            prep_run_explore_op,
             select_confs_op,
             prep_run_fp_op,
             collect_data_op,
@@ -184,7 +188,7 @@ def _block_cl(
     step_keys: Dict[str, Any],
     name: str,
     prep_run_dp_train_op: OPTemplate,
-    prep_run_lmp_op: OPTemplate,
+    prep_run_explore_op: OPTemplate,
     select_confs_op: Type[OP],
     prep_run_fp_op: OPTemplate,
     collect_data_op: Type[OP],
@@ -226,22 +230,23 @@ def _block_cl(
     )
     block_steps.add(prep_run_dp_train)
 
-    prep_run_lmp = Step(
-        name=name + "-prep-run-lmp",
-        template=prep_run_lmp_op,
+    prep_run_explore = Step(
+        name=name + "-prep-run-explore",
+        template=prep_run_explore_op,
         parameters={
             "block_id": block_steps.inputs.parameters["block_id"],
-            "lmp_config": block_steps.inputs.parameters["lmp_config"],
-            "lmp_task_grp": block_steps.inputs.parameters["lmp_task_grp"],
+            "expl_task_grp": block_steps.inputs.parameters["expl_task_grp"],
+            "explore_config": block_steps.inputs.parameters["explore_config"],
+            "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
             "models": prep_run_dp_train.outputs.artifacts["models"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-lmp"]
+            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-explore"]
         ),
     )
-    block_steps.add(prep_run_lmp)
+    block_steps.add(prep_run_explore)
 
     select_confs = Step(
         name=name + "-select-confs",
@@ -256,8 +261,8 @@ def _block_cl(
             "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
-            "trajs": prep_run_lmp.outputs.artifacts["trajs"],
-            "model_devis": prep_run_lmp.outputs.artifacts["model_devis"],
+            "trajs": prep_run_explore.outputs.artifacts["trajs"],
+            "model_devis": prep_run_explore.outputs.artifacts["model_devis"],
         },
         key=step_keys["select-confs"],
         executor=select_confs_executor,
@@ -314,7 +319,7 @@ def _block_cl(
     block_steps.outputs.artifacts["iter_data"]._from = collect_data.outputs.artifacts[
         "iter_data"
     ]
-    block_steps.outputs.artifacts["trajs"]._from = prep_run_lmp.outputs.artifacts[
+    block_steps.outputs.artifacts["trajs"]._from = prep_run_explore.outputs.artifacts[
         "trajs"
     ]
 

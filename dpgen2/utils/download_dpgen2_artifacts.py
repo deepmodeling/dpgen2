@@ -60,7 +60,7 @@ op_download_setting = {
     .add_output("models")
     .add_output("logs")
     .add_output("lcurves"),
-    "prep-run-lmp": DownloadDefinition()
+    "prep-run-explore": DownloadDefinition()
     .add_output("logs")
     .add_output("trajs")
     .add_output("model_devis"),
@@ -268,7 +268,7 @@ def _get_all_iterations(step_keys):
     ret = []
     for kk in step_keys:
         ii = get_iteration(kk)
-        if ii != "init":
+        if ii.startswith("iter-"):
             ii = int(ii.split("-")[1])
             ret.append(ii)
     ret = sorted(list(set(ret)))
@@ -341,7 +341,7 @@ def _filter_def_by_availability(
                 name in op_download_setting[subkey].output_def.keys()
             )
         else:
-            raise RuntimeError("unknown io style {io}")
+            raise RuntimeError(f"unknown io style {io}")
         if not avail:
             logging.warning(f"cannot find download settings for {dd}")
         else:

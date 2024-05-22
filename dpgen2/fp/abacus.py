@@ -132,6 +132,23 @@ class PrepFpOpAbacus(OP):
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
 
+from typing import (
+    Tuple,
+)
+
+
+def get_suffix_calculation(INPUT: List[str]) -> Tuple[str, str]:
+    suffix = "ABACUS"
+    calculation = "scf"
+    for iline in INPUT:
+        sline = iline.split("#")[0].split()
+        if len(sline) >= 2 and sline[0].lower() == "suffix":
+            suffix = sline[1].strip()
+        elif len(sline) >= 2 and sline[0].lower() == "calculation":
+            calculation = sline[1].strip()
+    return suffix, calculation
+
+
 class RunFpOpAbacus(OP):
     @classmethod
     def get_input_sign(cls):
@@ -171,7 +188,17 @@ class RunFpOpAbacus(OP):
         workdir = op_out["backward_dir"].parent
 
         # convert the output to deepmd/npy format
-        sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/scf")
+        with open("%s/INPUT" % workdir, "r") as f:
+            INPUT = f.readlines()
+        _, calculation = get_suffix_calculation(INPUT)
+        if calculation == "scf":
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/scf")
+        elif calculation == "md":
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/md")
+        elif calculation in ["relax", "cell-relax"]:
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
+        else:
+            raise ValueError("Type of calculation %s not supported" % calculation)
         out_name = run_config.get("out", fp_default_out_data_name)
         sys.to("deepmd/npy", workdir / out_name)
 

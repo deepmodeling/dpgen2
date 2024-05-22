@@ -45,9 +45,6 @@ deepmd_input_path = "one_frame_input"
 # global static variables
 deepmd_temp_path = "one_frame_temp"
 
-# global static variables
-deepmd_teacher_model = "teacher_model.pb"
-
 
 class DeepmdInputs:
     @staticmethod
@@ -136,6 +133,8 @@ class RunDeepmd(RunFp):
     def _get_dp_model(self, teacher_model_path: BinaryFileInput):
         from deepmd.infer import DeepPot  # type: ignore
 
+        ext = os.path.splitext(teacher_model_path.file_name)[-1]
+        deepmd_teacher_model = "teacher_model" + ext
         teacher_model_path.save_as_file(deepmd_teacher_model)
         dp = DeepPot(Path(deepmd_teacher_model))
 

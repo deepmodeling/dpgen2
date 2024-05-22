@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import shutil
@@ -35,6 +36,8 @@ from dpgen2.constants import (
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
+    _make_train_command,
+    _make_train_command_old,
 )
 
 # isort: on
@@ -314,6 +317,7 @@ class TestRunDPTrain(unittest.TestCase):
     def test_update_input_dict_v1_init_model(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size; 0:4:0.9; 4:7:0.1",
@@ -329,6 +333,7 @@ class TestRunDPTrain(unittest.TestCase):
     def test_update_input_dict_v1(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size",
@@ -345,6 +350,7 @@ class TestRunDPTrain(unittest.TestCase):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
             idict,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size; 0:4:0.9; 4:7:0.1",
@@ -361,6 +367,7 @@ class TestRunDPTrain(unittest.TestCase):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
             idict,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size",
@@ -820,7 +827,12 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
     def test_update_input_dict_v2_empty_list(self):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
-            idict, self.init_data, [], auto_prob_str="prob_sys_size", major_version="2"
+            idict,
+            self.config,
+            self.init_data,
+            [],
+            auto_prob_str="prob_sys_size",
+            major_version="2",
         )
         config = self.config.copy()
         config["init_model_policy"] = "no"
@@ -857,7 +869,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
+        self.assertEqual(out["model"], self.init_model)
         self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
         self.assertEqual(out["log"], work_dir / "train.log")
 
@@ -930,3 +942,52 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
+
+
+class TestMakeTrainCommand(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_consistency_impl(self):
+        dp_command = ["foo"]
+        train_script_name = "bar.json"
+        finetune_args = "piz"
+        init_model = "fox.pt"
+
+        # restart, impl, do_init, finetune_model, init_model_w_finetune
+        for res, ii, dim, fm, imwf in itertools.product(
+            [True, False],
+            ["tensorflow", "pytorch"],
+            [True, False],
+            ["finetune", "train-init"],
+            [True, False],
+        ):
+            if res:
+                if ii == "tensorflow":
+                    Path("checkpoint").write_text("")
+                else:
+                    Path("model.ckpt-000.pt").write_text("")
+                    Path("model.ckpt-001.pt").write_text("")
+
+            args = [
+                dp_command,
+                train_script_name,
+                ii,
+                dim,
+                init_model,
+                fm,
+                finetune_args,
+                imwf,
+            ]
+            cmd_new = _make_train_command(*args)
+            cmd_old = _make_train_command_old(*args)
+
+            self.assertEqual(cmd_old, cmd_new)
+
+            if res:
+                for ii in ["model.ckpt-000.pt", "model.ckpt-001.pt", "checkpoint"]:
+                    if os.path.exists(ii):
+                        os.remove(ii)

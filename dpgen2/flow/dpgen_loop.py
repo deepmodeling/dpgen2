@@ -94,7 +94,7 @@ class SchedulerWrapper(OP):
             {
                 "converged": bool,
                 "exploration_scheduler": BigParameter(ExplorationScheduler),
-                "lmp_task_grp": BigParameter(ExplorationTaskGroup),
+                "expl_task_grp": BigParameter(ExplorationTaskGroup),
                 "conf_selector": ConfSelector,
             }
         )
@@ -108,13 +108,13 @@ class SchedulerWrapper(OP):
         report = ip["exploration_report"]
         trajs = ip["trajs"]
 
-        conv, lmp_task_grp, selector = scheduler.plan_next_iteration(report, trajs)
+        conv, expl_task_grp, selector = scheduler.plan_next_iteration(report, trajs)
 
         return OPIO(
             {
                 "converged": conv,
                 "exploration_scheduler": scheduler,
-                "lmp_task_grp": lmp_task_grp,
+                "expl_task_grp": expl_task_grp,
                 "conf_selector": selector,
             }
         )
@@ -168,12 +168,12 @@ class ConcurrentLearningLoop(Steps):
             "numb_models": InputParameter(type=int),
             "template_script": InputParameter(),
             "train_config": InputParameter(),
-            "lmp_config": InputParameter(),
+            "explore_config": InputParameter(),
             "conf_selector": InputParameter(),
             "fp_config": InputParameter(),
             "exploration_scheduler": InputParameter(),
-            "lmp_task_grp": InputParameter(),
             "optional_parameter": InputParameter(type=dict),
+            "expl_task_grp": InputParameter(),
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
@@ -258,13 +258,14 @@ class ConcurrentLearning(Steps):
             "numb_models": InputParameter(type=int),
             "template_script": InputParameter(),
             "train_config": InputParameter(),
-            "lmp_config": InputParameter(),
+            "explore_config": InputParameter(),
             "fp_config": InputParameter(),
             "exploration_scheduler": InputParameter(),
             "optional_parameter": InputParameter(
                 type=dict, value=cl_default_optional_parameter
             ),
         }
+
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
             "init_data": InputArtifact(),
@@ -346,21 +347,22 @@ def _loop(
         steps.inputs.parameters["optional_parameter"]
     )
 
+    block_common_parameters = {
+        "block_id": steps.inputs.parameters["block_id"],
+        "type_map": steps.inputs.parameters["type_map"],
+        "numb_models": steps.inputs.parameters["numb_models"],
+        "template_script": steps.inputs.parameters["template_script"],
+        "train_config": steps.inputs.parameters["train_config"],
+        "conf_selector": steps.inputs.parameters["conf_selector"],
+        "fp_config": steps.inputs.parameters["fp_config"],
+        "optional_parameter": block_optional_parameter,
+        "explore_config": steps.inputs.parameters["explore_config"],
+        "expl_task_grp": steps.inputs.parameters["expl_task_grp"],
+    }
     block_step = Step(
         name=name + "-block",
         template=block_op,
-        parameters={
-            "block_id": steps.inputs.parameters["block_id"],
-            "type_map": steps.inputs.parameters["type_map"],
-            "numb_models": steps.inputs.parameters["numb_models"],
-            "template_script": steps.inputs.parameters["template_script"],
-            "train_config": steps.inputs.parameters["train_config"],
-            "lmp_config": steps.inputs.parameters["lmp_config"],
-            "conf_selector": steps.inputs.parameters["conf_selector"],
-            "fp_config": steps.inputs.parameters["fp_config"],
-            "lmp_task_grp": steps.inputs.parameters["lmp_task_grp"],
-            "optional_parameter": block_optional_parameter,
-        },
+        parameters=block_common_parameters,
         artifacts={
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],
@@ -412,24 +414,25 @@ def _loop(
     )
     steps.add(id_step)
 
+    next_common_parameters = {
+        "block_id": id_step.outputs.parameters["block_id"],
+        "type_map": steps.inputs.parameters["type_map"],
+        "numb_models": steps.inputs.parameters["numb_models"],
+        "template_script": steps.inputs.parameters["template_script"],
+        "train_config": steps.inputs.parameters["train_config"],
+        "explore_config": steps.inputs.parameters["explore_config"],
+        "conf_selector": scheduler_step.outputs.parameters["conf_selector"],
+        "fp_config": steps.inputs.parameters["fp_config"],
+        "exploration_scheduler": scheduler_step.outputs.parameters[
+            "exploration_scheduler"
+        ],
+        "optional_parameter": steps.inputs.parameters["optional_parameter"],
+        "expl_task_grp": scheduler_step.outputs.parameters["expl_task_grp"],
+    }
     next_step = Step(
         name=name + "-next",
         template=steps,
-        parameters={
-            "block_id": id_step.outputs.parameters["block_id"],
-            "type_map": steps.inputs.parameters["type_map"],
-            "numb_models": steps.inputs.parameters["numb_models"],
-            "template_script": steps.inputs.parameters["template_script"],
-            "train_config": steps.inputs.parameters["train_config"],
-            "lmp_config": steps.inputs.parameters["lmp_config"],
-            "conf_selector": scheduler_step.outputs.parameters["conf_selector"],
-            "fp_config": steps.inputs.parameters["fp_config"],
-            "exploration_scheduler": scheduler_step.outputs.parameters[
-                "exploration_scheduler"
-            ],
-            "lmp_task_grp": scheduler_step.outputs.parameters["lmp_task_grp"],
-            "optional_parameter": steps.inputs.parameters["optional_parameter"],
-        },
+        parameters=next_common_parameters,
         artifacts={
             "init_models": block_step.outputs.artifacts["models"],
             "init_data": steps.inputs.artifacts["init_data"],
@@ -515,24 +518,25 @@ def _dpgen(
     )
     steps.add(id_step)
 
+    common_parameters = {
+        "block_id": id_step.outputs.parameters["block_id"],
+        "type_map": steps.inputs.parameters["type_map"],
+        "numb_models": steps.inputs.parameters["numb_models"],
+        "template_script": steps.inputs.parameters["template_script"],
+        "train_config": steps.inputs.parameters["train_config"],
+        "explore_config": steps.inputs.parameters["explore_config"],
+        "conf_selector": scheduler_step.outputs.parameters["conf_selector"],
+        "fp_config": steps.inputs.parameters["fp_config"],
+        "exploration_scheduler": scheduler_step.outputs.parameters[
+            "exploration_scheduler"
+        ],
+        "optional_parameter": steps.inputs.parameters["optional_parameter"],
+        "expl_task_grp": scheduler_step.outputs.parameters["expl_task_grp"],
+    }
     loop_step = Step(
         name=name + "-loop",
         template=loop_op,
-        parameters={
-            "block_id": id_step.outputs.parameters["block_id"],
-            "type_map": steps.inputs.parameters["type_map"],
-            "numb_models": steps.inputs.parameters["numb_models"],
-            "template_script": steps.inputs.parameters["template_script"],
-            "train_config": steps.inputs.parameters["train_config"],
-            "conf_selector": scheduler_step.outputs.parameters["conf_selector"],
-            "lmp_config": steps.inputs.parameters["lmp_config"],
-            "fp_config": steps.inputs.parameters["fp_config"],
-            "exploration_scheduler": scheduler_step.outputs.parameters[
-                "exploration_scheduler"
-            ],
-            "lmp_task_grp": scheduler_step.outputs.parameters["lmp_task_grp"],
-            "optional_parameter": steps.inputs.parameters["optional_parameter"],
-        },
+        parameters=common_parameters,
         artifacts={
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],

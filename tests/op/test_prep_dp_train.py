@@ -34,7 +34,6 @@ template_script_se_e2_a = {
     "model": {"descriptor": {"type": "se_e2_a", "seed": 1}, "fitting_net": {"seed": 1}},
     "training": {
         "systems": [],
-        "set_prefix": "set",
         "stop_batch": 2000,
         "batch_size": "auto",
         "seed": 1,
@@ -51,7 +50,6 @@ template_script_hybrid = {
     },
     "training": {
         "systems": [],
-        "set_prefix": "set",
         "stop_batch": 2000,
         "batch_size": "auto",
         "seed": 1,

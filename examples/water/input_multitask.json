@@ -1,0 +1,218 @@
+{
+    "name": "water-dpgen-multitask",
+    "bohrium_config": {
+        "username": "",
+        "password": "",
+        "project_id": 1,
+        "_comment": "all"
+    },
+    "default_step_config": {
+        "template_config": {
+            "image": "",
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA V100_16g"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.8,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA V100_16g"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 5,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.8,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 20,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "upload_python_packages": [
+        "/path/to/dpgen2"
+    ],
+    "inputs": {
+        "type_map": [
+            "O",
+            "H"
+        ],
+        "mixed_type": true,
+        "mass_map": [
+            16.0,
+            4.0
+        ],
+        "multitask": true,
+        "head": "water_1",
+        "multi_init_data": {
+            "water_1": {
+                "prefix": null,
+                "sys": [
+                    "init/data_0",
+                    "init/data_1",
+                    "init/data_2"
+                ]
+            },
+            "water_2": {
+                "prefix": null,
+                "sys": [
+                    "init/data_0",
+                    "init/data_1",
+                    "init/data_2"
+                ]
+            }
+        },
+        "_comment": "all"
+    },
+    "train": {
+        "type": "dp",
+        "numb_models": 4,
+        "config": {
+            "backend": "pytorch",
+            "init_model_policy": "yes",
+            "init_model_old_ratio": 0.9,
+            "init_model_numb_steps": 2000,
+            "init_model_start_lr": 2e-05,
+            "init_model_start_pref_e": 0.25,
+            "init_model_start_pref_f": 100,
+            "_comment": "all"
+        },
+        "template_script": "train.json",
+        "_comment": "all"
+    },
+    "explore": {
+        "type": "lmp",
+        "config": {
+            "command": "lmp -var restart 0"
+        },
+        "convergence": {
+            "type": "adaptive-lower",
+            "conv_tolerance": 0.005,
+            "_numb_candi_f": 3000,
+            "rate_candi_f": 0.15,
+            "level_f_hi": 0.5,
+            "n_checked_steps": 8,
+            "_command": "all"
+        },
+        "max_numb_iter": 16,
+        "fatal_at_max": false,
+        "configuration_prefix": null,
+        "configurations": [
+            {
+                "type": "file",
+                "files": [
+                    "init"
+                ],
+                "fmt": "deepmd/npy/mixed"
+            }
+        ],
+        "stages": [
+            [
+                {
+                    "type": "lmp-template",
+                    "lmp": "template.lammps",
+                    "trj_freq": 10,
+                    "revisions": {
+                        "V_NSTEPS": [
+                            20
+                        ],
+                        "V_TEMP": [
+                            300
+                        ],
+                        "V_DUMPFREQ": [
+                            250
+                        ]
+                    },
+                    "sys_idx": [
+                        0
+                    ],
+                    "n_sample": 4
+                }
+            ]
+        ],
+        "_comment": "all"
+    },
+    "fp": {
+        "type": "vasp",
+        "task_max": 300,
+        "inputs_config": {
+            "pp_files": {
+                "O": "PBE/O/POTCAR",
+                "H": "PBE/H/POTCAR"
+            },
+            "incar": "vasp/INCAR",
+            "kspacing": 0.32,
+            "kgamma": true
+        },
+        "run_config": {
+            "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        },
+        "_comment": "all"
+    }
+}

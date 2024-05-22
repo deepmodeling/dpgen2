@@ -38,6 +38,7 @@ from dpgen2.constants import (
     model_name_match_pattern,
     model_name_pattern,
     plm_output_name,
+    pytorch_model_name_pattern,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -129,8 +130,10 @@ class RunLmp(OP):
             assert (
                 len(model_files) == 1
             ), "One model is enough in knowledge distillation"
-            teacher_model.save_as_file("teacher_model.pb")
-            model_files = [Path("teacher_model.pb").resolve()] + model_files
+            ext = os.path.splitext(teacher_model.file_name)[-1]
+            teacher_model_file = "teacher_model" + ext
+            teacher_model.save_as_file(teacher_model_file)
+            model_files = [Path(teacher_model_file).resolve()] + model_files
 
         with set_directory(work_dir):
             # link input files
@@ -138,15 +141,47 @@ class RunLmp(OP):
                 iname = ii.name
                 Path(iname).symlink_to(ii)
             # link models
+            model_names = []
             for idx, mm in enumerate(model_files):
-                mname = model_name_pattern % (idx)
-                Path(mname).symlink_to(mm)
-
-            if teacher_model is not None:
-                add_teacher_model(lmp_input_name)
+                ext = os.path.splitext(mm)[-1]
+                if ext == ".pb":
+                    mname = model_name_pattern % (idx)
+                    Path(mname).symlink_to(mm)
+                elif ext == ".pt":
+                    # freeze model
+                    mname = pytorch_model_name_pattern % (idx)
+                    freeze_args = "-o %s" % mname
+                    if config.get("head") is not None:
+                        freeze_args += " --head %s" % config["head"]
+                    freeze_cmd = "dp --pt freeze -c %s %s" % (mm, freeze_args)
+                    ret, out, err = run_command(freeze_cmd, shell=True)
+                    if ret != 0:
+                        logging.error(
+                            "".join(
+                                (
+                                    "freeze failed\n",
+                                    "command was",
+                                    freeze_cmd,
+                                    "out msg",
+                                    out,
+                                    "\n",
+                                    "err msg",
+                                    err,
+                                    "\n",
+                                )
+                            )
+                        )
+                        raise TransientError("freeze failed")
+                else:
+                    raise RuntimeError(
+                        "Model file with extension '%s' is not supported" % ext
+                    )
+                model_names.append(mname)
 
             if shuffle_models:
-                randomly_shuffle_models(lmp_input_name)
+                random.shuffle(model_names)
+
+            set_models(lmp_input_name, model_names)
 
             # run lmp
             command = " ".join([command, "-i", lmp_input_name, "-log", lmp_log_name])
@@ -188,6 +223,7 @@ class RunLmp(OP):
         doc_lmp_cmd = "The command of LAMMPS"
         doc_teacher_model = "The teacher model in `Knowledge Distillation`"
         doc_shuffle_models = "Randomly pick a model from the group of models to drive theexploration MD simulation"
+        doc_head = "Select a head from multitask"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
             Argument(
@@ -204,6 +240,7 @@ class RunLmp(OP):
                 default=False,
                 doc=doc_shuffle_models,
             ),
+            Argument("head", str, optional=True, default=None, doc=doc_head),
         ]
 
     @staticmethod
@@ -218,30 +255,15 @@ class RunLmp(OP):
 config_args = RunLmp.lmp_args
 
 
-def add_teacher_model(lmp_input_name: str):
+def set_models(lmp_input_name: str, model_names: List[str]):
     with open(lmp_input_name, encoding="utf8") as f:
         lmp_input_lines = f.readlines()
 
-    idx = find_only_one_key(lmp_input_lines, ["pair_style", "deepmd"])
-
-    model0_pattern = model_name_pattern % 0
-    assert (
-        lmp_input_lines[idx].find(model0_pattern) != -1
-    ), f'Error: cannot find "{model0_pattern}" in lmp_input, {lmp_input_lines[idx]}'
-
-    lmp_input_lines[idx] = lmp_input_lines[idx].replace(
-        model0_pattern, " ".join([model_name_pattern % i for i in range(2)])
+    idx = find_only_one_key(
+        lmp_input_lines, ["pair_style", "deepmd"], raise_not_found=False
     )
-
-    with open(lmp_input_name, "w", encoding="utf8") as f:
-        f.write("".join(lmp_input_lines))
-
-
-def randomly_shuffle_models(lmp_input_name: str):
-    with open(lmp_input_name, encoding="utf8") as f:
-        lmp_input_lines = f.readlines()
-
-    idx = find_only_one_key(lmp_input_lines, ["pair_style", "deepmd"])
+    if idx is None:
+        return
     new_line_split = lmp_input_lines[idx].split()
     match_first = -1
     match_last = -1
@@ -266,16 +288,14 @@ def randomly_shuffle_models(lmp_input_name: str):
                 f"unexpected matching of model pattern {pattern} "
                 f"in line {lmp_input_lines[idx]}"
             )
-    tmp = new_line_split[match_first:match_last]
-    random.shuffle(tmp)
-    new_line_split[match_first:match_last] = tmp
-    lmp_input_lines[idx] = " ".join(new_line_split)
+    new_line_split[match_first:match_last] = model_names
+    lmp_input_lines[idx] = " ".join(new_line_split) + "\n"
 
     with open(lmp_input_name, "w", encoding="utf8") as f:
         f.write("".join(lmp_input_lines))
 
 
-def find_only_one_key(lmp_lines, key):
+def find_only_one_key(lmp_lines, key, raise_not_found=True):
     found = []
     for idx in range(len(lmp_lines)):
         words = lmp_lines[idx].split()
@@ -285,5 +305,8 @@ def find_only_one_key(lmp_lines, key):
     if len(found) > 1:
         raise RuntimeError("found %d keywords %s" % (len(found), key))
     if len(found) == 0:
-        raise RuntimeError("failed to find keyword %s" % (key))
+        if raise_not_found:
+            raise RuntimeError("failed to find keyword %s" % (key))
+        else:
+            return None
     return found[0]

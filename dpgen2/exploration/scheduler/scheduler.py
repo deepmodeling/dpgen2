@@ -73,7 +73,7 @@ class ExplorationScheduler:
         """
         Get the index of the current iteration.
 
-        Iteration index increase when `self.plan_next_iteration` returns valid `lmp_task_grp` and `conf_selector` for the next iteration.
+        Iteration index increase when `self.plan_next_iteration` returns valid `expl_task_grp` and `conf_selector` for the next iteration.
 
         """
         tot_iter = -1
@@ -134,7 +134,7 @@ class ExplorationScheduler:
         """
 
         try:
-            stg_complete, lmp_task_grp, conf_selector = self.stage_schedulers[
+            stg_complete, expl_task_grp, conf_selector = self.stage_schedulers[
                 self.cur_stage
             ].plan_next_iteration(
                 report,
@@ -157,7 +157,7 @@ class ExplorationScheduler:
                     None,
                 )
         else:
-            return stg_complete, lmp_task_grp, conf_selector
+            return stg_complete, expl_task_grp, conf_selector
 
     def get_stage_of_iterations(self):
         """

@@ -19,6 +19,7 @@ from .context import (
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
+    fold_keys,
     print_list_steps,
     submit_concurrent_learning,
     update_reuse_step_scheduler,
@@ -956,3 +957,111 @@ RESTRAINT ARG=d1,d2 AT=V_DIST0,bar KAPPA=150.0,150.0 LABEL=restraint
 PRINT ARG=restraint.bias
 """
 )
+
+
+def test_fold_keys_lmp():
+    all_step_keys = [
+        "init--scheduler",
+        "init--id",
+        "iter-000000--prep-run-train",
+        "iter-000000--prep-train",
+        "iter-000000--run-train-0000",
+        "iter-000000--run-train-0001",
+        "iter-000000--run-train-0002",
+        "iter-000000--run-train-0003",
+        "iter-000000--prep-run-explore",
+        "iter-000000--prep-lmp",
+        "iter-000000--run-lmp-000000",
+        "iter-000000--run-lmp-000001",
+        "iter-000000--select-confs",
+        "iter-000000--prep-run-fp",
+        "iter-000000--prep-fp",
+        "iter-000000--run-fp-000000",
+        "iter-000000--run-fp-000001",
+        "iter-000000--run-fp-000002",
+    ]
+    folded_keys = fold_keys(all_step_keys)
+    assert folded_keys == {
+        "init--scheduler": ["init--scheduler"],
+        "init--id": ["init--id"],
+        "iter-000000--prep-run-train": [
+            "iter-000000--prep-train",
+            "iter-000000--run-train-0000",
+            "iter-000000--run-train-0001",
+            "iter-000000--run-train-0002",
+            "iter-000000--run-train-0003",
+        ],
+        "iter-000000--prep-run-explore": [
+            "iter-000000--prep-lmp",
+            "iter-000000--run-lmp-000000",
+            "iter-000000--run-lmp-000001",
+        ],
+        "iter-000000--select-confs": ["iter-000000--select-confs"],
+        "iter-000000--prep-run-fp": [
+            "iter-000000--prep-fp",
+            "iter-000000--run-fp-000000",
+            "iter-000000--run-fp-000001",
+            "iter-000000--run-fp-000002",
+        ],
+    }
+
+
+def test_fold_keys_caly():
+    all_step_keys = [
+        "init--scheduler",
+        "init--id",
+        "iter-000000--prep-run-train",
+        "iter-000000--prep-train",
+        "iter-000000--run-train-0000",
+        "iter-000000--run-train-0001",
+        "iter-000000--run-train-0002",
+        "iter-000000--run-train-0003",
+        "iter-000000--prep-run-explore",
+        "iter-000000--prep-caly-input",
+        "iter-000000--prep-run-dp-optim-000000-0",
+        "iter-000000--prep-run-dp-optim-000000-1",
+        "iter-000000--prep-run-dp-optim-000001-0",
+        "iter-000000--prep-run-dp-optim-000001-1",
+        "iter-000000--collect-run-calypso-000000-0",
+        "iter-000000--collect-run-calypso-000000-1",
+        "iter-000000--collect-run-calypso-000001-0",
+        "iter-000000--collect-run-calypso-000001-1",
+        "iter-000000--run-caly-model-devi",
+        "iter-000000--select-confs",
+        "iter-000000--prep-run-fp",
+        "iter-000000--prep-fp",
+        "iter-000000--run-fp-000000",
+        "iter-000000--run-fp-000001",
+        "iter-000000--run-fp-000002",
+    ]
+    folded_keys = fold_keys(all_step_keys)
+    assert folded_keys == {
+        "init--scheduler": ["init--scheduler"],
+        "init--id": ["init--id"],
+        "iter-000000--prep-run-train": [
+            "iter-000000--prep-train",
+            "iter-000000--run-train-0000",
+            "iter-000000--run-train-0001",
+            "iter-000000--run-train-0002",
+            "iter-000000--run-train-0003",
+        ],
+        "iter-000000--prep-run-explore": [
+            "iter-000000--prep-caly-input",
+            "iter-000000--prep-run-dp-optim-000000-0",
+            "iter-000000--prep-run-dp-optim-000000-1",
+            "iter-000000--prep-run-dp-optim-000001-0",
+            "iter-000000--prep-run-dp-optim-000001-1",
+            "iter-000000--collect-run-calypso-000000-0",
+            "iter-000000--collect-run-calypso-000000-1",
+            "iter-000000--collect-run-calypso-000001-0",
+            "iter-000000--collect-run-calypso-000001-1",
+            "iter-000000--run-caly-model-devi",
+        ],
+        "iter-000000--select-confs": ["iter-000000--select-confs"],
+        "iter-000000--prep-run-fp": [
+            "iter-000000--prep-fp",
+            "iter-000000--run-fp-000000",
+            "iter-000000--run-fp-000001",
+            "iter-000000--run-fp-000002",
+        ],
+    }

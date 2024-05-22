@@ -1,0 +1,583 @@
+{
+    "bohrium_config": {
+        "username": "x@x.cn",
+        "password": "xxx",
+        "project_id": 111111,
+        "_host": "https://workflow.dp.tech/",
+        "_k8s_api_server": "https://workflows.deepmodeling.com",
+        "_repo_key": "oss-bohrium",
+        "_comment": "all"
+    },
+    "default_step_config": {
+        "template_config": {
+            "image": "registry.dp.tech/dptech/prod-11265/deepmdv3-dpgen2-calypso:v0.2",
+            "_comment": "all"
+        },
+        "executor": {
+            "type": "dispatcher",
+            "image_pull_policy": "IfNotPresent",
+            "machine_dict": {
+                "batch_type": "Bohrium",
+                "context_type": "Bohrium",
+                "remote_profile": {
+                    "input_data": {
+                        "job_type": "container",
+                        "platform": "ali",
+                        "scass_type": "c2_m4_cpu"
+                    }
+                }
+            }
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "registry.dp.tech/dptech/prod-11265/deepmdv3-dpgen2-calypso:v0.2",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA V100_32g"
+                        }
+                    }
+                }
+            },
+            "_template_slice_config": {
+                "group_size": 1,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "registry.dp.tech/dptech/prod-11265/deepmdv3-dpgen2-calypso:v0.2",
+                "_comment": "all"
+            },
+            "_continue_on_success_ratio": 0.8,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA T4_16g"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 2,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "continue_on_success_ratio": 0,
+            "template_config": {
+                "image": "registry.dp.tech/dptech/vasp:5.4.4-calypso",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c16_m64_cpu"
+                        }
+                    }
+                }
+            },
+            "_template_slice_config": {
+                "group_size": 1,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "_upload_python_packages": [
+        "/root/dpgen2/dpgen2",
+        "/opt/re_e_bias_new/deepmd-kit/deepmd",
+	"/root/dflow/src/dflow"
+    ],
+    "inputs": {
+        "mixed_type": true,
+        "do_finetune": true,
+        "type_map": [
+            "H",
+            "He",
+            "Li",
+            "Be",
+            "B",
+            "C",
+            "N",
+            "O",
+            "F",
+            "Ne",
+            "Na",
+            "Mg",
+            "Al",
+            "Si",
+            "P",
+            "S",
+            "Cl",
+            "Ar",
+            "K",
+            "Ca",
+            "Sc",
+            "Ti",
+            "V",
+            "Cr",
+            "Mn",
+            "Fe",
+            "Co",
+            "Ni",
+            "Cu",
+            "Zn",
+            "Ga",
+            "Ge",
+            "As",
+            "Se",
+            "Br",
+            "Kr",
+            "Rb",
+            "Sr",
+            "Y",
+            "Zr",
+            "Nb",
+            "Mo",
+            "Tc",
+            "Ru",
+            "Rh",
+            "Pd",
+            "Ag",
+            "Cd",
+            "In",
+            "Sn",
+            "Sb",
+            "Te",
+            "I",
+            "Xe",
+            "Cs",
+            "Ba",
+            "La",
+            "Ce",
+            "Pr",
+            "Nd",
+            "Pm",
+            "Sm",
+            "Eu",
+            "Gd",
+            "Tb",
+            "Dy",
+            "Ho",
+            "Er",
+            "Tm",
+            "Yb",
+            "Lu",
+            "Hf",
+            "Ta",
+            "W",
+            "Re",
+            "Os",
+            "Ir",
+            "Pt",
+            "Au",
+            "Hg",
+            "Tl",
+            "Pb",
+            "Bi",
+            "Po",
+            "At",
+            "Rn",
+            "Fr",
+            "Ra",
+            "Ac",
+            "Th",
+            "Pa",
+            "U",
+            "Np",
+            "Pu",
+            "Am",
+            "Cm",
+            "Bk",
+            "Cf",
+            "Es",
+            "Fm",
+            "Md",
+            "No",
+            "Lr",
+            "Rf",
+            "Db",
+            "Sg",
+            "Bh",
+            "Hs",
+            "Mt",
+            "Ds",
+            "Rg",
+            "Cn",
+            "Nh",
+            "Fl",
+            "Mc",
+            "Lv",
+            "Ts",
+            "Og"
+        ],
+        "mass_map": [
+            4.0,
+            4.0026,
+            6.94,
+            9.0122,
+            10.81,
+            12.011,
+            14.007,
+            15.999,
+            18.998,
+            20.18,
+            22.99,
+            24.305,
+            26.982,
+            28.0855,
+            30.974,
+            32.06,
+            35.45,
+            39.95,
+            39.098,
+            40.078,
+            44.956,
+            47.867,
+            50.942,
+            51.996,
+            54.938,
+            55.845,
+            58.933,
+            58.693,
+            63.546,
+            65.38,
+            69.723,
+            72.63,
+            74.922,
+            78.971,
+            79.904,
+            83.798,
+            85.468,
+            87.62,
+            88.906,
+            91.224,
+            92.906,
+            95.95,
+            97,
+            101.07,
+            102.91,
+            106.42,
+            107.87,
+            112.41,
+            114.82,
+            118.71,
+            121.76,
+            127.6,
+            126.9,
+            131.29,
+            132.91,
+            137.33,
+            138.91,
+            140.12,
+            140.91,
+            144.24,
+            145,
+            150.36,
+            151.96,
+            157.25,
+            158.93,
+            162.5,
+            164.93,
+            167.26,
+            168.93,
+            173.05,
+            174.97,
+            178.49,
+            180.95,
+            183.84,
+            186.21,
+            190.23,
+            192.22,
+            195.08,
+            196.97,
+            200.59,
+            204.38,
+            207.2,
+            208.98,
+            209,
+            210,
+            222,
+            223,
+            226,
+            227,
+            232.04,
+            231.04,
+            238.03,
+            237,
+            244,
+            243,
+            247,
+            247,
+            251,
+            252,
+            257,
+            258,
+            259,
+            262,
+            267,
+            268,
+            269,
+            270,
+            269,
+            277,
+            281,
+            282,
+            285,
+            286,
+            290,
+            290,
+            293,
+            294,
+            294
+        ],
+        "init_data_prefix": null,
+        "init_data_sys": [
+            "/personal/workplace/DP/dpgen2/Mg10Al54/deepmd"
+        ],
+        "_comment": "all"
+    },
+    "train": {
+        "type": "dp",
+        "numb_models": 4,
+        "init_models_paths": [
+            "model-ckpt-new.pt",
+            "model-ckpt-new.pt",
+            "model-ckpt-new.pt",
+            "model-ckpt-new.pt"
+        ],
+        "config": {
+            "impl":"pytorch",
+            "finetune_args":"--model-branch Domains_Alloy",
+            "init_model_policy": "yes",
+            "init_model_old_ratio": 0.9,
+            "init_model_numb_steps": 20,
+            "init_model_start_lr": 2e-5,
+            "init_model_start_pref_e": 0.25,
+            "init_model_start_pref_f": 100,
+            "_comment": "all"
+        },
+        "template_script": "train.json",
+        "_comment": "all"
+    },
+    "fp": {
+        "type": "vasp",
+        "task_max": 300,
+        "run_config": {
+            "command": "ulimit -s unlimited && source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        },
+        "inputs_config": {
+            "incar": "/personal/workplace/DP/dpgen2/vasp_input/INCAR",
+            "pp_files": {
+                "Mg": "/personal/workplace/DP/dpgen2/vasp_input/POTCAR.Mg",
+                "Al": "/personal/workplace/DP/dpgen2/vasp_input/POTCAR.Al"
+            },
+            "kspacing": 0.1,
+            "kgamma": false
+        },
+        "_comment": "all"
+    },
+    "explore": {
+        "_type": "lmp",
+        "type": "calypso",
+        "config": {
+            "_command": "lmp -var restart 0",
+            "run_calypso_command": "calypso.x",
+            "run_opt_command": "python -u calypso_run_opt.py model.ckpt.pt"
+        },
+        "convergence": {
+            "type": "fixed-levels",
+            "conv_accuracy": 0.9,
+            "level_f_lo": 0.05,
+            "level_f_hi": 0.50,
+            "_comment": "all"
+        },
+        "max_numb_iter": 2,
+        "fatal_at_max": false,
+        "output_nopbc": false,
+        "configuration_prefix": null,
+        "configurations": [
+            {
+                "type": "file",
+                "_prefix": null,
+                "files": [
+                    "/personal/workplace/DP/dpgen2/Mg12Al8/deepmd"
+                ],
+                "fmt": "deepmd/npy"
+            }
+        ],
+        "stages": [
+            [
+                {
+                    "numb_of_species": 1,
+                    "numb_of_atoms": [
+                        1
+                    ],
+                    "name_of_atoms": [
+                        "Mg"
+                    ],
+                    "atomic_number": [
+                        3
+                    ],
+                    "pop_size": 50,
+                    "max_step": 3,
+                    "distance_of_ions": [
+                        [
+                            1.0
+                        ]
+                    ]
+                },
+                {
+                    "numb_of_species": 2,
+                    "numb_of_atoms": [
+                        1,
+                        3
+                    ],
+                    "name_of_atoms": [
+                        "Mg",
+                        "Al"
+                    ],
+                    "atomic_number": [
+                        3,
+                        37
+                    ],
+                    "pop_size": 50,
+                    "max_step": 3,
+                    "distance_of_ions": [
+                        [
+                            1.0,
+                            1.0
+                        ],
+                        [
+                            1.0,
+                            1.0
+                        ]
+                    ]
+                }
+            ],
+            [
+                {
+                    "numb_of_species": 1,
+                    "numb_of_atoms": [
+                        1
+                    ],
+                    "name_of_atoms": [
+                        "Mg"
+                    ],
+                    "atomic_number": [
+                        3
+                    ],
+                    "pop_size": 50,
+                    "max_step": 3,
+                    "distance_of_ions": [
+                        [
+                            1.0
+                        ]
+                    ]
+                },
+                {
+                    "numb_of_species": 2,
+                    "numb_of_atoms": [
+                        1,
+                        3
+                    ],
+                    "name_of_atoms": [
+                        "Mg",
+                        "Al"
+                    ],
+                    "atomic_number": [
+                        3,
+                        37
+                    ],
+                    "pop_size": 50,
+                    "max_step": 3,
+                    "distance_of_ions": [
+                        [
+                            1.0,
+                            1.0
+                        ],
+                        [
+                            1.0,
+                            1.0
+                        ]
+                    ]
+                }
+            ]
+        ],
+        "_lmp_stages": [
+            [
+                {
+                    "type": "lmp-md",
+                    "ensemble": "nvt",
+                    "nsteps": 50,
+                    "press": [
+                        1e0
+                    ],
+                    "temps": [
+                        50
+                    ],
+                    "trj_freq": 10,
+                    "conf_idx": [
+                        0
+                    ],
+                    "n_sample": 3
+                },
+                {
+                    "type": "lmp-template",
+                    "lmp": "template.lammps",
+                    "trj_freq": 10,
+                    "revisions": {
+                        "V_NSTEPS": [
+                            40
+                        ],
+                        "V_TEMP": [
+                            100,
+                            200
+                        ],
+                        "V_DUMPFREQ": [
+                            10
+                        ]
+                    },
+                    "conf_idx": [
+                        0
+                    ],
+                    "n_sample": 3
+                }
+            ]
+        ],
+        "_comment": "all"
+    }
+}

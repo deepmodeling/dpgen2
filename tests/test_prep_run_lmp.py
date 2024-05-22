@@ -218,6 +218,7 @@ class TestMockedRunLmp(unittest.TestCase):
             self.check_run_lmp_output(self.task_list_str[ii], self.model_list)
 
 
+# @unittest.skip("temp")
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestPrepRunLmp(unittest.TestCase):
     def setUp(self):
@@ -279,8 +280,8 @@ class TestPrepRunLmp(unittest.TestCase):
             "prep-run-step",
             template=steps,
             parameters={
-                "lmp_config": {},
-                "lmp_task_grp": self.task_group_list,
+                "explore_config": {},
+                "expl_task_grp": self.task_group_list,
             },
             artifacts={
                 "models": self.models,

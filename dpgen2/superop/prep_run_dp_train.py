@@ -20,6 +20,7 @@ from dflow import (
     OutputArtifact,
     OutputParameter,
     Outputs,
+    S3Artifact,
     Step,
     Steps,
     Workflow,
@@ -33,6 +34,7 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    BigParameter,
     OPIOSign,
     PythonOPTemplate,
     Slices,
@@ -75,7 +77,7 @@ class ModifyTrainScript(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "template_script": List[dict],
+                "template_script": BigParameter(List[dict]),
             }
         )
 
@@ -132,6 +134,7 @@ class PrepRunDPTrain(Steps):
         run_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
         finetune: bool = False,
+        valid_data: Optional[S3Artifact] = None,
     ):
         self._input_parameters = {
             "block_id": InputParameter(type=str, value=""),
@@ -192,6 +195,7 @@ class PrepRunDPTrain(Steps):
             run_config=run_config,
             upload_python_packages=upload_python_packages,
             finetune=finetune,
+            valid_data=valid_data,
         )
 
     @property
@@ -225,6 +229,7 @@ def _prep_run_dp_train(
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
     finetune: bool = False,
+    valid_data: Optional[S3Artifact] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
@@ -232,6 +237,7 @@ def _prep_run_dp_train(
     run_template_config = run_config.pop("template_config")
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
+    template_slice_config = run_config.pop("template_slice_config", {})
 
     prep_train = Step(
         "prep-train",
@@ -261,6 +267,7 @@ def _prep_run_dp_train(
                 input_parameter=["task_name"],
                 input_artifact=["task_path", "init_model"],
                 output_artifact=["model", "lcurve", "log", "script"],
+                **template_slice_config,
             ),
             python_packages=upload_python_packages,
             **run_template_config,
@@ -277,6 +284,7 @@ def _prep_run_dp_train(
             "init_model": train_steps.inputs.artifacts["init_models"],
             "init_data": train_steps.inputs.artifacts["init_data"],
             "iter_data": train_steps.inputs.artifacts["iter_data"],
+            "valid_data": valid_data,
         },
         with_sequence=argo_sequence(
             argo_len(prep_train.outputs.parameters["task_names"]),
