@@ -117,7 +117,9 @@ def iterdict(d: Dict[str, str], out_list: list, flag: Optional[str] = None):
                         if k_tmp == "_":
                             out_list[index] = "&" + flag + " " + repeat_keyword[idx]
                         else:
-                            out_list.insert(index + 1, k_tmp + " " + repeat_keyword[idx])
+                            out_list.insert(
+                                index + 1, k_tmp + " " + repeat_keyword[idx]
+                            )
 
             break
 
@@ -169,15 +171,15 @@ class Cp2kInputs:
         # write coordinate to xyz file used by cp2k input
         coord_list = sys_data["coords"][0]
         u = np.array(atom_names)
-        atom_list = u[atom_types] # type: ignore
+        atom_list = u[atom_types]  # type: ignore
         x = "&COORD\n"
-        for kind, coord in zip(atom_list, coord_list): # type: ignore
+        for kind, coord in zip(atom_list, coord_list):  # type: ignore
             x += str(kind) + " " + str(coord[:])[1:-1] + "\n"
         x += "&END COORD\n"
 
         # covert cell to cell string
         cell = sys_data["cells"][0]
-        cell = np.reshape(cell, [3, 3]) # type: ignore
+        cell = np.reshape(cell, [3, 3])  # type: ignore
         cell_a = np.array2string(cell[0, :])
         cell_a = cell_a[1:-1]
         cell_b = np.array2string(cell[1, :])
