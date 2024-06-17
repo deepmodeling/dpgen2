@@ -600,7 +600,7 @@ def make_lmp_task_group_from_config(
     elif config["type"] == "lmp-spin":
         tgroup = LmpSpinTaskGroup()
         config.pop("type")
-        lmp_spin_template = config.pop("lmp_spin_fname")
+        lmp_spin_template = config.pop("lmp_template_fname")
         tgroup.set_lmp(
             numb_models,
             lmp_spin_template,
