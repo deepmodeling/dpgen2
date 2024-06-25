@@ -3,6 +3,11 @@ from .abacus import (
     PrepFpOpAbacus,
     RunFpOpAbacus,
 )
+from .cp2k import (
+    Cp2kInputs,
+    PrepCp2k,
+    RunCp2k,
+)
 from .deepmd import (
     DeepmdInputs,
     PrepDeepmd,
@@ -39,5 +44,10 @@ fp_styles = {
         "inputs": FpOpAbacusInputs,
         "prep": PrepFpOpAbacus,
         "run": RunFpOpAbacus,
+    },
+    "cp2k": {
+        "inputs": Cp2kInputs,
+        "prep": PrepCp2k,
+        "run": RunCp2k,
     },
 }
