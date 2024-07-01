@@ -1,3 +1,4 @@
+import os
 from pathlib import (
     Path,
 )
@@ -6,7 +7,7 @@ from typing import (
     Optional,
 )
 
-import dpdata, os
+import dpdata
 from dargs import (
     Argument,
 )
@@ -100,11 +101,13 @@ class PrepFpOpCp2k(OP):
         op = PrepCp2k()
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
+
 def get_run_type(lines: List[str]) -> Optional[str]:
     for line in lines:
         if "RUN_TYPE" in line:
             return line.split()[-1]
     return None
+
 
 class RunFpOpCp2k(OP):
     @classmethod
@@ -155,12 +158,14 @@ class RunFpOpCp2k(OP):
         run_type = get_run_type(lines)
 
         if run_type == "ENERGY_FORCE":
-            sys = dpdata.LabeledSystem(file_path , fmt="cp2kdata/e_f")
+            sys = dpdata.LabeledSystem(file_path, fmt="cp2kdata/e_f")
         elif run_type == "MD":
-            sys = dpdata.LabeledSystem(str(workdir), cp2k_output_name="output.log", fmt="cp2kdata/md")
+            sys = dpdata.LabeledSystem(
+                str(workdir), cp2k_output_name="output.log", fmt="cp2kdata/md"
+            )
         else:
             raise ValueError(f"Type of calculation {run_type} not supported")
-        
+
         out_name = run_config.get("out", fp_default_out_data_name)
         sys.to("deepmd/npy", workdir / out_name)
 
