@@ -4,7 +4,7 @@ import unittest
 from pathlib import (
     Path,
 )
-
+import sys
 import dflow
 import dpdata
 from dflow import (
@@ -25,6 +25,8 @@ from dpgen2.superop import (
 
 
 class TestFpOpCp2k(unittest.TestCase):
+    def setUp(self):
+        self.python_version = sys.version_info
     def tearDown(self):
         if Path("upload").is_dir():
             shutil.rmtree("upload")
@@ -34,6 +36,9 @@ class TestFpOpCp2k(unittest.TestCase):
             shutil.rmtree(p)
 
     def test_cp2k(self):
+        # skip Python 3.7 version, which is unsuitable for cp2kdata
+        if self.python_version < (3, 8):
+            self.skipTest("Python version is below 3.8, skipping test.")
         data_path = Path(__file__).parent / "data.cp2k"
         fp_config = {
             "inputs": FpOpCp2kInputs(data_path / "input.inp"),
