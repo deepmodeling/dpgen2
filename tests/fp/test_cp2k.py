@@ -1,10 +1,11 @@
 import os
 import shutil
+import sys
 import unittest
 from pathlib import (
     Path,
 )
-import sys
+
 import dflow
 import dpdata
 from dflow import (
@@ -27,6 +28,7 @@ from dpgen2.superop import (
 class TestFpOpCp2k(unittest.TestCase):
     def setUp(self):
         self.python_version = sys.version_info
+
     def tearDown(self):
         if Path("upload").is_dir():
             shutil.rmtree("upload")
