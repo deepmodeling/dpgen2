@@ -35,7 +35,6 @@ class TestFpOpCp2k(unittest.TestCase):
 
     def test_cp2k(self):
         data_path = Path(__file__).parent / "data.cp2k"
-        print(data_path)
         fp_config = {
             "inputs": FpOpCp2kInputs(data_path / "input.inp"),
             "run": {
