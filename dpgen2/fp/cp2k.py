@@ -166,7 +166,8 @@ class RunFpOpCp2k(OP):
         else:
             raise ValueError(f"Type of calculation {run_type} not supported")
 
-        out_name = run_config.get("out", fp_default_out_data_name)
+        # out_name = run_config.get("out", fp_default_out_data_name)
+        out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
 
         return OPIO(
