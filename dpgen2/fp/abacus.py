@@ -199,7 +199,7 @@ class RunFpOpAbacus(OP):
             sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
         else:
             raise ValueError("Type of calculation %s not supported" % calculation)
-        out_name = run_config.get("out", fp_default_out_data_name)
+        out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
 
         return OPIO(
@@ -212,13 +212,6 @@ class RunFpOpAbacus(OP):
     @staticmethod
     def args():
         doc_cmd = "The command of abacus"
-        doc_out = (
-            "The output dir name of labeled data. "
-            "In `deepmd/npy` format provided by `dpdata`."
-        )
         return [
             Argument("command", str, optional=True, default="abacus", doc=doc_cmd),
-            Argument(
-                "out", str, optional=True, default=fp_default_out_data_name, doc=doc_out
-            ),
         ]
