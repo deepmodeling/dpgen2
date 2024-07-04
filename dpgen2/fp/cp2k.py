@@ -180,13 +180,6 @@ class RunFpOpCp2k(OP):
     @staticmethod
     def args():
         doc_cmd = "The command of cp2k"
-        doc_out = (
-            "The output dir name of labeled data. "
-            "In `deepmd/npy` format provided by `dpdata`."
-        )
         return [
             Argument("command", str, optional=True, default="cp2k", doc=doc_cmd),
-            Argument(
-                "out", str, optional=True, default=fp_default_out_data_name, doc=doc_out
-            ),
         ]
