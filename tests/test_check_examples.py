@@ -21,8 +21,6 @@ input_files = (
     p_examples / "ch4" / "input_dist.json",
     # p_examples / "chno" / "dpa_manyi.json",
     p_examples / "chno" / "input.json",
-    #p_examples / "water" / "input_dpgen_abacus.json",
-    #p_examples / "water" / "input_dpgen_cp2k.json",
 )
 
 
