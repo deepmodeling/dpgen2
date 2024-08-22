@@ -98,7 +98,7 @@ class RunRelax(OP):
             with open(os.path.join("relax_trajs", fname), "rb") as f:
                 try:
                     data = pickle.load(f)
-                except:
+                except Exception:
                     traceback.print_exc()
                     continue
             nsteps = len(data["energy"])
@@ -172,7 +172,6 @@ class RunRelax(OP):
                 header=header,
             )
             model_devis.append(model_devi_file)
-
         return OPIO(
             {
                 "trajs": trajs,

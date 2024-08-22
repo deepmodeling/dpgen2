@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import (
     Path,
 )
@@ -90,8 +91,7 @@ class DiffCSPGen(OP):
         except ValueError:
             raise RuntimeError("Path of DiffCSP model not provided.")
         model_path = args[i + 1]
-        ret = os.system(cmd)
-        assert ret == 0, "Command '%s' failed." % cmd
+        subprocess.run(cmd, shell=True, check=True)
         result_file = os.path.join(model_path, "eval_gen.pt")
         task_dir = "diffcsp.%s" % ip["task_id"]
         convert_pt_to_cif(result_file, task_dir)
