@@ -52,10 +52,12 @@ class PrepRunLmp(Steps):
         name: str,
         prep_op: Type[OP],
         run_op: Type[OP],
-        prep_config: dict = normalize_step_dict({}),
-        run_config: dict = normalize_step_dict({}),
+        prep_config: Optional[dict] = None,
+        run_config: Optional[dict] = None,
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):
+        prep_config = normalize_step_dict({}) if prep_config is None else prep_config
+        run_config = normalize_step_dict({}) if run_config is None else run_config
         self._input_parameters = {
             "block_id": InputParameter(type=str, value=""),
             "explore_config": InputParameter(),

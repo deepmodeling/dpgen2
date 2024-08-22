@@ -60,12 +60,14 @@ class PrepRunDPTrain(Steps):
         name: str,
         prep_train_op: Type[OP],
         run_train_op: Type[RunDPTrain],
-        prep_config: dict = normalize_step_dict({}),
-        run_config: dict = normalize_step_dict({}),
+        prep_config: Optional[dict] = None,
+        run_config: Optional[dict] = None,
         upload_python_packages: Optional[List[os.PathLike]] = None,
         valid_data: Optional[S3Artifact] = None,
         optional_files: Optional[List[str]] = None,
     ):
+        prep_config = normalize_step_dict({}) if prep_config is None else prep_config
+        run_config = normalize_step_dict({}) if run_config is None else run_config
         self._input_parameters = {
             "block_id": InputParameter(type=str, value=""),
             "numb_models": InputParameter(type=int),
