@@ -45,6 +45,8 @@ def npt_task_group_args():
     doc_use_clusters = "Calculate atomic model deviation"
     doc_relative_f_epsilon = "Calculate relative force model deviation"
     doc_relative_v_epsilon = "Calculate relative virial model deviation"
+    doc_ele_temp_f = "The electron temperature set by frame style"
+    doc_ele_temp_a = "The electron temperature set by atomistic style"
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -91,6 +93,20 @@ def npt_task_group_args():
             optional=True,
             default=None,
             doc=doc_relative_v_epsilon,
+        ),
+        Argument(
+            "ele_temp_f",
+            float,
+            optional=True,
+            default=None,
+            doc=doc_ele_temp_f,
+        ),
+        Argument(
+            "ele_temp_a",
+            float,
+            optional=True,
+            default=None,
+            doc=doc_ele_temp_a,
         ),
     ]
 
