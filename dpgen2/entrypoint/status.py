@@ -33,5 +33,6 @@ def status(
 
     if scheduler is not None:
         ptr_str = scheduler.print_convergence()
+        print(ptr_str)  # noqa: T201
     else:
         logging.warn("no scheduler is finished")

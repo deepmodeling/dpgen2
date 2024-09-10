@@ -10,6 +10,9 @@ from typing import (
 from dpgen2 import (
     __version__,
 )
+from dpgen2.utils.download_dpgen2_artifacts import (
+    print_op_download_setting,
+)
 
 from .common import (
     expand_idx,
@@ -352,7 +355,7 @@ def main():
             config = json.load(fp)
         wfid = args.ID
         if args.list_supported is not None and args.list_supported:
-            pass
+            print(print_op_download_setting())  # noqa: T201
         elif args.keys is not None:
             download(
                 wfid,

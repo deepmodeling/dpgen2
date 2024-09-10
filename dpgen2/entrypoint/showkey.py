@@ -32,3 +32,4 @@ def showkey(
         all_step_keys,
         ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
     )
+    print(prt_str)  # noqa: T201
