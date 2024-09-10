@@ -280,7 +280,7 @@ def parse_traj(traj_file):
             selected_traj = [trajs[iii] for iii in [4, 9, -10, -5, -1]]
         elif 5 <= len(trajs) < 20:
             rng = np.random.default_rng()
-            selected_traj = [trajs[rng.randint(3, len(trajs) - 1)] for _ in range(4)]
+            selected_traj = [trajs[rng.integers(3, len(trajs) - 1)] for _ in range(4)]
             selected_traj.append(trajs[-1])
         elif 3 <= len(trajs) < 5:
             selected_traj = [trajs[round((len(trajs) - 1) / 2)]]
