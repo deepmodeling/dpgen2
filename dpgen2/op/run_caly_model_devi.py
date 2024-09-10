@@ -214,7 +214,7 @@ def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     for idx, atom in enumerate(new_atoms):
         type_id = type_map.index(atom.symbol) + 1  # type: ignore
         dump_str += "%5d %5d" % (idx + 1, type_id)
-        dump_str += f"{atom.position[0]:20.10f} {atom.position[1]:20.10f} {atom.position[2]:20.10f}"
+        dump_str += f"{atom.position[0]:20.10f} {atom.position[1]:20.10f} {atom.position[2]:20.10f}"  # type: ignore
         dump_str += f"{0:20.10f} {0:20.10f} {0:20.10f}\n"
     # dump_str = dump_str.strip("\n")
     return dump_str
