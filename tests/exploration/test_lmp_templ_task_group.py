@@ -5,24 +5,12 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
-
-import numpy as np
 
 try:
-    from exploration.context import (
-        dpgen2,
-    )
+    from exploration.context import dpgen2  # noqa: F401
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from unittest.mock import (
-    Mock,
-    patch,
-)
 
 from dpgen2.constants import (
     lmp_conf_name,
@@ -30,7 +18,6 @@ from dpgen2.constants import (
     plm_input_name,
 )
 from dpgen2.exploration.task import (
-    ExplorationStage,
     LmpTemplateTaskGroup,
 )
 
@@ -55,7 +42,7 @@ change_box      all triclinic
 mass            1 27.000000
 mass            2 24.000000
 
-pair_style      deepmd ../graph.003.pb ../graph.001.pb ../graph.002.pb ../graph.000.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_style      deepmd ../graph.003.pb ../graph.001.pb ../graph.002.pb ../graph.000.pb  out_freq ${THERMO_FREQ} out_file model_devi.out
 pair_coeff      * *
 
 thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
@@ -130,7 +117,7 @@ change_box      all triclinic
 mass            1 27.000000
 mass            2 24.000000
 
-pair_style      deepmd ../graph.003.pb ../graph.001.pb ../graph.002.pb ../graph.000.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_style      deepmd ../graph.003.pb ../graph.001.pb ../graph.002.pb ../graph.000.pb  out_freq ${THERMO_FREQ} out_file model_devi.out
 pair_coeff      * *
 
 fix             dpgen_plm

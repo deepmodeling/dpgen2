@@ -115,7 +115,7 @@ class PrepFpOpAbacus(OP):
                         s["atom_types"][i] = atom_names.index(s["atom_names"][t])  # type: ignore https://github.com/microsoft/pyright/issues/5620
                     s.data["atom_numbs"] = atom_numbs
                     s.data["atom_names"] = atom_names
-                    target = "output/%s" % system
+                    target = f"output/{system}"
                     s.to("deepmd/npy", target)
                     confs.append(Path(target))
                 else:
@@ -188,7 +188,7 @@ class RunFpOpAbacus(OP):
         workdir = op_out["backward_dir"].parent
 
         # convert the output to deepmd/npy format
-        with open("%s/INPUT" % workdir, "r") as f:
+        with open(f"{workdir}/INPUT") as f:
             INPUT = f.readlines()
         _, calculation = get_suffix_calculation(INPUT)
         if calculation == "scf":
@@ -198,7 +198,7 @@ class RunFpOpAbacus(OP):
         elif calculation in ["relax", "cell-relax"]:
             sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
         else:
-            raise ValueError("Type of calculation %s not supported" % calculation)
+            raise ValueError(f"Type of calculation {calculation} not supported")
         out_name = run_config.get("out", fp_default_out_data_name)
         sys.to("deepmd/npy", workdir / out_name)
 

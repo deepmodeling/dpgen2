@@ -4,22 +4,15 @@ import unittest
 from pathlib import (
     Path,
 )
-
-import numpy as np
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
-)
-from mock import (
+from unittest import (
     mock,
 )
 
-# isort: off
-from .context import (
-    dpgen2,
+from dflow.python import (
+    OPIO,
 )
+
+# isort: off
 from dpgen2.constants import (
     train_script_name,
     train_task_pattern,

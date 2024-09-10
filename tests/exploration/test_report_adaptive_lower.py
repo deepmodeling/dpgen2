@@ -1,20 +1,14 @@
-import os
-import textwrap
 import unittest
-from collections import (
-    Counter,
+from unittest import (
+    mock,
 )
 
-import mock
 import numpy as np
 from dargs import (
     Argument,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
@@ -52,8 +46,8 @@ class TestTrajsExplorationReport(unittest.TestCase):
         for idx, ii in enumerate(expected_fail_):
             for jj in ii:
                 expected_fail.add((idx, jj))
-        expected_cand = set([(0, 5), (0, 6), (1, 8), (1, 0), (1, 5)])
-        expected_accu = set([(0, 1), (1, 6), (1, 7)])
+        expected_cand = {(0, 5), (0, 6), (1, 8), (1, 0), (1, 5)}
+        expected_accu = {(0, 1), (1, 6), (1, 7)}
 
         ter = ExplorationReportAdaptiveLower(
             level_f_hi=0.7,
@@ -135,10 +129,18 @@ class TestTrajsExplorationReport(unittest.TestCase):
         for idx, ii in enumerate(expected_fail_):
             for jj in ii:
                 expected_fail.add((idx, jj))
-        expected_cand = set([(0, 6), (0, 7), (0, 5)])
-        expected_accu = set(
-            [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
-        )
+        expected_cand = {(0, 6), (0, 7), (0, 5)}
+        expected_accu = {
+            (0, 1),
+            (0, 3),
+            (0, 4),
+            (1, 0),
+            (1, 1),
+            (1, 5),
+            (1, 6),
+            (1, 7),
+            (1, 8),
+        }
 
         ter = ExplorationReportAdaptiveLower(
             level_f_hi=0.7,
@@ -182,11 +184,21 @@ class TestTrajsExplorationReport(unittest.TestCase):
         for idx, ii in enumerate(expected_fail_):
             for jj in ii:
                 expected_fail.add((idx, jj))
-        expected_cand = set(
-            [(0, 6), (0, 7), (0, 5)]
-            + [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
-        )
-        expected_accu = set([])
+        expected_cand = {
+            (0, 6),
+            (0, 7),
+            (0, 5),
+            (0, 1),
+            (0, 3),
+            (0, 4),
+            (1, 0),
+            (1, 1),
+            (1, 5),
+            (1, 6),
+            (1, 7),
+            (1, 8),
+        }
+        expected_accu = set()
 
         ter = ExplorationReportAdaptiveLower(
             level_f_hi=0.7,
@@ -253,10 +265,18 @@ class TestTrajsExplorationReport(unittest.TestCase):
         for idx, ii in enumerate(expected_fail_):
             for jj in ii:
                 expected_fail.add((idx, jj))
-        expected_cand = set([(0, 6), (0, 7), (0, 5)])
-        expected_accu = set(
-            [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
-        )
+        expected_cand = {(0, 6), (0, 7), (0, 5)}
+        expected_accu = {
+            (0, 1),
+            (0, 3),
+            (0, 4),
+            (1, 0),
+            (1, 1),
+            (1, 5),
+            (1, 6),
+            (1, 7),
+            (1, 8),
+        }
 
         ter = ExplorationReportAdaptiveLower(
             level_f_hi=1.0,

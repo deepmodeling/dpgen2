@@ -1,11 +1,6 @@
-import glob
-import os
-import pickle
-from pathlib import (
-    Path,
-)
+import functools
+import operator
 
-import dpdata
 from dflow import (
     Workflow,
 )
@@ -32,9 +27,8 @@ def showkey(
 
     wf = Workflow(id=wf_id)
     folded_keys = get_resubmit_keys(wf)
-    all_step_keys = sum(folded_keys.values(), [])
+    all_step_keys = functools.reduce(operator.iadd, folded_keys.values(), [])
     prt_str = print_keys_in_nice_format(
         all_step_keys,
         ["run-train", "run-lmp", "run-fp"],
     )
-    print(prt_str)

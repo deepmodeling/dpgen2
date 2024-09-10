@@ -1,16 +1,12 @@
-import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 from unittest.mock import (
-    Mock,
-    call,
     patch,
 )
 
-import numpy as np
 from ase import (
     Atoms,
 )
@@ -18,25 +14,16 @@ from ase.io import (
     write,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    TransientError,
 )
 
 from dpgen2.constants import (
-    calypso_input_file,
-    calypso_log_name,
     calypso_task_pattern,
 )
 from dpgen2.op.run_caly_model_devi import (
     RunCalyModelDevi,
     atoms2lmpdump,
     parse_traj,
-)
-from dpgen2.utils import (
-    BinaryFileInput,
 )
 
 # from .context import (
@@ -45,11 +32,12 @@ from dpgen2.utils import (
 
 # isort: on
 try:
-    import deepmd
+    import deepmd  # noqa: F401
 
-    x = 0
-except:
+except ModuleNotFoundError:
     x = 1
+else:
+    x = 0
 
 
 class TestRunCalyModelDevi(unittest.TestCase):

@@ -40,16 +40,16 @@ class BCC:
     def poscar_unit(self, latt):
         box = self.gen_box()
         ret = ""
-        ret += "BCC : a = %f \n" % latt
-        ret += "%.16f\n" % (latt)
-        ret += "%.16f %.16f %.16f\n" % (box[0][0], box[0][1], box[0][2])
-        ret += "%.16f %.16f %.16f\n" % (box[1][0], box[1][1], box[1][2])
-        ret += "%.16f %.16f %.16f\n" % (box[2][0], box[2][1], box[2][2])
+        ret += f"BCC : a = {latt:f} \n"
+        ret += f"{latt:.16f}\n"
+        ret += f"{box[0][0]:.16f} {box[0][1]:.16f} {box[0][2]:.16f}\n"
+        ret += f"{box[1][0]:.16f} {box[1][1]:.16f} {box[1][2]:.16f}\n"
+        ret += f"{box[2][0]:.16f} {box[2][1]:.16f} {box[2][2]:.16f}\n"
         ret += "Type\n"
         ret += "%d\n" % self.numb_atoms()
         ret += "Direct\n"
-        ret += "%.16f %.16f %.16f\n" % (0.0, 0.0, 0.0)
-        ret += "%.16f %.16f %.16f\n" % (0.5, 0.5, 0.5)
+        ret += f"{0.0:.16f} {0.0:.16f} {0.0:.16f}\n"
+        ret += f"{0.5:.16f} {0.5:.16f} {0.5:.16f}\n"
         return ret
 
 
@@ -63,18 +63,18 @@ class FCC:
     def poscar_unit(self, latt):
         box = self.gen_box()
         ret = ""
-        ret += "FCC : a = %f \n" % latt
-        ret += "%.16f\n" % (latt)
-        ret += "%.16f %.16f %.16f\n" % (box[0][0], box[0][1], box[0][2])
-        ret += "%.16f %.16f %.16f\n" % (box[1][0], box[1][1], box[1][2])
-        ret += "%.16f %.16f %.16f\n" % (box[2][0], box[2][1], box[2][2])
+        ret += f"FCC : a = {latt:f} \n"
+        ret += f"{latt:.16f}\n"
+        ret += f"{box[0][0]:.16f} {box[0][1]:.16f} {box[0][2]:.16f}\n"
+        ret += f"{box[1][0]:.16f} {box[1][1]:.16f} {box[1][2]:.16f}\n"
+        ret += f"{box[2][0]:.16f} {box[2][1]:.16f} {box[2][2]:.16f}\n"
         ret += "Type\n"
         ret += "%d\n" % self.numb_atoms()
         ret += "Direct\n"
-        ret += "%.16f %.16f %.16f\n" % (0.0, 0.0, 0.0)
-        ret += "%.16f %.16f %.16f\n" % (0.5, 0.5, 0.0)
-        ret += "%.16f %.16f %.16f\n" % (0.5, 0.0, 0.5)
-        ret += "%.16f %.16f %.16f\n" % (0.0, 0.5, 0.5)
+        ret += f"{0.0:.16f} {0.0:.16f} {0.0:.16f}\n"
+        ret += f"{0.5:.16f} {0.5:.16f} {0.0:.16f}\n"
+        ret += f"{0.5:.16f} {0.0:.16f} {0.5:.16f}\n"
+        ret += f"{0.0:.16f} {0.5:.16f} {0.5:.16f}\n"
         return ret
 
 
@@ -91,16 +91,16 @@ class HCP:
     def poscar_unit(self, latt):
         box = self.gen_box()
         ret = ""
-        ret += "HCP : a = %f / sqrt(2)\n" % latt
+        ret += f"HCP : a = {latt:f} / sqrt(2)\n"
         ret += "%.16f\n" % (latt / np.sqrt(2))
-        ret += "%.16f %.16f %.16f\n" % (box[0][0], box[0][1], box[0][2])
-        ret += "%.16f %.16f %.16f\n" % (box[1][0], box[1][1], box[1][2])
-        ret += "%.16f %.16f %.16f\n" % (box[2][0], box[2][1], box[2][2])
+        ret += f"{box[0][0]:.16f} {box[0][1]:.16f} {box[0][2]:.16f}\n"
+        ret += f"{box[1][0]:.16f} {box[1][1]:.16f} {box[1][2]:.16f}\n"
+        ret += f"{box[2][0]:.16f} {box[2][1]:.16f} {box[2][2]:.16f}\n"
         ret += "Type\n"
         ret += "%d\n" % self.numb_atoms()
         ret += "Direct\n"
-        ret += "%.16f %.16f %.16f\n" % (0, 0, 0)
-        ret += "%.16f %.16f %.16f\n" % (1.0 / 3, 1.0 / 3, 1.0 / 2)
+        ret += f"{0:.16f} {0:.16f} {0:.16f}\n"
+        ret += f"{1.0 / 3:.16f} {1.0 / 3:.16f} {1.0 / 2:.16f}\n"
         return ret
 
 
@@ -114,15 +114,15 @@ class SC:
     def poscar_unit(self, latt):
         box = self.gen_box()
         ret = ""
-        ret += "SC : a = %f \n" % latt
-        ret += "%.16f\n" % (latt)
-        ret += "%.16f %.16f %.16f\n" % (box[0][0], box[0][1], box[0][2])
-        ret += "%.16f %.16f %.16f\n" % (box[1][0], box[1][1], box[1][2])
-        ret += "%.16f %.16f %.16f\n" % (box[2][0], box[2][1], box[2][2])
+        ret += f"SC : a = {latt:f} \n"
+        ret += f"{latt:.16f}\n"
+        ret += f"{box[0][0]:.16f} {box[0][1]:.16f} {box[0][2]:.16f}\n"
+        ret += f"{box[1][0]:.16f} {box[1][1]:.16f} {box[1][2]:.16f}\n"
+        ret += f"{box[2][0]:.16f} {box[2][1]:.16f} {box[2][2]:.16f}\n"
         ret += "Type\n"
         ret += "%d\n" % self.numb_atoms()
         ret += "Direct\n"
-        ret += "%.16f %.16f %.16f\n" % (0.0, 0.0, 0.0)
+        ret += f"{0.0:.16f} {0.0:.16f} {0.0:.16f}\n"
         return ret
 
 
@@ -142,21 +142,17 @@ class DIAMOND:
         box = self.gen_box()
         ret = ""
         ret += "DIAMOND\n"
-        ret += "%.16f\n" % (latt)
-        ret += "%.16f %.16f %.16f\n" % (box[0][0], box[0][1], box[0][2])
-        ret += "%.16f %.16f %.16f\n" % (box[1][0], box[1][1], box[1][2])
-        ret += "%.16f %.16f %.16f\n" % (box[2][0], box[2][1], box[2][2])
+        ret += f"{latt:.16f}\n"
+        ret += f"{box[0][0]:.16f} {box[0][1]:.16f} {box[0][2]:.16f}\n"
+        ret += f"{box[1][0]:.16f} {box[1][1]:.16f} {box[1][2]:.16f}\n"
+        ret += f"{box[2][0]:.16f} {box[2][1]:.16f} {box[2][2]:.16f}\n"
         ret += "Type\n"
         ret += "%d\n" % self.numb_atoms()
         ret += "Direct\n"
-        ret += "%.16f %.16f %.16f\n" % (
-            0.12500000000000,
-            0.12500000000000,
-            0.12500000000000,
+        ret += (
+            f"{0.12500000000000:.16f} {0.12500000000000:.16f} {0.12500000000000:.16f}\n"
         )
-        ret += "%.16f %.16f %.16f\n" % (
-            0.87500000000000,
-            0.87500000000000,
-            0.87500000000000,
+        ret += (
+            f"{0.87500000000000:.16f} {0.87500000000000:.16f} {0.87500000000000:.16f}\n"
         )
         return ret

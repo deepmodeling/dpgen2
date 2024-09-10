@@ -1,27 +1,14 @@
 import argparse
 import json
 import logging
-import os
 import textwrap
 from typing import (
     List,
     Optional,
 )
 
-import dflow
-from dflow import (
-    Step,
-    Steps,
-    Workflow,
-    download_artifact,
-    upload_artifact,
-)
-
 from dpgen2 import (
     __version__,
-)
-from dpgen2.utils.download_dpgen2_artifacts import (
-    print_op_download_setting,
 )
 
 from .common import (
@@ -41,11 +28,8 @@ from .status import (
     status,
 )
 from .submit import (
-    make_concurrent_learning_op,
-    make_naive_exploration_scheduler,
     resubmit_concurrent_learning,
     submit_concurrent_learning,
-    workflow_concurrent_learning,
 )
 from .watch import (
     default_watching_keys,
@@ -297,7 +281,7 @@ def main_parser() -> argparse.ArgumentParser:
         "-v",
         "--version",
         action="version",
-        version="DPGEN v%s" % __version__,
+        version=f"DPGEN v{__version__}",
     )
 
     return parser
@@ -368,7 +352,7 @@ def main():
             config = json.load(fp)
         wfid = args.ID
         if args.list_supported is not None and args.list_supported:
-            print(print_op_download_setting())
+            pass
         elif args.keys is not None:
             download(
                 wfid,

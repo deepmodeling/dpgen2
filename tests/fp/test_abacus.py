@@ -40,8 +40,9 @@ class TestFpOpAbacus(unittest.TestCase):
                 data_path / "INPUT", {"Na": data_path / "Na_ONCV_PBE-1.0.upf"}
             ),
             "run": {
-                "command": "cp -r %s OUT.ABACUS && cat %s"
-                % (data_path / "OUT.ABACUS", data_path / "log"),
+                "command": "cp -r {} OUT.ABACUS && cat {}".format(
+                    data_path / "OUT.ABACUS", data_path / "log"
+                ),
             },
         }
         confs = [data_path / "sys-2"]

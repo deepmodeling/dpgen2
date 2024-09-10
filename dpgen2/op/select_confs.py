@@ -1,12 +1,8 @@
-import json
-import os
 from pathlib import (
     Path,
 )
 from typing import (
     List,
-    Set,
-    Tuple,
 )
 
 from dflow.python import (
@@ -74,7 +70,6 @@ class SelectConfs(OP):
             - `conf`: (`Artifact(List[Path])`) The selected configurations.
 
         """
-
         conf_selector = ip["conf_selector"]
         type_map = ip["type_map"]
 

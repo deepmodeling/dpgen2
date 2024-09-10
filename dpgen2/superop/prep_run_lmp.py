@@ -2,13 +2,9 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     List,
     Optional,
-    Set,
     Type,
 )
 
@@ -21,18 +17,11 @@ from dflow import (
     Outputs,
     Step,
     Steps,
-    Workflow,
     argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
@@ -90,10 +79,12 @@ class PrepRunLmp(Steps):
         self._keys = ["prep-lmp", "run-lmp"]
         self.step_keys = {}
         ii = "prep-lmp"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-lmp"
         self.step_keys[ii] = "--".join(
-            ["%s" % self.inputs.parameters["block_id"], ii + "-{{item}}"]
+            ["{}".format(self.inputs.parameters["block_id"]), ii + "-{{item}}"]
         )
 
         self = _prep_run_lmp(

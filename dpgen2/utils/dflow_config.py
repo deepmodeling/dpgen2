@@ -1,5 +1,3 @@
-import copy
-
 from dflow.config import (
     config,
     s3_config,
@@ -19,7 +17,7 @@ def dflow_config_lower(
     dflow_config,
 ):
     dflow_s3_config = {}
-    keys = [kk for kk in dflow_config.keys()]
+    keys = list(dflow_config.keys())
     for kk in keys:
         if kk[:3] == "s3_":
             dflow_s3_config[kk[3:]] = dflow_config.pop(kk)
@@ -40,7 +38,7 @@ def dflow_config(
     config_data,
 ):
     """
-    set the dflow config by `config_data`
+    set the dflow config by `config_data`.
 
     the keys starting with "s3_" will be treated as s3_config keys,
     other keys are treated as config keys.
@@ -53,9 +51,6 @@ def dflow_config(
 def dflow_s3_config(
     config_data,
 ):
-    """
-    set the s3 config by `config_data`
-
-    """
+    """Set the s3 config by `config_data`."""
     if config_data is not None:
         dflow_s3_config_lower(config_data)

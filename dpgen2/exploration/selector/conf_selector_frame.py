@@ -1,7 +1,4 @@
 import copy
-from collections import (
-    Counter,
-)
 from pathlib import (
     Path,
 )
@@ -10,9 +7,6 @@ from typing import (
     Optional,
     Tuple,
 )
-
-import dpdata
-import numpy as np
 
 from dpgen2.exploration.render import (
     TrajRender,
@@ -30,7 +24,8 @@ from . import (
 class ConfSelectorFrames(ConfSelector):
     """Select frames from trajectories as confs.
 
-    Parameters:
+    Parameters
+    ----------
     trust_level: TrustLevel
         The trust level
     conf_filter: ConfFilters
@@ -56,7 +51,7 @@ class ConfSelectorFrames(ConfSelector):
         model_devis: List[Path],
         type_map: Optional[List[str]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
-        """Select configurations
+        """Select configurations.
 
         Parameters
         ----------

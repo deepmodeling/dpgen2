@@ -14,7 +14,6 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
-    BigParameter,
     OPIOSign,
     Parameter,
 )
@@ -158,7 +157,7 @@ class RunCalyModelDevi(OP):
 
 
 def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
-    """down triangle cell can be obtained from
+    """Down triangle cell can be obtained from
     cell params: a, b, c, alpha, beta, gamma.
     cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
     lx, ly, lz = cell[0][0], cell[1][1], cell[2][2]
@@ -169,7 +168,7 @@ def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     ylo_bound = ylo + MIN(0.0,yz)
     yhi_bound = yhi + MAX(0.0,yz)
     zlo_bound = zlo
-    zhi_bound = zhi
+    zhi_bound = zhi.
 
     ref: https://docs.lammps.org/Howto_triclinic.html
     """
@@ -208,19 +207,15 @@ def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     zhi_bound = zhi
 
     dump_str += "ITEM: BOX BOUNDS xy xz yz pp pp pp\n"
-    dump_str += "%20.10f %20.10f %20.10f\n" % (xlo_bound, xhi_bound, xy)
-    dump_str += "%20.10f %20.10f %20.10f\n" % (ylo_bound, yhi_bound, xz)
-    dump_str += "%20.10f %20.10f %20.10f\n" % (zlo_bound, zhi_bound, yz)
+    dump_str += f"{xlo_bound:20.10f} {xhi_bound:20.10f} {xy:20.10f}\n"
+    dump_str += f"{ylo_bound:20.10f} {yhi_bound:20.10f} {xz:20.10f}\n"
+    dump_str += f"{zlo_bound:20.10f} {zhi_bound:20.10f} {yz:20.10f}\n"
     dump_str += "ITEM: ATOMS id type x y z fx fy fz\n"
     for idx, atom in enumerate(new_atoms):
         type_id = type_map.index(atom.symbol) + 1  # type: ignore
         dump_str += "%5d %5d" % (idx + 1, type_id)
-        dump_str += "%20.10f %20.10f %20.10f" % (
-            atom.position[0],  # type: ignore
-            atom.position[1],  # type: ignore
-            atom.position[2],  # type: ignore
-        )
-        dump_str += "%20.10f %20.10f %20.10f\n" % (0, 0, 0)
+        dump_str += f"{atom.position[0]:20.10f} {atom.position[1]:20.10f} {atom.position[2]:20.10f}"
+        dump_str += f"{0:20.10f} {0:20.10f} {0:20.10f}\n"
     # dump_str = dump_str.strip("\n")
     return dump_str
 
@@ -284,9 +279,8 @@ def parse_traj(traj_file):
         if len(trajs) >= 20:
             selected_traj = [trajs[iii] for iii in [4, 9, -10, -5, -1]]
         elif 5 <= len(trajs) < 20:
-            selected_traj = [
-                trajs[np.random.randint(3, len(trajs) - 1)] for _ in range(4)
-            ]
+            rng = np.random.default_rng()
+            selected_traj = [trajs[rng.randint(3, len(trajs) - 1)] for _ in range(4)]
             selected_traj.append(trajs[-1])
         elif 3 <= len(trajs) < 5:
             selected_traj = [trajs[round((len(trajs) - 1) / 2)]]

@@ -9,13 +9,13 @@
 
     "default_step_config": {
 	"template_config": {
-	    "image" : "registry.dp.tech/dptech/prod-11881/dpgen2-utils:1.2",
-	    "_comment" : "all"
+        "image" : "registry.dp.tech/dptech/prod-11881/dpgen2-utils:1.2",
+        "_comment" : "all"
 	},
 	"executor" : {
-	    "type" : "dispatcher",
-	    "image_pull_policy" : "IfNotPresent",
-	    "machine_dict": {
+        "type" : "dispatcher",
+        "image_pull_policy" : "IfNotPresent",
+        "machine_dict": {
 		"batch_type": "Bohrium",
 		"context_type": "Bohrium",
 		"remote_profile": {
@@ -25,89 +25,89 @@
 			"scass_type": "c2_m8_cpu"
                     }
 		}
-	    }
+        }
 	},
 	"_comment" : "all"
     },
 
     "step_configs":{
 	"run_train_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "registry.dp.tech/dptech/deepmd-kit:2.1.5-cuda11.6",
 		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "executor" : {
 		"type" : "dispatcher",
 		"retry_on_submission_error": 10,
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c8_m32_1 * NVIDIA V100"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c8_m32_1 * NVIDIA V100"
 			}
-		    }
+            }
 		}
-	    },
-	    "_comment" : "all"
+        },
+        "_comment" : "all"
 	},
 	"run_explore_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "registry.dp.tech/dptech/deepmd-kit:2.1.5-cuda11.6",
 		"_comment" : "all"
-	    },
+        },
             "continue_on_success_ratio" : 0.80,
-	    "executor" : {
+        "executor" : {
 		"type" : "dispatcher",
 		"retry_on_submission_error": 10,
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c8_m32_1 * NVIDIA V100"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c8_m32_1 * NVIDIA V100"
 			}
-		    }
+            }
 		}
-	    },
+        },
   	   "template_slice_config":{
   	   	"group_size":  20,
   	   	"pool_size":  5
   	   },
-	    "_comment" : "all"
+        "_comment" : "all"
 	},
 	"run_fp_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "registry.dp.tech/dptech/prod-11881/manyi-dalibao:1.3",
 		"_comment" : "all"
-	    },
+        },
             "continue_on_success_ratio" : 0.80,
-	    "executor" : {
+        "executor" : {
 		"type" : "dispatcher",
 		"retry_on_submission_error": 10,
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c16_m64_cpu"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c16_m64_cpu"
 			}
-		    }
+            }
 		}
-	    },
+        },
             "template_slice_config":{
-      	        "group_size":  20,
+                  "group_size":  20,
       		"pool_size":  1
-      	    },
+              },
             "_comment" : "all"
          },
     "_comment" : "all"
@@ -132,19 +132,19 @@
 	"type" :	"dp",
 	"numb_models" : 4,
 	"init_models_paths":[
-	    "/data/druglike.dpgen2.mixed.8-b/init.models/task.0000/frozen_model.pb",
-	    "/data/druglike.dpgen2.mixed.8-b/init.models/task.0001/frozen_model.pb",
-	    "/data/druglike.dpgen2.mixed.8-b/init.models/task.0002/frozen_model.pb",
-	    "/data/druglike.dpgen2.mixed.8-b/init.models/task.0003/frozen_model.pb"
+        "/data/druglike.dpgen2.mixed.8-b/init.models/task.0000/frozen_model.pb",
+        "/data/druglike.dpgen2.mixed.8-b/init.models/task.0001/frozen_model.pb",
+        "/data/druglike.dpgen2.mixed.8-b/init.models/task.0002/frozen_model.pb",
+        "/data/druglike.dpgen2.mixed.8-b/init.models/task.0003/frozen_model.pb"
 	],
 	"config" : {
-	    "init_model_policy" : "yes",
-	    "init_model_old_ratio" : 0.98,
-	    "init_model_numb_steps" : 600000,
-	    "init_model_start_lr" : 1e-4,
-	    "init_model_start_pref_e" : 0.25,
-	    "init_model_start_pref_f" : 100,
-	    "_comment" : "all"
+        "init_model_policy" : "yes",
+        "init_model_old_ratio" : 0.98,
+        "init_model_numb_steps" : 600000,
+        "init_model_start_lr" : 1e-4,
+        "init_model_start_pref_e" : 0.25,
+        "init_model_start_pref_f" : 100,
+        "_comment" : "all"
 	},
 	"template_script" : "dpa_manyi.json",
 	"_comment" : "all"
@@ -153,7 +153,7 @@
     "explore" : {
 	"type" : "lmp",
 	"config" : {
-	    "command": "lmp -var restart 0"
+        "command": "lmp -var restart 0"
 	},
 	"convergence": {
            "type":                    "adaptive-lower",
@@ -168,21 +168,21 @@
 	"fatal_at_max" :	false,
 	"output_nopbc":		true,
 	"configurations":	[
-	    {
+        {
 		"type" : "file",
 		"files" : ["md.data/*N1[56].equ/*"],
 		"fmt" : "deepmd/npy",
 		"remove_pbc" : true
-	    }
+        }
 	],
 	"stages":	[
-	    [
+        [
 		{
-		    "type" : "lmp-template",
-		    "sys_idx": [0], "n_sample" : 4000,
-		    "lmp" : "template.lammps", "trj_freq" : 500, "revisions" : {"V_NSTEPS" : [20000], "V_TEMP" : [750], "V_DUMPFREQ": [2000]}
+            "type" : "lmp-template",
+            "sys_idx": [0], "n_sample" : 4000,
+            "lmp" : "template.lammps", "trj_freq" : 500, "revisions" : {"V_NSTEPS" : [20000], "V_TEMP" : [750], "V_DUMPFREQ": [2000]}
 		}
-	    ]
+        ]
 	],
 	"_comment" : "all"
     },
@@ -190,14 +190,14 @@
 	"type" :	"gaussian",
 	"task_max":	5000,
 	"run_config" : {
-	    "command": "ulimit -s unlimited && export g16root='/root/Gaussian_16' && source $g16root/g16/bsd/g16.profile && g16 "
+        "command": "ulimit -s unlimited && export g16root='/root/Gaussian_16' && source $g16root/g16/bsd/g16.profile && g16 "
 	},
 	"inputs_config" : {
 	   "keywords" : "wB97XD/6-31G** nosymm scf(conver=8) force",
-	    "multiplicity" : "auto",
-	    "charge" : 0,
-	    "nproc" : 16,
-	    "_comment" : "all"
+        "multiplicity" : "auto",
+        "charge" : 0,
+        "nproc" : 16,
+        "_comment" : "all"
 	},
 	"_comment" : "all"
     }

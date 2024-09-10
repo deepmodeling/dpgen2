@@ -1,8 +1,4 @@
-import json
-import os
-import random
 import shutil
-import tempfile
 import textwrap
 import unittest
 from pathlib import (
@@ -13,9 +9,6 @@ import dpdata
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.conf.file_conf import (
     FileConfGenerator,
 )
@@ -25,60 +18,60 @@ from dpgen2.conf.file_conf import (
 pos0 = textwrap.dedent(
     """POSCAR file written by OVITO
 1
-1 0 0 
-0 1 0 
+1 0 0
+0 1 0
 0 0 1
-Al 
+Al
 1
 Cartesian
-0 0 0 
+0 0 0
 """
 )
 
 pos1 = textwrap.dedent(
     """POSCAR file written by OVITO
 1
-2 0 0 
+2 0 0
 0 2 0
 0 0 2
 Mg
 1
 Cartesian
-0 0 0 
+0 0 0
 """
 )
 
-ifc0 = """Al1 
+ifc0 = """Al1
 1.0
 2.0 0.0 0.0
 0.0 2.0 0.0
 0.0 0.0 2.0
-Al 
-1 
+Al
+1
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """
 ofc0 = "\n1 atoms\n2 atom types\n   0.0000000000    2.0000000000 xlo xhi\n   0.0000000000    2.0000000000 ylo yhi\n   0.0000000000    2.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      1    0.0000000000    0.0000000000    0.0000000000\n"
 
-ifc1 = """Mg1 
+ifc1 = """Mg1
 1.0
 3.0 0.0 0.0
 0.0 3.0 0.0
 0.0 0.0 3.0
-Mg 
-1 
+Mg
+1
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """
 ofc1 = "\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
 
-ifc2 = """Mg1 
+ifc2 = """Mg1
 1.0
 4.0 0.0 0.0
 0.0 4.0 0.0
 0.0 0.0 4.0
-Mg 
-1 
+Mg
+1
 cartesian
    0.0000000000    0.0000000000    0.0000000000
 """

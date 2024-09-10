@@ -20,7 +20,6 @@ from dpgen2.exploration.selector import (
 from dpgen2.exploration.task import (
     BaseExplorationTaskGroup,
     ExplorationStage,
-    ExplorationTaskGroup,
 )
 
 from .stage_scheduler import (

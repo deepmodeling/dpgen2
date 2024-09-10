@@ -1,20 +1,9 @@
-import os
-import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
-from typing import (
-    List,
-    Set,
-)
 
 import numpy as np
 
 try:
-    from exploration.context import (
-        dpgen2,
-    )
+    from exploration.context import dpgen2  # noqa: F401
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
@@ -39,13 +28,8 @@ from dpgen2.exploration.scheduler import (
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
-from dpgen2.exploration.task import (
-    ExplorationStage,
-    ExplorationTaskGroup,
-)
 
 # isort: off
-import exploration.context
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,

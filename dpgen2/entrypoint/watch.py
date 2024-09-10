@@ -4,7 +4,6 @@ from typing import (
     Dict,
     List,
     Optional,
-    Union,
 )
 
 from dflow import (
@@ -43,7 +42,7 @@ def update_finished_steps(
     if finished_keys is not None:
         diff_keys = []
         for kk in wf_keys:
-            if not (kk in finished_keys):
+            if kk not in finished_keys:
                 diff_keys.append(kk)
     else:
         diff_keys = wf_keys

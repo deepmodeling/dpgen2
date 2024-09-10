@@ -1,11 +1,8 @@
-import json
-import pickle
 from pathlib import (
     Path,
 )
 from typing import (
     List,
-    Tuple,
 )
 
 from dflow.python import (
@@ -21,7 +18,6 @@ from dpgen2.constants import (
 )
 from dpgen2.exploration.task import (
     BaseExplorationTaskGroup,
-    ExplorationTaskGroup,
 )
 
 
@@ -74,7 +70,6 @@ class PrepLmp(OP):
             - `task_names`: (`List[str]`) The name of tasks. Will be used as the identities of the tasks. The names of different tasks are different.
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the LAMMPS simulation. The order fo the Paths should be consistent with `op["task_names"]`
         """
-
         lmp_task_grp = ip["lmp_task_grp"]
         cc = 0
         task_paths = []

@@ -8,18 +8,11 @@ from pathlib import (
 from typing import (
     List,
     Optional,
-    Set,
     Tuple,
 )
 
-import dpdata
-
 from dpgen2.exploration.report import (
     ExplorationReport,
-)
-
-from . import (
-    ConfFilters,
 )
 
 

@@ -2,7 +2,6 @@ from collections import (
     defaultdict,
 )
 from typing import (
-    Dict,
     List,
     Optional,
 )
@@ -38,7 +37,7 @@ class DeviManagerStd(DeviManager):
         ), f"Error: deviation(type: {type(deviation)}) is not a np.ndarray"
         assert len(deviation.shape) == 1, (
             f"Error: deviation(shape: {deviation.shape}) is not a "
-            + f"one-dimensional array"
+            + "one-dimensional array"
         )
 
         self._data[name].append(deviation)
@@ -57,7 +56,7 @@ class DeviManagerStd(DeviManager):
         return None
 
     def _check_data(self) -> None:
-        r"""Check if data is valid"""
+        r"""Check if data is valid."""
         model_devi_names = (
             DeviManager.MAX_DEVI_V,
             DeviManager.MIN_DEVI_V,
@@ -73,7 +72,7 @@ class DeviManagerStd(DeviManager):
                 assert len(self._data[name]) == self.ntraj, (
                     f"Error: the number of model deviation {name} "
                     + f"({len(self._data[name])}) and trajectory files ({self.ntraj}) "
-                    + f"are not equal."
+                    + "are not equal."
                 )
             for idx, ndarray in enumerate(self._data[name]):
                 assert isinstance(ndarray, np.ndarray), (

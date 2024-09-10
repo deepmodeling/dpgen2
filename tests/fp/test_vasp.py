@@ -1,8 +1,5 @@
 import glob
-import json
 import os
-import shutil
-import sys
 import textwrap
 import unittest
 from pathlib import (
@@ -13,9 +10,6 @@ import dpdata
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.fp.vasp import (
     VaspInputs,
     make_kspacing_kpoints,
@@ -75,8 +69,8 @@ Gamma
 0.00 6.00 6.00
 8.00 0.00 8.00
 9.00 9.00 0.00
-O 
-1 
+O
+1
 Selective dynamics
 Cartesian
 0.00 0.00 0.00 T T F
@@ -90,7 +84,7 @@ Cartesian
         kps = vi.make_kpoints(ss["cells"][0])
         self.assertEqual(ref, kps)
 
-    def test_vasp_input_kp(self):
+    def test_vasp_input_kp2(self):
         ref = textwrap.dedent(
             """K-Points
 0
@@ -105,8 +99,8 @@ Monkhorst Pack
 0.00 6.00 6.00
 8.00 0.00 8.00
 9.00 9.00 0.00
-O 
-1 
+O
+1
 Selective dynamics
 Cartesian
 0.00 0.00 0.00 T T F

@@ -5,7 +5,6 @@ from pathlib import (
 )
 from typing import (
     List,
-    Optional,
     Tuple,
     Union,
 )
@@ -14,7 +13,6 @@ import dpdata
 import numpy as np
 from dargs import (
     Argument,
-    Variant,
 )
 
 from .conf_generator import (
@@ -184,7 +182,7 @@ class AlloyConf:
         sys.data["atom_numbs"] = [0] * self.ntypes
         sys.data["atom_numbs"][0] = self.natoms
         sys.data["atom_types"] = np.array([0] * self.natoms, dtype=int)
-        self.type_population = [ii for ii in range(self.ntypes)]
+        self.type_population = list(range(self.ntypes))
         # record sys
         self.sys = sys
 

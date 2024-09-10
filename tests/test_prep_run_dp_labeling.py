@@ -1,22 +1,17 @@
-import os
 import shutil
-import sys
 import unittest
 from pathlib import (
     Path,
 )
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 import dpdata
 import numpy as np
-from dargs import (
-    Argument,
-)
 from dflow.python import (
     FatalError,
-)
-from mock import (
-    Mock,
-    patch,
 )
 
 from dpgen2.fp.deepmd import (

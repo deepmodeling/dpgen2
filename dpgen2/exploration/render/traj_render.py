@@ -9,12 +9,9 @@ from typing import (
     TYPE_CHECKING,
     List,
     Optional,
-    Tuple,
-    Union,
 )
 
 import dpdata
-import numpy as np
 
 from ..deviation import (
     DeviManager,

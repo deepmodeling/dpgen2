@@ -1,30 +1,20 @@
-"""Binary file inputs"""
+"""Binary file inputs."""
+
 import os
 import warnings
 from pathlib import (
     Path,
 )
 from typing import (
-    Any,
-    List,
     Optional,
-    Tuple,
     Union,
-)
-
-from dargs import (
-    Argument,
-    dargs,
-)
-from dflow.python import (
-    TransientError,
 )
 
 
 class BinaryFileInput:
     def __init__(self, path: Union[str, Path], ext: Optional[str] = None) -> None:
         path = str(path)
-        assert os.path.exists(path), f"No such file: {str(path)}"
+        assert os.path.exists(path), f"No such file: {path!s}"
         if ext and not ext.startswith("."):
             ext = "." + ext
         self.ext = ext
@@ -32,7 +22,7 @@ class BinaryFileInput:
         if self.ext:
             assert (
                 os.path.splitext(path)[-1] == self.ext
-            ), f'File extension mismatch, require "{ext}", current "{os.path.splitext(path)[-1]}", file path: {str(path)}'
+            ), f'File extension mismatch, require "{ext}", current "{os.path.splitext(path)[-1]}", file path: {path!s}'
 
         self.file_name = os.path.basename(path)
         with open(path, "rb") as f:

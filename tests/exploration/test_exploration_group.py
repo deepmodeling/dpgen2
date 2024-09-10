@@ -1,31 +1,17 @@
-import os
 import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
-from typing import (
-    List,
-    Set,
-)
-
-import numpy as np
 
 try:
-    from exploration.context import (
-        dpgen2,
-    )
+    from exploration.context import dpgen2  # noqa: F401
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from unittest.mock import (
-    Mock,
     patch,
 )
 
 from dpgen2.constants import (
     calypso_input_file,
-    calypso_run_opt_file,
     lmp_conf_name,
     lmp_input_name,
 )
@@ -56,7 +42,7 @@ if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data conf.lmp
 change_box   all triclinic
 mass            1 10.000000
 mass            2 20.000000
-pair_style      deepmd model.000.pb model.001.pb model.002.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_style      deepmd model.000.pb model.001.pb model.002.pb  out_freq ${THERMO_FREQ} out_file model_devi.out
 pair_coeff      * *
 
 thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
@@ -90,7 +76,7 @@ if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data conf.lmp
 change_box   all triclinic
 mass            1 10.000000
 mass            2 20.000000
-pair_style      deepmd model.000.pb model.001.pb model.002.pb  out_freq ${THERMO_FREQ} out_file model_devi.out 
+pair_style      deepmd model.000.pb model.001.pb model.002.pb  out_freq ${THERMO_FREQ} out_file model_devi.out
 pair_coeff      * *
 
 thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz

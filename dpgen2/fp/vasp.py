@@ -3,29 +3,15 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
     List,
-    Optional,
-    Set,
     Tuple,
-    Union,
 )
 
 import dpdata
-import numpy as np
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    BigParameter,
-    FatalError,
-    OPIOSign,
     TransientError,
 )
 
@@ -45,7 +31,6 @@ from .run_fp import (
 )
 from .vasp_input import (
     VaspInputs,
-    make_kspacing_kpoints,
 )
 
 # global static variables
@@ -70,7 +55,6 @@ class PrepVasp(PrepFp):
         vasp_inputs : VaspInputs
             The VaspInputs object handels all other input files of the task.
         """
-
         conf_frame.to("vasp/poscar", vasp_conf_name)
         Path(vasp_input_name).write_text(vasp_inputs.incar_template)
         # fix the case when some element have 0 atom, e.g. H0O2
@@ -108,7 +92,7 @@ class RunVasp(RunFp):
         out: str,
         log: str,
     ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -126,7 +110,6 @@ class RunVasp(RunFp):
         log_name: str
             The file name of the log.
         """
-
         log_name = log
         out_name = out
         # run vasp
@@ -153,7 +136,6 @@ class RunVasp(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_vasp_cmd = "The command of VASP"
         doc_vasp_log = "The log file name of VASP"
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."

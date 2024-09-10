@@ -1,4 +1,5 @@
 """Prep and Run Gaussian tasks."""
+
 import logging
 from typing import (
     Any,
@@ -103,7 +104,6 @@ class PrepGaussian(PrepFp):
         inputs : GaussianInputs
             The GaussianInputs object handels all other input files of the task.
         """
-
         conf_frame.to("gaussian/gjf", gaussian_input_name, **inputs.data)
 
 
@@ -135,7 +135,7 @@ class RunGaussian(RunFp):
         command: str,
         out: str,
     ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -184,7 +184,6 @@ class RunGaussian(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_gaussian_cmd = "The command of Gaussian"
         doc_gaussian_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [

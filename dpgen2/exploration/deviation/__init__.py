@@ -4,3 +4,5 @@ from .deviation_manager import (
 from .deviation_std import (
     DeviManagerStd,
 )
+
+__all__ = ["DeviManager", "DeviManagerStd"]

@@ -6,8 +6,6 @@ from typing import (
     Optional,
 )
 
-import numpy as np
-
 
 def get_subkey(
     key: str,
@@ -26,9 +24,7 @@ def matched_step_key(
     all_keys: List[str],
     step_keys: Optional[List[str]] = None,
 ):
-    """
-    returns the keys in `all_keys` that matches any of the `step_keys`
-    """
+    """Returns the keys in `all_keys` that matches any of the `step_keys`."""
     if step_keys is None:
         return all_keys
     ret = []
@@ -50,9 +46,7 @@ def get_last_scheduler(
     wf: Any,
     keys: List[str],
 ):
-    """
-    get the output Scheduler of the last successful iteration
-    """
+    """Get the output Scheduler of the last successful iteration."""
     outputs = wf.query_global_outputs()
     if (
         outputs is not None
@@ -76,7 +70,7 @@ def get_last_scheduler(
         return None
     else:
         skey = sorted(scheduler_keys)[-1]
-        step = [step for step in scheduler_steps if step.key == skey][0]
+        step = next(step for step in scheduler_steps if step.key == skey)
         return step.outputs.parameters["exploration_scheduler"].value
 
 
@@ -84,9 +78,7 @@ def get_all_schedulers(
     wf: Any,
     keys: List[str],
 ):
-    """
-    get the output Scheduler of the all the iterations
-    """
+    """Get the output Scheduler of the all the iterations."""
     scheduler_keys = sorted(matched_step_key(keys, ["scheduler"]))
     if len(scheduler_keys) == 0:
         return None
@@ -101,9 +93,7 @@ def get_all_schedulers(
 def get_last_iteration(
     keys: List[str],
 ):
-    """
-    get the index of the last iteraction from a list of step keys.
-    """
+    """Get the index of the last iteraction from a list of step keys."""
     return int(sorted([get_subkey(ii, 0) for ii in keys])[-1].split("-")[1])
 
 
@@ -111,9 +101,7 @@ def find_slice_ranges(
     keys: List[str],
     sliced_subkey: str,
 ):
-    """
-    find range of sliced OPs that matches the pattern 'iter-[0-9]*--{sliced_subkey}-[0-9]*'
-    """
+    """Find range of sliced OPs that matches the pattern 'iter-[0-9]*--{sliced_subkey}-[0-9]*'."""
     found_range = []
     tmp_range = []
     status = "not-found"
@@ -149,9 +137,7 @@ def sort_slice_ops(
     keys: List[str],
     sliced_subkey: List[str],
 ):
-    """
-    sort the keys of the sliced ops. the keys of the sliced ops contains sliced_subkey
-    """
+    """Sort the keys of the sliced ops. the keys of the sliced ops contains sliced_subkey."""
     if isinstance(sliced_subkey, str):
         sliced_subkey = [sliced_subkey]
     for ii in sliced_subkey:
@@ -173,7 +159,7 @@ def print_keys_in_nice_format(
     slice_1 = [ii[1] for ii in slice_range]
 
     normal_fmt = f"%{idx_fmt_len*2+4}d"
-    range_fmt = f"%d -> %d"
+    range_fmt = "%d -> %d"
     range_s_fmt = f"%{idx_fmt_len*2+4}s"
 
     idx = 0
@@ -194,4 +180,4 @@ def print_keys_in_nice_format(
         except ValueError:
             ret.append((normal_fmt + " : " + "%s") % (idx, keys[idx]))
         idx += 1
-    return "\n".join(ret + [""])
+    return "\n".join([*ret, ""])

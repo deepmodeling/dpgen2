@@ -12,3 +12,11 @@ conf_styles = {
     "alloy": AlloyConfGenerator,
     "file": FileConfGenerator,
 }
+
+
+__all__ = [
+    "AlloyConfGenerator",
+    "ConfGenerator",
+    "FileConfGenerator",
+    "conf_styles",
+]

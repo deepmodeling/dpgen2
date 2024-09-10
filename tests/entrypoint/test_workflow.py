@@ -1,19 +1,11 @@
 import json
-import os
-import shutil
 import textwrap
 import unittest
-
-import dflow
-import mock
-from dflow import (
-    Workflow,
+from unittest import (
+    mock,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.workflow import (
     execute_workflow_subcommand,
 )
@@ -62,8 +54,8 @@ foo_str = textwrap.dedent(
 {
     "default_step_config" : {
 	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
 	},
 	"_comment" : "all"
     },
@@ -79,8 +71,8 @@ foo_str = textwrap.dedent(
 	"mass_map":		[27, 24],
 	"init_data_prefix":	"",
 	"init_data_sys":	[
-	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
-	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+        "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+        "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
 	],
 	"_comment" : "all"
     },
@@ -95,7 +87,7 @@ foo_str = textwrap.dedent(
     "explore" : {
 	"type" : "lmp",
 	"config" : {
-	    "command": "lmp -var restart 0"
+        "command": "lmp -var restart 0"
 	},
 	"max_numb_iter" :	5,
 	"fatal_at_max" :	false,
@@ -105,7 +97,7 @@ foo_str = textwrap.dedent(
                 "level_f_hi":		0.50,
                 "conv_accuracy" :	0.9
         },
-	"configuration_prefix": null, 
+	"configuration_prefix": null,
 	"configuration":	[
 	],
 	"stages":	[
@@ -115,14 +107,14 @@ foo_str = textwrap.dedent(
     "fp" : {
 	"type" :	"vasp",
 	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
 	"task_max":	2,
 	"inputs_config" : {
-	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	    "incar":    "vasp/INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
+        "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+        "incar":    "vasp/INCAR",
+        "kspacing":	0.32,
+        "kgamma":	true
 	},
 	"_comment" : "all"
     }

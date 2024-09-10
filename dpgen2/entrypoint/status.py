@@ -1,9 +1,7 @@
 import logging
 from typing import (
     Dict,
-    List,
     Optional,
-    Union,
 )
 
 from dflow import (
@@ -15,7 +13,6 @@ from dpgen2.entrypoint.common import (
     global_config_workflow,
 )
 from dpgen2.utils.dflow_query import (
-    get_all_schedulers,
     get_last_scheduler,
 )
 
@@ -36,6 +33,5 @@ def status(
 
     if scheduler is not None:
         ptr_str = scheduler.print_convergence()
-        print(ptr_str)
     else:
         logging.warn("no scheduler is finished")

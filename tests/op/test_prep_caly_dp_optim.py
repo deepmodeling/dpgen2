@@ -1,38 +1,20 @@
-import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    TransientError,
-)
-from mock import (
-    call,
-    mock,
-    patch,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     calypso_task_pattern,
-    model_name_pattern,
     calypso_run_opt_file,
     calypso_check_opt_file,
 )
 from dpgen2.op import PrepCalyDPOptim
-from dpgen2.utils import (
-    BinaryFileInput,
-)
 
 # isort: on
 
@@ -46,7 +28,7 @@ class TestPrepDPOptim(unittest.TestCase):
         self.poscar_dir.mkdir(parents=True, exist_ok=True)
         nposcar = 10
         for i in range(1, nposcar + 1):
-            self.poscar_dir.joinpath(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+            self.poscar_dir.joinpath(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
 
         self.models_dir = Path("models_dir")
         self.models_dir.mkdir(parents=True, exist_ok=True)
@@ -67,7 +49,7 @@ class TestPrepDPOptim(unittest.TestCase):
         self.template_slice_config = {"group_size": 3}
         self.group_size = self.template_slice_config["group_size"]
 
-        grouped_poscar_list = [i for i in range(0, nposcar, self.group_size)]
+        grouped_poscar_list = list(range(0, nposcar, self.group_size))
         self.ngrouped = len(grouped_poscar_list)
         self.ref_task_dirs = []
         for i in range(0, self.ngrouped):

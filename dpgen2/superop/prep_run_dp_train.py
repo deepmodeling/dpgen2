@@ -9,7 +9,6 @@ from pathlib import (
 from typing import (
     List,
     Optional,
-    Set,
     Type,
 )
 
@@ -23,11 +22,8 @@ from dflow import (
     S3Artifact,
     Step,
     Steps,
-    Workflow,
     argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
     upload_artifact,
 )
 from dflow.python import (
@@ -111,7 +107,7 @@ class ModifyTrainScript(OP):
         for ii in range(numb_models):
             subdir = Path(train_task_pattern % ii)
             train_script = Path(scripts) / subdir / train_script_name
-            with open(train_script, "r") as fp:
+            with open(train_script) as fp:
                 train_dict = json.load(fp)
             new_template_script.append(train_dict)
 
@@ -178,13 +174,17 @@ class PrepRunDPTrain(Steps):
             self._keys.append("modify-train-script")
         self.step_keys = {}
         ii = "prep-train"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-train"
         self.step_keys[ii] = "--".join(
-            ["%s" % self.inputs.parameters["block_id"], ii + "-{{item}}"]
+            ["{}".format(self.inputs.parameters["block_id"]), ii + "-{{item}}"]
         )
         ii = "modify-train-script"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
 
         self = _prep_run_dp_train(
             self,
