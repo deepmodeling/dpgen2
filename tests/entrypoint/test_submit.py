@@ -6,12 +6,8 @@ from pathlib import (
     Path,
 )
 
-try:
-    from context import dpgen2  # noqa: F401
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
 # isort: off
+from .context import dpgen2  # noqa: F401
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
