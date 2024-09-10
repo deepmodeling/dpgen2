@@ -2,6 +2,7 @@ from pathlib import (
     Path,
 )
 from typing import (
+    Any,
     ClassVar,
     Dict,
     List,
@@ -32,7 +33,7 @@ class CollectData(OP):
 
     """
 
-    default_optional_parameter: ClassVar[Dict[str, bool]] = {
+    default_optional_parameter: ClassVar[Dict[str, Any]] = {
         "mixed_type": False,
     }
 
