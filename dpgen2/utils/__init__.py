@@ -34,6 +34,9 @@ from .obj_artifact import (
 from .run_command import (
     run_command,
 )
+from .setup_ele_temp import (
+    setup_ele_temp,
+)
 from .step_config import gen_doc as gen_doc_step_dict
 from .step_config import (
     init_executor,

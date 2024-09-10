@@ -84,9 +84,6 @@ from dpgen2.op.run_lmp import (
 from dpgen2.op.select_confs import (
     SelectConfs,
 )
-from dpgen2.superop.prep_run_dp_train import (
-    ModifyTrainScript,
-)
 
 mocked_template_script = {"seed": 1024, "data": []}
 mocked_numb_models = 3
@@ -511,6 +508,7 @@ class MockedRunVasp(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -568,6 +566,7 @@ class MockedRunVaspFail1(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -623,6 +622,7 @@ class MockedRunVaspRestart(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -850,7 +850,8 @@ class MockedConfSelector(ConfSelector):
         self,
         trajs: List[Path],
         model_devis: List[Path],
-        type_map: Optional[List[str]] = None,
+        type_map: List[str] = None,
+        optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         confs = []
         if len(trajs) == mocked_numb_lmp_tasks:
@@ -913,33 +914,6 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
         )
         super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)
 
-
-class MockedModifyTrainScript(ModifyTrainScript):
-    @OP.exec_sign_check
-    def execute(
-        self,
-        ip: OPIO,
-    ) -> OPIO:
-        scripts = ip["scripts"]
-        numb_models = ip["numb_models"]
-        odict = []
-
-        assert numb_models == mocked_numb_models
-
-        for ii in range(numb_models):
-            subdir = Path(scripts) / Path(train_task_pattern % ii)
-            fname = subdir / "input.json"
-            with open(fname) as fp:
-                train_dict = json.load(fp)
-            train_dict = {"foo": "bar"}
-            odict.append(train_dict)
-
-        op = OPIO(
-            {
-                "template_script": odict,
-            }
-        )
-        return op
 
 
 class MockedCollRunCaly(CollRunCaly):

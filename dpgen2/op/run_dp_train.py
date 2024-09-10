@@ -69,10 +69,9 @@ def _make_train_command(
         return command
     # case of init model and finetune
     assert checkpoint is None
-    do_init_model_or_train_init = do_init_model or finetune_mode == "train-init"
-    case_init_model = do_init_model_or_train_init and (not init_model_with_finetune)
+    case_init_model = do_init_model and (not init_model_with_finetune)
     case_finetune = finetune_mode == "finetune" or (
-        do_init_model_or_train_init and init_model_with_finetune
+        do_init_model and init_model_with_finetune
     )
     if case_init_model:
         init_flag = "--init-frz-model" if impl == "tensorflow" else "--init-model"
@@ -91,58 +90,6 @@ def _make_train_command(
     command += train_args.split()
     return command
 
-
-def _make_train_command_old(
-    dp_command,
-    train_script_name,
-    impl,
-    do_init_model,
-    init_model,
-    finetune_mode,
-    finetune_args,
-    init_model_with_finetune,
-):
-    if impl == "tensorflow" and os.path.isfile("checkpoint"):
-        command = [*dp_command, "train", "--restart", "model.ckpt", train_script_name]
-    elif impl == "pytorch" and len(glob.glob("model.ckpt-[0-9]*.pt")) > 0:
-        checkpoint = "model.ckpt-{}.pt".format(
-            max([int(f[11:-3]) for f in glob.glob("model.ckpt-[0-9]*.pt")])
-        )
-        command = [*dp_command, "train", "--restart", checkpoint, train_script_name]
-    elif (
-        do_init_model or finetune_mode == "train-init"
-    ) and not init_model_with_finetune:
-        if impl == "pytorch":
-            command = [
-                *dp_command,
-                "train",
-                "--init-model",
-                str(init_model),
-                train_script_name,
-            ]
-        else:
-            command = [
-                *dp_command,
-                "train",
-                "--init-frz-model",
-                str(init_model),
-                train_script_name,
-            ]
-    elif finetune_mode == "finetune" or (
-        (do_init_model or finetune_mode == "train-init") and init_model_with_finetune
-    ):
-        command = [
-            *dp_command,
-            "train",
-            train_script_name,
-            "--finetune",
-            str(init_model),
-            *finetune_args.split(),
-        ]
-    else:
-        command = [*dp_command, "train", train_script_name]
-
-    return command
 
 
 class RunDPTrain(OP):
@@ -174,7 +121,7 @@ class RunDPTrain(OP):
                 "init_model": Artifact(Path, optional=True),
                 "init_data": Artifact(NestedDict[Path]),
                 "iter_data": Artifact(List[Path]),
-                "valid_data": Artifact(List[Path], optional=True),
+                "valid_data": Artifact(NestedDict[Path], optional=True),
                 "optional_files": Artifact(List[Path], optional=True),
             }
         )
@@ -227,11 +174,10 @@ class RunDPTrain(OP):
         finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
         impl = ip["config"].get("impl", "tensorflow")
+        dp_command = ip["config"].get("command", "dp").split()
         assert impl in ["tensorflow", "pytorch"]
         if impl == "pytorch":
-            dp_command = ["dp", "--pt"]
-        else:
-            dp_command = ["dp"]
+            dp_command.append("--pt")
         finetune_args = config.get("finetune_args", "")
         train_args = config.get("train_args", "")
         config = RunDPTrain.normalize_config(config)
@@ -401,7 +347,7 @@ class RunDPTrain(OP):
         iter_data: List[Path],
         auto_prob_str: str = "prob_sys_size",
         major_version: str = "1",
-        valid_data: Optional[List[Path]] = None,
+        valid_data: Optional[Union[List[Path], Dict[str, List[Path]]]] = None,
     ):
         odict = idict.copy()
         if config["multitask"]:
@@ -413,6 +359,11 @@ class RunDPTrain(OP):
                 if k == head:
                     v["training_data"]["systems"] += [str(ii) for ii in iter_data]
                     v["training_data"]["auto_prob"] = auto_prob_str
+                if valid_data is None:
+                    v.pop("validation_data", None)
+                else:
+                    v["validation_data"] = v.get("validation_data", {"batch_size": 1})
+                    v["validation_data"]["systems"] = [str(ii) for ii in valid_data[k]]
             return odict
         data_list = [str(ii) for ii in init_data] + [str(ii) for ii in iter_data]
         if major_version == "1":
@@ -535,6 +486,7 @@ class RunDPTrain(OP):
 
     @staticmethod
     def training_args():
+        doc_command = "The command for DP, 'dp' for default"
         doc_impl = "The implementation/backend of DP. It can be 'tensorflow' or 'pytorch'. 'tensorflow' for default."
         doc_init_model_policy = "The policy of init-model training. It can be\n\n\
     - 'no': No init-model training. Traing from scratch.\n\n\
@@ -558,6 +510,13 @@ class RunDPTrain(OP):
         doc_init_model_with_finetune = "Use finetune for init model"
         doc_train_args = "Extra arguments for dp train"
         return [
+            Argument(
+                "command",
+                str,
+                optional=True,
+                default="dp",
+                doc=doc_command,
+            ),
             Argument(
                 "impl",
                 str,

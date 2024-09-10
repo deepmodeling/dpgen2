@@ -139,6 +139,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 path=Path("iter-000001/prep-run-fp/outputs"),
                 skip_exists=True,
             ),
+            mock.call(
+                "arti-extra_outputs",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
         for ii, jj in zip(mocked_dl.call_args_list, expected):
@@ -169,6 +174,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 path=Path("iter-000001/prep-run-fp/outputs"),
                 skip_exists=True,
             ),
+            mock.call(
+                "arti-extra_outputs",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
         ]
         self.assertEqual(len(mocked_dl.call_args_list), len(expected))
         for ii, jj in zip(mocked_dl.call_args_list, expected):
@@ -192,6 +202,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-labeled_data",
+                path=Path("iter-000001/prep-run-fp/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-extra_outputs",
                 path=Path("iter-000001/prep-run-fp/outputs"),
                 skip_exists=True,
             ),

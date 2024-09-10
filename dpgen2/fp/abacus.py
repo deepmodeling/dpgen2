@@ -166,6 +166,7 @@ class RunFpOpAbacus(OP):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
+                "extra_outputs": Artifact(List[Path]),
             }
         )
 
@@ -198,27 +199,25 @@ class RunFpOpAbacus(OP):
         elif calculation in ["relax", "cell-relax"]:
             sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
         else:
-            raise ValueError(f"Type of calculation {calculation} not supported")
-        out_name = run_config.get("out", fp_default_out_data_name)
+            raise ValueError("Type of calculation %s not supported" % calculation)
+        out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
+
+        extra_outputs = []
+        for fname in ip["config"]["extra_output_files"]:
+            extra_outputs += list(workdir.glob(fname))
 
         return OPIO(
             {
                 "log": workdir / "log",
                 "labeled_data": workdir / out_name,
+                "extra_outputs": extra_outputs,
             }
         )
 
     @staticmethod
     def args():
         doc_cmd = "The command of abacus"
-        doc_out = (
-            "The output dir name of labeled data. "
-            "In `deepmd/npy` format provided by `dpdata`."
-        )
         return [
             Argument("command", str, optional=True, default="abacus", doc=doc_cmd),
-            Argument(
-                "out", str, optional=True, default=fp_default_out_data_name, doc=doc_out
-            ),
         ]

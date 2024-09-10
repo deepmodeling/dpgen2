@@ -6,6 +6,14 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Union,
+)
+
+
+import dpdata
+import numpy as np
+from dflow.python.opio import (
+    HDF5Dataset,
 )
 
 from dpgen2.exploration.render import (
@@ -47,9 +55,10 @@ class ConfSelectorFrames(ConfSelector):
 
     def select(
         self,
-        trajs: List[Path],
-        model_devis: List[Path],
+        trajs: Union[List[Path], List[HDF5Dataset]],
+        model_devis: Union[List[Path], List[HDF5Dataset]],
         type_map: Optional[List[str]] = None,
+        optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         """Select configurations.
 
@@ -64,6 +73,8 @@ class ConfSelectorFrames(ConfSelector):
             where `md` stands for model deviation, v for virial and f for force
         type_map : List[str]
             The `type_map` of the systems
+        optional_outputs : List[Path]
+            Optional outputs of the exploration
 
         Returns
         -------
@@ -83,7 +94,11 @@ class ConfSelectorFrames(ConfSelector):
         id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
 
         ms = self.traj_render.get_confs(
-            trajs, id_cand_list, type_map, self.conf_filters
+            trajs,
+            id_cand_list,
+            type_map,
+            self.conf_filters,
+            optional_outputs,
         )
 
         out_path = Path("confs")

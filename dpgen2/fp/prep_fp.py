@@ -25,6 +25,7 @@ from dpgen2.constants import (
 )
 from dpgen2.utils import (
     set_directory,
+    setup_ele_temp,
 )
 
 
@@ -108,6 +109,10 @@ class PrepFp(OP, ABC):
         counter = 0
         # loop over list of MultiSystems
         for mm in confs:
+            if len(list(mm.rglob("fparam.npy"))) > 0:
+                setup_ele_temp(False)
+            if len(list(mm.rglob("aparam.npy"))) > 0:
+                setup_ele_temp(True)
             ms = dpdata.MultiSystems(type_map=type_map)
             ms.from_deepmd_npy(mm, labeled=False)  # type: ignore
             # loop over Systems in MultiSystems

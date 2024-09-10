@@ -54,6 +54,7 @@ class RunFp(OP, ABC):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
+                "extra_outputs": Artifact(List[Path]),
             }
         )
 
@@ -192,9 +193,14 @@ class RunFp(OP, ABC):
                     Path(iname).symlink_to(ii)
             out_name, log_name = self.run_task(**config)
 
+        extra_outputs = []
+        for fname in ip["config"]["extra_output_files"]:
+            extra_outputs += list(work_dir.glob(fname))
+
         return OPIO(
             {
                 "log": work_dir / log_name,
                 "labeled_data": work_dir / out_name,
+                "extra_outputs": extra_outputs,
             }
         )

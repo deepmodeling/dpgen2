@@ -44,6 +44,7 @@ class TestFpOpAbacus(unittest.TestCase):
                     data_path / "OUT.ABACUS", data_path / "log"
                 ),
             },
+            "extra_output_files": [],
         }
         confs = [data_path / "sys-2"]
         type_map = ["Na"]

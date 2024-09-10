@@ -14,9 +14,16 @@ input_files = (
     p_examples / "almg" / "input.json",
     # p_examples / "almg" / "input-v005.json",
     # p_examples / "almg" / "dp_template.json",
+    p_examples / "calypso" / "input.test.json",
+    p_examples / "water" / "input_distill.json",
+    p_examples / "water" / "input_dpgen.json",
+    p_examples / "water" / "input_multitask.json",
     p_examples / "ch4" / "input_dist.json",
     # p_examples / "chno" / "dpa_manyi.json",
     p_examples / "chno" / "input.json",
+    p_examples / "water" / "input_dpgen_abacus.json",
+    p_examples / "water" / "input_dpgen_cp2k.json",
+    p_examples / "diffcsp" / "dpgen.json",
 )
 
 

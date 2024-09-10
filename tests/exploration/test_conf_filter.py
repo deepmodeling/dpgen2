@@ -24,10 +24,7 @@ from dpgen2.exploration.selector import (
 class FooFilter(ConfFilter):
     def check(
         self,
-        coords: np.array,
-        cell: np.array,
-        atom_types: np.array,
-        nopbc: bool,
+        frame: dpdata.System,
     ) -> bool:
         return True
 
@@ -37,7 +34,7 @@ class faked_filter:
     myret: ClassVar[List[bool]] = [True]
 
     @classmethod
-    def faked_check(cls, cc, ce, at, np):
+    def faked_check(cls, frame):
         cls.myiter += 1
         cls.myiter = cls.myiter % len(cls.myret)
         return cls.myret[cls.myiter]

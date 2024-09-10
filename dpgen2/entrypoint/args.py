@@ -15,6 +15,9 @@ from dpgen2.conf import (
 from dpgen2.exploration.report import (
     conv_styles,
 )
+from dpgen2.exploration.selector import (
+    conf_filter_styles,
+)
 from dpgen2.fp import (
     fp_styles,
 )
@@ -170,6 +173,25 @@ def variant_conf():
     )
 
 
+def variant_filter():
+    doc = "the type of the configuration filter."
+    var_list = []
+    for kk in conf_filter_styles.keys():
+        var_list.append(
+            Argument(
+                kk,
+                dict,
+                conf_filter_styles[kk].args(),
+                doc="Configuration filter of type %s" % kk,
+            )
+        )
+    return Variant(
+        "type",
+        var_list,
+        doc=doc,
+    )
+
+
 def lmp_args():
     doc_config = "Configuration of lmp exploration"
     doc_max_numb_iter = "Maximum number of iterations per stage"
@@ -185,6 +207,7 @@ def lmp_args():
         "Then each stage is defined by a list of exploration task groups. "
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
+    doc_filters = "A list of configuration filters"
 
     return [
         Argument(
@@ -223,6 +246,15 @@ def lmp_args():
             alias=["configuration"],
         ),
         Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument(
+            "filters",
+            list,
+            [],
+            [variant_filter()],
+            optional=True,
+            default=[],
+            doc=doc_filters,
+        ),
     ]
 
 
@@ -268,6 +300,7 @@ def caly_args():
         "Then each stage is defined by a list of exploration task groups. "
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
+    doc_filters = "A list of configuration filters"
 
     return [
         Argument(
@@ -306,6 +339,105 @@ def caly_args():
             alias=["configuration"],
         ),
         Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument(
+            "filters",
+            list,
+            [],
+            [variant_filter()],
+            optional=True,
+            default=[],
+            doc=doc_filters,
+        ),
+    ]
+
+
+def run_diffcsp_args():
+    doc_gen_tasks = "Number of DiffCSP generation tasks"
+    doc_gen_command = "Command for DiffCSP generation"
+    doc_relax_group_size = "Group size for relaxation"
+    doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+    return [
+        Argument(
+            "gen_tasks",
+            int,
+            optional=True,
+            default=1,
+            doc=doc_gen_tasks,
+        ),
+        Argument(
+            "gen_command",
+            str,
+            optional=False,
+            doc=doc_gen_command,
+        ),
+        Argument(
+            "relax_group_size",
+            int,
+            optional=True,
+            default=100,
+            doc=doc_relax_group_size,
+        ),
+        Argument(
+            "use_hdf5",
+            bool,
+            optional=True,
+            default=False,
+            doc=doc_use_hdf5,
+        ),
+    ]
+
+
+def diffcsp_args():
+    doc_config = "Configuration of DiffCSP exploration"
+    doc_max_numb_iter = "Maximum number of iterations per stage"
+    doc_fatal_at_max = (
+        "Fatal when the number of iteration per stage reaches the `max_numb_iter`"
+    )
+    doc_output_nopbc = "Remove pbc of the output configurations"
+    doc_convergence = "The method of convergence check."
+    doc_stages = (
+        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
+        "The outer list provides the enumeration of the exploration stages. "
+        "Then each stage is defined by a list of exploration task groups. "
+        "Each task group is described in :ref:`the task group definition<task_group_sec>` "
+    )
+    doc_filters = "A list of configuration filters"
+
+    return [
+        Argument(
+            "config",
+            dict,
+            run_diffcsp_args(),
+            optional=False,
+            doc=doc_config,
+        ),
+        Argument(
+            "max_numb_iter", int, optional=True, default=10, doc=doc_max_numb_iter
+        ),
+        Argument(
+            "fatal_at_max", bool, optional=True, default=True, doc=doc_fatal_at_max
+        ),
+        Argument(
+            "output_nopbc", bool, optional=True, default=False, doc=doc_output_nopbc
+        ),
+        Argument(
+            "convergence",
+            dict,
+            [],
+            [variant_conv()],
+            optional=False,
+            doc=doc_convergence,
+        ),
+        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument(
+            "filters",
+            list,
+            [],
+            [variant_filter()],
+            optional=True,
+            default=[],
+            doc=doc_filters,
+        ),
     ]
 
 
@@ -313,6 +445,7 @@ def variant_explore():
     doc = "The type of the exploration"
     doc_lmp = "The exploration by LAMMPS simulations"
     doc_calypso = "The exploration by CALYPSO structure prediction"
+    doc_diffcsp = "The exploration by DiffCSP"
     return Variant(
         "type",
         [
@@ -320,6 +453,7 @@ def variant_explore():
             Argument("calypso", dict, caly_args(), doc=doc_calypso),
             Argument("calypso:default", dict, caly_args(), doc=doc_calypso),
             Argument("calypso:merge", dict, caly_args(), doc=doc_calypso),
+            Argument("diffcsp", dict, diffcsp_args(), doc=doc_diffcsp),
         ],
         doc=doc,
     )
@@ -329,6 +463,7 @@ def fp_args(inputs, run):
     doc_inputs_config = "Configuration for preparing vasp inputs"
     doc_run_config = "Configuration for running vasp tasks"
     doc_task_max = "Maximum number of vasp tasks for each iteration"
+    doc_extra_output_files = "Extra output file names, support wildcards"
 
     return [
         Argument(
@@ -346,6 +481,13 @@ def fp_args(inputs, run):
             doc=doc_run_config,
         ),
         Argument("task_max", int, optional=True, default=10, doc=doc_task_max),
+        Argument(
+            "extra_output_files",
+            list,
+            optional=True,
+            default=[],
+            doc=doc_extra_output_files,
+        ),
     ]
 
 
@@ -370,14 +512,12 @@ def input_args():
     doc_mass_map = "The mass map. e.g. [27., 24.]. Al and Mg will be set with mass 27. and 24. amu, respectively."
     doc_mixed_type = "Use `deepmd/npy/mixed` format for storing training data."
     doc_do_finetune = (
-        "Finetune the pretrained model before the first iteration. If it is set to True, then an additional step, finetune-step, "
-        'which is based on a branch of "PrepRunDPTrain," will be added before the dpgen_step. In the '
-        'finetune-step, the internal flag finetune_mode is set to "finetune," which means SuperOP "PrepRunDPTrain" '
-        'is now used as the "Finetune." In this step, we finetune the pretrained model in the train step and modify '
-        'the template after training. After that, in the normal dpgen-step, the flag do_finetune is set as "train-init," '
-        'which means we use `--init-frz-model` to train based on models from the previous iteration. The "do_finetune" flag '
-        'is set to False by default, while the internal flag finetune_mode is set to "no," which means anything related '
-        "to finetuning will not be done."
+        "Finetune the pretrained model during the first iteration. If it is set to True, then in the first iteration, "
+        'the internal flag finetune_mode is set to "finetune". In this step, we finetune the pretrained model in the '
+        'train step. After that, in the following iterations, init_model_policy is forced to be "yes", the flag '
+        'finetune_mode is set as "no", which means we use `--init-frz-model` or `--init-model` to train based on '
+        'models from the previous iteration. The "do_finetune" flag is set to False by default, while the internal '
+        'flag finetune_mode is set to "no", which means anything related to finetuning will not be done.'
     )
     doc_do_finetune = textwrap.dedent(doc_do_finetune)
     doc_init_data_prefix = "The prefix of initial data systems"
@@ -393,6 +533,12 @@ def input_args():
     doc_valid_data_prefix = "The prefix of validation data systems"
     doc_valid_sys = "The validation data systems"
     doc_valid_data_uri = "The URI of validation data"
+    doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
+    doc_multi_valid_data = (
+        "The validation data for multitask, it should be a dict, whose keys are task names and each value is a dict"
+        "containing fields `prefix` and `sys` for initial data of each task"
+    )
+    doc_multi_valid_data_uri = "The URI of validation data for multitask"
 
     return [
         Argument("type_map", List[str], optional=False, doc=doc_type_map),
@@ -470,6 +616,27 @@ def input_args():
             optional=True,
             default=None,
             doc=doc_valid_data_uri,
+        ),
+        Argument(
+            "use_ele_temp",
+            int,
+            optional=True,
+            default=0,
+            doc=doc_use_ele_temp,
+        ),
+        Argument(
+            "multi_valid_data",
+            dict,
+            optional=True,
+            default=None,
+            doc=doc_multi_valid_data,
+        ),
+        Argument(
+            "multi_valid_data_uri",
+            str,
+            optional=True,
+            default=None,
+            doc=doc_multi_valid_data_uri,
         ),
     ]
 

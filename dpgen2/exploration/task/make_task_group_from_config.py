@@ -8,6 +8,9 @@ from dpgen2.constants import (
     lmp_input_name,
     plm_input_name,
 )
+from dpgen2.exploration.task import (
+    DiffCSPTaskGroup,
+)
 from dpgen2.exploration.task.caly_task_group import (
     CalyTaskGroup,
 )
@@ -40,6 +43,8 @@ def npt_task_group_args():
     doc_use_clusters = "Calculate atomic model deviation"
     doc_relative_f_epsilon = "Calculate relative force model deviation"
     doc_relative_v_epsilon = "Calculate relative virial model deviation"
+    doc_ele_temp_f = "The electron temperature set by frame style"
+    doc_ele_temp_a = "The electron temperature set by atomistic style"
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -87,6 +92,20 @@ def npt_task_group_args():
             default=None,
             doc=doc_relative_v_epsilon,
         ),
+        Argument(
+            "ele_temp_f",
+            float,
+            optional=True,
+            default=None,
+            doc=doc_ele_temp_f,
+        ),
+        Argument(
+            "ele_temp_a",
+            float,
+            optional=True,
+            default=None,
+            doc=doc_ele_temp_a,
+        ),
     ]
 
 
@@ -95,6 +114,7 @@ def lmp_template_task_group_args():
     doc_plm_template_fname = "The file name of plumed input template"
     doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
+    doc_extra_pair_style_args = "The extra arguments for pair_style"
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -120,7 +140,7 @@ def lmp_template_task_group_args():
             doc=doc_plm_template_fname,
             alias=["plm_template", "plm"],
         ),
-        Argument("revisions", dict, optional=True, default={}),
+        Argument("revisions", dict, optional=True, default={}, doc=doc_revisions),
         Argument(
             "traj_freq",
             int,
@@ -128,6 +148,13 @@ def lmp_template_task_group_args():
             default=10,
             doc=doc_traj_freq,
             alias=["t_freq", "trj_freq", "trj_freq"],
+        ),
+        Argument(
+            "extra_pair_style_args",
+            str,
+            optional=True,
+            default="",
+            doc=doc_extra_pair_style_args,
         ),
     ]
 
@@ -503,6 +530,63 @@ def make_calypso_task_group_from_config(config):
 
     tgroup = CalyTaskGroup()
     tgroup.set_params(**config)
+    return tgroup
+
+
+def diffcsp_task_group_args():
+    doc_diffcsp_task_grp = "DiffCSP exploration tasks"
+    doc_trj_freq = "The frequency of dumping configurations and model devis"
+    doc_fmax = "Force tolerence in relaxation"
+    doc_steps = "Maximum number of steps in relaxation"
+    doc_timeout = "Timeout (seconds) in relaxation"
+    return Argument(
+        "task_group",
+        dict,
+        [
+            Argument(
+                "trj_freq",
+                int,
+                optional=True,
+                default=10,
+                doc=doc_trj_freq,
+                alias=["t_freq", "trj_freq", "traj_freq"],
+            ),
+            Argument(
+                "fmax",
+                float,
+                optional=True,
+                default=1e-4,
+                doc=doc_fmax,
+            ),
+            Argument(
+                "steps",
+                int,
+                optional=True,
+                default=200,
+                doc=doc_steps,
+            ),
+            Argument(
+                "timeout",
+                int,
+                optional=True,
+                default=None,
+                doc=doc_timeout,
+            ),
+        ],
+        doc=doc_diffcsp_task_grp,
+    )
+
+
+def diffcsp_normalize(config):
+    args = diffcsp_task_group_args()
+    config = args.normalize_value(config, trim_pattern="_*")
+    args.check_value(config, strict=False)
+    return config
+
+
+def make_diffcsp_task_group_from_config(config):
+    config = diffcsp_normalize(config)
+    tgroup = DiffCSPTaskGroup(**config)
     return tgroup
 
 

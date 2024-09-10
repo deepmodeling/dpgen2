@@ -97,21 +97,39 @@ class TestSelectConfs(unittest.TestCase):
     def test_validate_trajs(self):
         trajs = ["foo", "bar", None, "tar"]
         model_devis = ["zar", "par", None, "mar"]
-        trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
+        trajs, model_devis, _ = SelectConfs.validate_trajs(trajs, model_devis, None)
         self.assertEqual(trajs, ["foo", "bar", "tar"])
         self.assertEqual(model_devis, ["zar", "par", "mar"])
 
         trajs = ["foo", "bar", None, "tar"]
         model_devis = ["zar", "par", None]
         with self.assertRaises(FatalError) as context:
-            trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
+            trajs, model_devis, _ = SelectConfs.validate_trajs(trajs, model_devis, None)
 
         trajs = ["foo", "bar"]
         model_devis = ["zar", None]
         with self.assertRaises(FatalError) as context:
-            trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
+            trajs, model_devis, _ = SelectConfs.validate_trajs(trajs, model_devis, None)
 
         trajs = ["foo", None]
         model_devis = ["zar", "par"]
         with self.assertRaises(FatalError) as context:
-            trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
+            trajs, model_devis, _ = SelectConfs.validate_trajs(trajs, model_devis, None)
+
+        trajs = ["foo", "bar", None, "tar"]
+        model_devis = ["zar", "par", None, "mar"]
+        optional_outputs = ["dar", "far", None, "gar"]
+        trajs, model_devis, optional_outputs = SelectConfs.validate_trajs(
+            trajs, model_devis, optional_outputs
+        )
+        self.assertEqual(trajs, ["foo", "bar", "tar"])
+        self.assertEqual(model_devis, ["zar", "par", "mar"])
+        self.assertEqual(optional_outputs, ["dar", "far", "gar"])
+
+        trajs = ["foo", "bar"]
+        model_devis = ["zar", "par"]
+        optional_outputs = ["dar", None]
+        with self.assertRaises(FatalError) as context:
+            trajs, model_devis, optional_outputs = SelectConfs.validate_trajs(
+                trajs, model_devis, optional_outputs
+            )

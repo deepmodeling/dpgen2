@@ -35,6 +35,9 @@ from dpgen2.utils.step_config import normalize as normalize_step_dict
 from .prep_run_calypso import (
     PrepRunCaly,
 )
+from .prep_run_diffcsp import (
+    PrepRunDiffCSP,
+)
 from .prep_run_dp_train import (
     PrepRunDPTrain,
 )
@@ -69,7 +72,7 @@ class ConcurrentLearningBlock(Steps):
         self,
         name: str,
         prep_run_dp_train_op: PrepRunDPTrain,
-        prep_run_explore_op: Union[PrepRunLmp, PrepRunCaly],
+        prep_run_explore_op: Union[PrepRunLmp, PrepRunCaly, PrepRunDiffCSP],
         select_confs_op: Type[OP],
         prep_run_fp_op: PrepRunFp,
         collect_data_op: Type[OP],
@@ -246,6 +249,9 @@ def _block_cl(
         artifacts={
             "trajs": prep_run_explore.outputs.artifacts["trajs"],
             "model_devis": prep_run_explore.outputs.artifacts["model_devis"],
+            "optional_outputs": prep_run_explore.outputs.artifacts["optional_outputs"]
+            if "optional_outputs" in prep_run_explore.outputs.artifacts
+            else None,
         },
         key=step_keys["select-confs"],
         executor=select_confs_executor,

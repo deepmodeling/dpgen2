@@ -38,14 +38,19 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
         traj_freq: int = 10,
+        extra_pair_style_args: str = "",
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
         self.traj_freq = traj_freq
+        self.extra_pair_style_args = extra_pair_style_args
         self.lmp_set = True
         self.model_list = sorted([model_name_pattern % ii for ii in range(numb_models)])
         self.lmp_template = revise_lmp_input_model(
-            self.lmp_template, self.model_list, self.traj_freq
+            self.lmp_template,
+            self.model_list,
+            self.traj_freq,
+            self.extra_pair_style_args,
         )
         self.lmp_template = revise_lmp_input_dump(self.lmp_template, self.traj_freq)
         if plm_template_fname is not None:
@@ -133,12 +138,20 @@ def find_only_one_key(lmp_lines, key):
     return found[0]
 
 
-def revise_lmp_input_model(lmp_lines, task_model_list, trj_freq, deepmd_version="1"):
+def revise_lmp_input_model(
+    lmp_lines, task_model_list, trj_freq, extra_pair_style_args="", deepmd_version="1"
+):
     idx = find_only_one_key(lmp_lines, ["pair_style", "deepmd"])
+    if extra_pair_style_args:
+        extra_pair_style_args = " " + extra_pair_style_args
     graph_list = " ".join(task_model_list)
-    lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file model_devi.out" % (
-        graph_list,
-        trj_freq,
+    lmp_lines[idx] = (
+        "pair_style      deepmd %s out_freq %d out_file model_devi.out%s"
+        % (
+            graph_list,
+            trj_freq,
+            extra_pair_style_args,
+        )
     )
     return lmp_lines
 

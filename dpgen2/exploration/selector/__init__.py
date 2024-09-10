@@ -9,4 +9,17 @@ from .conf_selector_frame import (
     ConfSelectorFrames,
 )
 
-__all__ = ["ConfFilter", "ConfFilters", "ConfSelector", "ConfSelectorFrames"]
+
+from .distance_conf_filter import (
+    BoxLengthFilter,
+    BoxSkewnessConfFilter,
+    DistanceConfFilter,
+)
+
+conf_filter_styles = {
+    "distance": DistanceConfFilter,
+    "box_skewness": BoxSkewnessConfFilter,
+    "box_length": BoxLengthFilter,
+}
+__all__ = ["ConfFilter", "ConfFilters", "ConfSelector", "ConfSelectorFrames", "conf_filter_styles"]
+
