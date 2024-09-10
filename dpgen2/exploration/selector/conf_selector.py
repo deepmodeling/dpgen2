@@ -12,8 +12,6 @@ from typing import (
     Union,
 )
 
-
-import dpdata
 from dflow.python.opio import (
     HDF5Dataset,
 )

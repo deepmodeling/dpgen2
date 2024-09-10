@@ -6,9 +6,6 @@ import dpdata
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.exploration.render import TrajRenderLammps
 
 # isort: on

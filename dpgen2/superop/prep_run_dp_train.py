@@ -1,10 +1,6 @@
-import json
 import os
 from copy import (
     deepcopy,
-)
-from pathlib import (
-    Path,
 )
 from typing import (
     List,
@@ -28,18 +24,12 @@ from dflow import (
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    BigParameter,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
 
 from dpgen2.constants import (
     train_index_pattern,
-    train_script_name,
-    train_task_pattern,
 )
 from dpgen2.op import (
     RunDPTrain,
@@ -48,7 +38,6 @@ from dpgen2.utils.step_config import (
     init_executor,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
-
 
 
 class PrepRunDPTrain(Steps):
@@ -111,7 +100,6 @@ class PrepRunDPTrain(Steps):
         self.step_keys[ii] = "--".join(
             ["{}".format(self.inputs.parameters["block_id"]), ii + "-{{item}}"]
         )
-
 
         self = _prep_run_dp_train(
             self,

@@ -7,7 +7,6 @@ from unittest.mock import (
     patch,
 )
 
-import numpy as np
 from fake_data_set import (
     fake_system,
 )

@@ -2,40 +2,24 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
-    Any,
-    Dict,
     List,
     Optional,
     Type,
-    Union,
 )
 
 from dflow import (
     InputArtifact,
     InputParameter,
     Inputs,
-    OPTemplate,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )

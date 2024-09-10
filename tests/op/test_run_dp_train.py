@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 import shutil
@@ -27,7 +26,6 @@ from dpgen2.constants import (
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
-    _make_train_command,
 )
 
 # isort: on

@@ -53,8 +53,9 @@ def clean_lines(string_list, remove_empty_lines=True):
         remove_empty_lines: Set to True to skip lines which are empty after
             stripping.
 
-    Returns:
-        List of clean strings with no whitespaces.
+    Returns
+    -------
+    List of clean strings with no whitespaces.
     """
     for s in string_list:
         clean_s = s
@@ -159,7 +160,7 @@ class RunVasp(RunFp):
 
     def set_ele_temp(self, system):
         if os.path.exists("job.json"):
-            with open("job.json", "r") as f:
+            with open("job.json") as f:
                 data = json.load(f)
             if "use_ele_temp" in data and "ele_temp" in data:
                 if data["use_ele_temp"] == 1:

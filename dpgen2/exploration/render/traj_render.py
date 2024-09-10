@@ -12,7 +12,6 @@ from typing import (
 )
 
 import dpdata
-import numpy as np
 from dflow.python.opio import (
     HDF5Dataset,
 )

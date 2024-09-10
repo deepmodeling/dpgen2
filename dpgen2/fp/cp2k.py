@@ -152,7 +152,7 @@ class RunFpOpCp2k(OP):
         file_path = os.path.join(str(workdir), "output.log")
 
         # convert the output to deepmd/npy format
-        with open(workdir / "input.inp", "r") as f:
+        with open(workdir / "input.inp") as f:
             lines = f.readlines()
 
         # 获取 RUN_TYPE
