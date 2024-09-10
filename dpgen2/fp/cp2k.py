@@ -85,7 +85,7 @@ class PrepFpOpCp2k(OP):
                         s["atom_types"][i] = atom_names.index(s["atom_names"][t])  # type: ignore https://github.com/microsoft/pyright/issues/5620
                     s.data["atom_numbs"] = atom_numbs
                     s.data["atom_names"] = atom_names
-                    target = "output/%s" % system
+                    target = f"output/{system}"
                     s.to("deepmd/npy", target)
                     confs.append(Path(target))
                 else:

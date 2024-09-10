@@ -7,6 +7,7 @@ from unittest.mock import (
     patch,
 )
 
+import dpdata
 from fake_data_set import (
     fake_system,
 )

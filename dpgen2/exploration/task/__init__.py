@@ -59,4 +59,7 @@ __all__ = [
     "make_lmp_task_group_from_config",
     "variant_task_group",
     "NPTTaskGroup",
+    "DiffCSPTaskGroup",
+    "diffcsp_normalize",
+    "make_diffcsp_task_group_from_config",
 ]

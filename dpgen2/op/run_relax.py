@@ -192,14 +192,14 @@ class RunRelax(OP):
                 )
                 forces_list[j] = forces
                 virial_list[j] = virial / len(atype)
-            traj_file = ip["task_path"] / ("traj.%s.dump" % fname)
+            traj_file = ip["task_path"] / (f"traj.{fname}.dump")
             traj_file = self.write_traj(dump_str, traj_file)
             trajs.append(traj_file)
             devi = [np.array(step_list)]
             devi += list(calc_model_devi_v(np.array(virial_list)))
             devi += list(calc_model_devi_f(np.array(forces_list)))
             devi = np.vstack(devi).T
-            model_devi_file = ip["task_path"] / ("model_devi.%s.out" % fname)
+            model_devi_file = ip["task_path"] / (f"model_devi.{fname}.out")
             model_devi_file = self.write_model_devi(devi, model_devi_file)
             model_devis.append(model_devi_file)
         return OPIO(

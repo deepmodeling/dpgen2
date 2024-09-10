@@ -58,4 +58,8 @@ __all__ = [
     "RunDPTrain",
     "RunLmp",
     "SelectConfs",
+    "PrepRelax",
+    "RunRelax",
+    "RunRelaxHDF5",
+    "DiffCSPGen",
 ]

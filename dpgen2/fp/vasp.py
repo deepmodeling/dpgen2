@@ -11,6 +11,7 @@ from typing import (
 )
 
 import dpdata
+import numpy as np
 from dargs import (
     Argument,
 )

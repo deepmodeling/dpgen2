@@ -23,4 +23,5 @@ __all__ = [
     "PrepRunDPTrain",
     "PrepRunFp",
     "PrepRunLmp",
+    "PrepRunDiffCSP",
 ]

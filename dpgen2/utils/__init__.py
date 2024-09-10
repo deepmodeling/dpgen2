@@ -71,4 +71,5 @@ __all__ = [
     "init_executor",
     "normalize_step_dict",
     "step_conf_args",
+    "setup_ele_temp",
 ]

@@ -182,7 +182,7 @@ def variant_filter():
                 kk,
                 dict,
                 conf_filter_styles[kk].args(),
-                doc="Configuration filter of type %s" % kk,
+                doc=f"Configuration filter of type {kk}",
             )
         )
     return Variant(

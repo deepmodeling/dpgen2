@@ -301,7 +301,7 @@ class BoxLengthFilter(ConfFilter):
         c = cell[2][2]  # type: ignore
 
         if check_multiples(a, b, c, self.length_ratio):
-            logging.warning("One side is %s larger than another" % self.length_ratio)
+            logging.warning(f"One side is {self.length_ratio} larger than another")
             return False
         return True
 

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import random
@@ -328,10 +329,10 @@ def get_ele_temp(lmp_log_name):
 
 
 def freeze_model(input_model, frozen_model, head=None):
-    freeze_args = "-o %s" % frozen_model
+    freeze_args = f"-o {frozen_model}"
     if head is not None:
-        freeze_args += " --head %s" % head
-    freeze_cmd = "dp --pt freeze -c %s %s" % (input_model, freeze_args)
+        freeze_args += f" --head {head}"
+    freeze_cmd = f"dp --pt freeze -c {input_model} {freeze_args}"
     ret, out, err = run_command(freeze_cmd, shell=True)
     if ret != 0:
         logging.error(

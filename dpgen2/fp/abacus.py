@@ -199,7 +199,7 @@ class RunFpOpAbacus(OP):
         elif calculation in ["relax", "cell-relax"]:
             sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
         else:
-            raise ValueError("Type of calculation %s not supported" % calculation)
+            raise ValueError(f"Type of calculation {calculation} not supported")
         out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
 

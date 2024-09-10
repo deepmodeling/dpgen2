@@ -850,7 +850,7 @@ class MockedConfSelector(ConfSelector):
         self,
         trajs: List[Path],
         model_devis: List[Path],
-        type_map: List[str] = None,
+        type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         confs = []
