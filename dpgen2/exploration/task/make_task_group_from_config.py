@@ -1,4 +1,3 @@
-import dargs
 from dargs import (
     Argument,
     Variant,
@@ -7,7 +6,6 @@ from dargs import (
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
-    model_name_pattern,
     plm_input_name,
 )
 from dpgen2.exploration.task import (
@@ -634,4 +632,4 @@ def make_lmp_task_group_from_config(
 
 
 if __name__ == "__main__":
-    print(lmp_normalize({"type": "lmp-md"}))
+    pass

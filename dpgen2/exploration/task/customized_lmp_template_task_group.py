@@ -18,8 +18,6 @@ from dflow.python import (
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
-    model_name_pattern,
-    plm_input_name,
 )
 from dpgen2.utils import (
     run_command,
@@ -29,14 +27,8 @@ from dpgen2.utils import (
 from .conf_sampling_task_group import (
     ConfSamplingTaskGroup,
 )
-from .lmp import (
-    make_lmp_input,
-)
 from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
-)
-from .task import (
-    ExplorationTask,
 )
 
 

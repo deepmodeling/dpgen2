@@ -42,5 +42,5 @@ class TestPrepRelax(unittest.TestCase):
             if os.path.isdir("task.%06d" % i):
                 shutil.rmtree("task.%06d" % i)
         for i in range(4):
-            if os.path.isfile("%s.cif" % i):
-                os.remove("%s.cif" % i)
+            if os.path.isfile(f"{i}.cif"):
+                os.remove(f"{i}.cif")

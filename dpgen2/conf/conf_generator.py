@@ -41,7 +41,7 @@ class ConfGenerator(ABC):
         type_map,
         fmt="lammps/lmp",
     ) -> List[str]:
-        r"""Get the file content of configurations
+        r"""Get the file content of configurations.
 
         Parameters
         ----------

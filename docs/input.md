@@ -70,11 +70,11 @@ This section defines how the configuration space is explored.
 		"command": "lmp -var restart 0"
 	},
 	"convergence": {
-	    "type" :	"fixed-levels",
-	    "conv_accuracy" :	0.9,
-	    "level_f_lo":	0.05,
-	    "level_f_hi":	0.50,
-	    "_comment" : "all"
+        "type" :	"fixed-levels",
+        "conv_accuracy" :	0.9,
+        "level_f_lo":	0.05,
+        "level_f_hi":	0.50,
+        "_comment" : "all"
 	},
 	"max_numb_iter" :	5,
 	"fatal_at_max" :	false,
@@ -94,29 +94,29 @@ This section defines how the configuration space is explored.
 		}
 	],
 	"stages":	[
-	    [
+        [
 		{
-		    "_comment" : "stage 0, task group 0",
-		    "type" : "lmp-md",
-		    "ensemble": "nvt", "nsteps":  50, "temps": [50, 100], "trj_freq": 10,
-		    "conf_idx": [0], "n_sample" : 3
+            "_comment" : "stage 0, task group 0",
+            "type" : "lmp-md",
+            "ensemble": "nvt", "nsteps":  50, "temps": [50, 100], "trj_freq": 10,
+            "conf_idx": [0], "n_sample" : 3
 		},
 		{
-		    "_comment" : "stage 0, task group 1",
-		    "type" : "lmp-template",
-		    "lmp" : "template.lammps", "plm" : "template.plumed",
-		    "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [150, 200]},
-		    "conf_idx": [0], "n_sample" : 3
+            "_comment" : "stage 0, task group 1",
+            "type" : "lmp-template",
+            "lmp" : "template.lammps", "plm" : "template.plumed",
+            "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [150, 200]},
+            "conf_idx": [0], "n_sample" : 3
 		}
-	    ],
-	    [
+        ],
+        [
 		{
-		    "_comment" : "stage 1, task group 0",
-		    "type" : "lmp-md",
-		    "ensemble": "npt", "nsteps":  50, "press": [1e0], "temps": [50, 100, 200], "trj_freq": 10,
-		    "conf_idx": [1], "n_sample" : 3
+            "_comment" : "stage 1, task group 0",
+            "type" : "lmp-md",
+            "ensemble": "npt", "nsteps":  50, "press": [1e0], "temps": [50, 100, 200], "trj_freq": 10,
+            "conf_idx": [1], "n_sample" : 3
 		}
-	    ]
+        ]
 	]
 }
 ```
@@ -197,7 +197,7 @@ Any of the config in the {dargs:argument}`"step_configs"<step_configs>` can be o
 ```json
 "default_step_config" : {
 	"template_config" : {
-	    "image" : "dpgen2:x.x.x"
+        "image" : "dpgen2:x.x.x"
 	}
 },
 ```

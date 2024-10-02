@@ -16,3 +16,10 @@ conv_styles = {
     "fixed-levels-max-select": ExplorationReportTrustLevelsMax,
     "adaptive-lower": ExplorationReportAdaptiveLower,
 }
+__all__ = [
+    "ExplorationReport",
+    "ExplorationReportAdaptiveLower",
+    "ExplorationReportTrustLevelsMax",
+    "ExplorationReportTrustLevelsRandom",
+    "conv_styles",
+]

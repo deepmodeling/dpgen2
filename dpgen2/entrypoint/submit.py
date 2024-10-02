@@ -1,9 +1,9 @@
 import copy
-import glob
+import functools
 import json
 import logging
+import operator
 import os
-import pickle
 import re
 from copy import (
     deepcopy,
@@ -15,44 +15,20 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
-    Type,
-    Union,
 )
 
-import dpdata
 from dflow import (
     ArgoStep,
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
     S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
-    download_artifact,
     upload_artifact,
-)
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    FatalError,
-    OPIOSign,
-    PythonOPTemplate,
-    TransientError,
-    upload_packages,
 )
 
 from dpgen2.conf import (
     conf_styles,
 )
 from dpgen2.constants import (
-    default_host,
     default_image,
 )
 from dpgen2.entrypoint.args import normalize as normalize_args
@@ -65,7 +41,6 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReportTrustLevelsRandom,
     conv_styles,
 )
 from dpgen2.exploration.scheduler import (
@@ -78,11 +53,7 @@ from dpgen2.exploration.selector import (
     conf_filter_styles,
 )
 from dpgen2.exploration.task import (
-    CustomizedLmpTemplateTaskGroup,
     ExplorationStage,
-    ExplorationTask,
-    LmpTemplateTaskGroup,
-    NPTTaskGroup,
     caly_normalize,
     diffcsp_normalize,
     make_calypso_task_group_from_config,
@@ -130,16 +101,12 @@ from dpgen2.superop.caly_evo_step import (
 )
 from dpgen2.utils import (
     BinaryFileInput,
-    bohrium_config_from_dict,
-    dump_object_to_file,
     get_artifact_from_uri,
     get_subkey,
-    load_object_from_file,
     matched_step_key,
     print_keys_in_nice_format,
     sort_slice_ops,
     upload_artifact_and_print_uri,
-    workflow_config_from_dict,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
@@ -464,7 +431,7 @@ def get_systems_from_data(data, data_prefix=None):
     assert isinstance(data, list)
     if data_prefix is not None:
         data = [os.path.join(data_prefix, ii) for ii in data]
-    data = sum([expand_sys_str(ii) for ii in data], [])
+    data = functools.reduce(operator.iadd, [expand_sys_str(ii) for ii in data], [])
     return data
 
 
@@ -587,7 +554,7 @@ def workflow_concurrent_learning(
     if fp_style == "deepmd":
         assert (
             "teacher_model_path" in fp_config["run"]
-        ), f"Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
+        ), "Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
         assert os.path.exists(
             fp_config["run"]["teacher_model_path"]
         ), f"No such file: {fp_config['run']['teacher_model_path']}"
@@ -811,7 +778,7 @@ def successful_step_keys(wf):
     all_step_keys = []
     steps = wf.query_step()
     # For reused steps whose startedAt are identical, sort them by key
-    steps.sort(key=lambda x: "%s-%s" % (x.startedAt, x.key))
+    steps.sort(key=lambda x: f"{x.startedAt}-{x.key}")
     for step in steps:
         if step.key is not None and step.phase == "Succeeded":
             all_step_keys.append(step.key)
@@ -954,14 +921,14 @@ def resubmit_concurrent_learning(
 
     old_wf = Workflow(id=wfid)
     folded_keys = get_resubmit_keys(old_wf)
-    all_step_keys = sum(folded_keys.values(), [])
+    all_step_keys = functools.reduce(operator.iadd, folded_keys.values(), [])
 
     if list_steps:
         prt_str = print_keys_in_nice_format(
             all_step_keys,
             ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
         )
-        print(prt_str)
+        print(prt_str)  # noqa: T201
 
     if reuse is None:
         return None
@@ -981,10 +948,10 @@ def resubmit_concurrent_learning(
             # reuse the super OP iif all steps within it are reused
             if v != [k] and k in folded_keys and set(v) == set(folded_keys[k]):
                 reused_folded_keys[k] = [k]
-        reused_keys = sum(reused_folded_keys.values(), [])
+        reused_keys = functools.reduce(operator.iadd, reused_folded_keys.values(), [])
     reuse_step = old_wf.query_step(key=reused_keys)
     # For reused steps whose startedAt are identical, sort them by key
-    reuse_step.sort(key=lambda x: "%s-%s" % (x.startedAt, x.key))
+    reuse_step.sort(key=lambda x: f"{x.startedAt}-{x.key}")
 
     wf = submit_concurrent_learning(
         wf_config,

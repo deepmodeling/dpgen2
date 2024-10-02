@@ -2,40 +2,24 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
-    Any,
-    Dict,
     List,
     Optional,
     Type,
-    Union,
 )
 
 from dflow import (
     InputArtifact,
     InputParameter,
     Inputs,
-    OPTemplate,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
@@ -157,7 +141,7 @@ def _prep_run_diffcsp(
             "task_id": "{{item}}",
             "config": expl_config,
         },
-        key="%s--diffcsp-gen-{{item}}" % block_id,
+        key=f"{block_id}--diffcsp-gen-{{{{item}}}}",
         executor=prep_executor,
         with_sequence=argo_sequence(expl_config["gen_tasks"], format="%06d"),  # type: ignore
     )
@@ -176,7 +160,7 @@ def _prep_run_diffcsp(
         artifacts={
             "cifs": diffcsp_gen.outputs.artifacts["cifs"],
         },
-        key="%s--prep-relax" % block_id,
+        key=f"{block_id}--prep-relax",
         executor=prep_executor,
     )
     prep_run_diffcsp_steps.add(prep_relax)
@@ -202,7 +186,7 @@ def _prep_run_diffcsp(
             "models": models,
             "task_path": prep_relax.outputs.artifacts["task_paths"],
         },
-        key="%s--run-relax-{{item}}" % block_id,
+        key=f"{block_id}--run-relax-{{{{item}}}}",
         executor=run_executor,
         with_sequence=argo_sequence(
             prep_relax.outputs.parameters["ntasks"], format="%06d"

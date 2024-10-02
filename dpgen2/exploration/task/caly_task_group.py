@@ -109,22 +109,20 @@ class CalyTaskGroup(ExplorationTaskGroup):
         max_numb_atoms: int = 100,
         opt_step: int = 1000,
     ):
-        """
-        Set calypso parameters
-        """
+        """Set calypso parameters."""
         self.numb_of_species = numb_of_species
         self.numb_of_atoms = numb_of_atoms
 
         if isinstance(name_of_atoms, list) and all(
-            [isinstance(i, list) for i in name_of_atoms]
+            isinstance(i, list) for i in name_of_atoms
         ):
             overlap = set(name_of_atoms[0])
             for temp in name_of_atoms[1:]:
                 overlap = overlap & set(temp)
 
-            if any(map(lambda s: (set(s) - overlap) == 0, name_of_atoms)):
+            if any((set(s) - overlap) == 0 for s in name_of_atoms):
                 raise ValueError(
-                    f"Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
+                    "Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
                 )
 
             while True:

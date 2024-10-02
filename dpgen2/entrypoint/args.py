@@ -9,12 +9,8 @@ from dargs import (
     Variant,
 )
 
-import dpgen2
 from dpgen2.conf import (
     conf_styles,
-)
-from dpgen2.constants import (
-    default_image,
 )
 from dpgen2.exploration.report import (
     conv_styles,
@@ -186,7 +182,7 @@ def variant_filter():
                 kk,
                 dict,
                 conf_filter_styles[kk].args(),
-                doc="Configuration filter of type %s" % kk,
+                doc=f"Configuration filter of type {kk}",
             )
         )
     return Variant(

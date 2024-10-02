@@ -1,20 +1,3 @@
-from abc import (
-    ABC,
-    abstractmethod,
-)
-from typing import (
-    List,
-)
-
-from dpgen2.constants import (
-    lmp_conf_name,
-    lmp_input_name,
-    model_name_pattern,
-)
-
-from .task import (
-    ExplorationTask,
-)
 from .task_group import (
     BaseExplorationTaskGroup,
     ExplorationTaskGroup,
@@ -22,19 +5,13 @@ from .task_group import (
 
 
 class ExplorationStage:
-    """
-    The exploration stage.
-
-    """
+    """The exploration stage."""
 
     def __init__(self):
         self.clear()
 
     def clear(self):
-        """
-        Clear all exploration group.
-
-        """
+        """Clear all exploration group."""
         self.explor_groups = []
 
     def add_task_group(
@@ -42,7 +19,7 @@ class ExplorationStage:
         grp: ExplorationTaskGroup,
     ):
         """
-        Add an exploration group
+        Add an exploration group.
 
         Parameters
         ----------
@@ -67,7 +44,6 @@ class ExplorationStage:
             added to the stage.
 
         """
-
         lmp_task_grp = BaseExplorationTaskGroup()
         for ii in self.explor_groups:
             # lmp_task_grp.add_group(ii.make_task())

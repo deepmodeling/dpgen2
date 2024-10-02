@@ -9,13 +9,13 @@
 
     "default_step_config": {
 	"template_config": {
-	    "image" : "dpgen2:master",
-	    "_comment" : "all"
+        "image" : "dpgen2:master",
+        "_comment" : "all"
 	},
 	"executor" : {
-	    "type" : "dispatcher",
-	    "image_pull_policy" : "IfNotPresent",
-	    "machine_dict": {
+        "type" : "dispatcher",
+        "image_pull_policy" : "IfNotPresent",
+        "machine_dict": {
 		"batch_type": "Bohrium",
 		"context_type": "Bohrium",
 		"remote_profile": {
@@ -25,89 +25,89 @@
 			"scass_type": "c2_m8_cpu"
                     }
 		}
-	    }
+        }
 	},
 	"_comment" : "all"
     },
 
     "step_configs":{
 	"run_train_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "deepmd-kit:wanghan",
 		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "executor" : {
 		"type" : "dispatcher",
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c2_m8_cpu"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c2_m8_cpu"
 			}
-		    }
+            }
 		}
-	    },
-	    "_comment" : "all"
+        },
+        "_comment" : "all"
 	},
 	"run_explore_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "deepmd-kit:wanghan",
 		"_comment" : "all"
-	    },
+        },
             "continue_on_success_ratio" : 0.80,
-	    "executor" : {
+        "executor" : {
 		"type" : "dispatcher",
 		"retry_on_submission_error": 10,
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c8_m32_1 * NVIDIA V100"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c8_m32_1 * NVIDIA V100"
 			}
-		    }
+            }
 		}
-	    },
-  	    "template_slice_config":{
+        },
+          "template_slice_config":{
   	   	"group_size":  20,
   	   	"pool_size":  5
-  	    },
-	    "_comment" : "all"
+          },
+        "_comment" : "all"
 	},
 	"run_fp_config" : {
-	    "template_config" : {
+        "template_config" : {
 		"image" : "vasp:wanghan",
 		"_comment" : "all"
-	    },
+        },
             "continue_on_success_ratio" : 0.80,
-	    "executor" : {
+        "executor" : {
 		"type" : "dispatcher",
 		"retry_on_submission_error": 10,
 		"image_pull_policy" : "IfNotPresent",
 		"machine_dict": {
-		    "batch_type": "Bohrium",
-		    "context_type": "Bohrium",
-		    "remote_profile": {
+            "batch_type": "Bohrium",
+            "context_type": "Bohrium",
+            "remote_profile": {
 			"input_data": {
-			    "job_type": "container",
-			    "platform": "ali",
-			    "scass_type": "c16_m64_cpu"
+	            "job_type": "container",
+	            "platform": "ali",
+	            "scass_type": "c16_m64_cpu"
 			}
-		    }
+            }
 		}
-	    },
+        },
             "template_slice_config":{
-      	        "group_size":  20,
+                  "group_size":  20,
       		"pool_size":  1
-      	    },
-	    "_comment" : "all"
+              },
+        "_comment" : "all"
 	},
 	"_comment" : "all"
     },
@@ -120,8 +120,8 @@
 	"mixed_type":		false,
 	"init_data_prefix":	null,
 	"init_data_sys":	[
-	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
-	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+        "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+        "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
 	],
 	"_comment" : "all"
     },
@@ -129,7 +129,7 @@
 	"type" :	"dp",
 	"numb_models" : 4,
 	"config" : {
-	    "init_model_policy" : "no"
+        "init_model_policy" : "no"
 	},
 	"template_script" : "dp_template.json",
 	"_comment" : "all"
@@ -138,47 +138,47 @@
     "explore" : {
 	"type" : "lmp",
 	"config" : {
-	    "command": "lmp -var restart 0"
+        "command": "lmp -var restart 0"
 	},
 	"convergence": {
-	    "type" :	"fixed-levels",
-	    "conv_accuracy" :	0.9,
-	    "level_f_lo":	0.05,
-	    "level_f_hi":	0.50,
-	    "_comment" : "all"
+        "type" :	"fixed-levels",
+        "conv_accuracy" :	0.9,
+        "level_f_lo":	0.05,
+        "level_f_hi":	0.50,
+        "_comment" : "all"
 	},
 	"max_numb_iter" :	5,
 	"fatal_at_max" :	false,
 	"output_nopbc":		false,
 	"configurations":	[
-	    {
+        {
 		"type": "alloy",
 		"lattice" : ["fcc", 4.57],
 		"replicate" : [2, 2, 2],
 		"numb_confs" : 30,
 		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-	    },
-	    {
+        },
+        {
 		"type" : "file",
 		"files" : ["/path/to/confs/*"],
 		"fmt" : "deepmd/npy"
-	    }
+        }
 	],
 	"_comment" : "Stage is of type List[List[dict]]. ",
 	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
 	"stages":	[
-	    [
+        [
 		{
-		    "type" : "lmp-md",
-		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
-		    "conf_idx": [0], "n_sample" : 3
+            "type" : "lmp-md",
+            "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+            "conf_idx": [0], "n_sample" : 3
 		},
 		{
-		    "type" : "lmp-template",
-		    "lmp" : "template.lammps", "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [100, 200]},
-		    "conf_idx": [0], "n_sample" : 3
+            "type" : "lmp-template",
+            "lmp" : "template.lammps", "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [100, 200]},
+            "conf_idx": [0], "n_sample" : 3
 		}
-	    ]
+        ]
 	],
 	"_comment" : "all"
     },
@@ -186,13 +186,13 @@
 	"type" :	"vasp",
 	"task_max":	2,
 	"inputs_config" : {
-	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	    "incar":    "vasp/INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
+        "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+        "incar":    "vasp/INCAR",
+        "kspacing":	0.32,
+        "kgamma":	true
 	},
 	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
 	},
 	"_comment" : "all"
     }

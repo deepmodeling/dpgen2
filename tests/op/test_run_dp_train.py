@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 import shutil
@@ -6,37 +5,27 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest.mock import (
+    call,
+    patch,
+)
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
     FatalError,
-    OPIOSign,
-    TransientError,
 )
 from fake_data_set import (
     fake_multi_sys,
     fake_system,
 )
-from mock import (
-    call,
-    patch,
-)
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     train_script_name,
-    train_task_pattern,
 )
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
-    _make_train_command,
 )
 
 # isort: on
@@ -74,7 +63,7 @@ class TestRunDPTrain(unittest.TestCase):
         ss_0.to_deepmd_npy("init/data-0")
         ss_1.to_deepmd_npy("init/data-1")
         self.init_data = [Path("init/data-0"), Path("init/data-1")]
-        self.init_data = sorted(list(self.init_data))
+        self.init_data = sorted(self.init_data)
 
         self.init_model = Path("bar.pb")
 
@@ -764,7 +753,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         ss_0.to_deepmd_npy("init/data-0")
         ss_1.to_deepmd_npy("init/data-1")
         self.init_data = [Path("init/data-0"), Path("init/data-1")]
-        self.init_data = sorted(list(self.init_data))
+        self.init_data = sorted(self.init_data)
 
         self.init_model = Path("bar.pb")
 

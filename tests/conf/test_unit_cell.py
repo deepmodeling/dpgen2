@@ -1,17 +1,8 @@
-import json
-import os
-import shutil
 import unittest
-from pathlib import (
-    Path,
-)
 
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.conf.unit_cells import (
     generate_unit_cell,
 )

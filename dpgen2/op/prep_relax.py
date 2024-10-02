@@ -47,7 +47,7 @@ class PrepRelax(OP):
             task_dir = Path("task.%06d" % i)
             task_dir.mkdir(exist_ok=True)
             for j in range(group_size * i, min(group_size * (i + 1), ncifs)):
-                os.symlink(ip["cifs"][j], task_dir / ("%s.cif" % j))
+                os.symlink(ip["cifs"][j], task_dir / (f"{j}.cif"))
             task_paths.append(task_dir)
         return OPIO(
             {

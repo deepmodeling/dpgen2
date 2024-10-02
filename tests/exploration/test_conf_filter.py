@@ -1,19 +1,18 @@
-import os
 import unittest
-
-import dpdata
-import numpy as np
-from fake_data_set import (
-    fake_system,
+from typing import (
+    ClassVar,
+    List,
 )
-from mock import (
+from unittest.mock import (
     patch,
 )
 
-# isort: off
-from .context import (
-    dpgen2,
+import dpdata
+from fake_data_set import (
+    fake_system,
 )
+
+# isort: off
 from dpgen2.exploration.selector import (
     ConfFilter,
     ConfFilters,
@@ -32,7 +31,7 @@ class FooFilter(ConfFilter):
 
 class faked_filter:
     myiter = -1
-    myret = [True]
+    myret: ClassVar[List[bool]] = [True]
 
     @classmethod
     def faked_check(cls, frame):

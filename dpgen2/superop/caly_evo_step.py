@@ -2,13 +2,9 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     List,
     Optional,
-    Set,
     Type,
 )
 
@@ -17,30 +13,17 @@ from dflow import (
     InputParameter,
     Inputs,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
-    argo_sequence,
-    download_artifact,
     if_expression,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
 
-from dpgen2.constants import (
-    calypso_index_pattern,
-)
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -181,8 +164,7 @@ def _caly_evo_step(
             "opt_results_dir": caly_evo_step_steps.inputs.artifacts["opt_results_dir"],
             "qhull_input": caly_evo_step_steps.inputs.artifacts["qhull_input"],
         },
-        key="%s--collect-run-calypso-%s-%s"
-        % (
+        key="{}--collect-run-calypso-{}-{}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -215,8 +197,7 @@ def _caly_evo_step(
                 "caly_check_opt_file"
             ],
         },
-        key="%s--prep-dp-optim-%s-%s"
-        % (
+        key="{}--prep-dp-optim-{}-{}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -248,8 +229,7 @@ def _caly_evo_step(
         artifacts={
             "task_dir": prep_dp_optim.outputs.artifacts["task_dirs"],
         },
-        key="%s--run-dp-optim-%s-%s-{{item}}"
-        % (
+        key="{}--run-dp-optim-{}-{}-{{{{item}}}}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -284,7 +264,7 @@ def _caly_evo_step(
                 "caly_check_opt_file"
             ],
         },
-        when="%s == false" % (collect_run_calypso.outputs.parameters["finished"]),
+        when="{} == false".format(collect_run_calypso.outputs.parameters["finished"]),
     )
     caly_evo_step_steps.add(next_step)
 

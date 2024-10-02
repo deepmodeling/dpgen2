@@ -1,10 +1,8 @@
 import itertools
-import random
 from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -19,9 +17,6 @@ from dpgen2.constants import (
 
 from .conf_sampling_task_group import (
     ConfSamplingTaskGroup,
-)
-from .lmp import (
-    make_lmp_input,
 )
 from .task import (
     ExplorationTask,
@@ -139,7 +134,7 @@ def find_only_one_key(lmp_lines, key):
     if len(found) > 1:
         raise RuntimeError("found %d keywords %s" % (len(found), key))
     if len(found) == 0:
-        raise RuntimeError("failed to find keyword %s" % (key))
+        raise RuntimeError(f"failed to find keyword {key}")
     return found[0]
 
 
@@ -172,9 +167,8 @@ def revise_lmp_input_dump(lmp_lines, trj_freq):
 
 def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
     idx = find_only_one_key(lmp_lines, ["fix", "dpgen_plm"])
-    lmp_lines[idx] = "fix             dpgen_plm all plumed plumedfile %s outfile %s" % (
-        in_plm,
-        out_plm,
+    lmp_lines[idx] = (
+        f"fix             dpgen_plm all plumed plumedfile {in_plm} outfile {out_plm}"
     )
     return lmp_lines
 

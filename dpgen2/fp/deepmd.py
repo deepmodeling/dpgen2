@@ -1,4 +1,5 @@
 """Prep and Run Gaussian tasks."""
+
 import os
 from pathlib import (
     Path,
@@ -6,7 +7,6 @@ from pathlib import (
 from typing import (
     Any,
     List,
-    Optional,
     Tuple,
 )
 
@@ -18,7 +18,6 @@ from dargs import (
 )
 from dflow.python import (
     FatalError,
-    TransientError,
 )
 
 from dpgen2.constants import (
@@ -102,7 +101,7 @@ class RunDeepmd(RunFp):
         out: str,
         log: str,
     ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -205,7 +204,6 @@ class RunDeepmd(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_deepmd_teacher_model = (
             "The path of teacher model, which can be loaded by deepmd.infer.DeepPot"
         )

@@ -9,28 +9,21 @@ from pathlib import (
 from typing import (
     List,
     Optional,
-    Set,
-    Tuple,
 )
 
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
     OP,
     OPIO,
     Artifact,
     BigParameter,
-    FatalError,
     OPIOSign,
     TransientError,
 )
 
 from dpgen2.constants import (
-    lmp_conf_name,
     lmp_input_name,
     lmp_log_name,
     lmp_model_devi_name,
@@ -134,7 +127,7 @@ class RunLmp(OP):
             ext = os.path.splitext(teacher_model.file_name)[-1]
             teacher_model_file = "teacher_model" + ext
             teacher_model.save_as_file(teacher_model_file)
-            model_files = [Path(teacher_model_file).resolve()] + model_files
+            model_files = [Path(teacher_model_file).resolve(), *model_files]
 
         with set_directory(work_dir):
             # link input files
@@ -151,10 +144,12 @@ class RunLmp(OP):
                 elif ext == ".pt":
                     # freeze model
                     mname = pytorch_model_name_pattern % (idx)
+
                     freeze_model(mm, mname, config.get("model_frozen_head"))
+
                 else:
                     raise RuntimeError(
-                        "Model file with extension '%s' is not supported" % ext
+                        f"Model file with extension '{ext}' is not supported"
                     )
                 model_names.append(mname)
 
@@ -280,7 +275,7 @@ def set_models(lmp_input_name: str, model_names: List[str]):
             f"cannot file model pattern {pattern} in line " f" {lmp_input_lines[idx]}"
         )
     if match_last == -1:
-        raise RuntimeError(f"last matching index should not be -1, terribly wrong ")
+        raise RuntimeError("last matching index should not be -1, terribly wrong ")
     for ii in range(match_last, len(new_line_split)):
         if re.fullmatch(pattern, new_line_split[ii]) is not None:
             raise RuntimeError(
@@ -305,7 +300,7 @@ def find_only_one_key(lmp_lines, key, raise_not_found=True):
         raise RuntimeError("found %d keywords %s" % (len(found), key))
     if len(found) == 0:
         if raise_not_found:
-            raise RuntimeError("failed to find keyword %s" % (key))
+            raise RuntimeError(f"failed to find keyword {key}")
         else:
             return None
     return found[0]
@@ -334,10 +329,10 @@ def get_ele_temp(lmp_log_name):
 
 
 def freeze_model(input_model, frozen_model, head=None):
-    freeze_args = "-o %s" % frozen_model
+    freeze_args = f"-o {frozen_model}"
     if head is not None:
-        freeze_args += " --head %s" % head
-    freeze_cmd = "dp --pt freeze -c %s %s" % (input_model, freeze_args)
+        freeze_args += f" --head {head}"
+    freeze_cmd = f"dp --pt freeze -c {input_model} {freeze_args}"
     ret, out, err = run_command(freeze_cmd, shell=True)
     if ret != 0:
         logging.error(

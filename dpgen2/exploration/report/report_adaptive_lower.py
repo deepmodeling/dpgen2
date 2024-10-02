@@ -475,9 +475,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         devi_f: float,
     ) -> int:
-        """
-        return the index in histogram given a force  model deviation.
-        """
+        """Return the index in histogram given a force  model deviation."""
         dh = (self.level_f_hi - self.level_f_lo) / self.nhist
         hist_idx = int((devi_f - self.level_f_lo) / dh)
         if hist_idx < 0:
@@ -487,7 +485,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         return hist_idx
 
     def print_header(self) -> str:
-        r"""Print the header of report"""
+        r"""Print the header of report."""
         return self.header_str
 
     def print(
@@ -496,7 +494,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         idx_in_stage: int,
         iter_idx: int,
     ) -> str:
-        r"""Print the report"""
+        r"""Print the report."""
         fmt_str = self.fmt_str
         fmt_flt = self.fmt_flt
         print_tuple = (

@@ -1,53 +1,24 @@
-import json
-import os
-import pickle
 import shutil
 import time
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
-    download_artifact,
     upload_artifact,
-)
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
 )
 
 from dpgen2.constants import (
     calypso_check_opt_file,
-    calypso_index_pattern,
     calypso_input_file,
     calypso_run_opt_file,
 )
 
 try:
-    from context import (
-        dpgen2,
-    )
+    from context import dpgen2  # noqa: F401
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
@@ -80,9 +51,6 @@ from dpgen2.op.prep_caly_input import (
 )
 from dpgen2.op.prep_caly_model_devi import (
     PrepCalyModelDevi,
-)
-from dpgen2.op.run_caly_model_devi import (
-    RunCalyModelDevi,
 )
 from dpgen2.superop.caly_evo_step import (
     CalyEvoStep,
@@ -125,7 +93,7 @@ class TestPrepRunCaly(unittest.TestCase):
         for ii in range(self.nmodels):
             model_path = self.work_dir.joinpath(f"task.{ii}")
             model_path.mkdir(parents=True, exist_ok=True)
-            model = model_path.joinpath(f"frozen_model.pb")
+            model = model_path.joinpath("frozen_model.pb")
             model.write_text(f"model {ii}")
             self.model_list.append(model)
         self.models = upload_artifact(self.model_list)

@@ -81,5 +81,5 @@ class DeviManager(ABC):
 
     @abstractmethod
     def _check_data(self) -> None:
-        r"""Check if data is valid"""
+        r"""Check if data is valid."""
         pass

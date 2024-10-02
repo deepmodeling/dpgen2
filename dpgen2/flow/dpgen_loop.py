@@ -1,5 +1,4 @@
 import os
-import pickle
 from copy import (
     deepcopy,
 )
@@ -12,7 +11,6 @@ from typing import (
     Union,
 )
 
-import jsonpickle
 from dflow import (
     InputArtifact,
     InputParameter,
@@ -23,13 +21,7 @@ from dflow import (
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
-    argo_sequence,
-    download_artifact,
     if_expression,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
@@ -39,7 +31,6 @@ from dflow.python import (
     HDF5Datasets,
     OPIOSign,
     PythonOPTemplate,
-    Slices,
 )
 
 from dpgen2.exploration.report import (
@@ -56,10 +47,6 @@ from dpgen2.exploration.task import (
 )
 from dpgen2.superop.block import (
     ConcurrentLearningBlock,
-)
-from dpgen2.utils import (
-    dump_object_to_file,
-    load_object_from_file,
 )
 from dpgen2.utils.step_config import (
     init_executor,
@@ -214,7 +201,7 @@ class ConcurrentLearningLoop(Steps):
         self.step_keys = {}
         for ii in self._my_keys:
             self.step_keys[ii] = "--".join(
-                ["%s" % self.inputs.parameters["block_id"], ii]
+                ["{}".format(self.inputs.parameters["block_id"]), ii]
             )
 
         self = _loop(
@@ -338,7 +325,7 @@ class ConcurrentLearning(Steps):
 
     @property
     def loop_keys(self):
-        return [self.loop_key] + self.loop.keys
+        return [self.loop_key, *self.loop.keys]
 
 
 def _loop(
@@ -449,24 +436,24 @@ def _loop(
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": block_step.outputs.artifacts["iter_data"],
         },
-        when="%s == false" % (scheduler_step.outputs.parameters["converged"]),
+        when="{} == false".format(scheduler_step.outputs.parameters["converged"]),
     )
     steps.add(next_step)
 
     steps.outputs.parameters[
         "exploration_scheduler"
     ].value_from_expression = if_expression(
-        _if=(scheduler_step.outputs.parameters["converged"] == True),
+        _if=(scheduler_step.outputs.parameters["converged"] is True),
         _then=scheduler_step.outputs.parameters["exploration_scheduler"],
         _else=next_step.outputs.parameters["exploration_scheduler"],
     )
     steps.outputs.artifacts["models"].from_expression = if_expression(
-        _if=(scheduler_step.outputs.parameters["converged"] == True),
+        _if=(scheduler_step.outputs.parameters["converged"] is True),
         _then=block_step.outputs.artifacts["models"],
         _else=next_step.outputs.artifacts["models"],
     )
     steps.outputs.artifacts["iter_data"].from_expression = if_expression(
-        _if=(scheduler_step.outputs.parameters["converged"] == True),
+        _if=(scheduler_step.outputs.parameters["converged"] is True),
         _then=block_step.outputs.artifacts["iter_data"],
         _else=next_step.outputs.artifacts["iter_data"],
     )
@@ -553,7 +540,7 @@ def _dpgen(
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],
         },
-        key="--".join(["%s" % id_step.outputs.parameters["block_id"], loop_key]),
+        key="--".join(["{}".format(id_step.outputs.parameters["block_id"]), loop_key]),
     )
     steps.add(loop_step)
 

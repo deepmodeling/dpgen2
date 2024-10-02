@@ -2,15 +2,11 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     Any,
     Dict,
     List,
     Optional,
-    Set,
     Type,
     Union,
 )
@@ -25,25 +21,12 @@ from dflow import (
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
-    argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
-    Slices,
 )
 
-from dpgen2.op import (
-    CollectData,
-)
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -148,7 +131,7 @@ class ConcurrentLearningBlock(Steps):
         self.step_keys = {}
         for ii in self._my_keys:
             self.step_keys[ii] = "--".join(
-                ["%s" % self.inputs.parameters["block_id"], ii]
+                ["{}".format(self.inputs.parameters["block_id"]), ii]
             )
 
         self = _block_cl(
@@ -228,7 +211,7 @@ def _block_cl(
             "iter_data": block_steps.inputs.artifacts["iter_data"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-train"]
         ),
     )
     block_steps.add(prep_run_dp_train)
@@ -246,7 +229,7 @@ def _block_cl(
             "models": prep_run_dp_train.outputs.artifacts["models"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-explore"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-explore"]
         ),
     )
     block_steps.add(prep_run_explore)
@@ -288,7 +271,7 @@ def _block_cl(
             "confs": select_confs.outputs.artifacts["confs"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-fp"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-fp"]
         ),
     )
     block_steps.add(prep_run_fp)

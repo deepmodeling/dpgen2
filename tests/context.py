@@ -3,7 +3,7 @@ import sys
 
 dpgen_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, dpgen_path)
-import dpgen2
+import dpgen2  # noqa: F401
 from dpgen2.utils import (
     dflow_config,
 )

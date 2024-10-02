@@ -2,19 +2,19 @@
     "model" : {
 	"type_map":		["Al", "Mg"],
 	"descriptor": {
-	    "type":		"se_a",
-	    "sel":		[90, 90],
-	    "rcut_smth":	1.80,
-	    "rcut":		6.00,
-	    "neuron":	[25, 50, 100],
-	    "resnet_dt":	false,
-	    "axis_neuron":	4,
-	    "seed":		1
+        "type":		"se_a",
+        "sel":		[90, 90],
+        "rcut_smth":	1.80,
+        "rcut":		6.00,
+        "neuron":	[25, 50, 100],
+        "resnet_dt":	false,
+        "axis_neuron":	4,
+        "seed":		1
 	},
 	"fitting_net" : {
-	    "neuron":	[128, 128, 128],
-	    "resnet_dt":	true,
-	    "seed":		1
+        "neuron":	[128, 128, 128],
+        "resnet_dt":	true,
+        "seed":		1
 	}
     },
     "loss" : {
@@ -32,8 +32,8 @@
     },
     "training" : {
 	"training_data": {
-	    "systems": [],
-	    "batch_size":"auto"
+        "systems": [],
+        "batch_size":"auto"
 	},
 	"numb_steps":1000,
 	"seed":10,

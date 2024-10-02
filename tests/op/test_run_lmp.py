@@ -1,29 +1,20 @@
-import json
 import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
-
-import numpy as np
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
-    TransientError,
-)
-from mock import (
+from unittest.mock import (
     call,
-    mock,
     patch,
 )
 
-# isort: off
-from .context import (
-    dpgen2,
+from dflow.python import (
+    OPIO,
+    TransientError,
 )
+
+# isort: off
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -143,7 +134,7 @@ group target_element_1 type 4
 change_box   all triclinic
 mass            6 26.980000
 pair_style      deepmd model.000.pb out_freq 10 out_file model_devi.out
-pair_coeff      * * 
+pair_coeff      * *
 
 thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
 thermo          ${THERMO_FREQ}
@@ -215,7 +206,7 @@ run             3000 upto
         # check if the teacher model is linked to model.000.pb
         ii = 0
         self.assertEqual(
-            (work_dir / (model_name_pattern % ii)).read_text(), f"teacher model"
+            (work_dir / (model_name_pattern % ii)).read_text(), "teacher model"
         )
 
         ii = 1
@@ -224,7 +215,7 @@ run             3000 upto
         )
 
         # The number of models have to be 2 in knowledge distillation
-        self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
+        self.assertEqual(len(list(work_dir.glob("*.pb"))), 2)
 
 
 def swap_element(arg):

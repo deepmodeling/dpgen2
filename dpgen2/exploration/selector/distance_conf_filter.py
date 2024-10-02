@@ -196,7 +196,6 @@ class DistanceConfFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_custom_safe_dist = "Custom safe distance (in unit of bohr) for each element"
         doc_safe_dist_ratio = "The ratio multiplied to the safe distance"
         return [
@@ -260,7 +259,6 @@ class BoxSkewnessConfFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_theta = "The threshold for angles between the edges of the cell. If all angles are larger than this value the check is passed"
         return [
             Argument(
@@ -303,7 +301,7 @@ class BoxLengthFilter(ConfFilter):
         c = cell[2][2]  # type: ignore
 
         if check_multiples(a, b, c, self.length_ratio):
-            logging.warning("One side is %s larger than another" % self.length_ratio)
+            logging.warning(f"One side is {self.length_ratio} larger than another")
             return False
         return True
 
@@ -316,7 +314,6 @@ class BoxLengthFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_length_ratio = "The threshold for the length ratio between the edges of the cell. If all length ratios are smaller than this value the check is passed"
         return [
             Argument(

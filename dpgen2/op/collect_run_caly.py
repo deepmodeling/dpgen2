@@ -1,31 +1,20 @@
-import json
 import logging
-import os
-import random
-import re
 import shutil
 from pathlib import (
     Path,
 )
 from typing import (
     List,
-    Optional,
-    Set,
-    Tuple,
 )
 
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
     OP,
     OPIO,
     Artifact,
     BigParameter,
-    FatalError,
     OPIOSign,
     Parameter,
     TransientError,
@@ -35,7 +24,6 @@ from dpgen2.constants import (
     calypso_log_name,
 )
 from dpgen2.utils import (
-    BinaryFileInput,
     set_directory,
 )
 from dpgen2.utils.run_command import (
@@ -246,7 +234,7 @@ def prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc):
 def get_value_from_inputdat(filename):
     max_step = 0
     vsc = False
-    with open(filename, "r") as f:
+    with open(filename) as f:
         lines = f.readlines()
         for line in lines:
             if "MaxStep" in line:

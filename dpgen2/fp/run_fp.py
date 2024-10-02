@@ -1,4 +1,3 @@
-import json
 import os
 from abc import (
     ABC,
@@ -10,12 +9,10 @@ from pathlib import (
 from typing import (
     Dict,
     List,
-    Set,
     Tuple,
 )
 
 import dargs
-import dpdata
 from dflow.python import (
     OP,
     OPIO,
@@ -23,7 +20,6 @@ from dflow.python import (
     BigParameter,
     FatalError,
     OPIOSign,
-    TransientError,
 )
 
 from dpgen2.utils.chdir import (
@@ -91,7 +87,7 @@ class RunFp(OP, ABC):
         self,
         **kwargs,
     ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------

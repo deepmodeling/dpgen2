@@ -1,13 +1,8 @@
-import json
-import logging
-import pickle
-import shutil
 from pathlib import (
     Path,
 )
 from typing import (
     List,
-    Tuple,
 )
 
 from dflow import (
@@ -24,28 +19,13 @@ from dflow.python import (
     OPIOSign,
     Parameter,
     Slices,
-    TransientError,
 )
 from dflow.utils import (
     flatten,
 )
 
-from dpgen2.constants import (
-    calypso_check_opt_file,
-    calypso_run_opt_file,
-)
-from dpgen2.exploration.task import (
-    ExplorationTaskGroup,
-)
 from dpgen2.superop.caly_evo_step import (
     CalyEvoStep,
-)
-from dpgen2.utils import (
-    BinaryFileInput,
-    set_directory,
-)
-from dpgen2.utils.run_command import (
-    run_command,
 )
 
 
@@ -119,7 +99,7 @@ class CalyEvoStepMerge(OP):
             path_list = download_artifact(step.outputs.artifacts[k])
             if output_sign[k].type == List[Path]:
                 if not isinstance(path_list, list) or any(
-                    [p is not None and not isinstance(p, str) for p in path_list]
+                    p is not None and not isinstance(p, str) for p in path_list
                 ):
                     path_list = list(flatten(path_list).values())
                 out[k] = [Path(p) for p in path_list]

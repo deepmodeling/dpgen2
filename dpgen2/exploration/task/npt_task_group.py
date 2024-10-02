@@ -1,5 +1,4 @@
 import itertools
-import random
 from typing import (
     List,
     Optional,
@@ -50,9 +49,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         ele_temp_f: Optional[float] = None,
         ele_temp_a: Optional[float] = None,
     ):
-        """
-        Set MD parameters
-        """
+        """Set MD parameters."""
         self.graphs = [model_name_pattern % ii for ii in range(numb_models)]
         self.mass_map = mass_map
         self.temps = temps

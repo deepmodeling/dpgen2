@@ -23,7 +23,6 @@ from dpgen2.exploration.selector import (
     ConfSelector,
 )
 from dpgen2.exploration.task import (
-    ExplorationStage,
     ExplorationTaskGroup,
 )
 
@@ -31,12 +30,13 @@ from .stage_scheduler import (
     StageScheduler,
 )
 
+__all__ = [
+    "ExplorationScheduler",
+]
+
 
 class ExplorationScheduler:
-    """
-    The exploration scheduler.
-
-    """
+    """The exploration scheduler."""
 
     def __init__(
         self,
@@ -91,17 +91,11 @@ class ExplorationScheduler:
         return tot_iter
 
     def complete(self):
-        """
-        Tell if all stages are converged.
-
-        """
+        """Tell if all stages are converged."""
         return self.complete_
 
     def force_stage_complete(self):
-        """
-        Force complete the current stage
-
-        """
+        """Force complete the current stage."""
         self.stage_schedulers[self.cur_stage].force_complete()
         self.cur_stage += 1
         if self.cur_stage < len(self.stage_schedulers):
@@ -136,7 +130,6 @@ class ExplorationScheduler:
             The configuration selector for the next iteration. Should be `None` if converged.
 
         """
-
         try:
             stg_complete, expl_task_grp, conf_selector = self.stage_schedulers[
                 self.cur_stage
@@ -145,7 +138,7 @@ class ExplorationScheduler:
                 trajs,
             )
         except FatalError as e:
-            raise FatalError(f"stage {self.cur_stage}: " + str(e))
+            raise FatalError(f"stage {self.cur_stage}: " + str(e)) from e
 
         if stg_complete:
             self.cur_stage += 1
@@ -164,10 +157,7 @@ class ExplorationScheduler:
             return stg_complete, expl_task_grp, conf_selector
 
     def get_stage_of_iterations(self):
-        """
-        Get the stage index and the index in the stage of iterations.
-
-        """
+        """Get the stage index and the index in the stage of iterations."""
         stages = self.stage_schedulers
         n_stage_iters = []
         for ii in range(self.get_stage() + 1):
@@ -196,7 +186,7 @@ class ExplorationScheduler:
 
     def get_convergence_ratio(self):
         """
-        Get the accurate, candidate and failed ratios of the iterations
+        Get the accurate, candidate and failed ratios of the iterations.
 
         Returns
         -------
@@ -252,8 +242,8 @@ class ExplorationScheduler:
         )
 
         if self.complete():
-            ret.append(f"# All stages converged")
-        return "\n".join(ret + [""])
+            ret.append("# All stages converged")
+        return "\n".join([*ret, ""])
 
     def print_convergence(self):
         ret = []
@@ -288,5 +278,5 @@ class ExplorationScheduler:
                 _summary = self._print_prev_summary(prev_stg_idx)
                 assert _summary is not None
                 ret.append(_summary)
-                ret.append(f"# All stages converged")
-        return "\n".join(ret + [""])
+                ret.append("# All stages converged")
+        return "\n".join([*ret, ""])

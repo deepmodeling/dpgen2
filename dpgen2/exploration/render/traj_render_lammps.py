@@ -9,7 +9,6 @@ from typing import (
     TYPE_CHECKING,
     List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -76,7 +75,7 @@ class TrajRenderLammps(TrajRender):
     def get_ele_temp(self, optional_outputs):
         ele_temp = []
         for ii in range(len(optional_outputs)):
-            with open(optional_outputs[ii], "r") as f:
+            with open(optional_outputs[ii]) as f:
                 data = json.load(f)
             if self.use_ele_temp:
                 ele_temp.append(data["ele_temp"])

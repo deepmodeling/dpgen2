@@ -1,5 +1,3 @@
-import json
-import os
 from abc import (
     ABC,
     abstractmethod,
@@ -9,11 +7,8 @@ from pathlib import (
 )
 from typing import (
     Any,
-    Dict,
     List,
-    Set,
     Tuple,
-    Union,
 )
 
 import dpdata
@@ -105,7 +100,6 @@ class PrepFp(OP, ABC):
             - `task_names`: (`List[str]`) The name of tasks. Will be used as the identities of the tasks. The names of different tasks are different.
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the FP. The order fo the Paths should be consistent with `op["task_names"]`
         """
-
         inputs = ip["config"]["inputs"]
         confs = ip["confs"]
         type_map = ip["type_map"]

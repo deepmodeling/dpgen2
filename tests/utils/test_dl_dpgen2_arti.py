@@ -1,22 +1,17 @@
-import json
-import os
-import random
 import shutil
-import tempfile
 import unittest
 from pathlib import (
     Path,
 )
-
-import dflow
-import dpdata
-import mock
-import numpy as np
+from typing import (
+    ClassVar,
+    List,
+)
+from unittest import (
+    mock,
+)
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.watch import (
     update_finished_steps,
 )
@@ -45,7 +40,7 @@ class MockedStep:
 
 
 class Mockedwf:
-    keys = [
+    keys: ClassVar[List[str]] = [
         "iter-0--prep-run-train",
     ]
 

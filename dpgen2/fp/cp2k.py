@@ -85,7 +85,7 @@ class PrepFpOpCp2k(OP):
                         s["atom_types"][i] = atom_names.index(s["atom_names"][t])  # type: ignore https://github.com/microsoft/pyright/issues/5620
                     s.data["atom_numbs"] = atom_numbs
                     s.data["atom_names"] = atom_names
-                    target = "output/%s" % system
+                    target = f"output/{system}"
                     s.to("deepmd/npy", target)
                     confs.append(Path(target))
                 else:
@@ -152,7 +152,7 @@ class RunFpOpCp2k(OP):
         file_path = os.path.join(str(workdir), "output.log")
 
         # convert the output to deepmd/npy format
-        with open(workdir / "input.inp", "r") as f:
+        with open(workdir / "input.inp") as f:
             lines = f.readlines()
 
         # 获取 RUN_TYPE

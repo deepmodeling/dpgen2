@@ -6,9 +6,7 @@ from collections.abc import (
     Sequence,
 )
 from typing import (
-    Dict,
     List,
-    Tuple,
 )
 
 from .task import (
@@ -24,11 +22,11 @@ class BaseExplorationTaskGroup(Sequence):
         self.clear()
 
     def __getitem__(self, ii: int) -> ExplorationTask:
-        """Get the `ii`th task"""
+        """Get the `ii`th task."""
         return self.task_list[ii]
 
     def __len__(self) -> int:
-        """Get the number of tasks in the group"""
+        """Get the number of tasks in the group."""
         return len(self.task_list)
 
     def clear(self) -> None:
@@ -36,7 +34,7 @@ class BaseExplorationTaskGroup(Sequence):
 
     @property
     def task_list(self) -> List[ExplorationTask]:
-        """Get the `list` of `ExplorationTask`"""
+        """Get the `list` of `ExplorationTask`."""
         return self._task_list
 
     def add_task(self, task: ExplorationTask):
@@ -110,4 +108,3 @@ if __name__ == "__main__":
     grp = FooTaskGroup(3)
     for ii in grp:
         fcs = ii.files()
-        print(fcs)

@@ -17,11 +17,13 @@ repos:
 # Python
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.1.3
+    rev: v0.6.3
     hooks:
+    - id: ruff
+      args: ["--fix"]
     - id: ruff-format
 -   repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    rev: 5.13.2
     hooks:
     - id: isort
     files: \.py$

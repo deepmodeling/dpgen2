@@ -5,10 +5,7 @@ from abc import (
 from typing import (
     List,
     Optional,
-    Tuple,
 )
-
-import numpy as np
 
 from ..deviation import (
     DeviManager,
@@ -18,7 +15,7 @@ from ..deviation import (
 class ExplorationReport(ABC):
     @abstractmethod
     def clear(self):
-        r"""Clear the report"""
+        r"""Clear the report."""
         pass
 
     @abstractmethod
@@ -26,7 +23,7 @@ class ExplorationReport(ABC):
         self,
         model_devi: DeviManager,
     ):
-        r"""Record the model deviations of the trajectories
+        r"""Record the model deviations of the trajectories.
 
         Parameters
         ----------
@@ -61,15 +58,15 @@ class ExplorationReport(ABC):
         pass
 
     def no_candidate(self) -> bool:
-        r"""If no candidate configuration is found"""
-        return all([len(ii) == 0 for ii in self.get_candidate_ids()])
+        r"""If no candidate configuration is found."""
+        return all(len(ii) == 0 for ii in self.get_candidate_ids())
 
     @abstractmethod
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
     ) -> List[List[int]]:
-        r"""Get indexes of candidate configurations
+        r"""Get indexes of candidate configurations.
 
         Parameters
         ----------
@@ -87,7 +84,7 @@ class ExplorationReport(ABC):
 
     @abstractmethod
     def print_header(self) -> str:
-        r"""Print the header of report"""
+        r"""Print the header of report."""
         pass
 
     @abstractmethod
@@ -97,5 +94,5 @@ class ExplorationReport(ABC):
         idx_in_stage: int,
         iter_idx: int,
     ) -> str:
-        r"""Print the report"""
+        r"""Print the report."""
         pass

@@ -36,10 +36,10 @@ class MockedDiffCSPGen(DiffCSPGen):
         self,
         ip: OPIO,
     ) -> OPIO:
-        task_dir = Path("diffcsp.%s" % ip["task_id"])
+        task_dir = Path("diffcsp.{}".format(ip["task_id"]))
         task_dir.mkdir(exist_ok=True)
         for i in range(2):
-            fpath = task_dir / ("%s.cif" % i)
+            fpath = task_dir / (f"{i}.cif")
             fpath.write_text("Mocked cif.")
         return OPIO(
             {
@@ -60,10 +60,10 @@ class MockedRunRelax(RunRelax):
         model_devis = []
         for cif in cifs:
             name = cif[:-4]
-            traj = ip["task_path"] / ("traj.%s.dump" % name)
+            traj = ip["task_path"] / (f"traj.{name}.dump")
             traj.write_text("Mocked traj.")
             trajs.append(traj)
-            model_devi = ip["task_path"] / ("model_devi.%s.out" % name)
+            model_devi = ip["task_path"] / (f"model_devi.{name}.out")
             model_devi.write_text("Mocked model_devi.")
             model_devis.append(model_devi)
         return OPIO(
@@ -119,6 +119,6 @@ class TestPrepRunDiffCSP(unittest.TestCase):
         self.assertEqual(len(model_devis), 4)
 
     def tearDown(self):
-        for d in glob.glob("test-prep-run-diffcsp-*") + ["task.000000", "task.000001"]:
+        for d in [*glob.glob("test-prep-run-diffcsp-*"), "task.000000", "task.000001"]:
             if os.path.isdir(d):
                 shutil.rmtree(d)

@@ -8,7 +8,6 @@ from typing import (
     Optional,
 )
 
-import numpy as np
 from dflow import (
     Workflow,
     download_artifact,
@@ -105,13 +104,12 @@ def download_dpgen2_artifacts(
     the key should be of format 'iter-xxxxxx--subkey-of-step-xxxxxx'
     the input and output artifacts will be downloaded to
     prefix/iter-xxxxxx/key-of-step/inputs/ and
-    prefix/iter-xxxxxx/key-of-step/outputs/
+    prefix/iter-xxxxxx/key-of-step/outputs/.
 
     the downloaded input and output artifacts of steps are defined by
     `op_download_setting`
 
     """
-
     iteration = get_iteration(key)
     subkey = get_subkey(key)
     mypath = Path(iteration)
@@ -272,7 +270,7 @@ def _get_all_iterations(step_keys):
         if ii.startswith("iter-"):
             ii = int(ii.split("-")[1])
             ret.append(ii)
-    ret = sorted(list(set(ret)))
+    ret = sorted(set(ret))
     return ret
 
 
@@ -282,7 +280,7 @@ def _get_all_queried_steps(wf_step_keys, dld_items):
         ret.append(ii.split(global_step_def_split)[0])
     ret = set(ret)
     ret = ret.intersection(set(wf_step_keys))
-    return sorted(list(ret))
+    return sorted(ret)
 
 
 def _get_dld_items(

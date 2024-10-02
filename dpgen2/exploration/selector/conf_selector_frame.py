@@ -1,7 +1,4 @@
 import copy
-from collections import (
-    Counter,
-)
 from pathlib import (
     Path,
 )
@@ -12,8 +9,6 @@ from typing import (
     Union,
 )
 
-import dpdata
-import numpy as np
 from dflow.python.opio import (
     HDF5Dataset,
 )
@@ -34,7 +29,8 @@ from . import (
 class ConfSelectorFrames(ConfSelector):
     """Select frames from trajectories as confs.
 
-    Parameters:
+    Parameters
+    ----------
     trust_level: TrustLevel
         The trust level
     conf_filter: ConfFilters
@@ -61,7 +57,7 @@ class ConfSelectorFrames(ConfSelector):
         type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
-        """Select configurations
+        """Select configurations.
 
         Parameters
         ----------

@@ -72,14 +72,14 @@
     "stat_file": "./dpa2",
     "training_data": {
       "systems": [
-	      "/personal/workplace/DP/dpgen2/Mg12Al8/deepmd"
+          "/personal/workplace/DP/dpgen2/Mg12Al8/deepmd"
       ],
       "batch_size": 1,
       "_comment": "that's all"
     },
     "_validation_data": {
       "systems": [
-	      "/personal/workplace/DP/dpgen2/Mg12Al8/deepmd"
+          "/personal/workplace/DP/dpgen2/Mg12Al8/deepmd"
       ],
       "batch_size": 1,
       "_comment": "that's all"

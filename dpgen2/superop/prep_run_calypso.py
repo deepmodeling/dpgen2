@@ -2,9 +2,6 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     Any,
     Dict,
@@ -20,29 +17,17 @@ from dflow import (
     Inputs,
     OPTemplate,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
     argo_range,
-    argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
 
-from dpgen2.constants import (
-    calypso_index_pattern,
-)
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -102,13 +87,21 @@ class PrepRunCaly(Steps):
         ]
         self.step_keys = {}
         ii = "prep-caly-input"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "caly-evo-step-{{item}}"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "prep-caly-model-devi"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-caly-model-devi"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
 
         self = _prep_run_caly(
             self,
@@ -260,8 +253,9 @@ def _prep_run_caly(
         artifacts={
             "traj_results": caly_evo_step.outputs.artifacts["traj_results"],
         },
-        key="%s--prep-caly-model-devi"
-        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        key="{}--prep-caly-model-devi".format(
+            prep_run_caly_steps.inputs.parameters["block_id"]
+        ),
         executor=prep_executor,
     )
     prep_run_caly_steps.add(prep_caly_model_devi)
@@ -287,8 +281,9 @@ def _prep_run_caly(
             "traj_dirs": prep_caly_model_devi.outputs.artifacts["grouped_traj_list"],
             "models": prep_run_caly_steps.inputs.artifacts["models"],
         },
-        key="%s--run-caly-model-devi-{{item}}"
-        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        key="{}--run-caly-model-devi-{{{{item}}}}".format(
+            prep_run_caly_steps.inputs.parameters["block_id"]
+        ),
         executor=run_executor,
         **prep_config,
     )
