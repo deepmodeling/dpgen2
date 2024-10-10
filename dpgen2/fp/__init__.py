@@ -13,6 +13,10 @@ from .deepmd import (
     PrepDeepmd,
     RunDeepmd,
 )
+from .deltaspin import (
+    PrepDeltaSpin,
+    RunDeltaSpin,
+)
 from .gaussian import (
     GaussianInputs,
     PrepGaussian,
@@ -22,11 +26,6 @@ from .vasp import (
     PrepVasp,
     RunVasp,
     VaspInputs,
-)
-
-from .deltaspin import (
-    PrepDeltaSpin,
-    RunDeltaSpin,
 )
 
 fp_styles = {

@@ -115,7 +115,6 @@ class DeviManagerSpin(DeviManager):
             len(self._data[self.MAX_DEVI_MF]) == self.ntraj
         ), f"Error: cannot find model deviation {self.MAX_DEVI_MF}"
 
-
         # check if the length of the arrays corresponding to the same
         # trajectory has the same number of frames
         non_empty_deviations = list(frames.keys())

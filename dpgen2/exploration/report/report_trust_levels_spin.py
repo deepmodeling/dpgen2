@@ -31,7 +31,7 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         level_af_hi,
         level_mf_lo,
         level_mf_hi,
-        conv_accuracy = 0.9,
+        conv_accuracy=0.9,
     ):
         self.level_af_lo = level_af_lo
         self.level_af_hi = level_af_hi
@@ -71,7 +71,13 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
             Argument("level_af_hi", float, optional=False, doc=doc_level_af_hi),
             Argument("level_mf_lo", float, optional=False, doc=doc_level_mf_lo),
             Argument("level_mf_hi", float, optional=False, doc=doc_level_mf_hi),
-            Argument("conv_accuracy", float, optional=True, default=0.9, doc=doc_conv_accuracy),
+            Argument(
+                "conv_accuracy",
+                float,
+                optional=True,
+                default=0.9,
+                doc=doc_conv_accuracy,
+            ),
         ]
 
     def clear(self):
@@ -146,7 +152,9 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         # check consistency
         nframes = np.size(np.concatenate((id_af_cand, id_af_accu, id_af_fail)))
         if nframes != np.size(np.concatenate((id_mf_cand, id_mf_accu, id_mf_fail))):
-            raise FatalError("the number of frames by atomic force and magnetic force is not consistent")
+            raise FatalError(
+                "the number of frames by atomic force and magnetic force is not consistent"
+            )
         # nframes to sets
         set_af_accu = set(id_af_accu)
         set_af_cand = set(id_af_cand)
@@ -177,21 +185,21 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
 
     def failed_ratio(
         self,
-        tag = None,
+        tag=None,
     ):
         traj_nf = [len(ii) for ii in self.traj_fail]
         return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
     def accurate_ratio(
         self,
-        tag = None,
+        tag=None,
     ):
         traj_nf = [len(ii) for ii in self.traj_accu]
         return float(sum(traj_nf)) / float(sum(self.traj_nframes))
 
     def candidate_ratio(
         self,
-        tag = None,
+        tag=None,
     ):
         traj_nf = [len(ii) for ii in self.traj_cand]
         return float(sum(traj_nf)) / float(sum(self.traj_nframes))
@@ -206,14 +214,14 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         for ii in id_cand:
             id_cand_list[ii[0]].append(ii[1])
         return id_cand_list
-    
+
     def _get_candidates(
         self,
         max_nframes: Optional[int] = None,
     ) -> List[Tuple[int, int]]:
         """
         Get candidates. If number of candidates is larger than `max_nframes`,
-        then select `max_nframes` frames with the largest `max_devi_mf` 
+        then select `max_nframes` frames with the largest `max_devi_mf`
         from the candidates.
 
         Parameters
@@ -272,7 +280,7 @@ class ExplorationReportTrustLevelsSpin(ExplorationReport):
         )
         ret = " " + fmt_str % print_tuple
         return ret
-    
+
     @staticmethod
     def doc() -> str:
         def make_class_doc_link(key):

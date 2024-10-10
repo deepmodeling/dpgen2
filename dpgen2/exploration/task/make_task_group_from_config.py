@@ -19,14 +19,14 @@ from dpgen2.exploration.task.caly_task_group import (
 from dpgen2.exploration.task.customized_lmp_template_task_group import (
     CustomizedLmpTemplateTaskGroup,
 )
+from dpgen2.exploration.task.lmp_spin_task_group import (
+    LmpSpinTaskGroup,
+)
 from dpgen2.exploration.task.lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
 from dpgen2.exploration.task.npt_task_group import (
     NPTTaskGroup,
-)
-from dpgen2.exploration.task.lmp_spin_task_group import (
-    LmpSpinTaskGroup,
 )
 
 doc_conf_idx = "The configurations of `configurations[conf_idx]` will be used to generate the initial configurations of the tasks. This key provides the index of selected item in the `configurations` array."
@@ -319,11 +319,12 @@ def lmp_spin_task_group_args():
             alias=["plm_template", "plm"],
         ),
         Argument(
-            "revisions", 
-            dict, 
-            optional=True, 
-            default={}, 
-            doc=doc_revisions,)
+            "revisions",
+            dict,
+            optional=True,
+            default={},
+            doc=doc_revisions,
+        ),
     ]
 
 

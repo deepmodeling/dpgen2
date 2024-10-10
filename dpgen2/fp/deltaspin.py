@@ -54,6 +54,7 @@ vasp_input_name = "INCAR"
 vasp_pot_name = "POTCAR"
 vasp_kp_name = "KPOINTS"
 
+
 class PrepDeltaSpin(PrepFp):
     def prep_task(
         self,
@@ -134,7 +135,15 @@ class RunDeltaSpin(RunFp):
         if ret != 0:
             logging.error(
                 "".join(
-                    ("DeltaSpin failed\n", "out msg: ", out, "\n", "err msg: ", err, "\n")
+                    (
+                        "DeltaSpin failed\n",
+                        "out msg: ",
+                        out,
+                        "\n",
+                        "err msg: ",
+                        err,
+                        "\n",
+                    )
                 )
             )
             raise TransientError("DeltaSpin failed")
@@ -158,12 +167,24 @@ class RunDeltaSpin(RunFp):
         doc_deltaspin_out = "The output dir name of labeled data. In `deepmd/spin/npy` format provided by `dpdata`."
         return [
             Argument(
-                "command", str, optional=True, default="vasp_deltaspin", doc=doc_deltaspin_cmd
+                "command",
+                str,
+                optional=True,
+                default="vasp_deltaspin",
+                doc=doc_deltaspin_cmd,
             ),
             Argument(
-                "out", str, optional=True, default=fp_default_out_data_name, doc=doc_deltaspin_out
+                "out",
+                str,
+                optional=True,
+                default=fp_default_out_data_name,
+                doc=doc_deltaspin_out,
             ),
             Argument(
-                "log", str, optional=True, default=fp_default_log_name, doc=doc_deltaspin_log
+                "log",
+                str,
+                optional=True,
+                default=fp_default_log_name,
+                doc=doc_deltaspin_log,
             ),
         ]

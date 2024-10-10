@@ -79,10 +79,10 @@ from dpgen2.exploration.selector import (
     conf_filter_styles,
 )
 from dpgen2.exploration.task import (
-    LmpSpinTaskGroup,
     CustomizedLmpTemplateTaskGroup,
     ExplorationStage,
     ExplorationTask,
+    LmpSpinTaskGroup,
     LmpTemplateTaskGroup,
     NPTTaskGroup,
     caly_normalize,
