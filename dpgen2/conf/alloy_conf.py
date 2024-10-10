@@ -54,7 +54,7 @@ class AlloyConfGenerator(ConfGenerator):
         self,
         numb_confs,
         lattice: Union[dpdata.System, Tuple[str, float]],
-        replicate: Union[List[int], Tuple[int], int, None] = None,
+        replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
         concentration: Union[List[List[float]], List[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
@@ -164,7 +164,7 @@ class AlloyConf:
         self,
         lattice: Union[dpdata.System, Tuple[str, float]],
         type_map: List[str],
-        replicate: Union[List[int], Tuple[int], int, None] = None,
+        replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
     ) -> None:
         # init sys
         if not isinstance(lattice, dpdata.System):
@@ -354,7 +354,7 @@ def generate_alloy_conf_file_content(
     lattice: Union[dpdata.System, Tuple[str, float]],
     type_map: List[str],
     numb_confs,
-    replicate: Union[List[int], Tuple[int], int, None] = None,
+    replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
     concentration: Union[List[List[float]], List[float], None] = None,
     cell_pert_frac: float = 0.0,
     atom_pert_dist: float = 0.0,

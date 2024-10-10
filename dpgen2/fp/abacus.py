@@ -132,6 +132,23 @@ class PrepFpOpAbacus(OP):
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
 
+from typing import (
+    Tuple,
+)
+
+
+def get_suffix_calculation(INPUT: List[str]) -> Tuple[str, str]:
+    suffix = "ABACUS"
+    calculation = "scf"
+    for iline in INPUT:
+        sline = iline.split("#")[0].split()
+        if len(sline) >= 2 and sline[0].lower() == "suffix":
+            suffix = sline[1].strip()
+        elif len(sline) >= 2 and sline[0].lower() == "calculation":
+            calculation = sline[1].strip()
+    return suffix, calculation
+
+
 class RunFpOpAbacus(OP):
     @classmethod
     def get_input_sign(cls):
@@ -149,6 +166,7 @@ class RunFpOpAbacus(OP):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
+                "extra_outputs": Artifact(List[Path]),
             }
         )
 
@@ -171,27 +189,35 @@ class RunFpOpAbacus(OP):
         workdir = op_out["backward_dir"].parent
 
         # convert the output to deepmd/npy format
-        sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/scf")
-        out_name = run_config.get("out", fp_default_out_data_name)
+        with open("%s/INPUT" % workdir, "r") as f:
+            INPUT = f.readlines()
+        _, calculation = get_suffix_calculation(INPUT)
+        if calculation == "scf":
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/scf")
+        elif calculation == "md":
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/md")
+        elif calculation in ["relax", "cell-relax"]:
+            sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
+        else:
+            raise ValueError("Type of calculation %s not supported" % calculation)
+        out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
+
+        extra_outputs = []
+        for fname in ip["config"]["extra_output_files"]:
+            extra_outputs += list(workdir.glob(fname))
 
         return OPIO(
             {
                 "log": workdir / "log",
                 "labeled_data": workdir / out_name,
+                "extra_outputs": extra_outputs,
             }
         )
 
     @staticmethod
     def args():
         doc_cmd = "The command of abacus"
-        doc_out = (
-            "The output dir name of labeled data. "
-            "In `deepmd/npy` format provided by `dpdata`."
-        )
         return [
             Argument("command", str, optional=True, default="abacus", doc=doc_cmd),
-            Argument(
-                "out", str, optional=True, default=fp_default_out_data_name, doc=doc_out
-            ),
         ]

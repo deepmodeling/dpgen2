@@ -163,9 +163,9 @@ def main_parser() -> argparse.ArgumentParser:
             $ dpgen2 download CONFIG ID
 
             3. donwload specified input/output artifacts of certain steps. For example
-            $ dpgen2 download CONFIG ID -i 0-8 8 9 -d prep-run-train/input/init_data prep-run-lmp/output/trajs
+            $ dpgen2 download CONFIG ID -i 0-8 8 9 -d prep-run-train/input/init_data prep-run-explore/output/trajs
 
-            The command will download the init_data of prep-run-train's input and trajs of the prep-run-lmp's output from iterations 0 to 9 (by -i 0-8 8 9).
+            The command will download the init_data of prep-run-train's input and trajs of the prep-run-explore's output from iterations 0 to 9 (by -i 0-8 8 9).
             The supported step and the names of input/output can be checked by the -l flag.
             """
             )
@@ -229,7 +229,7 @@ def main_parser() -> argparse.ArgumentParser:
         type=str,
         nargs="+",
         default=default_watching_keys,
-        help="the subkey to watch. For example, 'prep-run-train' 'prep-run-lmp'",
+        help="the subkey to watch. For example, 'prep-run-train' 'prep-run-explore'",
     )
     parser_watch.add_argument(
         "-f",

@@ -51,7 +51,7 @@ def make_task_group_list(njobs):
         tt.add_file(calypso_input_file, f"input.dat_{ii}")
         tt.add_file(
             calypso_run_opt_file,
-            calypso_run_opt_str + calypso_run_opt_str_end % (0.01, 0.01),
+            calypso_run_opt_str + calypso_run_opt_str_end % (0.01, 0.01, 100),
         )
         tt.add_file(calypso_check_opt_file, calypso_check_opt_str)
         tgrp.add_task(tt)
@@ -91,6 +91,7 @@ class TestPrepCalyInput(unittest.TestCase):
         self.assertEqual(out["input_dat_files"], self.input_dat_list)
         self.assertEqual(out["caly_run_opt_files"], self.caly_run_opt_list)
         self.assertEqual(out["caly_check_opt_files"], self.caly_check_opt_list)
+        self.assertEqual(out["ntasks"], 2)
         # check files details
         self.assertEqual(self.input_dat_list[0].read_text().strip("\n"), "input.dat_0")
         # self.assertEqual(self.caly_run_opt_list[1].read_text().strip("\n"), "run_1")

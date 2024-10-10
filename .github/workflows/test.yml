@@ -24,4 +24,6 @@ jobs:
         pip install mock coverage pytest
     - name: Test
       run: SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 coverage run --source=./dpgen2 -m unittest -v -f && coverage report
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

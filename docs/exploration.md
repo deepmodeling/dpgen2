@@ -127,3 +127,301 @@ The abstractmethod to implement is `ConfSelector.select`. `trajs` and `model_dev
 The `ConfSelector.select` returns a Path, each of which can be treated as a `dpdata.MultiSystems`, and a [`ExplorationReport`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/report/report.py).
 
 [An example of selecting configurations from LAMMPS trajectories](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/selector/conf_selector_frame.py) may illustrate how to implement the `ConfSelector`s.
+
+
+# Implement a new exploration engine for dpgen2
+
+## 1. Define a new exploration task group
+
+First, we define a class `XXXTaskGroup` derived from `ExplorationTaskGroup` which implements the abstract method `make_task`. [`NPTTaskGroup`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/task/npt_task_group.py), [`LmpTemplateTaskGroup`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/task/lmp_template_task_group.py) and [`CalyTaskGroup`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/task/caly_task_group.py) can be referred as examples. `XXXTaskGroup` class records all combinations of parameters required for the exploration tasks. The `make_task` method converts each combination of parameters to a `ExplorationTask` object including input configuration file directly used in the exploration, and adds the `ExplorationTask` objects to the task group.
+
+```python
+class XXXTaskGroup(ExplorationTaskGroup):
+    def __init__(self, **kwargs):
+        super().__init__()
+        # set parameters
+
+    def make_task(self) -> "XXXTaskGroup":
+        """
+        Make the XXX task group.
+
+        Returns
+        -------
+        task_grp: XXXTaskGroup
+            Return a XXX task group.
+        """
+        # clear all existing tasks
+        self.clear()
+        # loop over all settings to be used
+        for params in params_list:
+            task = ExplorationTask()
+            file_name, file_content = _make_task_files(params)
+            task.add_file(file_name, file_content)
+            self.add_task(task)
+        return self
+```
+
+The arguments that initialize a `XXXTaskGroup` are defined in the input files of json format. dpgen2 uses the [`dargs`](https://github.com/deepmodeling/dargs) package to validate and normalize the arguments and to document them.
+
+Then we define the exploration arguments schema in the dpgen2 input configuration. Add a function `xxx_task_group_args` specifying arguments related to the tasks `explore.stages[*][*]` by virtue of `dargs` ([documents](https://docs.deepmodeling.com/projects/dargs/en/latest/#https://)), a function `xxx_normalize` normalizing input values, and a function `make_xxx_task_group_from_config` converting input configuration to a `XXXTaskGroup` object in [dpgen2/exploration/task/make_task_group_from_config.py](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/exploration/task/make_task_group_from_config.py).
+
+```python
+def xxx_task_group_args():
+    doc_xxx_task_grp = "XXX exploration tasks. dpgen2 will generate the XXX input script"
+    return Argument(
+        "task_group",
+        dict,
+        [
+            # Argument(...),
+        ],
+        doc=doc_xxx_task_grp,
+    )
+
+def xxx_normalize(config):
+    args = xxx_task_group_args()
+    config = args.normalize_value(config, trim_pattern="_*")
+    args.check_value(config, strict=False)
+    return config
+
+def make_xxx_task_group_from_config(config):
+    config = xxx_normalize(config)
+    tgroup = XXXTaskGroup(**config)
+    return tgroup
+```
+
+Add a new explore variant specifying other arguments in [dpgen2/entrypoint/args.py](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/entrypoint/args.py) which corresponds to `explore` in dpgen2 input configuration.
+
+```python
+def xxx_args():
+    return [
+        # Argument(...),
+    ]
+
+def variant_explore():
+    # ...
+    doc_xxx = "The exploration by XXX"
+    return Variant(
+        "type",
+        [
+            # ...
+            Argument("xxx", dict, xxx_args(), doc=doc_xxx),
+        ],
+        doc=doc,
+    )
+```
+
+## 2. Program a super OP for preparing and running exploration
+
+We then implement an OP (usually a super OP) including the main logic of preparing and running the new exploration engine. [`PrepRunLmp`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/superop/prep_run_lmp.py) and [`PrepRunCalypso`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/superop/prep_run_calypso.py) can be referred as examples. A `PrepRunExploration` OP takes `block_id`, `expl_task_grp`, `exploration_config`, `type_map` and `models` as inputs, and gives `trajs` and `model_devis` as outputs. Write the super OP in the framework of `dflow` ([documents](https://github.com/deepmodeling/dflow)).
+
+<image src="https://bohrium.oss-cn-zhangjiakou.aliyuncs.com/article/11106/b0841c93b3d6488a926d51107d109d74/0917b446-fed7-43ad-b66b-5830d8b71b71.png" width="50%"></image>
+
+```python
+class PrepRunXXX(Steps):
+    def __init__(
+        self,
+        name: str,
+        upload_python_packages: Optional[List[os.PathLike]] = None,
+    ):
+        self._input_parameters = {
+            "block_id": InputParameter(type=str, value=""),
+            "expl_task_grp": InputParameter(),
+            "explore_config": InputParameter(),
+            "type_map": InputParameter(),
+        }
+        self._input_artifacts = {
+            "models": InputArtifact(),
+        }
+        self._output_parameters = {
+        }
+        self._output_artifacts = {
+            "trajs": OutputArtifact(),
+            "model_devis": OutputArtifact(),
+        }
+        self._keys = ...
+        super().__init__(
+            name=name,
+            inputs=Inputs(
+                parameters=self._input_parameters,
+                artifacts=self._input_artifacts,
+            ),
+            outputs=Outputs(
+                parameters=self._output_parameters,
+                artifacts=self._output_artifacts,
+            ),
+        )
+        # call private function that implements the Steps
+        self = _prep_run_xxx(
+            self,
+            upload_python_packages=upload_python_packages,
+        )
+
+    @property
+    def input_parameters(self):
+        return self._input_parameters
+
+    @property
+    def input_artifacts(self):
+        return self._input_artifacts
+
+    @property
+    def output_parameters(self):
+        return self._output_parameters
+
+    @property
+    def output_artifacts(self):
+        return self._output_artifacts
+
+    @property
+    def keys(self):
+        return self._keys
+
+
+def _prep_run_xxx(
+    prep_run_xxx_steps: Steps,
+    upload_python_packages: Optional[List[os.PathLike]] = None,
+):
+    """The Steps is implemented by this function.
+    """
+    block_id = prep_run_xxx_steps.inputs.parameters["block_id"]
+    expl_task_grp = prep_run_xxx_steps.inputs.parameters["expl_task_grp"]
+    expl_config = prep_run_xxx_steps.inputs.parameters["explore_config"]
+    type_map = prep_run_xxx_steps.inputs.parameters["type_map"]
+    models = prep_run_xxx_steps.inputs.artifacts["models"]
+    # construct the Steps OP
+    some_step = Step(
+        # ...
+        python_packages=upload_python_packages,
+    )
+    prep_run_xxx_steps.add(some_step)
+    # specify the source of outputs
+    prep_run_xxx_steps.outputs.artifacts["trajs"]._from = # ...
+    prep_run_xxx_steps.outputs.artifacts["model_devis"]._from = # ...
+    return prep_run_xxx_steps
+```
+
+## 3. Integrate the new exploration engine into dpgen2 workflow
+
+Specify new OP as the `prep_run_explore_op` in the function `make_concurrent_learning_op` in [`dpgen2/entrypoint/submit.py`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/entrypoint/submit.py)
+
+```python
+def make_concurrent_learning_op(
+    # ...
+):
+    # ...
+    if explore_style == "lmp":
+        # ...
+    elif "calypso" in explore_style:
+        # ...
+    elif explore_style == "xxx":
+        prep_run_explore_op = PrepRunXXX(
+            "prep-run-xxx",
+            upload_python_packages=upload_python_packages,
+        )
+    else:
+        raise RuntimeError(f"unknown explore_style {explore_style}")
+```
+
+Define a function `make_xxx_naive_exploration_scheduler` to make exploration scheduler in specific branch. If the format of the `traj` file and the `model_devi` file outputed by `PrepRunXXX` is identical to LAMMPS's, we can reuse the trajectory render of LAMMPS.
+
+```python
+def make_naive_exploration_scheduler(
+    config,
+):
+    explore_style = config["explore"]["type"]
+
+    if explore_style == "lmp":
+        return make_lmp_naive_exploration_scheduler(config)
+    elif "calypso" in explore_style:
+        return make_calypso_naive_exploration_scheduler(config)
+    elif explore_style == "xxx":
+        return make_xxx_naive_exploration_scheduler(config)
+    else:
+        raise KeyError(
+            f"Unknown key `{explore_style}`, Only support `lmp`, `calypso`, `calypso:merge` and `calypso:default`."
+        )
+
+
+def make_xxx_naive_exploration_scheduler(config):
+    model_devi_jobs = config["explore"]["stages"]
+    fp_task_max = config["fp"]["task_max"]
+    max_numb_iter = config["explore"]["max_numb_iter"]
+    fatal_at_max = config["explore"]["fatal_at_max"]
+    convergence = config["explore"]["convergence"]
+    output_nopbc = config["explore"]["output_nopbc"]
+    scheduler = ExplorationScheduler()
+    # report
+    conv_style = convergence.pop("type")
+    report = conv_styles[conv_style](**convergence)
+    # trajectory render, the format of the output trajs are assumed to be lammps/dump
+    render = TrajRenderLammps(nopbc=output_nopbc)
+    # selector
+    selector = ConfSelectorFrames(
+        render,
+        report,
+        fp_task_max,
+    )
+
+    for job_ in model_devi_jobs:
+        if not isinstance(job_, list):
+            job = [job_]
+        else:
+            job = job_
+        # stage
+        stage = ExplorationStage()
+        for jj in job:
+            jconf = xxx_normalize(jj)
+            # make task group
+            tgroup = make_xxx_task_group_from_config(jconf)
+            # add the list to task group
+            tasks = tgroup.make_task()
+            stage.add_task_group(tasks)
+        # stage_scheduler
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            stage,
+            selector,
+            max_numb_iter=max_numb_iter,
+            fatal_at_max=fatal_at_max,
+        )
+        # scheduler
+        scheduler.add_stage_scheduler(stage_scheduler)
+
+    return scheduler
+```
+
+Add all keys of related OPs to the list to show in `dpgen2 showkey` command. For example, if the `prep-run-xxx` super OP consists of OPs `prep-xxx`, `run-xxx-0000`, `run-xxx-0001`, etc, then you can add some code as follow in file [`dpgen2/entrypoint/submit.py`](https://github.com/deepmodeling/dpgen2/blob/master/dpgen2/entrypoint/submit.py)
+
+```python
+def get_resubmit_keys(
+    wf,
+):
+    all_step_keys = successful_step_keys(wf)
+    step_keys = [
+        # ...
+        "prep-xxx",
+        "run-xxx",
+    ]
+    # ...
+
+def get_superop(key):
+    # ...
+    elif "prep-xxx" in key:
+        return key.replace("prep-xxx", "prep-run-explore")
+    elif "run-xxx-" in key:
+        return re.sub("run-xxx-[0-9]*", "prep-run-explore", key)
+    return None
+```
+
+## 4. Add unit tests (UTs) and run them in debug mode
+
+Write UT for each single OP. [`tests/op/test_run_lmp.py`](https://github.com/deepmodeling/dpgen2/blob/master/tests/op/test_run_lmp.py), [`tests/op/test_run_caly_model_devi.py`](https://github.com/deepmodeling/dpgen2/blob/master/tests/op/test_run_caly_model_devi.py) can be referred as examples.
+
+Write UT for `make_xxx_task_group_from_config` in [`tests/exploration/test_make_task_group_from_config.py`](https://github.com/deepmodeling/dpgen2/blob/master/tests/exploration/test_make_task_group_from_config.py).
+
+Write UT for super OP `PrepRunXXX`, i.e. construct and submit a workflow consisting of `PrepRunXXX`, and test the outputs of the workflow. [`tests/test_prep_run_lmp.py`](https://github.com/deepmodeling/dpgen2/blob/master/tests/test_prep_run_lmp.py) and [`tests/test_prep_run_caly.py`](https://github.com/deepmodeling/dpgen2/blob/master/tests/test_prep_run_caly.py) can be referred as examples.
+
+Run new UTs in debug mode (set environmental variable `DFLOW_DEBUG=1`).
+
+## 5. Run example workflows, add example configs and PR!
+
+Submit dpgen2 workflows to [https://workflows.deepmodeling.com/workflows/argo](https://workflows.deepmodeling.com/workflows/argo) or your own workflow server. If it works as expected, congratulations! Add an example input configuration to [`examples`](https://github.com/deepmodeling/dpgen2/tree/master/examples) and add the example config to the automatic config test in [tests/test_check_examples.py](https://github.com/deepmodeling/dpgen2/blob/master/tests/test_check_examples.py). Finally, submit a pull request (PR) and thank you for your contribution to the DeepModeling Community.

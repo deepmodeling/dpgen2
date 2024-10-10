@@ -102,7 +102,7 @@ class TestCollRunCaly(unittest.TestCase):
                     "input_file": self.input_file,
                     "step": self.step_file,
                     "results": self.results_dir,
-                    "opt_results_dir": self.opt_results_dir,
+                    "opt_results_dir": [self.opt_results_dir],
                 }
             )
         )
@@ -138,7 +138,7 @@ class TestCollRunCaly(unittest.TestCase):
                     "input_file": self.input_file,
                     "step": self.step_file,
                     "results": self.results_dir,
-                    "opt_results_dir": self.opt_results_dir,
+                    "opt_results_dir": [self.opt_results_dir],
                 }
             )
         )
@@ -169,7 +169,7 @@ class TestCollRunCaly(unittest.TestCase):
                     "input_file": self.input_file,
                     "step": self.step_file,
                     "results": self.results_dir,
-                    "opt_results_dir": self.opt_results_dir,
+                    "opt_results_dir": [self.opt_results_dir],
                 }
             )
         )
@@ -203,7 +203,7 @@ class TestCollRunCaly(unittest.TestCase):
                     "input_file": self.input_file,
                     "step": self.step_file,
                     "results": self.results_dir,
-                    "opt_results_dir": self.opt_results_dir,
+                    "opt_results_dir": [self.opt_results_dir],
                 }
             ),
         )

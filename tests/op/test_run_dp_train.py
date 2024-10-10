@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import shutil
@@ -35,6 +36,7 @@ from dpgen2.constants import (
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
+    _make_train_command,
 )
 
 # isort: on
@@ -314,6 +316,7 @@ class TestRunDPTrain(unittest.TestCase):
     def test_update_input_dict_v1_init_model(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size; 0:4:0.9; 4:7:0.1",
@@ -329,6 +332,7 @@ class TestRunDPTrain(unittest.TestCase):
     def test_update_input_dict_v1(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size",
@@ -345,6 +349,7 @@ class TestRunDPTrain(unittest.TestCase):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
             idict,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size; 0:4:0.9; 4:7:0.1",
@@ -361,6 +366,7 @@ class TestRunDPTrain(unittest.TestCase):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
             idict,
+            self.config,
             self.init_data,
             self.iter_data_exp,
             auto_prob_str="prob_sys_size",
@@ -686,6 +692,7 @@ class TestRunDPTrain(unittest.TestCase):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
         config = self.config.copy()
+        config["init_model_policy"] = "yes"
         task_path = self.task_path
         Path(task_path).mkdir(exist_ok=True)
         with open(Path(task_path) / train_script_name, "w") as fp:
@@ -705,7 +712,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "iter_data": [Path(ii) for ii in self.iter_data],
                     "optional_parameter": {
                         "mixed_type": False,
-                        "finetune_mode": "train-init",
+                        "finetune_mode": "no",
                     },
                 }
             )
@@ -742,7 +749,7 @@ class TestRunDPTrain(unittest.TestCase):
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_odict_v2)
+            self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
 
 
 class TestRunDPTrainNullIterData(unittest.TestCase):
@@ -820,7 +827,12 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
     def test_update_input_dict_v2_empty_list(self):
         idict = self.idict_v2
         odict = RunDPTrain.write_data_to_input_script(
-            idict, self.init_data, [], auto_prob_str="prob_sys_size", major_version="2"
+            idict,
+            self.config,
+            self.init_data,
+            [],
+            auto_prob_str="prob_sys_size",
+            major_version="2",
         )
         config = self.config.copy()
         config["init_model_policy"] = "no"
@@ -857,7 +869,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
+        self.assertEqual(out["model"], self.init_model)
         self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
         self.assertEqual(out["log"], work_dir / "train.log")
 

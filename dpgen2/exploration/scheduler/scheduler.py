@@ -5,11 +5,15 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Union,
 )
 
 import numpy as np
 from dflow.python import (
     FatalError,
+)
+from dflow.python.opio import (
+    HDF5Dataset,
 )
 
 from dpgen2.exploration.report import (
@@ -110,7 +114,7 @@ class ExplorationScheduler:
     def plan_next_iteration(
         self,
         report: Optional[ExplorationReport] = None,
-        trajs: Optional[List[Path]] = None,
+        trajs: Optional[Union[List[Path], List[HDF5Dataset]]] = None,
     ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]]:
         """
         Make the plan for the next DPGEN iteration.
@@ -119,7 +123,7 @@ class ExplorationScheduler:
         ----------
         report : ExplorationReport
             The exploration report of this iteration.
-        trajs : List[Path]
+        trajs : Union[List[Path], List[HDF5Dataset]]
             A list of configurations generated during the exploration. May be used to generate new configurations for the next iteration.
 
         Returns

@@ -49,6 +49,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         relative_v_epsilon: Optional[float] = None,
         ele_temp_f: Optional[float] = None,
         ele_temp_a: Optional[float] = None,
+        pimd_bead: Optional[str] = None,
     ):
         """
         Set MD parameters
@@ -72,6 +73,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         self.ele_temp_f = ele_temp_f
         self.ele_temp_a = ele_temp_a
         self.md_set = True
+        self.pimd_bead = pimd_bead
 
     def make_task(
         self,
@@ -131,6 +133,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
                 self.ele_temp_a,
                 self.no_pbc,
                 trj_seperate_files=False,
+                pimd_bead=self.pimd_bead,
             ),
         )
         return task

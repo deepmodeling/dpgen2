@@ -18,6 +18,7 @@ from dpgen2.constants import (
 calypso_run_opt_str = """#!/usr/bin/env python3
 
 import os
+import sys
 import time
 import glob
 import numpy as np
@@ -97,12 +98,11 @@ def Write_Outcar(outcar, element, ele, volume, lat, pos, ene, force, stress, pst
     enthalpy = ene + pstress * volume / 1602.17733
     f.write('enthalpy is  TOTEN    = %20.6f %20.6f\\n' % (enthalpy, enthalpy/na))
 
-def run_opt(fmax, stress):
+def run_opt(fmax, stress, opt_step):
     # Using the ASE&DP to Optimize Configures
 
-    calc = DP(model='frozen_model.pb')    # init the model before iteration
+    calc = DP(model=sys.argv[1])    # init the model before iteration
 
-    Opt_Step = 1000
     start = time.time()
     # pstress kbar
     pstress = stress
@@ -117,7 +117,7 @@ def run_opt(fmax, stress):
         to_be_opti.calc = calc
         ucf = UnitCellFilter(to_be_opti, scalar_pressure=aim_stress)
         opt = LBFGS(ucf,trajectory=poscar.strip("POSCAR_") + '.traj')
-        opt.run(fmax=fmax,steps=Opt_Step)
+        opt.run(fmax=fmax,steps=opt_step)
         atoms_lat = to_be_opti.cell
         atoms_pos = to_be_opti.positions
         atoms_force = to_be_opti.get_forces()
@@ -137,7 +137,7 @@ def run_opt(fmax, stress):
 
 calypso_run_opt_str_end = """
 if __name__ == '__main__':
-    run_opt(fmax=%.3f, stress=%.3f)
+    run_opt(fmax=%.3f, stress=%.3f, opt_step=%.3f)
 """
 
 calypso_check_opt_str = """#!/usr/bin/env python3
@@ -240,14 +240,14 @@ if __name__ == "__main__":
 def make_calypso_input(
     numb_of_species: int,
     name_of_atoms: List[str],
-    atomic_number: List[int],
+    atomic_number,
     numb_of_atoms: List[int],
     distance_of_ions,
     pop_size: int = 30,
     max_step: int = 5,
     system_name: str = "CALYPSO",
     numb_of_formula: List[int] = [1, 1],
-    pressure: float = 0.001,
+    pressure: float = 0.001,  # KBar
     fmax: float = 0.01,
     volume: float = 0,
     ialgo: int = 2,
@@ -332,7 +332,12 @@ def make_calypso_input(
     file_str += vsc_ctrl_range + "\n"
     file_str += "@End\n"
 
-    run_opt_str = calypso_run_opt_str + calypso_run_opt_str_end % (fmax, pressure)
+    opt_step = kwargs.get("opt_step", 1000)
+    run_opt_str = calypso_run_opt_str + calypso_run_opt_str_end % (
+        fmax,
+        pressure,
+        opt_step,
+    )
     check_opt_str = calypso_check_opt_str
 
     return file_str, run_opt_str, check_opt_str

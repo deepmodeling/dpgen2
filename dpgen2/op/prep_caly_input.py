@@ -43,6 +43,7 @@ vsc_keys = {
 calypso_run_opt_str = """#!/usr/bin/env python3
 
 import os
+import sys
 import time
 import glob
 import numpy as np
@@ -126,7 +127,7 @@ def Write_Outcar(outcar, element, ele, volume, lat, pos, ene, force, stress, pst
 def run_opt(fmax, stress):
     '''Using the ASE&DP to Optimize Configures'''
 
-    calc = DP(model='frozen_model.pb')    # init the model before iteration
+    calc = DP(model=sys.argv[1])    # init the model before iteration
 
     Opt_Step = 1000
     start = time.time()
@@ -317,7 +318,8 @@ class PrepCalyInput(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": Parameter(List[str]),  # task dir names
+                "ntasks": Parameter(int),
+                "task_names": BigParameter(List[str]),  # task dir names
                 "input_dat_files": Artifact(List[Path]),  # `input.dat`s
                 "caly_run_opt_files": Artifact(List[Path]),
                 "caly_check_opt_files": Artifact(List[Path]),
@@ -366,6 +368,7 @@ class PrepCalyInput(OP):
 
         return OPIO(
             {
+                "ntasks": len(task_names),
                 "task_names": task_names,
                 "input_dat_files": input_dat_files,
                 "caly_run_opt_files": caly_run_opt_files,

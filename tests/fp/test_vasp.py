@@ -17,11 +17,43 @@ from .context import (
     dpgen2,
 )
 from dpgen2.fp.vasp import (
+    PrepVasp,
+    RunVasp,
     VaspInputs,
+    dumps_incar,
+    loads_incar,
     make_kspacing_kpoints,
+)
+from dpgen2.utils import (
+    setup_ele_temp,
 )
 
 # isort: on
+
+INCAR = """
+PREC=A
+ENCUT=600
+ISYM=0
+ALGO=fast
+EDIFF=1.000000e-06
+LREAL=A
+NPAR=1
+KPAR=1
+
+NELMIN=4
+ISIF=2
+ISMEAR=1
+SIGMA=1.000000
+IBRION=-1
+
+NSW=0
+
+LWAVE=F
+LCHARG=F
+PSTRESS=0
+
+KSPACING=0.160000
+KGAMMA=.FALSE."""
 
 
 class TestVASPInputs(unittest.TestCase):
@@ -119,3 +151,66 @@ Cartesian
         ss = dpdata.System("POSCAR")
         kps = vi.make_kpoints(ss["cells"][0])
         self.assertEqual(ref, kps)
+
+
+class TestIncar(unittest.TestCase):
+    def test_loads_dumps_incar(self):
+        incar = INCAR
+        params = loads_incar(incar)
+        self.assertEqual(len(params), 19)
+        self.assertEqual(params["PREC"], "A")
+        self.assertEqual(params["EDIFF"], "1.000000e-06")
+        self.assertEqual(params["IBRION"], "-1")
+        self.assertEqual(params["KGAMMA"], ".FALSE.")
+        new_incar = dumps_incar(params)
+        new_params = loads_incar(new_incar)
+        self.assertEqual(params, new_params)
+
+
+class TestPrepVasp(unittest.TestCase):
+    def test_set_ele_temp(self):
+        setup_ele_temp(False)
+        frame = dpdata.System(
+            data={
+                "atom_names": ["H"],
+                "atom_numbs": [1],
+                "atom_types": np.zeros(1, dtype=int),
+                "cells": np.eye(3).reshape(1, 3, 3),
+                "coords": np.zeros((1, 1, 3)),
+                "orig": np.zeros(3),
+                "nopbc": True,
+                "fparam": np.array([[6.6]]),
+            }
+        )
+        op = PrepVasp()
+        incar = INCAR
+        incar = op.set_ele_temp(frame, incar)
+        params = loads_incar(incar)
+        self.assertEqual(int(params["ISMEAR"]), -1)
+        self.assertAlmostEqual(float(params["SIGMA"]), 0.0005687439953015817)
+
+
+class TestRunVasp(unittest.TestCase):
+    def test_set_ele_temp(self):
+        with open("job.json", "w") as f:
+            json.dump({"use_ele_temp": 1, "ele_temp": 6.6}, f)
+        system = dpdata.LabeledSystem(
+            data={
+                "atom_names": ["H"],
+                "atom_numbs": [1],
+                "atom_types": np.zeros(1, dtype=int),
+                "cells": np.eye(3).reshape(1, 3, 3),
+                "coords": np.zeros((1, 1, 3)),
+                "orig": np.zeros(3),
+                "energies": np.zeros(1),
+                "forces": np.zeros((1, 1, 3)),
+                "nopbc": True,
+            }
+        )
+        op = RunVasp()
+        op.set_ele_temp(system)
+        np.testing.assert_array_almost_equal(system.data["fparam"], [[6.6]])
+
+    def tearDown(self):
+        if os.path.exists("job.json"):
+            os.remove("job.json")

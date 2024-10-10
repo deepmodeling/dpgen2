@@ -78,7 +78,6 @@ class RunCalyModelDevi(OP):
             - `model_devi`: (`Artifact(List[Path])`) The model deviation. The order of recorded model deviations should be consistent with the order of frames in `traj`.
 
         """
-
         from deepmd.infer import (  # type: ignore
             DeepPot,
             calc_model_devi,
@@ -110,15 +109,15 @@ class RunCalyModelDevi(OP):
                     for atoms in atoms_list:
                         natoms = len(atoms)
                         dump_str = atoms2lmpdump(atoms, tcount, type_map, ignore=True)
-                        dump_str_dict[natoms].append(dump_str)
+                        dump_str_dict[tcount].append(dump_str)
 
                         pbc = np.all(atoms.get_pbc())
                         coord = atoms.get_positions().reshape(1, -1)
                         cell = atoms.get_cell().array.reshape(1, -1) if pbc else None
                         atype = [type_map.index(atom.symbol) for atom in atoms]  # type: ignore
                         devi = calc_model_devi(coord, cell, atype, graphs)[0]
-                        devis_dict[natoms].append(devi)
-                        tcount += 1
+                        devis_dict[tcount].append(devi)
+                    tcount += 1
 
             traj_file_list = []
             model_devi_file_list = []
@@ -237,19 +236,48 @@ def parse_traj(traj_file):
         read,
     )
 
-    # optimization will at least return one structures in traj file
-    trajs: List[Atoms] = read(traj_file, index=":", format="traj")  # type: ignore
+    safe_dist_dict = {
+        "He": 0.0,
+        "Li": 1.5,
+        "Na": 1.45,
+        "K": 2.3,
+        "Rb": 2.5,
+        "Mg": 1.7,
+        "Ca": 2.3,
+        "Sr": 2.5,
+        "Al": 1.7,
+        "Sc": 2.0,
+        "Y": 2.1,
+        "La": 2.5,
+        "Ti": 2.0,
+        "Zr": 2.1,
+        "Hf": 2.4,
+        "Mo": 2.1,
+        "W": 2.3,
+        "B": 1.1,
+        "C": 1.1,
+        "Si": 1.6,
+        "P": 1.5,
+        "As": 2.0,
+        "S": 1.5,
+        "Se": 2.1,
+        "Te": 2.0,
+        "Br": 2.3,
+        "H": 0.813,
+    }
 
+    trajs: List[Atoms] = read(traj_file, index=":", format="traj")  # type: ignore
+    dthresh = 0.72
     numb_traj = len(trajs)
     assert numb_traj >= 1, "traj file is broken."
 
+    # 1st Filter, initial configuration
     origin = trajs[0]
-    if len(origin) == 1:
-        origin = make_supercell(origin, [[2, 0, 0], [0, 2, 0], [0, 0, 2]])
+    origin = make_supercell(origin, [[2, 0, 0], [0, 2, 0], [0, 0, 2]])
     dis_mtx = origin.get_all_distances(mic=True)
     row, col = np.diag_indices_from(dis_mtx)
     dis_mtx[row, col] = np.nan
-    is_reasonable = np.nanmin(dis_mtx) > 0.6
+    is_reasonable = np.nanmin(dis_mtx) > dthresh
 
     selected_traj: Union[List[Atoms], None] = None
     if is_reasonable:
@@ -265,15 +293,39 @@ def parse_traj(traj_file):
             selected_traj.append(trajs[-1])
         elif len(trajs) == 2:
             selected_traj = [trajs[0], trajs[-1]]
-        else:  # len(trajs) == 1
+        else:
             selected_traj = [trajs[0]]
+
+        # 2nd filter for selected traj. It filters out all FRAMES that are to close.
+        i_keep = []
+        for t in selected_traj:
+            t2 = make_supercell(t, [[2, 0, 0], [0, 2, 0], [0, 0, 2]])
+
+            frame_is_reasonable = True
+            dist_dict = t2.get_all_distances(mic=True)
+            atype = t2.get_chemical_symbols()
+            for a in range(len(atype)):
+                for b in range(a + 1, len(atype)):
+                    dd = dist_dict[a][b]
+                    dr = (
+                        (safe_dist_dict[atype[a]] + safe_dist_dict[atype[b]])
+                        * 0.529
+                        / 1.2
+                    )
+                    if dd < dr:
+                        frame_is_reasonable = False
+
+            if frame_is_reasonable:
+                i_keep.append(selected_traj.index(t))
+        selected_traj = [selected_traj[iii] for iii in i_keep]
     else:
         selected_traj = None
+
     return selected_traj
 
 
 def write_model_devi_out(devi: np.ndarray, fname: Union[str, Path], header: str = ""):
-    assert devi.shape[1] == 7
+    assert devi.shape[1] == 8
     header = "%s\n%10s" % (header, "step")
     for item in "vf":
         header += "%19s%19s%19s" % (
@@ -281,6 +333,7 @@ def write_model_devi_out(devi: np.ndarray, fname: Union[str, Path], header: str 
             f"min_devi_{item}",
             f"avg_devi_{item}",
         )
+        header += "%19s" % "devi_e"
     with open(fname, "ab") as fp:
         np.savetxt(
             fp,

@@ -29,11 +29,11 @@ The progress of a workflow can be watched on-the-fly
 ```bash
 $ dpgen2 watch input.json WFID
 INFO:root:steps iter-000000--prep-run-train----------------------- finished
-INFO:root:steps iter-000000--prep-run-lmp------------------------- finished
+INFO:root:steps iter-000000--prep-run-explore--------------------- finished
 INFO:root:steps iter-000000--prep-run-fp-------------------------- finished
 INFO:root:steps iter-000000--collect-data------------------------- finished
 INFO:root:steps iter-000001--prep-run-train----------------------- finished
-INFO:root:steps iter-000001--prep-run-lmp------------------------- finished
+INFO:root:steps iter-000001--prep-run-explore--------------------- finished
 ...
 ```
 The artifacts can be downloaded on-the-fly with `-d` flag. Note that the existing files are automatically skipped if one sets `dflow_config["archive_mode"] = None`.

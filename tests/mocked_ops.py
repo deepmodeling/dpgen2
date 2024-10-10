@@ -19,6 +19,7 @@ from pathlib import (
 )
 from typing import (
     List,
+    Optional,
     Tuple,
 )
 
@@ -30,6 +31,8 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from dpgen2.constants import (
+    calypso_check_opt_file,
+    calypso_run_opt_file,
     fp_task_pattern,
     lmp_conf_name,
     lmp_input_name,
@@ -71,14 +74,17 @@ from dpgen2.op.collect_data import (
 from dpgen2.op.collect_run_caly import (
     CollRunCaly,
 )
+from dpgen2.op.prep_caly_dp_optim import (
+    PrepCalyDPOptim,
+)
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
 )
 from dpgen2.op.prep_lmp import (
     PrepExplorationTaskGroup,
 )
-from dpgen2.op.prep_run_dp_optim import (
-    PrepRunDPOptim,
+from dpgen2.op.run_caly_dp_optim import (
+    RunCalyDPOptim,
 )
 from dpgen2.op.run_caly_model_devi import (
     RunCalyModelDevi,
@@ -91,9 +97,6 @@ from dpgen2.op.run_lmp import (
 )
 from dpgen2.op.select_confs import (
     SelectConfs,
-)
-from dpgen2.superop.prep_run_dp_train import (
-    ModifyTrainScript,
 )
 
 mocked_template_script = {"seed": 1024, "data": []}
@@ -519,6 +522,7 @@ class MockedRunVasp(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -576,6 +580,7 @@ class MockedRunVaspFail1(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -631,6 +636,7 @@ class MockedRunVaspRestart(RunVasp):
             {
                 "log": work_dir / log,
                 "labeled_data": work_dir / labeled_data,
+                "extra_outputs": [],
             }
         )
 
@@ -859,6 +865,7 @@ class MockedConfSelector(ConfSelector):
         trajs: List[Path],
         model_devis: List[Path],
         type_map: List[str] = None,
+        optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         confs = []
         if len(trajs) == mocked_numb_lmp_tasks:
@@ -922,34 +929,6 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
         super().__init__(stage, self.selector, max_numb_iter=max_numb_iter)
 
 
-class MockedModifyTrainScript(ModifyTrainScript):
-    @OP.exec_sign_check
-    def execute(
-        self,
-        ip: OPIO,
-    ) -> OPIO:
-        scripts = ip["scripts"]
-        numb_models = ip["numb_models"]
-        odict = []
-
-        assert numb_models == mocked_numb_models
-
-        for ii in range(numb_models):
-            subdir = Path(scripts) / Path(train_task_pattern % ii)
-            fname = subdir / "input.json"
-            with open(fname, "r") as fp:
-                train_dict = json.load(fp)
-            train_dict = {"foo": "bar"}
-            odict.append(train_dict)
-
-        op = OPIO(
-            {
-                "template_script": odict,
-            }
-        )
-        return op
-
-
 class MockedCollRunCaly(CollRunCaly):
     @OP.exec_sign_check
     def execute(
@@ -978,58 +957,61 @@ class MockedCollRunCaly(CollRunCaly):
         results = (
             ip["results"].resolve() if ip["results"] is not None else ip["results"]
         )
-        opt_results_dir = (
-            ip["opt_results_dir"].resolve()
-            if ip["opt_results_dir"] is not None
-            else ip["opt_results_dir"]
-        )
+
+        opt_results_dir = []
+        if ip["opt_results_dir"] is not None:
+            for temp in ip["opt_results_dir"]:
+                opt_results_dir.append(Path(temp).resolve())
 
         os.chdir(work_dir)
         Path(input_file.name).symlink_to(input_file)
         if step is not None and results is not None and opt_results_dir is not None:
             step = ip["step"].resolve()
             results = ip["results"].resolve()
-            opt_results_dir = ip["opt_results_dir"].resolve()
+
+            for opt_results_name in opt_results_dir:
+                for file_name in opt_results_name.iterdir():
+                    Path(file_name.name).symlink_to(file_name)
+            # opt_results_dir = ip["opt_results_dir"].resolve()
 
             Path(step.name).symlink_to(step)
             Path(results.name).symlink_to(results)
-            Path(opt_results_dir.name).symlink_to(opt_results_dir)
+            # Path(opt_results_dir.name).symlink_to(opt_results_dir)
 
-        for i in range(5):
-            Path(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+        finished = "true" if int(cnt_num) == int(max_step) else "false"
+        if finished == "false":
+            for i in range(5):
+                Path(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
 
-        if step is None:
-            Path("step").write_text("2")
-        else:
-            step_num = Path("step").read_text().strip()
-            Path("step").write_text(f"{int(step_num)+1}")
+            if step is None:
+                Path("step").write_text("2")
+            else:
+                step_num = Path("step").read_text().strip()
+                Path("step").write_text(f"{int(step_num)+1}")
 
-        if qhull_input is None:
-            Path("test_qconvex.in").write_text("")
+            if qhull_input is None:
+                Path("test_qconvex.in").write_text("")
 
-        step_num = int(Path("step").read_text().strip())
+            step_num = int(Path("step").read_text().strip())
 
-        if results is None:
-            Path("results").mkdir(parents=True, exist_ok=True)
-            for i in range(1, step_num):
+            if results is None:
+                Path("results").mkdir(parents=True, exist_ok=True)
+                for i in range(1, step_num):
+                    Path(f"results/pso_ini_{i}").write_text(f"pso_ini_{i}")
+                    Path(f"results/pso_opt_{i}").write_text(f"pso_opt_{i}")
+                    Path(f"results/pso_sor_{i}").write_text(f"pso_sor_{i}")
+            else:
+                i = step_num
                 Path(f"results/pso_ini_{i}").write_text(f"pso_ini_{i}")
                 Path(f"results/pso_opt_{i}").write_text(f"pso_opt_{i}")
                 Path(f"results/pso_sor_{i}").write_text(f"pso_sor_{i}")
-        else:
-            i = step_num
-            Path(f"results/pso_ini_{i}").write_text(f"pso_ini_{i}")
-            Path(f"results/pso_opt_{i}").write_text(f"pso_opt_{i}")
-            Path(f"results/pso_sor_{i}").write_text(f"pso_sor_{i}")
 
         poscar_dir = Path("poscar_dir")
         poscar_dir.mkdir(parents=True, exist_ok=True)
         for poscar in Path().glob("POSCAR_*"):
             target = poscar_dir.joinpath(poscar.name)
             shutil.copyfile(poscar, target)
-        finished = "true" if int(cnt_num) == int(max_step) else "false"
-        # print(f"-------------cnt_num: {cnt_num}, -------max_step---:{max_step}")
-        # print(f"-------------step_num: {step_num}")
-        # print(f"-------------finished: {finished}")
+        # finished = "true" if int(cnt_num) == int(max_step) else "false"
 
         os.chdir(cwd)
         ret_dict = {
@@ -1044,7 +1026,7 @@ class MockedCollRunCaly(CollRunCaly):
         return OPIO(ret_dict)
 
 
-class MockedPrepRunDPOptim(PrepRunDPOptim):
+class MockedPrepCalyDPOptim(PrepCalyDPOptim):
     @OP.exec_sign_check
     def execute(
         self,
@@ -1054,8 +1036,6 @@ class MockedPrepRunDPOptim(PrepRunDPOptim):
 
         finished = ip["finished"]
         work_dir = Path(ip["task_name"])
-        cnt_num = ip["cnt_num"]
-        # print(f"--------=---------task_name: {work_dir}")
         work_dir.mkdir(parents=True, exist_ok=True)
 
         poscar_dir = ip["poscar_dir"]
@@ -1067,23 +1047,84 @@ class MockedPrepRunDPOptim(PrepRunDPOptim):
         model_list = sorted(model_list, key=lambda x: str(x).split(".")[1])
         model_file = model_list[0]
 
+        os.chdir(work_dir)
+
+        group_size = 2
+
+        if finished == "false":
+            grouped_poscar_list = [
+                poscar_list[i : i + group_size]
+                for i in range(0, len(poscar_list), group_size)
+            ]
+            task_dirs = []
+            for idx, poscar_list in enumerate(grouped_poscar_list):
+                opt_path = Path(f"opt_path_{idx}")
+                task_dirs.append(work_dir / opt_path)
+
+                cwd = os.getcwd()
+                os.chdir(opt_path)
+                for poscar in poscar_list:
+                    Path(poscar.name).symlink_to(poscar)
+                Path(model_file.name).symlink_to(model_file)
+                Path(caly_run_opt_file.name).symlink_to(caly_run_opt_file)
+                Path(caly_check_opt_file.name).symlink_to(caly_check_opt_file)
+                os.chdir(cwd)
+
+            task_names = [str(task_dir) for task_dir in task_dirs]
+        else:
+            temp_dir = work_dir / "opt_path"
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            task_dirs = [temp_dir]
+            task_names = [str(task_dir) for task_dir in task_dirs]
+
+        os.chdir(cwd)
+        return OPIO(
+            {
+                "task_name": task_names,
+                "task_dirs": task_dirs,
+            }
+        )
+
+
+class MockedRunCalyDPOptim(RunCalyDPOptim):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        cwd = os.getcwd()
+
+        finished = ip["finished"]
+        work_dir = Path(ip["task_name"])
+        cnt_num = ip["cnt_num"]
+        work_dir.mkdir(parents=True, exist_ok=True)
+
         config = ip["config"] if ip["config"] is not None else {}
         command = config.get("run_opt_command", "python -u calypso_run_opt.py")
 
+        task_path = ip["task_dir"]
+        if task_path is not None:
+            input_files = [ii.resolve() for ii in Path(task_path).iterdir()]
+        else:
+            pass
+
         os.chdir(work_dir)
 
-        for idx, poscar in enumerate(poscar_list):
-            Path(poscar.name).symlink_to(poscar)
-        Path("frozen_model.pb").symlink_to(model_file)
-        Path(caly_run_opt_file.name).symlink_to(caly_run_opt_file)
-        Path(caly_check_opt_file.name).symlink_to(caly_check_opt_file)
-
-        for i in range(1, 6):
-            Path().joinpath(f"CONTCAR_{str(i)}").write_text(f"CONTCAR_{str(i)}")
-            Path().joinpath(f"OUTCAR_{str(i)}").write_text(f"OUTCAR_{str(i)}")
-            Path().joinpath(f"{str(i)}.traj").write_text(f"{str(i)}.traj")
-
         if finished == "false":
+            for ii in input_files:
+                iname = ii.name
+                Path(iname).symlink_to(ii)
+
+            poscar_list = sorted(Path().rglob("POSCAR_*"))
+            cnt = 0
+            for poscar in poscar_list:
+                cnt += 1
+                poscar_name = poscar.name
+                num = poscar_name.strip("POSCAR_")
+                Path(poscar_name.replace("POSCAR", "CONTCAR")).write_text("")
+                Path(poscar_name.replace("POSCAR", "OUTCAR")).write_text("")
+                Path(f"{num}.traj").write_text("")
+
             optim_results_dir = Path("optim_results_dir")
             optim_results_dir.mkdir(parents=True, exist_ok=True)
             for poscar in Path().glob("POSCAR_*"):
@@ -1114,8 +1155,6 @@ class MockedPrepRunDPOptim(PrepRunDPOptim):
                 "task_name": str(work_dir),
                 "optim_results_dir": work_dir / optim_results_dir,
                 "traj_results": work_dir / traj_results_dir,
-                "caly_run_opt_file": work_dir / caly_run_opt_file.name,
-                "caly_check_opt_file": work_dir / caly_check_opt_file.name,
             }
         )
 

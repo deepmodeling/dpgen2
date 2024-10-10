@@ -61,12 +61,6 @@ from mocked_ops import (
 # isort: on
 
 dpgen_keys = [
-    "finetune--prep-train",
-    "finetune--run-train-0002",
-    "finetune--run-train-0000",
-    "finetune--run-train-0001",
-    "finetune--modify-train-script",
-    "finetune--prep-run-train",
     "init--scheduler",
     "init--id",
     "iter-000000--prep-train",
@@ -81,7 +75,7 @@ dpgen_keys = [
     "iter-000000--run-lmp-000002",
     "iter-000000--run-lmp-000003",
     "iter-000000--run-lmp-000000",
-    "iter-000000--prep-run-lmp",
+    "iter-000000--prep-run-explore",
     "iter-000000--select-confs",
     "iter-000000--prep-fp",
     "iter-000000--run-fp-000001",
@@ -103,7 +97,7 @@ dpgen_keys = [
     "iter-000001--run-lmp-000005",
     "iter-000001--run-lmp-000002",
     "iter-000001--run-lmp-000004",
-    "iter-000001--prep-run-lmp",
+    "iter-000001--prep-run-explore",
     "iter-000001--select-confs",
     "iter-000001--prep-fp",
     "iter-000001--run-fp-000001",
@@ -228,12 +222,6 @@ class TestDflowQuery(unittest.TestCase):
 
     def test_sort_slice_ops(self):
         expected_output = [
-            "finetune--prep-train",
-            "finetune--run-train-0000",
-            "finetune--run-train-0001",
-            "finetune--run-train-0002",
-            "finetune--modify-train-script",
-            "finetune--prep-run-train",
             "init--scheduler",
             "init--id",
             "iter-000000--prep-train",
@@ -248,7 +236,7 @@ class TestDflowQuery(unittest.TestCase):
             "iter-000000--run-lmp-000003",
             "iter-000000--run-lmp-000004",
             "iter-000000--run-lmp-000005",
-            "iter-000000--prep-run-lmp",
+            "iter-000000--prep-run-explore",
             "iter-000000--select-confs",
             "iter-000000--prep-fp",
             "iter-000000--run-fp-000000",
@@ -272,20 +260,16 @@ class TestDflowQuery(unittest.TestCase):
 
     def test_print_keys(self):
         expected_output = [
-            "                   0 : finetune--prep-train",
-            "              1 -> 3 : finetune--run-train-0000 -> finetune--run-train-0002",
-            "                   4 : finetune--modify-train-script",
-            "                   5 : finetune--prep-run-train",
-            "                   6 : init--scheduler",
-            "                   7 : init--id",
-            "                   8 : iter-000000--prep-train",
-            "             9 -> 11 : iter-000000--run-train-0000 -> iter-000000--run-train-0002",
-            "                  12 : iter-000000--prep-run-train",
+            "                   0 : init--scheduler",
+            "                   1 : init--id",
+            "                   2 : iter-000000--prep-train",
+            "              3 -> 5 : iter-000000--run-train-0000 -> iter-000000--run-train-0002",
+            "                   6 : iter-000000--prep-run-train",
         ]
         expected_output = "\n".join(expected_output + [""])
 
         ret = print_keys_in_nice_format(
-            dpgen_keys[:13],
+            dpgen_keys[:7],
             ["run-train", "run-lmp", "run-fp"],
             idx_fmt_len=8,
         )

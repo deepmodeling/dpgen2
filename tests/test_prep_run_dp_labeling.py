@@ -23,7 +23,6 @@ from dpgen2.fp.deepmd import (
     PrepDeepmd,
     RunDeepmd,
     deepmd_input_path,
-    deepmd_teacher_model,
     deepmd_temp_path,
 )
 from dpgen2.utils import (
@@ -97,8 +96,6 @@ class TestRunDeepmd(unittest.TestCase):
 
         shutil.rmtree(deepmd_temp_path, ignore_errors=True)
 
-        shutil.rmtree(deepmd_teacher_model, ignore_errors=True)
-
     def test_prep_input(self):
         run_deepmd = RunDeepmd()
         out_name = self.task_path / "test_out"
@@ -151,8 +148,6 @@ class TestRunDeepmd(unittest.TestCase):
             _dp, _type_map = run_deepmd._get_dp_model(self.teacher_model)
             self.assertTrue(_dp is dp)
             self.assertEqual(_type_map, ["H", "C"])
-            deepmd.infer.DeepPot.assert_called_once_with(Path(deepmd_teacher_model))
-            self.assertFalse(Path(deepmd_teacher_model).is_file())
 
     def test_dp_infer(self):
         self.system.to("deepmd/npy", deepmd_input_path)

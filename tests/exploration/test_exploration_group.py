@@ -72,6 +72,43 @@ run             ${NSTEPS} upto
 """
 )
 
+in_template_npt_fparam = textwrap.dedent(
+    """variable        NSTEPS          equal 1000
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        TEMP            equal %f
+variable        ELE_TEMP        equal %f
+variable        PRES            equal %f
+variable        TAU_T           equal 0.100000
+variable        TAU_P           equal 0.500000
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        1.0 bin
+
+box          tilt large
+if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data conf.lmp"
+change_box   all triclinic
+mass            1 10.000000
+mass            2 20.000000
+pair_style      deepmd model.000.pb model.001.pb model.002.pb  out_freq ${THERMO_FREQ} out_file model_devi.out fparam ${ELE_TEMP}
+pair_coeff      * *
+
+thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
+thermo          ${THERMO_FREQ}
+dump            1 all custom ${DUMP_FREQ} traj.dump id type x y z fx fy fz
+restart         10000 dpgen.restart
+
+if "${restart} == 0" then "velocity        all create ${TEMP} 1111"
+fix             1 all npt temp ${TEMP} ${TEMP} ${TAU_T} iso ${PRES} ${PRES} ${TAU_P}
+
+timestep        0.001000
+run             ${NSTEPS} upto
+"""
+)
+
 in_template_nvt = textwrap.dedent(
     """variable        NSTEPS          equal 1000
 variable        THERMO_FREQ     equal 10
@@ -310,6 +347,75 @@ class TestCPTGroup(unittest.TestCase):
             self.assertEqual(
                 task_group[ii].files()[lmp_input_name],
                 in_template_npt % (self.tt[j_idx], self.pp[k_idx]),
+            )
+
+    @patch("dpgen2.exploration.task.lmp.lmp_input.random")
+    def test_npt_ele_temp(self, mock_random):
+        mock_random.randrange.return_value = 1110
+        self.confs = ["foo"]
+        self.tt = [100]
+        self.pp = [1]
+        self.numb_model = 3
+        self.mass_map = [10, 20]
+        ele_temp = 10.0
+
+        cpt_group = NPTTaskGroup()
+        cpt_group.set_md(
+            self.numb_model,
+            self.mass_map,
+            self.tt,
+            self.pp,
+            ele_temp_f=ele_temp,
+        )
+        cpt_group.set_conf(
+            self.confs,
+        )
+        task_group = cpt_group.make_task()
+
+        ngroup = len(task_group)
+        self.assertEqual(ngroup, len(self.confs) * len(self.tt) * len(self.pp))
+
+        for ii in range(ngroup):
+            i_idx = ii // (len(self.tt) * len(self.pp))
+            j_idx = (ii - len(self.tt) * len(self.pp) * i_idx) // len(self.pp)
+            k_idx = ii - len(self.tt) * len(self.pp) * i_idx - len(self.pp) * j_idx
+            self.assertEqual(
+                task_group[ii].files()[lmp_conf_name],
+                self.confs[i_idx],
+            )
+            self.assertEqual(
+                task_group[ii].files()[lmp_input_name],
+                in_template_npt_fparam % (self.tt[j_idx], ele_temp, self.pp[k_idx]),
+            )
+
+        cpt_group = NPTTaskGroup()
+        cpt_group.set_md(
+            self.numb_model,
+            self.mass_map,
+            self.tt,
+            self.pp,
+            ele_temp_a=ele_temp,
+        )
+        cpt_group.set_conf(
+            self.confs,
+        )
+        task_group = cpt_group.make_task()
+
+        ngroup = len(task_group)
+        self.assertEqual(ngroup, len(self.confs) * len(self.tt) * len(self.pp))
+
+        for ii in range(ngroup):
+            i_idx = ii // (len(self.tt) * len(self.pp))
+            j_idx = (ii - len(self.tt) * len(self.pp) * i_idx) // len(self.pp)
+            k_idx = ii - len(self.tt) * len(self.pp) * i_idx - len(self.pp) * j_idx
+            self.assertEqual(
+                task_group[ii].files()[lmp_conf_name],
+                self.confs[i_idx],
+            )
+            in_template_npt_aparam = in_template_npt_fparam.replace("fparam", "aparam")
+            self.assertEqual(
+                task_group[ii].files()[lmp_input_name],
+                in_template_npt_aparam % (self.tt[j_idx], ele_temp, self.pp[k_idx]),
             )
 
     @patch("dpgen2.exploration.task.lmp.lmp_input.random")
@@ -623,8 +729,32 @@ class TestCalyStage(unittest.TestCase):
                 "fmax": 1,
             }
         )
+        self.config_random = caly_normalize(
+            {
+                "name_of_atoms": [
+                    ["Li", "La", "Mg", "Al"],
+                    ["La", "Be", "Mg", "Ca"],
+                    ["H"],
+                ],
+                "numb_of_atoms": [10, 10, 10],
+                "numb_of_species": 3,
+                "distance_of_ions": [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+            }
+        )
+        self.config_random_dict = caly_normalize(
+            {
+                "name_of_atoms": [
+                    ["Li", "La", "Mg", "Al"],
+                    ["La", "Be", "Mg", "Ca"],
+                    ["H"],
+                ],
+                "numb_of_atoms": [10, 10, 10],
+                "numb_of_species": 3,
+                "distance_of_ions": {"Li": 1.0, "La": 1.1, "H": 0.5},
+            }
+        )
 
-    def test(self):
+    def test_00_make_calypso_task(self):
         tgroup_1 = make_calypso_task_group_from_config(self.config_1)
         tgroup_2 = make_calypso_task_group_from_config(self.config_2)
 
@@ -639,13 +769,21 @@ class TestCalyStage(unittest.TestCase):
         self.maxDiff = None
         ii = 0
         self.assertEqual(task_group[ii].files()[calypso_input_file], ref_input)
-        # self.assertEqual(
-        #     task_group[ii].files()[calypso_run_opt_file],
-        #     ref_run_opt,
-        # )
-        # ii += 1
-        # self.assertEqual(task_group[ii].files()[lmp_conf_name], "foo")
-        # self.assertEqual(
-        #     task_group[ii].files()[lmp_input_name],
-        #     in_template_npt % (100.0, 10.0),
-        # )
+
+    def test_01_make_random_calypso_task(self):
+        tgroup_1 = make_calypso_task_group_from_config(self.config_random)
+
+        stage = ExplorationStage()
+        stage.add_task_group(tgroup_1)
+
+        task_group = stage.make_task()
+        self.assertEqual(len(task_group), 1)
+
+    def test_02_make_random_dict_calypso_task(self):
+        tgroup_1 = make_calypso_task_group_from_config(self.config_random_dict)
+
+        stage = ExplorationStage()
+        stage.add_task_group(tgroup_1)
+
+        task_group = stage.make_task()
+        self.assertEqual(len(task_group), 1)

@@ -1,0 +1,444 @@
+{
+    "name": "water-dpgen",
+    "bohrium_config": {
+        "username": "",
+        "password": "",
+        "project_id": 1,
+        "_comment": "all"
+    },
+    "default_step_config": {
+        "template_config": {
+            "image": "",
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA V100_16g"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.8,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "1 * NVIDIA V100_16g"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 5,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.8,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 20,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+    "upload_python_packages": [
+        "/path/to/dpgen2"
+    ],
+    "inputs": {
+        "type_map": [
+            "H",
+            "He",
+            "Li",
+            "Be",
+            "B",
+            "C",
+            "N",
+            "O",
+            "F",
+            "Ne",
+            "Na",
+            "Mg",
+            "Al",
+            "Si",
+            "P",
+            "S",
+            "Cl",
+            "Ar",
+            "K",
+            "Ca",
+            "Sc",
+            "Ti",
+            "V",
+            "Cr",
+            "Mn",
+            "Fe",
+            "Co",
+            "Ni",
+            "Cu",
+            "Zn",
+            "Ga",
+            "Ge",
+            "As",
+            "Se",
+            "Br",
+            "Kr",
+            "Rb",
+            "Sr",
+            "Y",
+            "Zr",
+            "Nb",
+            "Mo",
+            "Tc",
+            "Ru",
+            "Rh",
+            "Pd",
+            "Ag",
+            "Cd",
+            "In",
+            "Sn",
+            "Sb",
+            "Te",
+            "I",
+            "Xe",
+            "Cs",
+            "Ba",
+            "La",
+            "Ce",
+            "Pr",
+            "Nd",
+            "Pm",
+            "Sm",
+            "Eu",
+            "Gd",
+            "Tb",
+            "Dy",
+            "Ho",
+            "Er",
+            "Tm",
+            "Yb",
+            "Lu",
+            "Hf",
+            "Ta",
+            "W",
+            "Re",
+            "Os",
+            "Ir",
+            "Pt",
+            "Au",
+            "Hg",
+            "Tl",
+            "Pb",
+            "Bi",
+            "Po",
+            "At",
+            "Rn",
+            "Fr",
+            "Ra",
+            "Ac",
+            "Th",
+            "Pa",
+            "U",
+            "Np",
+            "Pu",
+            "Am",
+            "Cm",
+            "Bk",
+            "Cf",
+            "Es",
+            "Fm",
+            "Md",
+            "No",
+            "Lr",
+            "Rf",
+            "Db",
+            "Sg",
+            "Bh",
+            "Hs",
+            "Mt",
+            "Ds",
+            "Rg",
+            "Cn",
+            "Nh",
+            "Fl",
+            "Mc",
+            "Lv",
+            "Ts",
+            "Og"
+        ],
+        "mixed_type": true,
+        "do_finetune": true,
+        "mass_map": [
+            4.0,
+            4.0026,
+            6.94,
+            9.0122,
+            10.81,
+            12.011,
+            14.007,
+            15.999,
+            18.998,
+            20.18,
+            22.99,
+            24.305,
+            26.982,
+            28.0855,
+            30.974,
+            32.06,
+            35.45,
+            39.95,
+            39.098,
+            40.078,
+            44.956,
+            47.867,
+            50.942,
+            51.996,
+            54.938,
+            55.845,
+            58.933,
+            58.693,
+            63.546,
+            65.38,
+            69.723,
+            72.63,
+            74.922,
+            78.971,
+            79.904,
+            83.798,
+            85.468,
+            87.62,
+            88.906,
+            91.224,
+            92.906,
+            95.95,
+            97,
+            101.07,
+            102.91,
+            106.42,
+            107.87,
+            112.41,
+            114.82,
+            118.71,
+            121.76,
+            127.6,
+            126.9,
+            131.29,
+            132.91,
+            137.33,
+            138.91,
+            140.12,
+            140.91,
+            144.24,
+            145,
+            150.36,
+            151.96,
+            157.25,
+            158.93,
+            162.5,
+            164.93,
+            167.26,
+            168.93,
+            173.05,
+            174.97,
+            178.49,
+            180.95,
+            183.84,
+            186.21,
+            190.23,
+            192.22,
+            195.08,
+            196.97,
+            200.59,
+            204.38,
+            207.2,
+            208.98,
+            209,
+            210,
+            222,
+            223,
+            226,
+            227,
+            232.04,
+            231.04,
+            238.03,
+            237,
+            244,
+            243,
+            247,
+            247,
+            251,
+            252,
+            257,
+            258,
+            259,
+            262,
+            267,
+            268,
+            269,
+            270,
+            269,
+            277,
+            281,
+            282,
+            285,
+            286,
+            290,
+            290,
+            293,
+            294,
+            294
+        ],
+        "init_data_prefix": null,
+        "init_data_sys": [
+            "init/data_0",
+            "init/data_1",
+            "init/data_2"
+        ],
+        "_comment": "all"
+    },
+    "train": {
+        "type": "dp",
+        "numb_models": 4,
+        "init_models_paths": [
+            "pretrained_model.pt",
+            "pretrained_model.pt",
+            "pretrained_model.pt",
+            "pretrained_model.pt"
+        ],
+        "config": {
+            "backend": "pytorch",
+            "finetune_args": "--model-branch H2O_H2O-PD",
+            "init_model_policy": "yes",
+            "init_model_old_ratio": 0.9,
+            "init_model_numb_steps": 2000,
+            "init_model_start_lr": 2e-05,
+            "init_model_start_pref_e": 0.25,
+            "init_model_start_pref_f": 100,
+            "_comment": "all"
+        },
+        "template_script": "train.json",
+        "_comment": "all"
+    },
+    "explore": {
+        "type": "lmp",
+        "config": {
+            "command": "lmp -var restart 0"
+        },
+        "convergence": {
+            "type": "adaptive-lower",
+            "conv_tolerance": 0.005,
+            "_numb_candi_f": 3000,
+            "rate_candi_f": 0.15,
+            "level_f_hi": 0.5,
+            "n_checked_steps": 8,
+            "_command": "all"
+        },
+        "max_numb_iter": 16,
+        "fatal_at_max": false,
+        "configuration_prefix": null,
+        "configurations": [
+            {
+                "type": "file",
+                "files": [
+                    "init"
+                ],
+                "fmt": "deepmd/npy/mixed"
+            }
+        ],
+        "stages": [
+            [
+                {
+                    "type": "lmp-template",
+                    "lmp": "template.lammps",
+                    "trj_freq": 10,
+                    "revisions": {
+                        "V_NSTEPS": [
+                            20
+                        ],
+                        "V_TEMP": [
+                            300
+                        ],
+                        "V_DUMPFREQ": [
+                            250
+                        ]
+                    },
+                    "sys_idx": [
+                        0
+                    ],
+                    "n_sample": 4
+                }
+            ]
+        ],
+        "_comment": "all"
+    },
+    "fp": {
+        "type": "vasp",
+        "task_max": 300,
+        "inputs_config": {
+            "pp_files": {
+                "O": "PBE/O/POTCAR",
+                "H": "PBE/H/POTCAR"
+            },
+            "incar": "vasp/INCAR",
+            "kspacing": 0.32,
+            "kgamma": true
+        },
+        "run_config": {
+            "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        },
+        "_comment": "all"
+    }
+}

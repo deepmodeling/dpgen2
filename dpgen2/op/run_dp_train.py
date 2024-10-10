@@ -7,8 +7,11 @@ from pathlib import (
     Path,
 )
 from typing import (
+    Dict,
     List,
+    Optional,
     Tuple,
+    Union,
 )
 
 import dpdata
@@ -24,6 +27,7 @@ from dflow.python import (
     Artifact,
     BigParameter,
     FatalError,
+    NestedDict,
     OPIOSign,
     Parameter,
     TransientError,
@@ -39,6 +43,61 @@ from dpgen2.utils.chdir import (
 from dpgen2.utils.run_command import (
     run_command,
 )
+
+
+def _make_train_command(
+    dp_command,
+    train_script_name,
+    impl,
+    do_init_model,
+    init_model,
+    finetune_mode,
+    finetune_args,
+    init_model_with_finetune,
+    train_args="",
+):
+    # find checkpoint
+    if impl == "tensorflow" and os.path.isfile("checkpoint"):
+        checkpoint = "model.ckpt"
+    elif impl == "pytorch" and len(glob.glob("model.ckpt-[0-9]*.pt")) > 0:
+        checkpoint = "model.ckpt-%s.pt" % max(
+            [int(f[11:-3]) for f in glob.glob("model.ckpt-[0-9]*.pt")]
+        )
+    else:
+        checkpoint = None
+    # case of restart
+    if checkpoint is not None:
+        command = dp_command + ["train", "--restart", checkpoint, train_script_name]
+        return command
+    # case of init model and finetune
+    assert checkpoint is None
+    case_init_model = do_init_model and (not init_model_with_finetune)
+    case_finetune = finetune_mode == "finetune" or (
+        do_init_model and init_model_with_finetune
+    )
+    if case_init_model:
+        init_flag = "--init-frz-model" if impl == "tensorflow" else "--init-model"
+        command = dp_command + [
+            "train",
+            init_flag,
+            str(init_model),
+            train_script_name,
+        ]
+    elif case_finetune:
+        command = (
+            dp_command
+            + [
+                "train",
+                train_script_name,
+                "--finetune",
+                str(init_model),
+            ]
+            + finetune_args.split()
+        )
+    else:
+        command = dp_command + ["train", train_script_name]
+    command += train_args.split()
+    return command
 
 
 class RunDPTrain(OP):
@@ -68,8 +127,10 @@ class RunDPTrain(OP):
                 ),
                 "task_path": Artifact(Path),
                 "init_model": Artifact(Path, optional=True),
-                "init_data": Artifact(List[Path]),
+                "init_data": Artifact(NestedDict[Path]),
                 "iter_data": Artifact(List[Path]),
+                "valid_data": Artifact(NestedDict[Path], optional=True),
+                "optional_files": Artifact(List[Path], optional=True),
             }
         )
 
@@ -100,7 +161,7 @@ class RunDPTrain(OP):
             - `task_name`: (`str`) The name of training task.
             - `task_path`: (`Artifact(Path)`) The path that contains all input files prepareed by `PrepDPTrain`.
             - `init_model`: (`Artifact(Path)`) A frozen model to initialize the training.
-            - `init_data`: (`Artifact(List[Path])`) Initial training data.
+            - `init_data`: (`Artifact(NestedDict[Path])`) Initial training data.
             - `iter_data`: (`Artifact(List[Path])`) Training data generated in the DPGEN iterations.
 
         Returns
@@ -120,16 +181,25 @@ class RunDPTrain(OP):
         mixed_type = ip["optional_parameter"]["mixed_type"]
         finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
+        impl = ip["config"].get("impl", "tensorflow")
+        dp_command = ip["config"].get("command", "dp").split()
+        assert impl in ["tensorflow", "pytorch"]
+        if impl == "pytorch":
+            dp_command.append("--pt")
+        finetune_args = config.get("finetune_args", "")
+        train_args = config.get("train_args", "")
         config = RunDPTrain.normalize_config(config)
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         init_model = ip["init_model"]
         init_data = ip["init_data"]
         iter_data = ip["iter_data"]
+        valid_data = ip["valid_data"]
         iter_data_old_exp = _expand_all_multi_sys_to_sys(iter_data[:-1])
         iter_data_new_exp = _expand_all_multi_sys_to_sys(iter_data[-1:])
         iter_data_exp = iter_data_old_exp + iter_data_new_exp
         work_dir = Path(task_name)
+        init_model_with_finetune = config["init_model_with_finetune"]
 
         # update the input script
         input_script = Path(task_path) / train_script_name
@@ -151,13 +221,24 @@ class RunDPTrain(OP):
         auto_prob_str = "prob_sys_size"
         if do_init_model:
             old_ratio = config["init_model_old_ratio"]
-            numb_old = len(init_data) + len(iter_data_old_exp)
+            if config["multitask"]:
+                head = config["head"]
+                len_init = len(init_data[head])
+            else:
+                len_init = len(init_data)
+            numb_old = len_init + len(iter_data_old_exp)
             numb_new = numb_old + len(iter_data_new_exp)
             auto_prob_str = f"prob_sys_size; 0:{numb_old}:{old_ratio}; {numb_old}:{numb_new}:{1.-old_ratio:g}"
 
         # update the input dict
         train_dict = RunDPTrain.write_data_to_input_script(
-            train_dict, init_data, iter_data_exp, auto_prob_str, major_version
+            train_dict,
+            config,
+            init_data,
+            iter_data_exp,
+            auto_prob_str,
+            major_version,
+            valid_data,
         )
         train_dict = RunDPTrain.write_other_to_input_script(
             train_dict, config, do_init_model, major_version
@@ -169,7 +250,7 @@ class RunDPTrain(OP):
             return OPIO(
                 {
                     "script": work_dir / train_script_name,
-                    "model": work_dir / "frozen_model.pb",
+                    "model": init_model,
                     "lcurve": work_dir / "lcurve.out",
                     "log": work_dir / "train.log",
                 }
@@ -186,25 +267,23 @@ class RunDPTrain(OP):
             with open(train_script_name, "w") as fp:
                 json.dump(train_dict, fp, indent=4)
 
+            if ip["optional_files"] is not None:
+                for f in ip["optional_files"]:
+                    Path(f.name).symlink_to(f)
+
             # train model
-            if do_init_model or finetune_mode == "train-init":
-                command = [
-                    "dp",
-                    "train",
-                    "--init-frz-model",
-                    str(init_model),
-                    train_script_name,
-                ]
-            elif finetune_mode == "finetune":
-                command = [
-                    "dp",
-                    "train",
-                    train_script_name,
-                    "--finetune",
-                    str(init_model),
-                ]
-            else:
-                command = ["dp", "train", train_script_name]
+            command = _make_train_command(
+                dp_command,
+                train_script_name,
+                impl,
+                do_init_model,
+                init_model,
+                finetune_mode,
+                finetune_args,
+                init_model_with_finetune,
+                train_args,
+            )
+
             ret, out, err = run_command(command)
             if ret != 0:
                 clean_before_quit()
@@ -231,23 +310,27 @@ class RunDPTrain(OP):
                 shutil.copy2("input_v2_compat.json", train_script_name)
 
             # freeze model
-            ret, out, err = run_command(["dp", "freeze", "-o", "frozen_model.pb"])
-            if ret != 0:
-                clean_before_quit()
-                logging.error(
-                    "".join(
-                        (
-                            "dp freeze failed\n",
-                            "out msg: ",
-                            out,
-                            "\n",
-                            "err msg: ",
-                            err,
-                            "\n",
+            if impl == "pytorch":
+                model_file = "model.ckpt.pt"
+            else:
+                ret, out, err = run_command(["dp", "freeze", "-o", "frozen_model.pb"])
+                if ret != 0:
+                    clean_before_quit()
+                    logging.error(
+                        "".join(
+                            (
+                                "dp freeze failed\n",
+                                "out msg: ",
+                                out,
+                                "\n",
+                                "err msg: ",
+                                err,
+                                "\n",
+                            )
                         )
                     )
-                )
-                raise FatalError("dp freeze failed")
+                    raise FatalError("dp freeze failed")
+                model_file = "frozen_model.pb"
             fplog.write("#=================== freeze std out ===================\n")
             fplog.write(out)
             fplog.write("#=================== freeze std err ===================\n")
@@ -258,7 +341,7 @@ class RunDPTrain(OP):
         return OPIO(
             {
                 "script": work_dir / train_script_name,
-                "model": work_dir / "frozen_model.pb",
+                "model": work_dir / model_file,
                 "lcurve": work_dir / "lcurve.out",
                 "log": work_dir / "train.log",
             }
@@ -267,24 +350,52 @@ class RunDPTrain(OP):
     @staticmethod
     def write_data_to_input_script(
         idict: dict,
-        init_data: List[Path],
+        config,
+        init_data: Union[List[Path], Dict[str, List[Path]]],
         iter_data: List[Path],
         auto_prob_str: str = "prob_sys_size",
         major_version: str = "1",
+        valid_data: Optional[Union[List[Path], Dict[str, List[Path]]]] = None,
     ):
         odict = idict.copy()
+        if config["multitask"]:
+            head = config["head"]
+            for k, v in odict["training"]["data_dict"].items():
+                v["training_data"]["systems"] = []
+                if k in init_data:
+                    v["training_data"]["systems"] += [str(ii) for ii in init_data[k]]
+                if k == head:
+                    v["training_data"]["systems"] += [str(ii) for ii in iter_data]
+                    v["training_data"]["auto_prob"] = auto_prob_str
+                if valid_data is None:
+                    v.pop("validation_data", None)
+                else:
+                    v["validation_data"] = v.get("validation_data", {"batch_size": 1})
+                    v["validation_data"]["systems"] = [str(ii) for ii in valid_data[k]]
+            return odict
         data_list = [str(ii) for ii in init_data] + [str(ii) for ii in iter_data]
         if major_version == "1":
             # v1 behavior
             odict["training"]["systems"] = data_list
             odict["training"].setdefault("batch_size", "auto")
             odict["training"]["auto_prob_style"] = auto_prob_str
+            if valid_data is not None:
+                odict["training"]["validation_data"] = {
+                    "systems": [str(ii) for ii in valid_data],
+                    "batch_size": 1,
+                }
         elif major_version == "2":
             # v2 behavior
             odict["training"]["training_data"]["systems"] = data_list
             odict["training"]["training_data"].setdefault("batch_size", "auto")
             odict["training"]["training_data"]["auto_prob"] = auto_prob_str
-            odict["training"].pop("validation_data", None)
+            if valid_data is None:
+                odict["training"].pop("validation_data", None)
+            else:
+                odict["training"]["validation_data"] = {
+                    "systems": [str(ii) for ii in valid_data],
+                    "batch_size": 1,
+                }
         else:
             raise RuntimeError("unsupported DeePMD-kit major version", major_version)
         return odict
@@ -300,9 +411,16 @@ class RunDPTrain(OP):
         odict["training"]["disp_file"] = "lcurve.out"
         if do_init_model:
             odict["learning_rate"]["start_lr"] = config["init_model_start_lr"]
-            odict["loss"]["start_pref_e"] = config["init_model_start_pref_e"]
-            odict["loss"]["start_pref_f"] = config["init_model_start_pref_f"]
-            odict["loss"]["start_pref_v"] = config["init_model_start_pref_v"]
+            if "loss_dict" in odict:
+                for v in odict["loss_dict"].values():
+                    if isinstance(v, dict):
+                        v["start_pref_e"] = config["init_model_start_pref_e"]
+                        v["start_pref_f"] = config["init_model_start_pref_f"]
+                        v["start_pref_v"] = config["init_model_start_pref_v"]
+            else:
+                odict["loss"]["start_pref_e"] = config["init_model_start_pref_e"]
+                odict["loss"]["start_pref_f"] = config["init_model_start_pref_f"]
+                odict["loss"]["start_pref_v"] = config["init_model_start_pref_v"]
             if major_version == "1":
                 odict["training"]["stop_batch"] = config["init_model_numb_steps"]
             elif major_version == "2":
@@ -335,7 +453,6 @@ class RunDPTrain(OP):
                     f"The training is skipped.\n"
                 )
                 Path("lcurve.out").touch()
-                shutil.copy(init_model, "frozen_model.pb")
             return True
         else:
             return False
@@ -361,7 +478,12 @@ class RunDPTrain(OP):
                 do_init_model = True
             elif "old_data_larger_than" in config["init_model_policy"]:
                 old_data_size_level = int(config["init_model_policy"].split(":")[-1])
-                init_data_size = _get_data_size_of_all_systems(init_data)
+                if isinstance(init_data, dict):
+                    init_data_size = _get_data_size_of_all_systems(
+                        sum(init_data.values(), [])
+                    )
+                else:
+                    init_data_size = _get_data_size_of_all_systems(init_data)
                 iter_data_old_size = _get_data_size_of_all_mult_sys(
                     iter_data[:-1], mixed_type=mixed_type
                 )
@@ -372,7 +494,9 @@ class RunDPTrain(OP):
 
     @staticmethod
     def training_args():
-        doc_init_model_prolicy = "The policy of init-model training. It can be\n\n\
+        doc_command = "The command for DP, 'dp' for default"
+        doc_impl = "The implementation/backend of DP. It can be 'tensorflow' or 'pytorch'. 'tensorflow' for default."
+        doc_init_model_policy = "The policy of init-model training. It can be\n\n\
     - 'no': No init-model training. Traing from scratch.\n\n\
     - 'yes': Do init-model training.\n\n\
     - 'old_data_larger_than:XXX': Do init-model if the training data size of the previous model is larger than XXX. XXX is an int number."
@@ -388,13 +512,33 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )
+        doc_finetune_args = "Extra arguments for finetuning"
+        doc_multitask = "Do multitask training"
+        doc_head = "Head to use in the multitask training"
+        doc_init_model_with_finetune = "Use finetune for init model"
+        doc_train_args = "Extra arguments for dp train"
         return [
+            Argument(
+                "command",
+                str,
+                optional=True,
+                default="dp",
+                doc=doc_command,
+            ),
+            Argument(
+                "impl",
+                str,
+                optional=True,
+                default="tensorflow",
+                doc=doc_impl,
+                alias=["backend"],
+            ),
             Argument(
                 "init_model_policy",
                 str,
                 optional=True,
                 default="no",
-                doc=doc_init_model_prolicy,
+                doc=doc_init_model_policy,
             ),
             Argument(
                 "init_model_old_ratio",
@@ -438,6 +582,41 @@ class RunDPTrain(OP):
                 optional=True,
                 default=0.0,
                 doc=doc_init_model_start_pref_v,
+            ),
+            Argument(
+                "init_model_with_finetune",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_init_model_with_finetune,
+            ),
+            Argument(
+                "finetune_args",
+                str,
+                optional=True,
+                default="",
+                doc=doc_finetune_args,
+            ),
+            Argument(
+                "multitask",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_multitask,
+            ),
+            Argument(
+                "head",
+                str,
+                optional=True,
+                default=None,
+                doc=doc_head,
+            ),
+            Argument(
+                "train_args",
+                str,
+                optional=True,
+                default="",
+                doc=doc_train_args,
             ),
         ]
 

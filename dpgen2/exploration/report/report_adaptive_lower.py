@@ -239,7 +239,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 ii, md_f[ii], md_v[ii]
             )
             self.nframes += add_nframes
-            self.accur = self.accur.union(add_accur)
+            self.accur.update(add_accur)
             self.failed += add_failed
             coll_f += add_f
             coll_v += add_v

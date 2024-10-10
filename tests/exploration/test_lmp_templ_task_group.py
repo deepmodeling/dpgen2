@@ -197,6 +197,84 @@ PRINT ARG=restraint.bias
 )
 
 
+in_lmp_pimd_template = textwrap.dedent(
+    """variable        NSTEPS          equal V_NSTEPS
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        TEMP            equal V_TEMP
+variable        PRES            equal 0.0
+variable        TAU_T           equal 0.100000
+variable        TAU_P           equal 0.500000
+variable        ibead           uloop 4 pad
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        1.0 bin
+
+box             tilt large
+read_data       conf.lmp
+change_box      all triclinic
+mass            1 27.000000
+mass            2 24.000000
+
+pair_style      deepmd
+pair_coeff      * *
+
+thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
+thermo          ${THERMO_FREQ}
+
+dump            dpgen_dump
+
+velocity        all create ${TEMP} 826513
+fix             1 all pimd/langevin ensemble npt integrator baoab temp ${TEMP} thermostat PILE_L 1234 tau ${TAU_T} iso ${PRES} barostat BZP taup ${TAU_P}
+
+timestep        0.001
+run             ${NSTEPS}
+"""
+)
+
+
+expected_lmp_pimd_template = textwrap.dedent(
+    """variable        NSTEPS          equal 1000
+variable        THERMO_FREQ     equal 10
+variable        DUMP_FREQ       equal 10
+variable        TEMP            equal 300
+variable        PRES            equal 0.0
+variable        TAU_T           equal 0.100000
+variable        TAU_P           equal 0.500000
+variable        ibead           uloop 4 pad
+
+units           metal
+boundary        p p p
+atom_style      atomic
+
+neighbor        1.0 bin
+
+box             tilt large
+read_data       conf.lmp
+change_box      all triclinic
+mass            1 27.000000
+mass            2 24.000000
+
+pair_style      deepmd model.000.pb model.001.pb model.002.pb model.003.pb out_freq 20 out_file model_devi.${ibead}.out
+pair_coeff      * *
+
+thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz
+thermo          ${THERMO_FREQ}
+
+dump            dpgen_dump all custom 20 traj.${ibead}.dump id type x y z
+
+velocity        all create ${TEMP} 826513
+fix             1 all pimd/langevin ensemble npt integrator baoab temp ${TEMP} thermostat PILE_L 1234 tau ${TAU_T} iso ${PRES} barostat BZP taup ${TAU_P}
+
+timestep        0.001
+run             ${NSTEPS}
+"""
+)
+
+
 class TestLmpTemplateTaskGroup(unittest.TestCase):
     def setUp(self):
         self.lmp_template_fname = Path("lmp.template")
@@ -215,11 +293,14 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         }
         self.rev_empty = {}
         self.traj_freq = 20
+        self.lmp_pimd_template_fname = Path("lmp.pimd.template")
+        self.lmp_pimd_template_fname.write_text(in_lmp_pimd_template)
 
     def tearDown(self):
         os.remove(self.lmp_template_fname)
         os.remove(self.lmp_plm_template_fname)
         os.remove(self.plm_template_fname)
+        os.remove(self.lmp_pimd_template_fname)
 
     def test_lmp(self):
         task_group = LmpTemplateTaskGroup()
@@ -333,3 +414,25 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
                 ee,
             )
             idx += 1
+
+    def test_lmp_pimd(self):
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(["foo"])
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_pimd_template_fname,
+            revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
+            traj_freq=self.traj_freq,
+            pimd_bead="${ibead}",
+        )
+        task_group.make_task()
+        ngroup = len(task_group)
+        self.assertEqual(
+            ngroup,
+            1,
+        )
+        ee = expected_lmp_pimd_template.split("\n")
+        self.assertEqual(
+            task_group[0].files()[lmp_input_name].split("\n"),
+            ee,
+        )

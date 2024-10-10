@@ -38,7 +38,7 @@ class PrepDPTrain(OP):
     def get_input_sign(cls):
         return OPIOSign(
             {
-                "template_script": Union[dict, List[dict]],
+                "template_script": BigParameter(Union[dict, List[dict]]),
                 "numb_models": int,
             }
         )
@@ -107,18 +107,27 @@ class PrepDPTrain(OP):
         )
         return op
 
+    def _set_desc_seed(self, desc):
+        if desc["type"] == "hybrid":
+            for desc in desc["list"]:
+                self._set_desc_seed(desc)
+        elif desc["type"] not in ["dpa1", "dpa2"]:
+            desc["seed"] = random.randrange(sys.maxsize) % (2**32)
+
     def _script_rand_seed(
         self,
         input_dict,
     ):
         jtmp = input_dict.copy()
-        if jtmp["model"]["descriptor"]["type"] == "hybrid":
-            for desc in jtmp["model"]["descriptor"]["list"]:
-                desc["seed"] = random.randrange(sys.maxsize) % (2**32)
+        if "model_dict" in jtmp["model"]:
+            for d in jtmp["model"]["model_dict"].values():
+                if isinstance(d["descriptor"], str):
+                    self._set_desc_seed(jtmp["model"]["shared_dict"][d["descriptor"]])
+                d["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (2**32)
         else:
-            jtmp["model"]["descriptor"]["seed"] = random.randrange(sys.maxsize) % (
+            self._set_desc_seed(jtmp["model"]["descriptor"])
+            jtmp["model"]["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (
                 2**32
             )
-        jtmp["model"]["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (2**32)
         jtmp["training"]["seed"] = random.randrange(sys.maxsize) % (2**32)
         return jtmp

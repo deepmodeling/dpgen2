@@ -59,7 +59,7 @@ class Mockedwf:
     keys = [
         "iter-000000--prep-run-train",
         "iter-000001--prep-run-train",
-        "iter-000000--prep-run-lmp",
+        "iter-000000--prep-run-explore",
     ]
 
     def query_step_by_key(self, key):
@@ -117,8 +117,8 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 step_defs=[
                     "prep-run-train/input/init_models",
                     "prep-run-train/output/logs",
-                    "prep-run-lmp/input/foo",
-                    "prep-run-lmp/output/trajs",
+                    "prep-run-explore/input/foo",
+                    "prep-run-explore/output/trajs",
                 ],
                 prefix="foo",
                 chk_pnt=False,
@@ -126,7 +126,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(log.output), 1)
         self.assertEqual(len(log.records), 1)
         self.assertIn(
-            "cannot find download settings for prep-run-lmp/input/foo",
+            "cannot find download settings for prep-run-explore/input/foo",
             log.output[0],
         )
         expected = [
@@ -142,7 +142,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-trajs",
-                path=Path("foo/iter-000000/prep-run-lmp/output/trajs"),
+                path=Path("foo/iter-000000/prep-run-explore/output/trajs"),
                 skip_exists=True,
             ),
             mock.call(
@@ -197,8 +197,8 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 step_defs=[
                     "prep-run-train/input/init_models",
                     "prep-run-train/output/logs",
-                    "prep-run-lmp/input/foo",
-                    "prep-run-lmp/output/trajs",
+                    "prep-run-explore/input/foo",
+                    "prep-run-explore/output/trajs",
                 ],
                 prefix="foo",
                 chk_pnt=True,
@@ -206,7 +206,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         self.assertEqual(len(log.output), 1)
         self.assertEqual(len(log.records), 1)
         self.assertIn(
-            "cannot find download settings for prep-run-lmp/input/foo",
+            "cannot find download settings for prep-run-explore/input/foo",
             log.output[0],
         )
         expected = [
@@ -222,7 +222,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-trajs",
-                path=Path("foo/iter-000000/prep-run-lmp/output/trajs"),
+                path=Path("foo/iter-000000/prep-run-explore/output/trajs"),
                 skip_exists=True,
             ),
             mock.call(
@@ -246,8 +246,8 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             step_defs=[
                 "prep-run-train/input/init_models",
                 "prep-run-train/output/logs",
-                "prep-run-lmp/output/trajs",
-                "prep-run-lmp/output/model_devis",
+                "prep-run-explore/output/trajs",
+                "prep-run-explore/output/model_devis",
             ],
             prefix="foo",
             chk_pnt=True,
@@ -255,7 +255,7 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
         expected = [
             mock.call(
                 "arti-model_devis",
-                path=Path("foo/iter-000000/prep-run-lmp/output/model_devis"),
+                path=Path("foo/iter-000000/prep-run-explore/output/model_devis"),
                 skip_exists=True,
             ),
         ]

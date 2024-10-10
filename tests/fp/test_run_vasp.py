@@ -81,7 +81,8 @@ class TestRunVasp(unittest.TestCase):
                                     "command": "myvasp",
                                     "log": "foo.log",
                                     "out": "data",
-                                }
+                                },
+                                "extra_output_files": [],
                             },
                             "task_name": self.task_name,
                             "task_path": self.task_path,
@@ -128,7 +129,8 @@ class TestRunVasp(unittest.TestCase):
                             "config": {
                                 "run": {
                                     "command": "myvasp",
-                                }
+                                },
+                                "extra_output_files": [],
                             },
                             "task_name": self.task_name,
                             "task_path": self.task_path,
@@ -163,7 +165,8 @@ class TestRunVasp(unittest.TestCase):
                         "config": {
                             "run": {
                                 "command": "myvasp",
-                            }
+                            },
+                            "extra_output_files": [],
                         },
                         "task_name": self.task_name,
                         "task_path": self.task_path,

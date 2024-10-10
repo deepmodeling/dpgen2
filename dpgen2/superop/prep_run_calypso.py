@@ -11,6 +11,7 @@ from typing import (
     List,
     Optional,
     Type,
+    Union,
 )
 
 from dflow import (
@@ -47,22 +48,22 @@ from dpgen2.utils.step_config import (
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 
-from .caly_evo_step import (
-    CalyEvoStep,
-)
-
 
 class PrepRunCaly(Steps):
     def __init__(
         self,
         name: str,
         prep_caly_input_op: Type[OP],
-        caly_evo_step_op: OPTemplate,
+        caly_evo_step_op: Union[OPTemplate, OP],
+        prep_caly_model_devi_op: Type[OP],
         run_caly_model_devi_op: Type[OP],
-        prep_config: dict = normalize_step_dict({}),
-        run_config: dict = normalize_step_dict({}),
+        expl_mode: str = "default",
+        prep_config: Optional[dict] = None,
+        run_config: Optional[dict] = None,
         upload_python_packages: Optional[List[os.PathLike]] = None,
     ):
+        prep_config = normalize_step_dict({}) if prep_config is None else prep_config
+        run_config = normalize_step_dict({}) if run_config is None else run_config
         self._input_parameters = {
             "block_id": InputParameter(type=str, value=""),
             "expl_task_grp": InputParameter(),
@@ -96,12 +97,15 @@ class PrepRunCaly(Steps):
         self._keys = [
             "prep-caly-input",
             "caly-evo-step-{{item}}",
+            "prep-caly-model-devi",
             "run-caly-model-devi",
         ]
         self.step_keys = {}
         ii = "prep-caly-input"
         self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
         ii = "caly-evo-step-{{item}}"
+        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        ii = "prep-caly-model-devi"
         self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
         ii = "run-caly-model-devi"
         self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
@@ -111,7 +115,9 @@ class PrepRunCaly(Steps):
             self.step_keys,
             prep_caly_input_op,
             caly_evo_step_op,
+            prep_caly_model_devi_op,
             run_caly_model_devi_op,
+            expl_mode=expl_mode,
             prep_config=prep_config,
             run_config=run_config,
             upload_python_packages=upload_python_packages,
@@ -142,8 +148,10 @@ def _prep_run_caly(
     prep_run_caly_steps: Steps,
     step_keys: Dict[str, Any],
     prep_caly_input_op: Type[OP],
-    caly_evo_step_op: OPTemplate,
+    caly_evo_step_op: Union[OPTemplate, OP],
+    prep_caly_model_devi_op: Type[OP],
     run_caly_model_devi_op: Type[OP],
+    expl_mode: str = "default",
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -175,12 +183,27 @@ def _prep_run_caly(
     prep_run_caly_steps.add(prep_caly_input)
 
     temp_value = None
+    if expl_mode == "default":
+        caly_evo_step_config = prep_config
+        caly_evo_step_executor = None
+        caly_evo_step_slice_config = {}
+        template = caly_evo_step_op
+    elif expl_mode == "merge":
+        caly_evo_step_config = run_config
+        caly_evo_step_executor = run_executor
+        caly_evo_step_slice_config = deepcopy(template_slice_config)
+        template = PythonOPTemplate(
+            caly_evo_step_op,  # type: ignore
+            python_packages=upload_python_packages,
+            **run_template_config,
+        )  # type: ignore
+    else:
+        raise KeyError(f"Unknown expl mode `{expl_mode}`")
 
     caly_evo_step = Step(
-        name="caly-evo-step",
-        template=caly_evo_step_op,
+        "caly-evo-step",
+        template=template,  # type: ignore
         slices=Slices(
-            "int('{{item}}')",
             input_parameter=[
                 "task_name",
             ],
@@ -193,7 +216,7 @@ def _prep_run_caly(
                 "caly_check_opt_file",
             ],
             output_artifact=["traj_results"],
-            **template_slice_config,
+            **caly_evo_step_slice_config,
         ),
         parameters={
             "block_id": prep_run_caly_steps.inputs.parameters["block_id"],
@@ -216,41 +239,61 @@ def _prep_run_caly(
             "qhull_input": temp_value,
         },
         key=step_keys["caly-evo-step-{{item}}"],
-        with_sequence=argo_sequence(
-            argo_len(prep_caly_input.outputs.parameters["task_names"]),
-            format=calypso_index_pattern,
-        ),
-        executor=prep_executor,
-        **prep_config,
+        with_param=argo_range(prep_caly_input.outputs.parameters["ntasks"]),  # type: ignore
+        executor=caly_evo_step_executor,
+        **caly_evo_step_config,
     )
     prep_run_caly_steps.add(caly_evo_step)
+
+    # prep_caly_model_devi
+    prep_caly_model_devi = Step(
+        "prep-caly-model-devi",
+        template=PythonOPTemplate(
+            prep_caly_model_devi_op,
+            python_packages=upload_python_packages,
+            **run_template_config,
+        ),
+        parameters={
+            "task_name": "prep-calypso-model-deviation",
+            "config": prep_run_caly_steps.inputs.parameters["explore_config"],
+        },
+        artifacts={
+            "traj_results": caly_evo_step.outputs.artifacts["traj_results"],
+        },
+        key="%s--prep-caly-model-devi"
+        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        executor=prep_executor,
+    )
+    prep_run_caly_steps.add(prep_caly_model_devi)
 
     # run model devi
     run_caly_model_devi = Step(
         "run-caly-model-devi",
         template=PythonOPTemplate(
             run_caly_model_devi_op,
+            slices=Slices(
+                input_parameter=["task_name"],
+                input_artifact=["traj_dirs"],
+                output_artifact=["traj", "model_devi"],
+            ),
             python_packages=upload_python_packages,
-            **prep_template_config,
+            **run_template_config,
         ),
         parameters={
             "type_map": prep_run_caly_steps.inputs.parameters["type_map"],
-            "task_name": "run-calypso-model-devi",
+            "task_name": prep_caly_model_devi.outputs.parameters["task_name_list"],
         },
         artifacts={
-            "traj_dirs": caly_evo_step.outputs.artifacts["traj_results"],
+            "traj_dirs": prep_caly_model_devi.outputs.artifacts["grouped_traj_list"],
             "models": prep_run_caly_steps.inputs.artifacts["models"],
         },
-        key=step_keys["run-caly-model-devi"],
-        executor=prep_executor,
+        key="%s--run-caly-model-devi-{{item}}"
+        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        executor=run_executor,
         **prep_config,
     )
     prep_run_caly_steps.add(run_caly_model_devi)
 
-    # prep_run_caly_steps.outputs.parameters[
-    #     "task_names"
-    # ].value_from_parameter = prep_caly_input.outputs.parameters["task_names"],
-    # run_caly_model_devi.outputs.parameters["task_name"]
     prep_run_caly_steps.outputs.artifacts[
         "trajs"
     ]._from = run_caly_model_devi.outputs.artifacts["traj"]

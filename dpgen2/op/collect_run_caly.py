@@ -59,7 +59,7 @@ class CollRunCaly(OP):
         return OPIOSign(
             {
                 "config": BigParameter(dict),  # for command
-                "task_name": Parameter(str),  # calypso_task.idx
+                "task_name": BigParameter(str),  # calypso_task.idx
                 "cnt_num": Parameter(int),
                 "input_file": Artifact(Path),  # input.dat, !!! must be provided
                 "step": Artifact(type=Path, optional=True),  # step file
@@ -67,7 +67,7 @@ class CollRunCaly(OP):
                     type=Path, optional=True
                 ),  # dir named results for evo
                 "opt_results_dir": Artifact(
-                    type=Path, optional=True
+                    type=List[Path], optional=True
                 ),  # dir contains POSCAR* CONTCAR* OUTCAR*
                 "qhull_input": Artifact(type=Path, optional=True),  # for vsc
             }
@@ -77,7 +77,7 @@ class CollRunCaly(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_name": Parameter(str),  # calypso_task.idx
+                "task_name": BigParameter(str),  # calypso_task.idx
                 "finished": Parameter(str),  # True if cnt_num == maxstep
                 "poscar_dir": Artifact(Path),  # dir contains POSCAR* of next step
                 "input_file": Artifact(Path),  # input.dat
@@ -141,11 +141,11 @@ class CollRunCaly(OP):
         results = (
             ip["results"].resolve() if ip["results"] is not None else ip["results"]
         )
-        opt_results_dir = (
-            ip["opt_results_dir"].resolve()
-            if ip["opt_results_dir"] is not None
-            else ip["opt_results_dir"]
-        )
+        opt_results_dir = []
+        if ip["opt_results_dir"] is not None:
+            for temp in ip["opt_results_dir"]:
+                opt_results_dir.append(Path(temp).resolve())
+
         qhull_input = (
             ip["qhull_input"].resolve()
             if ip["qhull_input"] is not None
@@ -157,26 +157,30 @@ class CollRunCaly(OP):
             prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc)
             # copy input.dat
             Path(input_file.name).symlink_to(input_file)
-            # run calypso
-            command = " ".join([command, ">", calypso_log_name])
-            ret, out, err = run_command(command, shell=True)
-            if ret != 0:
-                logging.error(
-                    "".join(
-                        (
-                            "calypso failed\n",
-                            "command was: ",
-                            command,
-                            "out msg: ",
-                            out,
-                            "\n",
-                            "err msg: ",
-                            err,
-                            "\n",
+
+            finished = "true" if int(cnt_num) == int(max_step) else "false"
+
+            if finished == "false":
+                # run calypso
+                command = " ".join([command, ">", calypso_log_name])
+                ret, out, err = run_command(command, shell=True)
+                if ret != 0:
+                    logging.error(
+                        "".join(
+                            (
+                                "calypso failed\n",
+                                "command was: ",
+                                command,
+                                "out msg: ",
+                                out,
+                                "\n",
+                                "err msg: ",
+                                err,
+                                "\n",
+                            )
                         )
                     )
-                )
-                raise TransientError("calypso failed")
+                    raise TransientError("calypso failed")
 
             poscar_dir = Path("poscar_dir")
             poscar_dir.mkdir(parents=True, exist_ok=True)
@@ -185,7 +189,7 @@ class CollRunCaly(OP):
                 shutil.copyfile(poscar, target)
 
             step = Path("step").read_text().strip()
-            finished = "true" if int(cnt_num) == int(max_step) else "false"
+            # finished = "true" if int(cnt_num) == int(max_step) else "false"
 
             if not Path("test_qconvex.in").exists():
                 Path("test_qconvex.in").write_text("")
@@ -227,11 +231,13 @@ config_args = CollRunCaly.calypso_args
 
 
 def prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc):
-    if step is not None and results is not None or opt_results_dir is not None:
+    if step is not None and results is not None and opt_results_dir is not None:
         Path(step.name).symlink_to(step)
         Path(results.name).symlink_to(results)
-        for file_name in opt_results_dir.iterdir():
-            Path(file_name.name).symlink_to(file_name)
+        assert isinstance(opt_results_dir, list), "opt_results_dir should be a list."
+        for opt_results_name in opt_results_dir:
+            for file_name in opt_results_name.iterdir():
+                Path(file_name.name).symlink_to(file_name)
 
     if vsc and qhull_input is not None:
         Path(qhull_input.name).symlink_to(qhull_input)

@@ -5,10 +5,14 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Union,
 )
 
 from dflow.python import (
     FatalError,
+)
+from dflow.python.opio import (
+    HDF5Dataset,
 )
 
 from dpgen2.exploration.report import (
@@ -67,7 +71,7 @@ class ConvergenceCheckStageScheduler(StageScheduler):
     def plan_next_iteration(
         self,
         report: Optional[ExplorationReport] = None,
-        trajs: Optional[List[Path]] = None,
+        trajs: Optional[Union[List[Path], List[HDF5Dataset]]] = None,
     ) -> Tuple[bool, Optional[BaseExplorationTaskGroup], Optional[ConfSelector]]:
         if self.complete():
             raise FatalError("Cannot plan because the stage has completed.")

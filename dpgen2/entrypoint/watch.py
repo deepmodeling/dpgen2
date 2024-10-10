@@ -24,7 +24,7 @@ from dpgen2.utils.download_dpgen2_artifacts import (
 
 default_watching_keys = [
     "prep-run-train",
-    "prep-run-lmp",
+    "prep-run-explore",
     "prep-run-fp",
     "collect-data",
 ]

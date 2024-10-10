@@ -7,6 +7,7 @@ from typing import (
     List,
     Set,
     Tuple,
+    Union,
 )
 
 from dflow.python import (
@@ -15,6 +16,7 @@ from dflow.python import (
     Artifact,
     BigParameter,
     FatalError,
+    HDF5Datasets,
     OPIOSign,
 )
 
@@ -35,8 +37,9 @@ class SelectConfs(OP):
             {
                 "conf_selector": ConfSelector,
                 "type_map": List[str],
-                "trajs": Artifact(List[Path]),
-                "model_devis": Artifact(List[Path]),
+                "trajs": Artifact(Union[List[Path], HDF5Datasets]),
+                "model_devis": Artifact(Union[List[Path], HDF5Datasets]),
+                "optional_outputs": Artifact(List[Path], optional=True),
             }
         )
 
@@ -80,12 +83,16 @@ class SelectConfs(OP):
 
         trajs = ip["trajs"]
         model_devis = ip["model_devis"]
-        trajs, model_devis = SelectConfs.validate_trajs(trajs, model_devis)
+        optional_outputs = ip["optional_outputs"]
+        trajs, model_devis, optional_outputs = SelectConfs.validate_trajs(
+            trajs, model_devis, optional_outputs
+        )
 
         confs, report = conf_selector.select(
             trajs,
             model_devis,
             type_map=type_map,
+            optional_outputs=optional_outputs,
         )
 
         return OPIO(
@@ -99,18 +106,41 @@ class SelectConfs(OP):
     def validate_trajs(
         trajs,
         model_devis,
+        optional_outputs=None,
     ):
         ntrajs = len(trajs)
         if ntrajs != len(model_devis):
             raise FatalError(
                 "length of trajs list is not equal to the " "model_devis list"
             )
+        if optional_outputs and ntrajs != len(optional_outputs):
+            raise FatalError(
+                "length of trajs list is not equal to the " "optional_output list"
+            )
         rett = []
         retm = []
-        for tt, mm in zip(trajs, model_devis):  # type: ignore
-            if (tt is None and mm is not None) or (tt is not None and mm is None):
-                raise FatalError("trajs frame is {tt} while model_devis frame is {mm}")
-            elif tt is not None and mm is not None:
+        reto = []
+        for i in range(ntrajs):
+            tt = trajs[i]
+            mm = model_devis[i]
+            if tt is not None and mm is not None:
                 rett.append(tt)
                 retm.append(mm)
-        return rett, retm
+                if optional_outputs:
+                    oo = optional_outputs[i]
+                    if oo is not None:
+                        reto.append(oo)
+                    else:
+                        raise FatalError(
+                            f"trajs frame is {tt} while optional_outputs frame is {oo}"
+                        )
+            elif tt is None and mm is None:
+                if optional_outputs:
+                    oo = optional_outputs[i]
+                    if oo is not None:
+                        raise FatalError(
+                            f"trajs frame is {tt} while optional_outputs frame is {oo}"
+                        )
+            else:
+                raise FatalError(f"trajs frame is {tt} while model_devis frame is {mm}")
+        return rett, retm, reto
