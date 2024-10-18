@@ -30,6 +30,7 @@ class TrajRenderLammpsSpin(TrajRender):
     def __init__(
         self,
         nopbc: bool = False,
+        use_ele_temp: int = 0,
     ):
         self.nopbc = nopbc
 
