@@ -61,6 +61,7 @@ class TrajRenderLammpsSpin(TrajRender):
         id_selected: List[List[int]],
         type_map: Optional[List[str]] = None,
         conf_filters: Optional["ConfFilters"] = None,
+        optional_outputs: Optional[List[Path]] = None,
     ) -> dpdata.MultiSystems:
         del conf_filters  # by far does not support conf filters
         ntraj = len(trajs)
