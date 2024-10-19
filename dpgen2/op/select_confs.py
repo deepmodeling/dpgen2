@@ -126,7 +126,7 @@ class SelectConfs(OP):
             if tt is not None and mm is not None:
                 rett.append(tt)
                 retm.append(mm)
-                if optional_outputs:
+                if optional_outputs and any(optional_outputs):
                     oo = optional_outputs[i]
                     if oo is not None:
                         reto.append(oo)

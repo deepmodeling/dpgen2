@@ -95,9 +95,9 @@ class CollectData(OP):
 
         ms = dpdata.MultiSystems(type_map=type_map)
         for ii in labeled_data:
-            if len(list(ii.rglob("fparam.npy"))) > 0:
+            if ii and len(list(ii.rglob("fparam.npy"))) > 0:
                 setup_ele_temp(False)
-            if len(list(ii.rglob("aparam.npy"))) > 0:
+            if ii and len(list(ii.rglob("aparam.npy"))) > 0:
                 setup_ele_temp(True)
             ss = dpdata.LabeledSystem(ii, fmt="deepmd/npy")
             ms.append(ss)

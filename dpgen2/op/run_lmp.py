@@ -195,7 +195,8 @@ class RunLmp(OP):
                     with open("job.json", "w") as f:
                         json.dump(data, f, indent=4)
 
-        merge_pimd_files()
+            merge_pimd_files()
+
         ret_dict = {
             "log": work_dir / lmp_log_name,
             "traj": work_dir / lmp_traj_name,
