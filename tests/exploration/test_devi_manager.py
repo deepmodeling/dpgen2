@@ -31,11 +31,13 @@ class TestDeviManagerStd(unittest.TestCase):
             )
         )
         self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_V), [None, None])
+        self.assertEqual(model_devi.get(DeviManager.MIN_DEVI_MF), [None, None])
 
         model_devi.clear()
         self.assertEqual(model_devi.ntraj, 0)
         self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_F), [])
         self.assertEqual(model_devi.get(DeviManager.MAX_DEVI_V), [])
+        self.assertEqual(model_devi.get(DeviManager.MIN_DEVI_MF), [])
 
     def test_add_invalid_name(self):
         model_devi = DeviManagerStd()
@@ -72,6 +74,7 @@ class TestDeviManagerStd(unittest.TestCase):
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))
         model_devi.add(DeviManager.MAX_DEVI_V, np.array([4, 5, 6]))
+        model_devi.add(DeviManager.MAX_DEVI_MF, np.array([7, 8, 9]))
 
         self.assertEqual(model_devi.ntraj, 2)
 
@@ -80,6 +83,13 @@ class TestDeviManagerStd(unittest.TestCase):
             "Error: the number of model deviation",
             model_devi.get,
             DeviManager.MAX_DEVI_V,
+        )
+        
+        self.assertRaisesRegex(
+            AssertionError,
+            "Error: the number of model deviation",
+            model_devi.get,
+            DeviManager.MAX_DEVI_MF,
         )
 
         model_devi = DeviManagerStd()
@@ -108,4 +118,22 @@ class TestDeviManagerStd(unittest.TestCase):
             f"Error: the number of frames in",
             model_devi.get,
             DeviManager.MAX_DEVI_V,
+        )
+        
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))
+        model_devi.add(DeviManager.MAX_DEVI_MF, np.array([1, 2, 3]))
+        model_devi.add(DeviManager.MAX_DEVI_MF, np.array([4, 5]))
+        self.assertRaisesRegex(
+            AssertionError,
+            f"Error: the number of frames in",
+            model_devi.get,
+            DeviManager.MAX_DEVI_F,
+        )
+        self.assertRaisesRegex(
+            AssertionError,
+            f"Error: the number of frames in",
+            model_devi.get,
+            DeviManager.MAX_DEVI_MF,
         )

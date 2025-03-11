@@ -87,7 +87,19 @@ class TestRunDPTrain(unittest.TestCase):
             "init_model_start_pref_f": 100,
             "init_model_start_pref_v": 0.0,
         }
+        self.config_spin = {
+            "spin": True,
+            "init_model_policy": "no",
+            "init_model_old_ratio": 0.9,
+            "init_model_numb_steps": 400000,
+            "init_model_start_lr": 1e-4,
+            "init_model_start_pref_e": 0.1,
+            "init_model_start_pref_f": 100,
+            "init_model_start_pref_fm": 100,
+            "init_model_start_pref_v": 0.0,
+        }
         self.config = RunDPTrain.normalize_config(self.config)
+        self.config_spin = RunDPTrain.normalize_config(self.config_spin)
 
         self.old_data_size = (
             self.init_nframs_0 + self.init_nframs_1 + sum(self.nframes_0)
@@ -164,6 +176,35 @@ class TestRunDPTrain(unittest.TestCase):
                 "start_pref_e": 0.1,
                 "start_pref_f": 100,
                 "start_pref_v": 0.0,
+            },
+        }
+        
+        self.expected_init_model_odict_v2_spin = {
+            "training": {
+                "training_data": {
+                    "systems": [
+                        "init/data-0",
+                        "init/data-1",
+                        "data-0/foo3",
+                        "data-0/foo4",
+                        "data-1/foo2",
+                        "data-1/foo3",
+                        "data-1/foo5",
+                    ],
+                    "batch_size": "auto",
+                    "auto_prob": "prob_sys_size; 0:4:0.9; 4:7:0.1",
+                },
+                "disp_file": "lcurve.out",
+                "numb_steps": 400000,
+            },
+            "learning_rate": {
+                "start_lr": 1e-4,
+            },
+            "loss": {
+                "start_pref_e": 0.1,
+                "start_pref_v": 0.0,
+                "start_pref_fr": 100,
+                "start_pref_fm": 100,
             },
         }
 
@@ -546,6 +587,70 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
 
+    @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_init_model_spin(self, mocked_run):
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
+
+        config = self.config_spin.copy()
+        config["init_model_policy"] = "yes"
+
+        task_path = self.task_path
+        Path(task_path).mkdir(exist_ok=True)
+        idict_v2 = self.idict_v2.copy()
+        idict_v2["loss"] = {"start_pref_e": 0.1, "start_pref_v": 1, "start_pref_fr": 1, "start_pref_fm": 1}
+        with open(Path(task_path) / train_script_name, "w") as fp:
+            json.dump(idict_v2, fp, indent=4)
+        task_name = self.task_name
+        work_dir = Path(task_name)
+
+        ptrain = RunDPTrain()
+        out = ptrain.execute(
+            OPIO(
+                {
+                    "config": config,
+                    "task_name": task_name,
+                    "task_path": Path(task_path),
+                    "init_model": Path(self.init_model),
+                    "init_data": [Path(ii) for ii in self.init_data],
+                    "iter_data": [Path(ii) for ii in self.iter_data],
+                }
+            )
+        )
+        self.assertEqual(out["script"], work_dir / train_script_name)
+        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
+        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(out["log"], work_dir / "train.log")
+
+        calls = [
+            call(
+                [
+                    "dp",
+                    "train",
+                    "--init-frz-model",
+                    str(self.init_model),
+                    train_script_name,
+                ]
+            ),
+            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+        ]
+        mocked_run.assert_has_calls(calls)
+
+        self.assertTrue(work_dir.is_dir())
+        self.assertTrue(out["log"].is_file())
+        self.assertEqual(
+            out["log"].read_text(),
+            "#=================== train std out ===================\n"
+            "foo\n"
+            "#=================== train std err ===================\n"
+            "#=================== freeze std out ===================\n"
+            "bar\n"
+            "#=================== freeze std err ===================\n",
+        )
+        with open(out["script"]) as fp:
+            jdata = json.load(fp)
+            print(jdata)
+            self.assertDictEqual(jdata, self.expected_init_model_odict_v2_spin)
+    
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_train_error(self, mocked_run):
         mocked_run.side_effect = [(1, "", "foo\n"), (0, "bar\n", "")]

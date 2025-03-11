@@ -13,6 +13,9 @@ from .diffcsp_task_group import (
 from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
+from .lmp_spin_task_group import (
+    LmpSpinTaskGroup,
+)
 from .make_task_group_from_config import (
     caly_normalize,
     caly_task_group_args,

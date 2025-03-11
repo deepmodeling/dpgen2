@@ -31,15 +31,20 @@ class ExplorationReportTrustLevels(ExplorationReport):
         level_f_hi,
         level_v_lo=None,
         level_v_hi=None,
+        level_mf_lo=None,
+        level_mf_hi=None,
         conv_accuracy=0.9,
     ):
         self.level_f_lo = level_f_lo
         self.level_f_hi = level_f_hi
         self.level_v_lo = level_v_lo
         self.level_v_hi = level_v_hi
+        self.level_mf_lo = level_mf_lo
+        self.level_mf_hi = level_mf_hi
         self.conv_accuracy = conv_accuracy
         self.clear()
         self.v_level = (self.level_v_lo is not None) and (self.level_v_hi is not None)
+        self.mf_level = (self.level_mf_lo is not None) and (self.level_mf_hi is not None)
         self.model_devi = None
 
         print_tuple = (
@@ -59,6 +64,12 @@ class ExplorationReportTrustLevels(ExplorationReport):
                 "v_hi",
             )
             spaces += [10, 10]
+        if self.mf_level:
+            print_tuple += (
+                "mf_lo",
+                "mf_hi",
+            )
+            spaces += [10, 10]
         print_tuple += ("cvged",)
         spaces += [8]
         self.fmt_str = " ".join([f"%{ii}s" for ii in spaces])
@@ -75,6 +86,8 @@ class ExplorationReportTrustLevels(ExplorationReport):
         doc_level_f_hi = "The higher trust level of force model deviation"
         doc_level_v_lo = "The lower trust level of virial model deviation"
         doc_level_v_hi = "The higher trust level of virial model deviation"
+        doc_level_mf_lo = "The lower trust level of magnetic force model deviation"
+        doc_level_mf_hi = "The higher trust level of magnetic force model deviation"
         doc_conv_accuracy = "If the ratio of accurate frames is larger than this value, the stage is converged"
         return [
             Argument("level_f_lo", float, optional=False, doc=doc_level_f_lo),
@@ -84,6 +97,20 @@ class ExplorationReportTrustLevels(ExplorationReport):
             ),
             Argument(
                 "level_v_hi", float, optional=True, default=None, doc=doc_level_v_hi
+            ),
+            Argument(
+                "level_mf_lo",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_level_mf_lo,
+            ),
+            Argument(
+                "level_mf_hi",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_level_mf_hi,
             ),
             Argument(
                 "conv_accuracy",
@@ -111,6 +138,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         ntraj = model_devi.ntraj
         md_f = model_devi.get(DeviManager.MAX_DEVI_F)
         md_v = model_devi.get(DeviManager.MAX_DEVI_V)
+        md_mf = model_devi.get(DeviManager.MAX_DEVI_MF)
 
         for ii in range(ntraj):
             id_f_cand, id_f_accu, id_f_fail = self._get_indexes(
@@ -119,6 +147,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
             id_v_cand, id_v_accu, id_v_fail = self._get_indexes(
                 md_v[ii], self.level_v_lo, self.level_v_hi
             )
+            id_mf_cand, id_mf_accu, id_mf_fail = self._get_indexes(
+                md_mf[ii], self.level_mf_lo, self.level_mf_hi
+            )
             nframes, set_accu, set_cand, set_fail = self._record_one_traj(
                 id_f_accu,
                 id_f_cand,
@@ -126,6 +157,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
                 id_v_accu,
                 id_v_cand,
                 id_v_fail,
+                id_mf_accu,
+                id_mf_cand,
+                id_mf_fail,
             )
             # record
             self.traj_nframes.append(nframes)
@@ -170,6 +204,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
         id_v_accu,
         id_v_cand,
         id_v_fail,
+        id_mf_accu,
+        id_mf_cand,
+        id_mf_fail,
     ):
         """
         Record one trajctory. inputs are the indexes of candidate, accurate and failed frames.
@@ -180,27 +217,45 @@ class ExplorationReportTrustLevels(ExplorationReport):
         if novirial:
             assert id_v_accu is None
             assert id_v_fail is None
+        nomagforce = id_mf_cand is None
+        if nomagforce:
+            assert id_mf_accu is None
+            assert id_mf_fail is None
         nframes = np.size(np.concatenate((id_f_cand, id_f_accu, id_f_fail)))
         if (not novirial) and nframes != np.size(
             np.concatenate((id_v_cand, id_v_accu, id_v_fail))
         ):
             raise FatalError("number of frames by virial ")
+        if (not nomagforce) and nframes != np.size(
+            np.concatenate((id_mf_cand, id_mf_accu, id_mf_fail))
+        ):
+            raise FatalError("number of frames by magnetic force ")
         # nframes
         # to sets
+        set_full = set([ii for ii in range(nframes)])
         set_f_accu = set(id_f_accu)
         set_f_cand = set(id_f_cand)
         set_f_fail = set(id_f_fail)
-        set_v_accu = set([ii for ii in range(nframes)]) if novirial else set(id_v_accu)
+        set_v_accu = set_full if novirial else set(id_v_accu)
         set_v_cand = set([]) if novirial else set(id_v_cand)
         set_v_fail = set([]) if novirial else set(id_v_fail)
+        set_mf_accu = set_full if nomagforce else set(id_mf_accu)
+        set_mf_cand = set([]) if nomagforce else set(id_mf_cand)
+        set_mf_fail = set([]) if nomagforce else set(id_mf_fail)
+        
+        # check consistency
+        assert set_full == set_f_accu | set_f_cand | set_f_fail
+        for accu, cand, fail in [[set_f_accu, set_f_cand, set_f_fail], 
+                                 [set_v_accu, set_v_cand, set_v_fail], 
+                                 [set_mf_accu, set_mf_cand, set_mf_fail]]:
+            assert 0 == len(accu & cand)
+            assert 0 == len(accu & fail)
+            assert 0 == len(cand & fail)
+        
         # accu, cand, fail
-        set_accu = set_f_accu & set_v_accu
-        set_cand = (
-            (set_f_cand & set_v_accu)
-            | (set_f_cand & set_v_cand)
-            | (set_f_accu & set_v_cand)
-        )
-        set_fail = set_f_fail | set_v_fail
+        set_accu = set_f_accu & set_v_accu & set_mf_accu
+        set_fail = set_f_fail | set_v_fail | set_mf_fail
+        set_cand = set_full - set_accu - set_fail
         # check size
         assert nframes == len(set_accu | set_cand | set_fail)
         assert 0 == len(set_accu & set_cand)
@@ -270,6 +325,11 @@ class ExplorationReportTrustLevels(ExplorationReport):
             print_tuple += (
                 fmt_flt % (self.level_v_lo),
                 fmt_flt % (self.level_v_hi),
+            )
+        if self.mf_level:
+            print_tuple += (
+                fmt_flt % (self.level_mf_lo),
+                fmt_flt % (self.level_mf_hi),
             )
         print_tuple += (str(self.converged()),)
         ret = " " + fmt_str % print_tuple

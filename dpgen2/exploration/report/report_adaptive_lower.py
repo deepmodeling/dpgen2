@@ -27,14 +27,17 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
 
     This report will treat a fixed number of frames that has force
     model deviation lower than `level_f_hi`, and virial model deviation
-    lower than `level_v_hi` as candidates.
+    lower than `level_v_hi` as candidates, and magnetic force model deviation
+    lower than `level_mf_hi` as candidates.
 
     The number of force frames is given by max(`numb_candi_f`, `rate_candi_f` * nframes)
     The number of virial frames is given by max(`numb_candi_v`, `rate_candi_v` * nframes)
+    The number of magnetic force frames is given by max(`numb_candi_mf`, `rate_candi_mf` * nframes)
 
     The lower force trust level will be set to the lowest force model deviation
     of the force frames. The lower virial trust level will be set to the lowest
-    virial model deviation of the virial frames
+    virial model deviation of the virial frames. The lower magnetic force trust
+    level will be set to the lowest magnetic force model deviation of the magnetic
 
     The exploration will be treat as converged if the differences in model
     deviations in the neighboring steps are less than `conv_tolerance`
@@ -58,6 +61,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
     rate_candi_v        float
         The ratio of virial frames that has a model deviation lower than
         `level_v_hi` treated as candidate.
+    level_mf_hi         float
+        The higher trust level of magnetic force model deviation
+    numb_candi_mf       int
+        The number of magnetic force frames that has a model deviation lower than
+        `level_mf_hi` treated as candidate.
+    rate_candi_mf       float
+        The ratio of magnetic force frames that has a model deviation lower than
+        `level_mf_hi` treated as candidate.
     n_checked_steps     int
         The number of steps to check the convergence.
     conv_tolerance      float
@@ -79,21 +90,32 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         level_v_hi: Optional[float] = None,
         numb_candi_v: int = 0,
         rate_candi_v: float = 0.0,
+        level_mf_hi: Optional[float] = None,
+        numb_candi_mf: int = 0,
+        rate_candi_mf: float = 0.0,
         n_checked_steps: int = 2,
         conv_tolerance: float = 0.05,
         candi_sel_prob: str = "uniform",
     ):
         self.level_f_hi = level_f_hi
         self.level_v_hi = level_v_hi
+        self.level_mf_hi = level_mf_hi
         self.numb_candi_f = numb_candi_f
         self.rate_candi_f = rate_candi_f
         self.numb_candi_v = numb_candi_v
         self.rate_candi_v = rate_candi_v
+        self.numb_candi_mf = numb_candi_mf
+        self.rate_candi_mf = rate_candi_mf
         self.has_virial = self.level_v_hi is not None
         if not self.has_virial:
             self.level_v_hi = sys.float_info.max
             self.numb_candi_v = 0
             self.rate_candi_v = 0.0
+        self.has_mf = self.level_mf_hi is not None
+        if not self.has_mf:
+            self.level_mf_hi = sys.float_info.max
+            self.numb_candi_mf = 0
+            self.rate_candi_mf = 0.0
         self.n_checked_steps = n_checked_steps
         self.conv_tolerance = conv_tolerance
         self.model_devi = None
@@ -123,6 +145,12 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 "v_hi",
             )
             spaces += [10, 10]
+        if self.has_mf:
+            print_tuple += (
+                "mf_lo",
+                "mf_hi",
+            )
+            spaces += [10, 10]
         spaces += [8]
         self.fmt_str = " ".join([f"%{ii}s" for ii in spaces])
         self.fmt_flt = "%.4f"
@@ -145,13 +173,16 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         rate_candi_f_link = make_class_doc_link("rate_candi_f")
         numb_candi_v_link = make_class_doc_link("numb_candi_v")
         rate_candi_v_link = make_class_doc_link("rate_candi_v")
-        numb_candi_s = f"{numb_candi_f_link} or {numb_candi_v_link}"
-        rate_candi_s = f"{rate_candi_f_link} or {rate_candi_v_link}"
+        numb_candi_mf_link = make_class_doc_link("numb_candi_mf")
+        rate_candi_mf_link = make_class_doc_link("rate_candi_mf")
+        numb_candi_s = f"{numb_candi_f_link} or {numb_candi_v_link} or {numb_candi_mf_link}"
+        rate_candi_s = f"{rate_candi_f_link} or {rate_candi_v_link} or {rate_candi_mf_link}"
         level_f_hi_link = make_class_doc_link("level_f_hi")
         level_v_hi_link = make_class_doc_link("level_v_hi")
+        level_mf_hi_link = make_class_doc_link("level_mf_hi")
         conv_tolerance_link = make_class_doc_link("conv_tolerance")
         n_checked_steps_link = make_class_doc_link("n_checked_steps")
-        return f"The method of adaptive adjust the lower trust levels. In each step of iterations, a number (set by {numb_candi_s}) or a ratio (set by {rate_candi_s}) of configurations with a model deviation lower than the higher trust level ({level_f_hi_link}, {level_v_hi_link}) are treated as candidates. The lowest model deviation of the candidates are treated as the lower trust level. If the lower trust level does not change significant (controlled by {conv_tolerance_link}) in {n_checked_steps_link}, the stage is treated as converged. "
+        return f"The method of adaptive adjust the lower trust levels. In each step of iterations, a number (set by {numb_candi_s}) or a ratio (set by {rate_candi_s}) of configurations with a model deviation lower than the higher trust level ({level_f_hi_link}, {level_v_hi_link}, {level_mf_hi_link}) are treated as candidates. The lowest model deviation of the candidates are treated as the lower trust level. If the lower trust level does not change significant (controlled by {conv_tolerance_link}) in {n_checked_steps_link}, the stage is treated as converged. "
 
     @staticmethod
     def args() -> List[Argument]:
@@ -161,6 +192,9 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         doc_level_v_hi = "The higher trust level of virial model deviation"
         doc_numb_candi_v = "The number of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
         doc_rate_candi_v = "The ratio of virial frames that has a model deviation lower than `level_v_hi` treated as candidate."
+        doc_level_mf_hi = "The higher trust level of magnetic force model deviation"
+        doc_numb_candi_mf = "The number of magnetic force frames that has a model deviation lower than `level_mf_hi` treated as candidate."
+        doc_rate_candi_mf = "The ratio of magnetic force frames that has a model deviation lower than `level_mf_hi` treated as candidate."
         doc_n_check_steps = "The number of steps to check the convergence."
         doc_conv_tolerance = "The convergence tolerance."
         doc_candi_sel_prob = (
@@ -190,6 +224,15 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             ),
             Argument(
                 "rate_candi_v", float, optional=True, default=0.0, doc=doc_rate_candi_v
+            ),
+            Argument(
+                "level_mf_hi", float, optional=True, default=None, doc=doc_level_mf_hi
+            ),
+            Argument(
+                "numb_candi_mf", int, optional=True, default=0, doc=doc_numb_candi_mf
+            ),
+            Argument(
+                "rate_candi_mf", float, optional=True, default=0.0, doc=doc_rate_candi_mf
             ),
             Argument(
                 "n_checked_steps", int, optional=True, default=2, doc=doc_n_check_steps
@@ -222,6 +265,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.model_devi = None
         self.md_f = []
         self.md_v = []
+        self.md_mf = []
 
     def record(
         self,
@@ -231,34 +275,43 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.ntraj += ntraj
         md_f = model_devi.get(DeviManager.MAX_DEVI_F)
         md_v = model_devi.get(DeviManager.MAX_DEVI_V)
+        md_mf = model_devi.get(DeviManager.MAX_DEVI_MF)
         self.md_f += md_f
         self.md_v += md_v
+        self.md_mf += md_mf
 
         # inits
         coll_f = []
         coll_v = []
+        coll_mf = []
         # loop over trajs
         for ii in range(ntraj):
-            add_nframes, add_accur, add_failed, add_f, add_v = self._record_one_traj(
-                ii, md_f[ii], md_v[ii]
+            add_nframes, add_accur, add_failed, add_f, add_v, add_mf = self._record_one_traj(
+                ii, md_f[ii], md_v[ii], md_mf[ii]
             )
             self.nframes += add_nframes
             self.accur.update(add_accur)
             self.failed += add_failed
             coll_f += add_f
             coll_v += add_v
+            coll_mf += add_mf
         # sort
         coll_f.sort()
         coll_v.sort()
+        coll_mf.sort()
         assert len(coll_v) == len(coll_f)
+        assert len(coll_mf) == len(coll_f)
         # calcuate numbers
         numb_candi_f = max(self.numb_candi_f, int(self.rate_candi_f * len(coll_f)))
         numb_candi_v = max(self.numb_candi_v, int(self.rate_candi_v * len(coll_v)))
+        numb_candi_mf = max(self.numb_candi_mf, int(self.rate_candi_mf * len(coll_mf)))
         # adjust number of candidate
         if len(coll_f) < numb_candi_f:
             numb_candi_f = len(coll_f)
         if len(coll_v) < numb_candi_v:
             numb_candi_v = len(coll_v)
+        if len(coll_mf) < numb_candi_mf:
+            numb_candi_mf = len(coll_mf)
         # compute trust lo
         if numb_candi_v == 0:
             self.level_v_lo = self.level_v_hi
@@ -266,6 +319,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             self.level_v_lo = coll_v[-numb_candi_v][0]
         if not self.has_virial:
             self.level_v_lo = None
+            
+        if numb_candi_mf == 0:
+            self.level_mf_lo = self.level_mf_hi
+        else:
+            self.level_mf_lo = coll_mf[-numb_candi_mf][0]
+        if not self.has_mf:
+            self.level_mf_lo = None
+            
         if numb_candi_f == 0:
             self.level_f_lo = self.level_f_hi
         else:
@@ -275,6 +336,8 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             self.candi.add(tuple(coll_f[ii][1:]))
         for ii in range(len(coll_v) - numb_candi_v, len(coll_v)):
             self.candi.add(tuple(coll_v[ii][1:]))
+        for ii in range(len(coll_mf) - numb_candi_mf, len(coll_mf)):
+            self.candi.add(tuple(coll_mf[ii][1:]))
         # accurate set is substracted by the candidate set
         self.accur = self.accur - self.candi
         self.model_devi = model_devi
@@ -288,12 +351,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         tt,
         md_f,
         md_v,
+        md_mf,
     ):
         """
         Record one trajctory.
 
         tt:             traj index
         md_f, md_v:     model deviations of force and virial
+        md_mf:          model deviations of magnetic force
         """
         # check consistency
         if self.has_virial and md_v is None:
@@ -301,9 +366,16 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 "report requires virial model deviation, but no virial "
                 "model deviation is provided."
             )
+        if self.has_mf and md_mf is None:
+            raise FatalError(
+                "report requires magnetic force model deviation, but no "
+                "magnetic force model deviation is provided."
+            )
         # fake md_v as zeros if None is provided
         if md_v is None:
             md_v = np.zeros_like(md_f)
+        if md_mf is None:
+            md_mf = np.zeros_like(md_f)
         # loop over frames
         nframes = md_f.shape[0]
         assert nframes == md_v.shape[0]
@@ -311,16 +383,18 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         accur = set()
         coll_f = []
         coll_v = []
+        coll_mf = []
         for ii in range(nframes):
-            if md_f[ii] > self.level_f_hi or md_v[ii] > self.level_v_hi:
+            if md_f[ii] > self.level_f_hi or md_v[ii] > self.level_v_hi or md_mf[ii] > self.level_mf_hi:
                 failed.append((tt, ii))
             else:
                 coll_f.append([md_f[ii], tt, ii])
                 coll_v.append([md_v[ii], tt, ii])
+                coll_mf.append([md_mf[ii], tt, ii])
                 # now accur takes all non-failed frames,
                 # will be substracted by candidate later
                 accur.add((tt, ii))
-        return nframes, accur, failed, coll_f, coll_v
+        return nframes, accur, failed, coll_f, coll_v, coll_mf
 
     def _sequence_conv(
         self,
@@ -348,6 +422,10 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 all_level_v = [ii.level_v_lo for ii in reports] + [self.level_v_lo]
                 all_level_v = all_level_v[-self.n_checked_steps :]
                 conv = conv and self._sequence_conv(all_level_v)
+            if self.has_mf:
+                all_level_mf = [ii.level_mf_lo for ii in reports] + [self.level_mf_lo]
+                all_level_mf = all_level_mf[-self.n_checked_steps :]
+                conv = conv and self._sequence_conv(all_level_mf)
             return conv
 
     def failed_ratio(
@@ -528,6 +606,11 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             print_tuple += (
                 fmt_flt % (self.level_v_lo),
                 fmt_flt % (self.level_v_hi),
+            )
+        if self.has_mf:
+            print_tuple += (
+                fmt_flt % (self.level_mf_lo),
+                fmt_flt % (self.level_mf_hi),
             )
         ret = " " + fmt_str % print_tuple
         return ret

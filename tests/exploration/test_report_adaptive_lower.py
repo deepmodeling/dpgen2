@@ -296,6 +296,147 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
         self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
 
+    def test_mf(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_MF,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_MF,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
+        )
+
+        expected_fail_ = [[0, 2, 8], [2, 3, 4]]
+        expected_fail = set()
+        for idx, ii in enumerate(expected_fail_):
+            for jj in ii:
+                expected_fail.add((idx, jj))
+        expected_cand = set([(0, 6), (0, 7), (0, 5)])
+        expected_accu = set(
+            [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
+        )
+
+        ter = ExplorationReportAdaptiveLower(
+            level_f_hi=1.0,
+            numb_candi_f=0,
+            rate_candi_f=0.000,
+            level_mf_hi=0.76,
+            numb_candi_mf=3,
+            rate_candi_mf=0.001,
+            n_checked_steps=3,
+            conv_tolerance=0.001,
+        )
+        ter.record(model_devi)
+        self.assertEqual(ter.candi, expected_cand)
+        self.assertEqual(ter.accur, expected_accu)
+        self.assertEqual(set(ter.failed), expected_fail)
+
+        class MockedReport:
+            level_f_lo = 0
+            level_v_lo = 0
+            level_mf_lo = 0
+
+        mr = MockedReport()
+        mr.level_f_lo = 1.0
+        mr.level_v_lo = 0.51
+        mr.level_mf_lo = 0.51
+        self.assertFalse(ter.converged([mr]))
+        self.assertTrue(ter.converged([mr, mr]))
+        self.assertTrue(ter.converged([mr, mr, mr]))
+
+        picked = ter.get_candidate_ids(2)
+        npicked = 0
+        self.assertEqual(len(picked), 2)
+        for ii in range(2):
+            for jj in picked[ii]:
+                self.assertTrue((ii, jj) in expected_cand)
+                npicked += 1
+        self.assertEqual(npicked, 2)
+        self.assertEqual(ter.candidate_ratio(), 3.0 / 18.0)
+        self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
+        self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
+    
+    #### need modify   
+    def test_v_mf(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.90, 0.10, 0.91, 0.11, 0.50, 0.53, 0.51, 0.52, 0.92]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_V,
+            np.array([0.40, 0.20, 0.80, 0.81, 0.82, 0.21, 0.41, 0.22, 0.42]),
+        )
+
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.40, 0.20, 0.21, 0.80, 0.81, 0.53, 0.22, 0.82, 0.42]),
+        )
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.50, 0.90, 0.91, 0.92, 0.51, 0.52, 0.10, 0.11, 0.12]),
+        )
+
+        expected_fail_ = [[0, 2, 8], [2, 3, 4]]
+        expected_fail = set()
+        for idx, ii in enumerate(expected_fail_):
+            for jj in ii:
+                expected_fail.add((idx, jj))
+        expected_cand = set([(0, 6), (0, 7), (0, 5)])
+        expected_accu = set(
+            [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
+        )
+
+        ter = ExplorationReportAdaptiveLower(
+            level_f_hi=1.0,
+            numb_candi_f=0,
+            rate_candi_f=0.000,
+            level_v_hi=0.76,
+            numb_candi_v=3,
+            rate_candi_v=0.001,
+            n_checked_steps=3,
+            conv_tolerance=0.001,
+        )
+        ter.record(model_devi)
+        self.assertEqual(ter.candi, expected_cand)
+        self.assertEqual(ter.accur, expected_accu)
+        self.assertEqual(set(ter.failed), expected_fail)
+
+        class MockedReport:
+            level_f_lo = 0
+            level_v_lo = 0
+            level_mf_lo = 0
+
+        mr = MockedReport()
+        mr.level_f_lo = 1.0
+        mr.level_v_lo = 0.51
+        mr.level_mf_lo = 0.51
+        self.assertFalse(ter.converged([mr]))
+        self.assertTrue(ter.converged([mr, mr]))
+        self.assertTrue(ter.converged([mr, mr, mr]))
+
+        picked = ter.get_candidate_ids(2)
+        npicked = 0
+        self.assertEqual(len(picked), 2)
+        for ii in range(2):
+            for jj in picked[ii]:
+                self.assertTrue((ii, jj) in expected_cand)
+                npicked += 1
+        self.assertEqual(npicked, 2)
+        self.assertEqual(ter.candidate_ratio(), 3.0 / 18.0)
+        self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
+        self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
+    
     def test_args(self):
         input_dict = {
             "level_f_hi": 1.0,
@@ -315,4 +456,6 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(data["n_checked_steps"], 2)
         self.assertAlmostEqual(data["conv_tolerance"], 0.01)
         self.assertAlmostEqual(data["candi_sel_prob"], "uniform")
+        self.assertTrue(data["level_mf_hi"] is None)
+        self.assertEqual(data["numb_candi_mf"], 0)
         ExplorationReportAdaptiveLower(*data)

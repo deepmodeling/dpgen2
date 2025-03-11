@@ -212,6 +212,7 @@ def lmp_args():
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
+    doc_lammps_input_file = "The template input file for LAMMPS simulation. Will pass it to dpdata to parse LAMMPS dump file in spin job."
 
     return [
         Argument(
@@ -258,6 +259,9 @@ def lmp_args():
             optional=True,
             default=[],
             doc=doc_filters,
+        ),
+        Argument(
+            "lammps_input_file", str, optional=True, default=None, doc=doc_lammps_input_file
         ),
     ]
 

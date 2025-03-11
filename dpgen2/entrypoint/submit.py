@@ -82,6 +82,7 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     ExplorationTask,
     LmpTemplateTaskGroup,
+    LmpSpinTaskGroup,
     NPTTaskGroup,
     caly_normalize,
     diffcsp_normalize,
@@ -318,7 +319,7 @@ def make_naive_exploration_scheduler_without_conf(config, explore_style):
     conv_style = convergence.pop("type")
     report = conv_styles[conv_style](**convergence)
     # trajectory render, the format of the output trajs are assumed to be lammps/dump
-    render = TrajRenderLammps(nopbc=output_nopbc)
+    render = TrajRenderLammps(nopbc=output_nopbc,lammps_input_file=config["explore"]["lammps_input_file"])
     # selector
     selector = ConfSelectorFrames(
         render,
@@ -378,7 +379,7 @@ def make_lmp_naive_exploration_scheduler(config):
     # report
     conv_style = convergence.pop("type")
     report = conv_styles[conv_style](**convergence)
-    render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp)
+    render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp, lammps_input_file=config["explore"]["lammps_input_file"])
     # selector
     selector = ConfSelectorFrames(
         render,

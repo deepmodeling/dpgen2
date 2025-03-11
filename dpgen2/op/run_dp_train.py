@@ -415,12 +415,22 @@ class RunDPTrain(OP):
                 for v in odict["loss_dict"].values():
                     if isinstance(v, dict):
                         v["start_pref_e"] = config["init_model_start_pref_e"]
-                        v["start_pref_f"] = config["init_model_start_pref_f"]
                         v["start_pref_v"] = config["init_model_start_pref_v"]
+                        # for spin job, the key is "start_pref_fr" and "start_pref_fm"
+                        if config.get("spin", False):
+                            v["start_pref_fr"] = config["init_model_start_pref_f"]
+                            v["start_pref_fm"] = config["init_model_start_pref_fm"]
+                        else:
+                            v["start_pref_f"] = config["init_model_start_pref_f"]
+
             else:
                 odict["loss"]["start_pref_e"] = config["init_model_start_pref_e"]
-                odict["loss"]["start_pref_f"] = config["init_model_start_pref_f"]
                 odict["loss"]["start_pref_v"] = config["init_model_start_pref_v"]
+                if config.get("spin", False):
+                    odict["loss"]["start_pref_fr"] = config["init_model_start_pref_f"]
+                    odict["loss"]["start_pref_fm"] = config["init_model_start_pref_fm"]
+                else:
+                    odict["loss"]["start_pref_f"] = config["init_model_start_pref_f"]
             if major_version == "1":
                 odict["training"]["stop_batch"] = config["init_model_numb_steps"]
             elif major_version == "2":
@@ -509,6 +519,12 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_f = (
             "The start force prefactor in loss when init-model"
         )
+        doc_init_model_start_pref_fm = (
+            "The start magnetic force prefactor in loss when init-model for spin job"
+        )
+        doc_spin = (
+            "If is a spin job"
+        )
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )
@@ -575,6 +591,20 @@ class RunDPTrain(OP):
                 optional=True,
                 default=100,
                 doc=doc_init_model_start_pref_f,
+            ),
+            Argument(
+                "init_model_start_pref_fm",
+                float,
+                optional=True,
+                default=100,
+                doc=doc_init_model_start_pref_fm,
+            ),
+            Argument(
+                "spin",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_spin,
             ),
             Argument(
                 "init_model_start_pref_v",
