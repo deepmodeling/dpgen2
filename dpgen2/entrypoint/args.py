@@ -261,7 +261,11 @@ def lmp_args():
             doc=doc_filters,
         ),
         Argument(
-            "lammps_input_file", str, optional=True, default=None, doc=doc_lammps_input_file
+            "lammps_input_file",
+            str,
+            optional=True,
+            default=None,
+            doc=doc_lammps_input_file,
         ),
     ]
 

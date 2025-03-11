@@ -10,11 +10,11 @@ from .customized_lmp_template_task_group import (
 from .diffcsp_task_group import (
     DiffCSPTaskGroup,
 )
-from .lmp_template_task_group import (
-    LmpTemplateTaskGroup,
-)
 from .lmp_spin_task_group import (
     LmpSpinTaskGroup,
+)
+from .lmp_template_task_group import (
+    LmpTemplateTaskGroup,
 )
 from .make_task_group_from_config import (
     caly_normalize,

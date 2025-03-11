@@ -522,9 +522,7 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_fm = (
             "The start magnetic force prefactor in loss when init-model for spin job"
         )
-        doc_spin = (
-            "If is a spin job"
-        )
+        doc_spin = "If is a spin job"
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )

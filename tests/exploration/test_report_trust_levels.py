@@ -36,7 +36,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         # behavior in frames selection when traj_cand <= max_nframes
         self.fv_selection_test(ExplorationReportTrustLevelsRandom)
         self.fv_selection_test(ExplorationReportTrustLevelsMax)
-        
+
         self.mf_selection_test(ExplorationReportTrustLevelsRandom)
         self.mf_selection_test(ExplorationReportTrustLevelsMax)
 
@@ -99,7 +99,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(ter.candidate_ratio(), 6.0 / 18.0)
         self.assertEqual(ter.accurate_ratio(), 2.0 / 18.0)
         self.assertEqual(ter.failed_ratio(), 10.0 / 18.0)
-    
+
     def mf_selection_test(self, exploration_report: ExplorationReportTrustLevels):
         model_devi = DeviManagerStd()
         model_devi.add(
@@ -127,7 +127,9 @@ class TestTrajsExplorationReport(unittest.TestCase):
         expected_fail = [set(ii) for ii in expected_fail]
         all_cand_sel = [(0, 6), (0, 5), (1, 8), (1, 6), (1, 0), (1, 5)]
 
-        ter = exploration_report(0.3, 0.6, level_mf_lo=0.3, level_mf_hi=0.6, conv_accuracy=0.9)
+        ter = exploration_report(
+            0.3, 0.6, level_mf_lo=0.3, level_mf_hi=0.6, conv_accuracy=0.9
+        )
         ter.record(model_devi)
         self.assertEqual(ter.traj_cand, expected_cand)
         self.assertEqual(ter.traj_accu, expected_accu)

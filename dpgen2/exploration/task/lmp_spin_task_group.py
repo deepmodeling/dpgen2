@@ -41,7 +41,7 @@ class LmpSpinTaskGroup(ConfSamplingTaskGroup):
         numb_models: int,
         lmp_template_fname: str,
         plm_template_fname: Optional[str] = None,
-        revisions: dict = {}
+        revisions: dict = {},
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
@@ -103,6 +103,7 @@ class LmpSpinTaskGroup(ConfSamplingTaskGroup):
                 plm_cont,
             )
         return task
+
 
 def revise_by_keys(lmp_lines, keys, values):
     for kk, vv in zip(keys, values):  # type: ignore

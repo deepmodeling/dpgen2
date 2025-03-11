@@ -178,7 +178,7 @@ class TestRunDPTrain(unittest.TestCase):
                 "start_pref_v": 0.0,
             },
         }
-        
+
         self.expected_init_model_odict_v2_spin = {
             "training": {
                 "training_data": {
@@ -597,7 +597,12 @@ class TestRunDPTrain(unittest.TestCase):
         task_path = self.task_path
         Path(task_path).mkdir(exist_ok=True)
         idict_v2 = self.idict_v2.copy()
-        idict_v2["loss"] = {"start_pref_e": 0.1, "start_pref_v": 1, "start_pref_fr": 1, "start_pref_fm": 1}
+        idict_v2["loss"] = {
+            "start_pref_e": 0.1,
+            "start_pref_v": 1,
+            "start_pref_fr": 1,
+            "start_pref_fm": 1,
+        }
         with open(Path(task_path) / train_script_name, "w") as fp:
             json.dump(idict_v2, fp, indent=4)
         task_name = self.task_name
@@ -650,7 +655,7 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             print(jdata)
             self.assertDictEqual(jdata, self.expected_init_model_odict_v2_spin)
-    
+
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_train_error(self, mocked_run):
         mocked_run.side_effect = [(1, "", "foo\n"), (0, "bar\n", "")]

@@ -84,7 +84,7 @@ class TestDeviManagerStd(unittest.TestCase):
             model_devi.get,
             DeviManager.MAX_DEVI_V,
         )
-        
+
         self.assertRaisesRegex(
             AssertionError,
             "Error: the number of model deviation",
@@ -119,7 +119,7 @@ class TestDeviManagerStd(unittest.TestCase):
             model_devi.get,
             DeviManager.MAX_DEVI_V,
         )
-        
+
         model_devi = DeviManagerStd()
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([1, 2, 3]))
         model_devi.add(DeviManager.MAX_DEVI_F, np.array([4, 5, 6]))

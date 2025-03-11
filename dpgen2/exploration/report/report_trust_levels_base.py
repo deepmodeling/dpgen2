@@ -44,7 +44,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.conv_accuracy = conv_accuracy
         self.clear()
         self.v_level = (self.level_v_lo is not None) and (self.level_v_hi is not None)
-        self.mf_level = (self.level_mf_lo is not None) and (self.level_mf_hi is not None)
+        self.mf_level = (self.level_mf_lo is not None) and (
+            self.level_mf_hi is not None
+        )
         self.model_devi = None
 
         print_tuple = (
@@ -242,16 +244,18 @@ class ExplorationReportTrustLevels(ExplorationReport):
         set_mf_accu = set_full if nomagforce else set(id_mf_accu)
         set_mf_cand = set([]) if nomagforce else set(id_mf_cand)
         set_mf_fail = set([]) if nomagforce else set(id_mf_fail)
-        
+
         # check consistency
         assert set_full == set_f_accu | set_f_cand | set_f_fail
-        for accu, cand, fail in [[set_f_accu, set_f_cand, set_f_fail], 
-                                 [set_v_accu, set_v_cand, set_v_fail], 
-                                 [set_mf_accu, set_mf_cand, set_mf_fail]]:
+        for accu, cand, fail in [
+            [set_f_accu, set_f_cand, set_f_fail],
+            [set_v_accu, set_v_cand, set_v_fail],
+            [set_mf_accu, set_mf_cand, set_mf_fail],
+        ]:
             assert 0 == len(accu & cand)
             assert 0 == len(accu & fail)
             assert 0 == len(cand & fail)
-        
+
         # accu, cand, fail
         set_accu = set_f_accu & set_v_accu & set_mf_accu
         set_fail = set_f_fail | set_v_fail | set_mf_fail
