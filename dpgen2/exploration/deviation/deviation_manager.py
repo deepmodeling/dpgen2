@@ -19,6 +19,9 @@ class DeviManager(ABC):
     MAX_DEVI_F = "max_devi_f"
     MIN_DEVI_F = "min_devi_f"
     AVG_DEVI_F = "avg_devi_f"
+    MAX_DEVI_MF = "max_devi_mf"
+    MIN_DEVI_MF = "min_devi_mf"
+    AVG_DEVI_MF = "avg_devi_mf"
 
     def __init__(self) -> None:
         super().__init__()
@@ -32,6 +35,9 @@ class DeviManager(ABC):
             DeviManager.MAX_DEVI_F,
             DeviManager.MIN_DEVI_F,
             DeviManager.AVG_DEVI_F,
+            DeviManager.MAX_DEVI_MF,
+            DeviManager.MIN_DEVI_MF,
+            DeviManager.AVG_DEVI_MF,
         ), f"Error: unknown deviation name {name}"
 
     def add(self, name: str, deviation: np.ndarray) -> None:
@@ -64,7 +70,9 @@ class DeviManager(ABC):
             The name of the deviation. The name is restricted to
             (DeviManager.MAX_DEVI_V, DeviManager.MIN_DEVI_V,
              DeviManager.AVG_DEVI_V, DeviManager.MAX_DEVI_F,
-             DeviManager.MIN_DEVI_F, DeviManager.AVG_DEVI_F)
+             DeviManager.MIN_DEVI_F, DeviManager.AVG_DEVI_F,
+             DeviManager.MAX_DEVI_MF, DeviManager.MIN_DEVI_MF,
+             DeviManager.AVG_DEVI_MF)
         """
         self._check_name(name)
         self._check_data()
