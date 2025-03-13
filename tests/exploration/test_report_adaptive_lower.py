@@ -365,8 +365,8 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(ter.candidate_ratio(), 3.0 / 18.0)
         self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
         self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
-    
-    #### need modify   
+
+    #### need modify
     def test_v_mf(self):
         model_devi = DeviManagerStd()
         model_devi.add(
@@ -436,7 +436,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertEqual(ter.candidate_ratio(), 3.0 / 18.0)
         self.assertEqual(ter.accurate_ratio(), 9.0 / 18.0)
         self.assertEqual(ter.failed_ratio(), 6.0 / 18.0)
-    
+
     def test_args(self):
         input_dict = {
             "level_f_hi": 1.0,

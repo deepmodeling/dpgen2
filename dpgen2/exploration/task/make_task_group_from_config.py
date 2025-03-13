@@ -19,13 +19,12 @@ from dpgen2.exploration.task.caly_task_group import (
 from dpgen2.exploration.task.customized_lmp_template_task_group import (
     CustomizedLmpTemplateTaskGroup,
 )
-from dpgen2.exploration.task.lmp_template_task_group import (
-    LmpTemplateTaskGroup,
-)
 from dpgen2.exploration.task.lmp_spin_task_group import (
     LmpSpinTaskGroup,
 )
-
+from dpgen2.exploration.task.lmp_template_task_group import (
+    LmpTemplateTaskGroup,
+)
 from dpgen2.exploration.task.npt_task_group import (
     NPTTaskGroup,
 )
@@ -180,6 +179,7 @@ def lmp_template_task_group_args():
         ),
     ]
 
+
 def lmp_spin_task_group_args():
     doc_lmp_template_fname = "The file name of lammps input template"
     doc_plm_template_fname = "The file name of plumed input template"
@@ -210,11 +210,12 @@ def lmp_spin_task_group_args():
             alias=["plm_template", "plm"],
         ),
         Argument(
-            "revisions", 
-            dict, 
-            optional=True, 
-            default={}, 
-            doc=doc_revisions,)
+            "revisions",
+            dict,
+            optional=True,
+            default={},
+            doc=doc_revisions,
+        ),
     ]
 
 

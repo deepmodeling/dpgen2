@@ -138,13 +138,18 @@ run             ${NSTEPS}
 """
 )
 
+
 class TestLmpSpinTaskGroup(unittest.TestCase):
     def setUp(self):
         self.lmp_template_fname = Path("lmp.template")
         self.lmp_template_fname.write_text(in_lmp_template)
         self.numb_models = 8
         self.confs = ["foo", "bar"]
-        self.lmp_rev_mat = {"V_NSTEPS": [1000], "V_TEMP": [50, 100], "V_MASS":[0.01, 0.1]}
+        self.lmp_rev_mat = {
+            "V_NSTEPS": [1000],
+            "V_TEMP": [50, 100],
+            "V_MASS": [0.01, 0.1],
+        }
         self.rev_empty = {}
 
     def tearDown(self):
@@ -154,9 +159,7 @@ class TestLmpSpinTaskGroup(unittest.TestCase):
         task_group = LmpSpinTaskGroup()
         task_group.set_conf(self.confs)
         task_group.set_lmp(
-            self.numb_models,
-            self.lmp_template_fname,
-            revisions=self.lmp_rev_mat
+            self.numb_models, self.lmp_template_fname, revisions=self.lmp_rev_mat
         )
         task_group.make_task()
         ngroup = len(task_group)
@@ -189,15 +192,11 @@ class TestLmpSpinTaskGroup(unittest.TestCase):
             )
             idx += 1
 
-    
-
     def test_lmp_empty(self):
         task_group = LmpSpinTaskGroup()
         task_group.set_conf(self.confs)
         task_group.set_lmp(
-            self.numb_models,
-            self.lmp_template_fname,
-            revisions=self.rev_empty
+            self.numb_models, self.lmp_template_fname, revisions=self.rev_empty
         )
         task_group.make_task()
         ngroup = len(task_group)
@@ -217,4 +216,3 @@ class TestLmpSpinTaskGroup(unittest.TestCase):
                 ee,
             )
             idx += 1
-

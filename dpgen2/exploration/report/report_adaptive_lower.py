@@ -175,8 +175,12 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         rate_candi_v_link = make_class_doc_link("rate_candi_v")
         numb_candi_mf_link = make_class_doc_link("numb_candi_mf")
         rate_candi_mf_link = make_class_doc_link("rate_candi_mf")
-        numb_candi_s = f"{numb_candi_f_link} or {numb_candi_v_link} or {numb_candi_mf_link}"
-        rate_candi_s = f"{rate_candi_f_link} or {rate_candi_v_link} or {rate_candi_mf_link}"
+        numb_candi_s = (
+            f"{numb_candi_f_link} or {numb_candi_v_link} or {numb_candi_mf_link}"
+        )
+        rate_candi_s = (
+            f"{rate_candi_f_link} or {rate_candi_v_link} or {rate_candi_mf_link}"
+        )
         level_f_hi_link = make_class_doc_link("level_f_hi")
         level_v_hi_link = make_class_doc_link("level_v_hi")
         level_mf_hi_link = make_class_doc_link("level_mf_hi")
@@ -232,7 +236,11 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 "numb_candi_mf", int, optional=True, default=0, doc=doc_numb_candi_mf
             ),
             Argument(
-                "rate_candi_mf", float, optional=True, default=0.0, doc=doc_rate_candi_mf
+                "rate_candi_mf",
+                float,
+                optional=True,
+                default=0.0,
+                doc=doc_rate_candi_mf,
             ),
             Argument(
                 "n_checked_steps", int, optional=True, default=2, doc=doc_n_check_steps
@@ -286,9 +294,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         coll_mf = []
         # loop over trajs
         for ii in range(ntraj):
-            add_nframes, add_accur, add_failed, add_f, add_v, add_mf = self._record_one_traj(
-                ii, md_f[ii], md_v[ii], md_mf[ii]
-            )
+            (
+                add_nframes,
+                add_accur,
+                add_failed,
+                add_f,
+                add_v,
+                add_mf,
+            ) = self._record_one_traj(ii, md_f[ii], md_v[ii], md_mf[ii])
             self.nframes += add_nframes
             self.accur.update(add_accur)
             self.failed += add_failed
@@ -319,14 +332,14 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             self.level_v_lo = coll_v[-numb_candi_v][0]
         if not self.has_virial:
             self.level_v_lo = None
-            
+
         if numb_candi_mf == 0:
             self.level_mf_lo = self.level_mf_hi
         else:
             self.level_mf_lo = coll_mf[-numb_candi_mf][0]
         if not self.has_mf:
             self.level_mf_lo = None
-            
+
         if numb_candi_f == 0:
             self.level_f_lo = self.level_f_hi
         else:
@@ -385,7 +398,11 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         coll_v = []
         coll_mf = []
         for ii in range(nframes):
-            if md_f[ii] > self.level_f_hi or md_v[ii] > self.level_v_hi or md_mf[ii] > self.level_mf_hi:
+            if (
+                md_f[ii] > self.level_f_hi
+                or md_v[ii] > self.level_v_hi
+                or md_mf[ii] > self.level_mf_hi
+            ):
                 failed.append((tt, ii))
             else:
                 coll_f.append([md_f[ii], tt, ii])

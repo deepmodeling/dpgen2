@@ -42,7 +42,7 @@ class TrajRenderLammps(TrajRender):
         self,
         nopbc: bool = False,
         use_ele_temp: int = 0,
-        lammps_input_file: str = None, # type: ignore
+        lammps_input_file: str = None,  # type: ignore
     ):
         self.nopbc = nopbc
         self.use_ele_temp = use_ele_temp
@@ -80,10 +80,10 @@ class TrajRenderLammps(TrajRender):
         model_devi.add(DeviManager.MIN_DEVI_F, dd[:, 5])  # type: ignore
         model_devi.add(DeviManager.AVG_DEVI_F, dd[:, 6])  # type: ignore
         # assume the 7-9 columns are for MF
-        if dd.shape[1] >= 10: # type: ignore
-            model_devi.add(DeviManager.MAX_DEVI_MF, dd[:, 7]) # type: ignore
-            model_devi.add(DeviManager.MIN_DEVI_MF, dd[:, 8]) # type: ignore
-            model_devi.add(DeviManager.AVG_DEVI_MF, dd[:, 9]) # type: ignore
+        if dd.shape[1] >= 10:  # type: ignore
+            model_devi.add(DeviManager.MAX_DEVI_MF, dd[:, 7])  # type: ignore
+            model_devi.add(DeviManager.MIN_DEVI_MF, dd[:, 8])  # type: ignore
+            model_devi.add(DeviManager.AVG_DEVI_MF, dd[:, 9])  # type: ignore
 
     def get_ele_temp(self, optional_outputs):
         ele_temp = []
@@ -139,7 +139,9 @@ class TrajRenderLammps(TrajRender):
                 else:
                     traj = trajs[ii]
                 # for spin job, need to read input file to get the key of the spin data
-                ss = dpdata.System(traj, fmt=traj_fmt, type_map=type_map, input_file=lammps_input_file)
+                ss = dpdata.System(
+                    traj, fmt=traj_fmt, type_map=type_map, input_file=lammps_input_file
+                )
                 ss.nopbc = self.nopbc
                 if ele_temp:
                     self.set_ele_temp(ss, ele_temp[ii])
