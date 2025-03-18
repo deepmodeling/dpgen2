@@ -109,7 +109,9 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
 
         level_f_hi_link = make_class_doc_link("level_f_hi")
         level_v_hi_link = make_class_doc_link("level_v_hi")
+        level_mf_hi_link = make_class_doc_link("level_mf_hi")
         level_f_lo_link = make_class_doc_link("level_f_lo")
         level_v_lo_link = make_class_doc_link("level_v_lo")
+        level_mf_lo_link = make_class_doc_link("level_mf_lo")
         conv_accuracy_link = make_class_doc_link("conv_accuracy")
-        return f"The configurations with force model deviation between {level_f_lo_link}, {level_f_hi_link} or virial model deviation between {level_v_lo_link} and {level_v_hi_link} are treated as candidates (The virial model deviation check is optional). The configurations with maximal model deviation in the candidates are sent for FP calculations. If the ratio of accurate (below {level_f_lo_link} and {level_v_lo_link}) is higher then {conv_accuracy_link}, the stage is treated as converged."
+        return f"The configurations with force model deviation between {level_f_lo_link}, {level_f_hi_link} or virial model deviation between {level_v_lo_link} and {level_v_hi_link}, or magnetic force model deviation between {level_mf_lo_link} and {level_mf_hi_link}, are treated as candidates (The virial model deviation check is optional). The configurations with maximal model deviation in the candidates are sent for FP calculations. If the ratio of accurate (below {level_f_lo_link} and {level_v_lo_link}) is higher then {conv_accuracy_link}, the stage is treated as converged."
