@@ -21,7 +21,7 @@ from . import (
 )
 
 safe_dist_dict = {
-    "H": 1.2255,
+    "H": 0.612,
     "He": 0.936,
     "Li": 1.8,
     "Be": 1.56,
@@ -169,16 +169,48 @@ class DistanceConfFilter(ConfFilter):
             pbc=(not frame.nopbc),
         )
 
-        P = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
-        extended_structure = make_supercell(structure, P)
+        coords = structure.positions
+        symbols = structure.get_chemical_symbols()
+        cell, _ = structure.get_cell().standard_form()
 
-        coords = extended_structure.positions
-        symbols = extended_structure.get_chemical_symbols()
+        a1 = cell[0]
+        a2 = cell[1]
+        a3 = cell[2]
+
+        all_combinations = {
+    'a1': np.linalg.norm(a1),
+    'a2': np.linalg.norm(a2),
+    'a3': np.linalg.norm(a3),
+    'a1+a2': np.linalg.norm(a1 + a2),
+    'a1+a3': np.linalg.norm(a1 + a3),
+    'a2+a3': np.linalg.norm(a2 + a3),
+    'a1-a2': np.linalg.norm(a1 - a2),
+    'a1-a3': np.linalg.norm(a1 - a3),
+    'a2-a3': np.linalg.norm(a2 - a3),
+    'a1+a2+a3': np.linalg.norm(a1 + a2 + a3),
+    'a1+a2-a3': np.linalg.norm(a1 + a2 - a3),
+    'a1-a2+a3': np.linalg.norm(a1 - a2 + a3),
+    'a1-a2-a3': np.linalg.norm(a1 - a2 - a3),
+    '-a1+a2+a3': np.linalg.norm(-a1 + a2 + a3),
+    '-a1+a2-a3': np.linalg.norm(-a1 + a2 - a3),
+    '-a1-a2+a3': np.linalg.norm(-a1 - a2 + a3),
+    '-a1-a2-a3': np.linalg.norm(-a1 - a2 - a3)
+}
+
+
+        A = list(all_combinations.values())
+        B = [safe_dist[type_i] * 2 for type_i in symbols]
+
+        for a in A:
+            for b in B:
+                if a < b:
+                    print(f"Lattice length {a:.3f} is less than safe distance {b:.3f} ")
+                    return False
 
         num_atoms = len(coords)
         for i in range(num_atoms):
             for j in range(i + 1, num_atoms):
-                dist = extended_structure.get_distance(i, j, mic=True)
+                dist = structure.get_distance(i, j, mic=True)
                 type_i = symbols[i]
                 type_j = symbols[j]
                 dr = safe_dist[type_i] + safe_dist[type_j]
@@ -211,10 +243,8 @@ class DistanceConfFilter(ConfFilter):
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
 
-        doc_max_workers = (
-            "The maximum number of processes used to filter configurations, "
-            + "None represents as many as the processors of the machine, and 1 for serial"
-        )
+        doc_max_workers = "The maximum number of processes used to filter configurations, " + \
+            "None represents as many as the processors of the machine, and 1 for serial"
         doc_custom_safe_dist = "Custom safe distance (in unit of bohr) for each element"
         doc_safe_dist_ratio = "The ratio multiplied to the safe distance"
         return [
@@ -269,9 +299,9 @@ class BoxSkewnessConfFilter(ConfFilter):
         cell, _ = structure.get_cell().standard_form()
 
         if (
-            cell[1][0] > np.tan(self.theta / 180.0 * np.pi) * cell[1][1]  # type: ignore
-            or cell[2][0] > np.tan(self.theta / 180.0 * np.pi) * cell[2][2]  # type: ignore
-            or cell[2][1] > np.tan(self.theta / 180.0 * np.pi) * cell[2][2]  # type: ignore
+            np.abs(cell[1][0]) > np.tan(self.theta / 180.0 * np.pi) * cell[1][1]  # type: ignore
+            or np.abs(cell[2][0]) > np.tan(self.theta / 180.0 * np.pi) * cell[2][2]  # type: ignore
+            or np.abs(cell[2][1]) > np.tan(self.theta / 180.0 * np.pi) * cell[2][2]  # type: ignore
         ):
             logging.warning("Inclined box")
             return False
@@ -297,10 +327,8 @@ class BoxSkewnessConfFilter(ConfFilter):
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
 
-        doc_max_workers = (
-            "The maximum number of processes used to filter configurations, "
-            + "None represents as many as the processors of the machine, and 1 for serial"
-        )
+        doc_max_workers = "The maximum number of processes used to filter configurations, " + \
+            "None represents as many as the processors of the machine, and 1 for serial"
         doc_theta = "The threshold for angles between the edges of the cell. If all angles are larger than this value the check is passed"
         return [
             Argument(
@@ -375,10 +403,8 @@ class BoxLengthFilter(ConfFilter):
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
 
-        doc_max_workers = (
-            "The maximum number of processes used to filter configurations, "
-            + "None represents as many as the processors of the machine, and 1 for serial"
-        )
+        doc_max_workers = "The maximum number of processes used to filter configurations, " + \
+            "None represents as many as the processors of the machine, and 1 for serial"
         doc_length_ratio = "The threshold for the length ratio between the edges of the cell. If all length ratios are smaller than this value the check is passed"
         return [
             Argument(
