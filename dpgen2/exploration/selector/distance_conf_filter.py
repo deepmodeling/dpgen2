@@ -174,11 +174,13 @@ class DistanceConfFilter(ConfFilter):
         coords = structure.positions
         symbols = structure.get_chemical_symbols()
         cell, _ = structure.get_cell().standard_form()
-        cell = np.array(cell)
+        cell = cell.array
 
-        a1 = cell[0, :]
-        a2 = cell[1, :]
-        a3 = cell[2, :]
+        a1 = cell[0]
+        a2 = cell[1]
+        a3 = cell[2]
+
+
 
         all_combinations = {
             "a1": np.linalg.norm(a1),
