@@ -12,6 +12,8 @@ from typing import (
 import dargs
 import dpdata
 import numpy as np
+import logging
+from copy import deepcopy
 from dargs import (
     Argument,
 )
@@ -172,6 +174,7 @@ class DistanceConfFilter(ConfFilter):
         coords = structure.positions
         symbols = structure.get_chemical_symbols()
         cell, _ = structure.get_cell().standard_form()
+        cell = np.array(cell)
 
         a1 = cell[0, :] 
         a2 = cell[1, :]
