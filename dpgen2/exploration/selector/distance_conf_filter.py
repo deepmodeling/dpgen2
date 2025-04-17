@@ -176,7 +176,7 @@ class DistanceConfFilter(ConfFilter):
         cell, _ = structure.get_cell().standard_form()
         cell = np.array(cell)
 
-        a1 = cell[0, :] 
+        a1 = cell[0, :]
         a2 = cell[1, :]
         a3 = cell[2, :]
 
