@@ -178,8 +178,6 @@ class DistanceConfFilter(ConfFilter):
         a2 = cell[1]
         a3 = cell[2]
 
-
-
         all_combinations = {
             "a1": np.linalg.norm(a1),
             "a2": np.linalg.norm(a2),
