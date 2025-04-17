@@ -12,8 +12,6 @@ from typing import (
 import dargs
 import dpdata
 import numpy as np
-import logging
-from copy import deepcopy
 from dargs import (
     Argument,
 )
