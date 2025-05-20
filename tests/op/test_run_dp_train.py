@@ -7,6 +7,7 @@ from pathlib import (
     Path,
 )
 
+import dpdata
 import numpy as np
 from dflow.python import (
     OP,
@@ -37,6 +38,7 @@ from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
     _make_train_command,
+    split_valid,
 )
 
 # isort: on
@@ -1052,3 +1054,44 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
+
+
+class TestSplitValid(unittest.TestCase):
+    def setUp(self):
+        s = fake_system(10, 1)
+        s.to_deepmd_npy("fake_data")
+        ms = fake_multi_sys([10, 20], [1, 2])
+        ms.to_deepmd_npy_mixed("fake_mixed_data")
+
+    def test_split_valid(self):
+        train_systems, valid_systems = split_valid(["fake_data"], 0.1)
+        self.assertEqual(len(train_systems), 1)
+        s = dpdata.LabeledSystem(train_systems[0], fmt="deepmd/npy")
+        self.assertEqual(len(s), 9)
+        self.assertEqual(len(valid_systems), 1)
+        s = dpdata.LabeledSystem(valid_systems[0], fmt="deepmd/npy")
+        self.assertEqual(len(s), 1)
+
+    def test_split_valid_mixed(self):
+        train_systems, valid_systems = split_valid(
+            ["fake_mixed_data/1", "fake_mixed_data/2"], 0.1
+        )
+        self.assertEqual(len(train_systems), 2)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(train_systems[0], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 9)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(train_systems[1], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 18)
+        self.assertEqual(len(valid_systems), 2)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(valid_systems[0], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 1)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(valid_systems[1], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 2)
+
+    def tearDown(self):
+        for f in ["fake_data", "fake_mixed_data", "train_data", "valid_data"]:
+            if os.path.exists(f):
+                shutil.rmtree(f)

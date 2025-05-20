@@ -141,7 +141,7 @@ class PrepVasp(PrepFp):
 
         conf_frame.to("vasp/poscar", vasp_conf_name)
         incar = vasp_inputs.incar_template
-        self.set_ele_temp(conf_frame, incar)
+        incar = self.set_ele_temp(conf_frame, incar)
 
         Path(vasp_input_name).write_text(incar)
         # fix the case when some element have 0 atom, e.g. H0O2

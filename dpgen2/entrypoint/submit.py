@@ -540,7 +540,7 @@ def workflow_concurrent_learning(
     else:
         if config["inputs"]["valid_data_uri"] is not None:
             valid_data = get_artifact_from_uri(config["inputs"]["valid_data_uri"])
-        elif config["inputs"]["valid_data_prefix"] is not None:
+        elif config["inputs"]["valid_data_sys"] is not None:
             valid_data_prefix = config["inputs"]["valid_data_prefix"]
             valid_data = config["inputs"]["valid_data_sys"]
             valid_data = get_systems_from_data(valid_data, valid_data_prefix)
