@@ -31,6 +31,9 @@ from dpgen2.op.run_dp_train import (
 from dpgen2.op.run_lmp import (
     RunLmp,
 )
+from dpgen2.op.run_nvnmd_train import (
+    RunNvNMDTrain,
+)
 from dpgen2.utils import (
     normalize_step_dict,
     step_conf_args,
@@ -127,12 +130,59 @@ def dp_train_args():
     ]
 
 
+def nvnmd_train_args():
+    doc_numb_models = "Number of models trained for evaluating the model deviation"
+    doc_config = "Configuration of training"
+    doc_template_script = "File names of the template training script. It can be a `List[str]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `str`, the models share the same template training script. "
+    doc_init_models_paths = "the paths to initial models"
+    doc_init_models_uri = "The URI of initial models"
+    doc_optional_files = "Optional files for training"
+
+    return [
+        Argument(
+            "config",
+            dict,
+            RunNvNMDTrain.training_args(),
+            optional=True,
+            default=RunNvNMDTrain.normalize_config({}),
+            doc=doc_numb_models,
+        ),
+        Argument("numb_models", int, optional=True, default=4, doc=doc_numb_models),
+        Argument(
+            "template_script", [List[str], str], optional=False, doc=doc_template_script
+        ),
+        Argument(
+            "init_models_paths",
+            List[str],
+            optional=True,
+            default=None,
+            doc=doc_init_models_paths,
+            alias=["training_iter0_model_path"],
+        ),
+        Argument(
+            "init_models_uri",
+            str,
+            optional=True,
+            default=None,
+            doc=doc_init_models_uri,
+        ),
+        Argument(
+            "optional_files",
+            list,
+            optional=True,
+            default=None,
+            doc=doc_optional_files,
+        ),
+    ]
+
+
 def variant_train():
     doc = "the type of the training"
     return Variant(
         "type",
         [
             Argument("dp", dict, dp_train_args()),
+            Argument("dp-nvnmd", dict, nvnmd_train_args()),
             Argument("dp-dist", dict, dp_dist_train_args()),
         ],
         doc=doc,
@@ -454,6 +504,7 @@ def variant_explore():
         "type",
         [
             Argument("lmp", dict, lmp_args(), doc=doc_lmp),
+            Argument("nvnmd", dict, lmp_args(), doc=doc_lmp),
             Argument("calypso", dict, caly_args(), doc=doc_calypso),
             Argument("calypso:default", dict, caly_args(), doc=doc_calypso),
             Argument("calypso:merge", dict, caly_args(), doc=doc_calypso),

@@ -54,10 +54,16 @@ class DownloadDefinition:
 op_download_setting = {
     "prep-run-train": DownloadDefinition()
     .add_input("init_models")
+    .add_input("init_models_ckpt_meta")
+    .add_input("init_models_ckpt_data")
+    .add_input("init_models_ckpt_index")
     .add_input("init_data")
     .add_input("iter_data")
     .add_output("scripts")
     .add_output("models")
+    .add_output("models_ckpt_meta")
+    .add_output("models_ckpt_data")
+    .add_output("models_ckpt_index")
     .add_output("logs")
     .add_output("lcurves"),
     "prep-run-explore": DownloadDefinition()

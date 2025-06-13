@@ -22,6 +22,9 @@ from .prep_dp_train import (
 from .prep_lmp import (
     PrepLmp,
 )
+from .prep_nvnmd_train import (
+    PrepNvNMDTrain,
+)
 from .prep_relax import (
     PrepRelax,
 )
@@ -37,6 +40,12 @@ from .run_dp_train import (
 from .run_lmp import (
     RunLmp,
     RunLmpHDF5,
+)
+from .run_nvnmd import (
+    RunNvNMD,
+)
+from .run_nvnmd_train import (
+    RunNvNMDTrain,
 )
 from .run_relax import (
     RunRelax,

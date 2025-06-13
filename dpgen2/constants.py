@@ -1,9 +1,15 @@
 train_index_pattern = "%04d"
 train_task_pattern = "task." + train_index_pattern
 train_script_name = "input.json"
+train_cnn_script_name = "input_cnn.json"
+train_qnn_script_name = "input_qnn.json"
 train_log_name = "train.log"
 model_name_pattern = "model.%03d.pb"
 pytorch_model_name_pattern = "model.%03d.pth"
+model_ckpt_pattern = "model.ckpt.%03d"
+model_ckpt_meta_pattern = "model.ckpt.%03d/model.ckpt.meta"
+model_ckpt_data_pattern = "model.ckpt.%03d/model.ckpt.data"
+model_ckpt_index_pattern = "model.ckpt.%03d/model.ckpt.index"
 model_name_match_pattern = r"model\.[0-9]{3,}(\.pb|\.pth)"
 lmp_index_pattern = "%06d"
 lmp_task_pattern = "task." + lmp_index_pattern

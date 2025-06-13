@@ -70,6 +70,21 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 skip_exists=True,
             ),
             mock.call(
+                "arti-init_models_ckpt_meta",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_models_ckpt_data",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_models_ckpt_index",
+                path=Path("foo/iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
                 "arti-init_data",
                 path=Path("foo/iter-000000/prep-run-train/inputs"),
                 skip_exists=True,
@@ -86,6 +101,21 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-models",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_meta",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_data",
+                path=Path("foo/iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_index",
                 path=Path("foo/iter-000000/prep-run-train/outputs"),
                 skip_exists=True,
             ),
@@ -271,6 +301,21 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 skip_exists=True,
             ),
             mock.call(
+                "arti-init_models_ckpt_meta",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_models_ckpt_data",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-init_models_ckpt_index",
+                path=Path("iter-000000/prep-run-train/inputs"),
+                skip_exists=True,
+            ),
+            mock.call(
                 "arti-init_data",
                 path=Path("iter-000000/prep-run-train/inputs"),
                 skip_exists=True,
@@ -287,6 +332,21 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-models",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_meta",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_data",
+                path=Path("iter-000000/prep-run-train/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-models_ckpt_index",
                 path=Path("iter-000000/prep-run-train/outputs"),
                 skip_exists=True,
             ),

@@ -64,6 +64,9 @@ from .prep_run_fp import (
 from .prep_run_lmp import (
     PrepRunLmp,
 )
+from .prep_run_nvnmd_train import (
+    PrepRunNvNMDTrain,
+)
 
 block_default_optional_parameter = {
     "data_mixed_type": False,
@@ -88,7 +91,7 @@ class ConcurrentLearningBlock(Steps):
     def __init__(
         self,
         name: str,
-        prep_run_dp_train_op: PrepRunDPTrain,
+        prep_run_dp_train_op: Union[PrepRunDPTrain, PrepRunNvNMDTrain],
         prep_run_explore_op: Union[PrepRunLmp, PrepRunCaly, PrepRunDiffCSP],
         select_confs_op: Type[OP],
         prep_run_fp_op: PrepRunFp,
@@ -113,6 +116,9 @@ class ConcurrentLearningBlock(Steps):
         }
         self._input_artifacts = {
             "init_models": InputArtifact(optional=True),
+            "init_models_ckpt_index": InputArtifact(optional=True),
+            "init_models_ckpt_data": InputArtifact(optional=True),
+            "init_models_ckpt_meta": InputArtifact(optional=True),
             "init_data": InputArtifact(),
             "iter_data": InputArtifact(),
         }
@@ -121,6 +127,9 @@ class ConcurrentLearningBlock(Steps):
         }
         self._output_artifacts = {
             "models": OutputArtifact(),
+            "models_ckpt_index": OutputArtifact(optional=True),
+            "models_ckpt_data": OutputArtifact(optional=True),
+            "models_ckpt_meta": OutputArtifact(optional=True),
             "iter_data": OutputArtifact(),
             "trajs": OutputArtifact(),
         }
@@ -212,25 +221,55 @@ def _block_cl(
         block_steps.inputs.parameters["optional_parameter"]
     )
 
-    prep_run_dp_train = Step(
-        name + "-prep-run-dp-train",
-        template=prep_run_dp_train_op,
-        parameters={
-            "block_id": block_steps.inputs.parameters["block_id"],
-            "train_config": block_steps.inputs.parameters["train_config"],
-            "numb_models": block_steps.inputs.parameters["numb_models"],
-            "template_script": block_steps.inputs.parameters["template_script"],
-            "run_optional_parameter": run_dp_train_optional_parameter,
-        },
-        artifacts={
-            "init_models": block_steps.inputs.artifacts["init_models"],
-            "init_data": block_steps.inputs.artifacts["init_data"],
-            "iter_data": block_steps.inputs.artifacts["iter_data"],
-        },
-        key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
-        ),
-    )
+    if isinstance(prep_run_dp_train_op, PrepRunNvNMDTrain):
+        prep_run_dp_train = Step(
+            name + "-prep-run-nvnmd-train",
+            template=prep_run_dp_train_op,
+            parameters={
+                "block_id": block_steps.inputs.parameters["block_id"],
+                "train_config": block_steps.inputs.parameters["train_config"],
+                "numb_models": block_steps.inputs.parameters["numb_models"],
+                "template_script": block_steps.inputs.parameters["template_script"],
+                "run_optional_parameter": run_dp_train_optional_parameter,
+            },
+            artifacts={
+                "init_models": block_steps.inputs.artifacts["init_models"],
+                "init_models_ckpt_index": block_steps.inputs.artifacts[
+                    "init_models_ckpt_index"
+                ],
+                "init_models_ckpt_data": block_steps.inputs.artifacts[
+                    "init_models_ckpt_data"
+                ],
+                "init_models_ckpt_meta": block_steps.inputs.artifacts[
+                    "init_models_ckpt_meta"
+                ],
+                "init_data": block_steps.inputs.artifacts["init_data"],
+                "iter_data": block_steps.inputs.artifacts["iter_data"],
+            },
+            key="--".join(
+                ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
+            ),
+        )
+    else:
+        prep_run_dp_train = Step(
+            name + "-prep-run-dp-train",
+            template=prep_run_dp_train_op,
+            parameters={
+                "block_id": block_steps.inputs.parameters["block_id"],
+                "train_config": block_steps.inputs.parameters["train_config"],
+                "numb_models": block_steps.inputs.parameters["numb_models"],
+                "template_script": block_steps.inputs.parameters["template_script"],
+                "run_optional_parameter": run_dp_train_optional_parameter,
+            },
+            artifacts={
+                "init_models": block_steps.inputs.artifacts["init_models"],
+                "init_data": block_steps.inputs.artifacts["init_data"],
+                "iter_data": block_steps.inputs.artifacts["iter_data"],
+            },
+            key="--".join(
+                ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
+            ),
+        )
     block_steps.add(prep_run_dp_train)
 
     prep_run_explore = Step(
@@ -243,7 +282,9 @@ def _block_cl(
             "type_map": block_steps.inputs.parameters["type_map"],
         },
         artifacts={
-            "models": prep_run_dp_train.outputs.artifacts["models"],
+            "models": prep_run_dp_train.outputs.artifacts["nvnmodels"]
+            if isinstance(prep_run_dp_train_op, PrepRunNvNMDTrain)
+            else prep_run_dp_train.outputs.artifacts["models"]
         },
         key="--".join(
             ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-explore"]
@@ -322,6 +363,16 @@ def _block_cl(
     block_steps.outputs.artifacts["models"]._from = prep_run_dp_train.outputs.artifacts[
         "models"
     ]
+    if isinstance(prep_run_dp_train_op, PrepRunNvNMDTrain):
+        block_steps.outputs.artifacts[
+            "models_ckpt_meta"
+        ]._from = prep_run_dp_train.outputs.artifacts["models_ckpt_meta"]
+        block_steps.outputs.artifacts[
+            "models_ckpt_data"
+        ]._from = prep_run_dp_train.outputs.artifacts["models_ckpt_data"]
+        block_steps.outputs.artifacts[
+            "models_ckpt_index"
+        ]._from = prep_run_dp_train.outputs.artifacts["models_ckpt_index"]
     block_steps.outputs.artifacts["iter_data"]._from = collect_data.outputs.artifacts[
         "iter_data"
     ]
