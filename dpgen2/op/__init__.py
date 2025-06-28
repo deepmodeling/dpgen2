@@ -38,6 +38,12 @@ from .run_lmp import (
     RunLmp,
     RunLmpHDF5,
 )
+from .run_nvnmd import (
+    RunNvNMD,
+)
+from .run_nvnmd_train import (
+    RunNvNMDTrain,
+)
 from .run_relax import (
     RunRelax,
     RunRelaxHDF5,

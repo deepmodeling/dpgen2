@@ -7,7 +7,6 @@ from pathlib import (
     Path,
 )
 
-import dpdata
 import numpy as np
 from dflow.python import (
     OP,
@@ -32,19 +31,23 @@ from .context import (
 )
 from dpgen2.constants import (
     train_script_name,
+    train_cnn_script_name,
+    train_qnn_script_name,
     train_task_pattern,
 )
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
+)
+from dpgen2.op.run_nvnmd_train import (
+    RunNvNMDTrain,
     _make_train_command,
-    split_valid,
 )
 
 # isort: on
 
 
-class TestRunDPTrain(unittest.TestCase):
+class TestRunNvNMDTrain(unittest.TestCase):
     def setUp(self):
         self.atom_name = "foo"
         self.nframes_0 = [2, 5, 3]
@@ -78,7 +81,11 @@ class TestRunDPTrain(unittest.TestCase):
         self.init_data = [Path("init/data-0"), Path("init/data-1")]
         self.init_data = sorted(list(self.init_data))
 
-        self.init_model = Path("bar.pb")
+        # self.init_model = Path("bar.pb")
+        # self.init_model_ckpt_meta = Path("model.ckpt.meta")
+        # self.init_model_ckpt_data = Path("model.ckpt.data")
+        # self.init_model_ckpt_index = Path("model.ckpt.index")
+        self.init_model = Path("nvnmd_models")
 
         self.config = {
             "init_model_policy": "no",
@@ -170,6 +177,34 @@ class TestRunDPTrain(unittest.TestCase):
                 "start_pref_v": 0.0,
             },
         }
+        self.expected_qnn_model_odict_v2 = {
+            "training": {
+                "training_data": {
+                    "systems": [
+                        "init/data-0",
+                        "init/data-1",
+                        "data-0/foo3",
+                        "data-0/foo4",
+                        "data-1/foo2",
+                        "data-1/foo3",
+                        "data-1/foo5",
+                    ],
+                    "batch_size": "auto",
+                    "auto_prob": "prob_sys_size; 0:4:0.9; 4:7:0.1",
+                },
+                "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
+                "numb_steps": 0,
+            },
+            "learning_rate": {
+                "start_lr": 1e-4,
+            },
+            "loss": {
+                "start_pref_e": 0.1,
+                "start_pref_f": 100,
+                "start_pref_v": 0.0,
+            },
+        }
 
         self.idict_v1 = {
             "training": {
@@ -235,6 +270,32 @@ class TestRunDPTrain(unittest.TestCase):
                 "start_pref_v": 0.0,
             },
         }
+        self.expected_qnn_model_odict_v1 = {
+            "training": {
+                "systems": [
+                    "init/data-0",
+                    "init/data-1",
+                    "data-0/foo3",
+                    "data-0/foo4",
+                    "data-1/foo2",
+                    "data-1/foo3",
+                    "data-1/foo5",
+                ],
+                "batch_size": "auto",
+                "auto_prob_style": "prob_sys_size; 0:4:0.9; 4:7:0.1",
+                "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
+                "stop_batch": 0,
+            },
+            "learning_rate": {
+                "start_lr": 1e-4,
+            },
+            "loss": {
+                "start_pref_e": 0.1,
+                "start_pref_f": 100,
+                "start_pref_v": 0.0,
+            },
+        }
 
     def tearDown(self):
         for ii in [
@@ -259,66 +320,6 @@ class TestRunDPTrain(unittest.TestCase):
         self.assertAlmostEqual(config["init_model_start_pref_f"], 100)
         self.assertAlmostEqual(config["init_model_start_pref_v"], 0.0)
 
-    def test_get_size_of_all_mult_sys(self):
-        cc = _get_data_size_of_all_mult_sys(self.iter_data)
-        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
-        cc = _get_data_size_of_all_mult_sys(self.mixed_iter_data, mixed_type=True)
-        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
-        # read the mixed type systems as if they were standard system,
-        # should give the correct estimate of the data size
-        cc = _get_data_size_of_all_mult_sys(self.mixed_iter_data, mixed_type=False)
-        self.assertEqual(cc, sum(self.nframes_0) + sum(self.nframes_1))
-
-    def test_decide_init_model_no_model(self):
-        do_init_model = RunDPTrain.decide_init_model(
-            self.config, None, self.init_data, self.iter_data
-        )
-        self.assertFalse(do_init_model)
-
-    def test_decide_init_model_none_iter_data(self):
-        do_init_model = RunDPTrain.decide_init_model(
-            self.config, self.init_model, self.init_data, None
-        )
-        self.assertFalse(do_init_model)
-
-    def test_decide_init_model_no_iter_data(self):
-        do_init_model = RunDPTrain.decide_init_model(
-            self.config, self.init_model, self.init_data, []
-        )
-        self.assertFalse(do_init_model)
-
-    def test_decide_init_model_config_no(self):
-        config = self.config.copy()
-        config["init_model_policy"] = "no"
-        do_init_model = RunDPTrain.decide_init_model(
-            config, self.init_model, self.init_data, self.iter_data
-        )
-        self.assertFalse(do_init_model)
-
-    def test_decide_init_model_config_yes(self):
-        config = self.config.copy()
-        config["init_model_policy"] = "yes"
-        do_init_model = RunDPTrain.decide_init_model(
-            config, self.init_model, self.init_data, self.iter_data
-        )
-        self.assertTrue(do_init_model)
-
-    def test_decide_init_model_config_larger_than_no(self):
-        config = self.config.copy()
-        config["init_model_policy"] = f"old_data_larger_than:{self.old_data_size}"
-        do_init_model = RunDPTrain.decide_init_model(
-            config, self.init_model, self.init_data, self.iter_data
-        )
-        self.assertFalse(do_init_model)
-
-    def test_decide_init_model_config_larger_than_yes(self):
-        config = self.config.copy()
-        config["init_model_policy"] = f"old_data_larger_than:{self.old_data_size-1}"
-        do_init_model = RunDPTrain.decide_init_model(
-            config, self.init_model, self.init_data, self.iter_data
-        )
-        self.assertTrue(do_init_model)
-
     def test_update_input_dict_v1_init_model(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
@@ -331,9 +332,13 @@ class TestRunDPTrain(unittest.TestCase):
         config = self.config.copy()
         config["init_model_policy"] = "yes"
         odict = RunDPTrain.write_other_to_input_script(
-            odict, config, True, major_version="1"
+            odict, config, True, major_version="1", do_quantized=False
         )
         self.assertDictEqual(odict, self.expected_init_model_odict_v1)
+        odict = RunDPTrain.write_other_to_input_script(
+            odict, config, True, major_version="1", do_quantized=True
+        )
+        self.assertDictEqual(odict, self.expected_qnn_model_odict_v1)
 
     def test_update_input_dict_v1(self):
         odict = RunDPTrain.write_data_to_input_script(
@@ -347,7 +352,7 @@ class TestRunDPTrain(unittest.TestCase):
         config = self.config.copy()
         config["init_model_policy"] = "no"
         odict = RunDPTrain.write_other_to_input_script(
-            odict, config, False, major_version="1"
+            odict, config, False, major_version="1", do_quantized=False
         )
         self.assertDictEqual(odict, self.expected_odict_v1)
 
@@ -364,9 +369,13 @@ class TestRunDPTrain(unittest.TestCase):
         config = self.config.copy()
         config["init_model_policy"] = "yes"
         odict = RunDPTrain.write_other_to_input_script(
-            odict, config, True, major_version="2"
+            odict, config, True, major_version="2", do_quantized=False
         )
         self.assertDictEqual(odict, self.expected_init_model_odict_v2)
+        odict = RunDPTrain.write_other_to_input_script(
+            odict, config, True, major_version="2", do_quantized=True
+        )
+        self.assertDictEqual(odict, self.expected_qnn_model_odict_v2)
 
     def test_update_input_dict_v2(self):
         idict = self.idict_v2
@@ -381,11 +390,11 @@ class TestRunDPTrain(unittest.TestCase):
         config = self.config.copy()
         config["init_model_policy"] = "no"
         odict = RunDPTrain.write_other_to_input_script(
-            odict, config, False, major_version="2"
+            odict, config, False, major_version="2", do_quantized=False
         )
         self.assertDictEqual(odict, self.expected_odict_v2)
 
-    @patch("dpgen2.op.run_dp_train.run_command")
+    @patch("dpgen2.op.run_nvnmd_train.run_command")
     def test_exec_v1(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
@@ -399,7 +408,7 @@ class TestRunDPTrain(unittest.TestCase):
         task_name = self.task_name
         work_dir = Path(task_name)
 
-        ptrain = RunDPTrain()
+        ptrain = RunNvNMDTrain()
         out = ptrain.execute(
             OPIO(
                 {
@@ -413,13 +422,38 @@ class TestRunDPTrain(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
-        self.assertEqual(out["log"], work_dir / "train.log")
+        self.assertEqual(
+            out["model"] / "frozen_model.pb",
+            work_dir / "nvnmd_models/frozen_model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.pb",
+            work_dir / "nvnmd_models/model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.data-00000-of-00001",
+            work_dir / "nvnmd_models/model.ckpt.data-00000-of-00001",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.meta",
+            work_dir / "nvnmd_models/model.ckpt.meta",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.index",
+            work_dir / "nvnmd_models/model.ckpt.index",
+        )
+        self.assertEqual(
+            out["lcurve"],
+            work_dir / "nvnmd_cnn/lcurve.out",
+        )
+        self.assertEqual(
+            out["log"],
+            work_dir / "train.log",
+        )
 
         calls = [
-            call(["dp", "train", train_script_name]),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+            call(["dp", "train-nvnmd", train_cnn_script_name, "-s", "s1"]),
+            call(["dp", "train-nvnmd", train_qnn_script_name, "-s", "s2"]),
         ]
         mocked_run.assert_has_calls(calls)
 
@@ -427,18 +461,18 @@ class TestRunDPTrain(unittest.TestCase):
         self.assertTrue(out["log"].is_file())
         self.assertEqual(
             out["log"].read_text(),
-            "#=================== train std out ===================\n"
+            "#=================== train_cnn std out ===================\n"
             "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
+            "#=================== train_cnn std err ===================\n"
+            "#=================== train_qnn std out ===================\n"
             "bar\n"
-            "#=================== freeze std err ===================\n",
+            "#=================== train_qnn std err ===================\n",
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v1)
 
-    @patch("dpgen2.op.run_dp_train.run_command")
+    @patch("dpgen2.op.run_nvnmd_train.run_command")
     def test_exec_v2(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
@@ -452,7 +486,7 @@ class TestRunDPTrain(unittest.TestCase):
         task_name = self.task_name
         work_dir = Path(task_name)
 
-        ptrain = RunDPTrain()
+        ptrain = RunNvNMDTrain()
         out = ptrain.execute(
             OPIO(
                 {
@@ -466,13 +500,32 @@ class TestRunDPTrain(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(
+            out["model"] / "frozen_model.pb",
+            work_dir / "nvnmd_models/frozen_model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.pb",
+            work_dir / "nvnmd_models/model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.data-00000-of-00001",
+            work_dir / "nvnmd_models/model.ckpt.data-00000-of-00001",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.meta",
+            work_dir / "nvnmd_models/model.ckpt.meta",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.index",
+            work_dir / "nvnmd_models/model.ckpt.index",
+        )
+        self.assertEqual(out["lcurve"], work_dir / "nvnmd_cnn/lcurve.out")
         self.assertEqual(out["log"], work_dir / "train.log")
 
         calls = [
-            call(["dp", "train", train_script_name]),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+            call(["dp", "train-nvnmd", train_cnn_script_name, "-s", "s1"]),
+            call(["dp", "train-nvnmd", train_qnn_script_name, "-s", "s2"]),
         ]
         mocked_run.assert_has_calls(calls)
 
@@ -480,18 +533,18 @@ class TestRunDPTrain(unittest.TestCase):
         self.assertTrue(out["log"].is_file())
         self.assertEqual(
             out["log"].read_text(),
-            "#=================== train std out ===================\n"
+            "#=================== train_cnn std out ===================\n"
             "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
+            "#=================== train_cnn std err ===================\n"
+            "#=================== train_qnn std out ===================\n"
             "bar\n"
-            "#=================== freeze std err ===================\n",
+            "#=================== train_qnn std err ===================\n",
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
-    @patch("dpgen2.op.run_dp_train.run_command")
+    @patch("dpgen2.op.run_nvnmd_train.run_command")
     def test_exec_v2_init_model(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
@@ -505,7 +558,7 @@ class TestRunDPTrain(unittest.TestCase):
         task_name = self.task_name
         work_dir = Path(task_name)
 
-        ptrain = RunDPTrain()
+        ptrain = RunNvNMDTrain()
         out = ptrain.execute(
             OPIO(
                 {
@@ -519,21 +572,41 @@ class TestRunDPTrain(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(
+            out["model"] / "frozen_model.pb",
+            work_dir / "nvnmd_models/frozen_model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.pb",
+            work_dir / "nvnmd_models/model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.data-00000-of-00001",
+            work_dir / "nvnmd_models/model.ckpt.data-00000-of-00001",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.meta",
+            work_dir / "nvnmd_models/model.ckpt.meta",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.index",
+            work_dir / "nvnmd_models/model.ckpt.index",
+        )
+        self.assertEqual(out["lcurve"], work_dir / "nvnmd_cnn/lcurve.out")
         self.assertEqual(out["log"], work_dir / "train.log")
 
         calls = [
             call(
                 [
                     "dp",
-                    "train",
-                    "--init-frz-model",
-                    str(self.init_model),
-                    train_script_name,
+                    "train-nvnmd",
+                    "--init-model",
+                    "model.ckpt",
+                    train_cnn_script_name,
+                    "-s",
+                    "s1",
                 ]
-            ),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+            )
         ]
         mocked_run.assert_has_calls(calls)
 
@@ -541,18 +614,18 @@ class TestRunDPTrain(unittest.TestCase):
         self.assertTrue(out["log"].is_file())
         self.assertEqual(
             out["log"].read_text(),
-            "#=================== train std out ===================\n"
+            "#=================== train_cnn std out ===================\n"
             "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
+            "#=================== train_cnn std err ===================\n"
+            "#=================== train_qnn std out ===================\n"
             "bar\n"
-            "#=================== freeze std err ===================\n",
+            "#=================== train_qnn std err ===================\n",
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
 
-    @patch("dpgen2.op.run_dp_train.run_command")
+    @patch("dpgen2.op.run_nvnmd_train.run_command")
     def test_exec_v2_train_error(self, mocked_run):
         mocked_run.side_effect = [(1, "", "foo\n"), (0, "bar\n", "")]
 
@@ -566,7 +639,7 @@ class TestRunDPTrain(unittest.TestCase):
         task_name = self.task_name
         work_dir = Path(task_name)
 
-        ptrain = RunDPTrain()
+        ptrain = RunNvNMDTrain()
         with self.assertRaises(FatalError) as ee:
             out = ptrain.execute(
                 OPIO(
@@ -582,7 +655,7 @@ class TestRunDPTrain(unittest.TestCase):
             )
 
         calls = [
-            call(["dp", "train", train_script_name]),
+            call(["dp", "train-nvnmd", train_cnn_script_name, "-s", "s1"]),
         ]
         mocked_run.assert_has_calls(calls)
 
@@ -591,174 +664,8 @@ class TestRunDPTrain(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
-    @patch("dpgen2.op.run_dp_train.run_command")
-    def test_exec_v2_freeze_error(self, mocked_run):
-        mocked_run.side_effect = [(0, "foo\n", ""), (1, "", "bar\n")]
 
-        config = self.config.copy()
-        config["init_model_policy"] = "no"
-
-        task_path = self.task_path
-        Path(task_path).mkdir(exist_ok=True)
-        with open(Path(task_path) / train_script_name, "w") as fp:
-            json.dump(self.idict_v2, fp, indent=4)
-        task_name = self.task_name
-        work_dir = Path(task_name)
-
-        ptrain = RunDPTrain()
-        with self.assertRaises(FatalError) as ee:
-            out = ptrain.execute(
-                OPIO(
-                    {
-                        "config": config,
-                        "task_name": task_name,
-                        "task_path": Path(task_path),
-                        "init_model": Path(self.init_model),
-                        "init_data": [Path(ii) for ii in self.init_data],
-                        "iter_data": [Path(ii) for ii in self.iter_data],
-                    }
-                )
-            )
-
-        calls = [
-            call(["dp", "train", train_script_name]),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
-        ]
-        mocked_run.assert_has_calls(calls)
-
-        self.assertTrue(work_dir.is_dir())
-        with open(work_dir / train_script_name) as fp:
-            jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_odict_v2)
-
-    @patch("dpgen2.op.run_dp_train.run_command")
-    def test_exec_v2_finetune_finetune(self, mocked_run):
-        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
-        config = self.config.copy()
-        task_path = self.task_path
-        Path(task_path).mkdir(exist_ok=True)
-        with open(Path(task_path) / train_script_name, "w") as fp:
-            json.dump(self.idict_v2, fp, indent=4)
-        task_name = self.task_name
-        work_dir = Path(task_name)
-
-        ptrain = RunDPTrain()
-        out = ptrain.execute(
-            OPIO(
-                {
-                    "config": config,
-                    "task_name": task_name,
-                    "task_path": Path(task_path),
-                    "init_model": Path(self.init_model),
-                    "init_data": [Path(ii) for ii in self.init_data],
-                    "iter_data": [Path(ii) for ii in self.iter_data],
-                    "optional_parameter": {
-                        "mixed_type": False,
-                        "finetune_mode": "finetune",
-                    },
-                }
-            )
-        )
-        self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
-        self.assertEqual(out["log"], work_dir / "train.log")
-
-        calls = [
-            call(
-                [
-                    "dp",
-                    "train",
-                    train_script_name,
-                    "--finetune",
-                    str(self.init_model),
-                ]
-            ),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
-        ]
-        mocked_run.assert_has_calls(calls)
-
-        self.assertTrue(work_dir.is_dir())
-        self.assertTrue(out["log"].is_file())
-        self.assertEqual(
-            out["log"].read_text(),
-            "#=================== train std out ===================\n"
-            "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
-            "bar\n"
-            "#=================== freeze std err ===================\n",
-        )
-        with open(out["script"]) as fp:
-            jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_odict_v2)
-
-    @patch("dpgen2.op.run_dp_train.run_command")
-    def test_exec_v2_finetune_train_init(self, mocked_run):
-        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
-
-        config = self.config.copy()
-        config["init_model_policy"] = "yes"
-        task_path = self.task_path
-        Path(task_path).mkdir(exist_ok=True)
-        with open(Path(task_path) / train_script_name, "w") as fp:
-            json.dump(self.idict_v2, fp, indent=4)
-        task_name = self.task_name
-        work_dir = Path(task_name)
-
-        ptrain = RunDPTrain()
-        out = ptrain.execute(
-            OPIO(
-                {
-                    "config": config,
-                    "task_name": task_name,
-                    "task_path": Path(task_path),
-                    "init_model": Path(self.init_model),
-                    "init_data": [Path(ii) for ii in self.init_data],
-                    "iter_data": [Path(ii) for ii in self.iter_data],
-                    "optional_parameter": {
-                        "mixed_type": False,
-                        "finetune_mode": "no",
-                    },
-                }
-            )
-        )
-        self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
-        self.assertEqual(out["log"], work_dir / "train.log")
-
-        calls = [
-            call(
-                [
-                    "dp",
-                    "train",
-                    "--init-frz-model",
-                    str(self.init_model),
-                    train_script_name,
-                ]
-            ),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
-        ]
-        mocked_run.assert_has_calls(calls)
-
-        self.assertTrue(work_dir.is_dir())
-        self.assertTrue(out["log"].is_file())
-        self.assertEqual(
-            out["log"].read_text(),
-            "#=================== train std out ===================\n"
-            "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
-            "bar\n"
-            "#=================== freeze std err ===================\n",
-        )
-        with open(out["script"]) as fp:
-            jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
-
-
-class TestRunDPTrainNullIterData(unittest.TestCase):
+class TestRunNvNMDTrainNullIterData(unittest.TestCase):
     def setUp(self):
         self.atom_name = "foo"
         self.init_nframs_0 = 3
@@ -773,6 +680,10 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         self.init_data = sorted(list(self.init_data))
 
         self.init_model = Path("bar.pb")
+        self.init_model_ckpt_meta = Path("model.ckpt.meta")
+        self.init_model_ckpt_data = Path("model.ckpt.data")
+        self.init_model_ckpt_index = Path("model.ckpt.index")
+        self.init_model = Path("nvnmd_models")
 
         self.config = {
             "init_model_policy": "no",
@@ -844,58 +755,11 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         config = self.config.copy()
         config["init_model_policy"] = "no"
         odict = RunDPTrain.write_other_to_input_script(
-            odict, config, False, major_version="2"
+            odict, config, False, major_version="2", do_quantized=False
         )
         self.assertDictEqual(odict, self.expected_odict_v2)
 
-    def test_exec_v2_empty_list(self):
-        config = self.config.copy()
-        config["init_model_policy"] = "no"
-
-        task_path = self.task_path
-        Path(task_path).mkdir(exist_ok=True)
-        with open(Path(task_path) / train_script_name, "w") as fp:
-            json.dump(self.idict_v2, fp, indent=4)
-        task_name = self.task_name
-        work_dir = Path(task_name)
-
-        self.init_model = self.init_model.absolute()
-        self.init_model.write_text("this is init model")
-
-        ptrain = RunDPTrain()
-        out = ptrain.execute(
-            OPIO(
-                {
-                    "config": config,
-                    "task_name": task_name,
-                    "task_path": Path(task_path),
-                    "init_model": Path(self.init_model),
-                    "init_data": [Path(ii) for ii in self.init_data],
-                    "iter_data": [],
-                }
-            )
-        )
-        self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], self.init_model)
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
-        self.assertEqual(out["log"], work_dir / "train.log")
-
-        self.assertTrue(work_dir.is_dir())
-        self.assertTrue(out["log"].is_file())
-        self.assertEqual(
-            out["log"].read_text(),
-            f"We have init model {self.init_model} and "
-            f"no iteration training data. "
-            f"The training is skipped.\n",
-        )
-        with open(out["script"]) as fp:
-            jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_odict_v2)
-        self.assertEqual(Path(out["model"]).read_text(), "this is init model")
-
-        os.remove(self.init_model)
-
-    @patch("dpgen2.op.run_dp_train.run_command")
+    @patch("dpgen2.op.run_nvnmd_train.run_command")
     def test_exec_v2_empty_dir(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
@@ -911,7 +775,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         empty_data = Path("foo")
         empty_data.mkdir(exist_ok=True)
 
-        ptrain = RunDPTrain()
+        ptrain = RunNvNMDTrain()
         out = ptrain.execute(
             OPIO(
                 {
@@ -925,13 +789,32 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             )
         )
         self.assertEqual(out["script"], work_dir / train_script_name)
-        self.assertEqual(out["model"], work_dir / "frozen_model.pb")
-        self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
+        self.assertEqual(
+            out["model"] / "frozen_model.pb",
+            work_dir / "nvnmd_models/frozen_model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.pb",
+            work_dir / "nvnmd_models/model.pb",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.data-00000-of-00001",
+            work_dir / "nvnmd_models/model.ckpt.data-00000-of-00001",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.meta",
+            work_dir / "nvnmd_models/model.ckpt.meta",
+        )
+        self.assertEqual(
+            out["model"] / "model.ckpt.index",
+            work_dir / "nvnmd_models/model.ckpt.index",
+        )
+        self.assertEqual(out["lcurve"], work_dir / "nvnmd_cnn/lcurve.out")
         self.assertEqual(out["log"], work_dir / "train.log")
 
         calls = [
-            call(["dp", "train", train_script_name]),
-            call(["dp", "freeze", "-o", "frozen_model.pb"]),
+            call(["dp", "train-nvnmd", train_cnn_script_name, "-s", "s1"]),
+            call(["dp", "train-nvnmd", train_qnn_script_name, "-s", "s2"]),
         ]
         mocked_run.assert_has_calls(calls)
 
@@ -939,54 +822,13 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         self.assertTrue(out["log"].is_file())
         self.assertEqual(
             out["log"].read_text(),
-            "#=================== train std out ===================\n"
+            "#=================== train_cnn std out ===================\n"
             "foo\n"
-            "#=================== train std err ===================\n"
-            "#=================== freeze std out ===================\n"
+            "#=================== train_cnn std err ===================\n"
+            "#=================== train_qnn std out ===================\n"
             "bar\n"
-            "#=================== freeze std err ===================\n",
+            "#=================== train_qnn std err ===================\n",
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
-
-
-class TestSplitValid(unittest.TestCase):
-    def setUp(self):
-        s = fake_system(10, 1)
-        s.to_deepmd_npy("fake_data")
-        ms = fake_multi_sys([10, 20], [1, 2])
-        ms.to_deepmd_npy_mixed("fake_mixed_data")
-
-    def test_split_valid(self):
-        train_systems, valid_systems = split_valid(["fake_data"], 0.1)
-        self.assertEqual(len(train_systems), 1)
-        s = dpdata.LabeledSystem(train_systems[0], fmt="deepmd/npy")
-        self.assertEqual(len(s), 9)
-        self.assertEqual(len(valid_systems), 1)
-        s = dpdata.LabeledSystem(valid_systems[0], fmt="deepmd/npy")
-        self.assertEqual(len(s), 1)
-
-    def test_split_valid_mixed(self):
-        train_systems, valid_systems = split_valid(
-            ["fake_mixed_data/1", "fake_mixed_data/2"], 0.1
-        )
-        self.assertEqual(len(train_systems), 2)
-        ms = dpdata.MultiSystems()
-        ms.load_systems_from_file(train_systems[0], fmt="deepmd/npy/mixed")
-        self.assertEqual(len(ms[0]), 9)
-        ms = dpdata.MultiSystems()
-        ms.load_systems_from_file(train_systems[1], fmt="deepmd/npy/mixed")
-        self.assertEqual(len(ms[0]), 18)
-        self.assertEqual(len(valid_systems), 2)
-        ms = dpdata.MultiSystems()
-        ms.load_systems_from_file(valid_systems[0], fmt="deepmd/npy/mixed")
-        self.assertEqual(len(ms[0]), 1)
-        ms = dpdata.MultiSystems()
-        ms.load_systems_from_file(valid_systems[1], fmt="deepmd/npy/mixed")
-        self.assertEqual(len(ms[0]), 2)
-
-    def tearDown(self):
-        for f in ["fake_data", "fake_mixed_data", "train_data", "valid_data"]:
-            if os.path.exists(f):
-                shutil.rmtree(f)
