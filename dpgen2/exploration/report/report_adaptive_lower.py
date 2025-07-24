@@ -450,7 +450,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 len(self.candi_picked),
                 size=max_nframes,
                 replace=False,
-                p=prob / np.sum(prob)
+                p=prob / np.sum(prob),
             )
             ret = [self.candi_picked[i] for i in indices]
         else:

@@ -198,19 +198,19 @@ class TestTrajsExplorationReport(unittest.TestCase):
         )
 
         def faked_choices(
-            a,  #numb_candi
-            size=None,  #numb_select
-            replace=False, # non-repeative sampling
+            a,  # numb_candi
+            size=None,  # numb_select
+            replace=False,  # non-repeative sampling
             p=None,  # normalized prob
         ):
             # hist: 2bins, 0.1-0.4 5candi, 0.4-0.7 7candi
             # only return those with mdf 0.1-0.4
-            candi = ter.candi_picked 
+            candi = ter.candi_picked
             self.assertEqual(a, 12)
             self.assertEqual(len(p), 12)
             ret_indices = []
             for ii in range(a):
-                tidx, fidx = candi[ii] 
+                tidx, fidx = candi[ii]
                 this_mdf = md_f[tidx][fidx]
                 if this_mdf < 0.4:
                     self.assertAlmostEqual(p[ii], 0.1)  # 1/5 / 2.0
