@@ -1,5 +1,8 @@
 import itertools
 import random
+from pathlib import (
+    Path,
+)
 from typing import (
     List,
     Optional,
@@ -50,6 +53,7 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         ele_temp_f: Optional[float] = None,
         ele_temp_a: Optional[float] = None,
         pimd_bead: Optional[str] = None,
+        input_extra_files: Optional[List[str]] = None,
     ):
         """
         Set MD parameters
@@ -72,6 +76,12 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         self.relative_v_epsilon = relative_v_epsilon
         self.ele_temp_f = ele_temp_f
         self.ele_temp_a = ele_temp_a
+        if input_extra_files is not None:
+            self.input_extra_files = [Path(ii).name for ii in input_extra_files]
+            self.input_extra_file_contents = [Path(ii).read_text() for ii in input_extra_files]
+        else:
+            self.input_extra_files = []
+            self.input_extra_file_contents = []
         self.md_set = True
         self.pimd_bead = pimd_bead
 
@@ -136,4 +146,9 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
                 pimd_bead=self.pimd_bead,
             ),
         )
+
+        # Add extra files to the task
+        for file_name, file_content in zip(self.input_extra_files, self.input_extra_file_contents):
+            task.add_file(file_name, file_content)
+
         return task
