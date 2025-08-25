@@ -48,7 +48,9 @@ def npt_task_group_args():
     doc_ele_temp_f = "The electron temperature set by frame style"
     doc_ele_temp_a = "The electron temperature set by atomistic style"
     doc_pimd_bead = "Bead index for PIMD, None for non-PIMD"
-    doc_input_extra_files = "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    doc_input_extra_files = (
+        "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    )
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -61,7 +63,9 @@ def npt_task_group_args():
         ),
         Argument("temps", list, optional=False, doc=doc_temps, alias=["Ts"]),
         Argument("press", list, optional=True, doc=doc_press, alias=["Ps"]),
-        Argument("ens", str, optional=True, default="nve", doc=doc_ens, alias=["ensemble"]),
+        Argument(
+            "ens", str, optional=True, default="nve", doc=doc_ens, alias=["ensemble"]
+        ),
         Argument("dt", float, optional=True, default=1e-3, doc=doc_dt),
         Argument("nsteps", int, optional=True, default=100, doc=doc_nsteps),
         Argument(
@@ -77,7 +81,9 @@ def npt_task_group_args():
         Argument("pka_e", float, optional=True, default=None, doc=doc_pka_e),
         Argument("neidelay", int, optional=True, default=None, doc=doc_neidelay),
         Argument("no_pbc", bool, optional=True, default=False, doc=doc_no_pbc),
-        Argument("use_clusters", bool, optional=True, default=False, doc=doc_use_clusters),
+        Argument(
+            "use_clusters", bool, optional=True, default=False, doc=doc_use_clusters
+        ),
         Argument(
             "relative_f_epsilon",
             float,
@@ -130,7 +136,9 @@ def lmp_template_task_group_args():
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
     doc_extra_pair_style_args = "The extra arguments for pair_style"
     doc_pimd_bead = "Bead index for PIMD, None for non-PIMD"
-    doc_input_extra_files = "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    doc_input_extra_files = (
+        "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    )
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),

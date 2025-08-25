@@ -78,7 +78,9 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         self.ele_temp_a = ele_temp_a
         if input_extra_files is not None:
             self.input_extra_files = [Path(ii).name for ii in input_extra_files]
-            self.input_extra_file_contents = [Path(ii).read_text() for ii in input_extra_files]
+            self.input_extra_file_contents = [
+                Path(ii).read_text() for ii in input_extra_files
+            ]
         else:
             self.input_extra_files = []
             self.input_extra_file_contents = []
@@ -148,7 +150,9 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         )
 
         # Add extra files to the task
-        for file_name, file_content in zip(self.input_extra_files, self.input_extra_file_contents):
+        for file_name, file_content in zip(
+            self.input_extra_files, self.input_extra_file_contents
+        ):
             task.add_file(file_name, file_content)
 
         return task
