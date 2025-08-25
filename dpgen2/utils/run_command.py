@@ -58,8 +58,12 @@ def run_command_streaming(
             pipe.close()
 
         # Start threads for streaming
-        stdout_thread = threading.Thread(target=stream_output, args=(process.stdout, stdout_buffer, False))
-        stderr_thread = threading.Thread(target=stream_output, args=(process.stderr, stderr_buffer, True))
+        stdout_thread = threading.Thread(
+            target=stream_output, args=(process.stdout, stdout_buffer, False)
+        )
+        stderr_thread = threading.Thread(
+            target=stream_output, args=(process.stderr, stderr_buffer, True)
+        )
 
         stdout_thread.start()
         stderr_thread.start()
