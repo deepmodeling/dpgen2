@@ -4,24 +4,50 @@ DPGEN2 is a Python package that implements concurrent learning workflows for gen
 
 Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
 
+## Development Requirements
+
+### Semantic Commit Messages
+Use semantic commit messages for all PR titles and commit messages. Follow the format:
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Examples:
+- `feat: add comprehensive GitHub Copilot instructions`
+- `fix: remove test artifacts from git tracking`
+- `docs: update installation guide to use uv`
+- `refactor(cli): improve argument parsing`
+- `test: add validation for workflow components`
+
+Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`
+
+### Package Manager Preference
+Prefer `uv` over `pip` for installing Python dependencies like dpgen2. Use `uv` commands for faster and more reliable dependency management when possible.
+
 ## Working Effectively
 
 ### Bootstrap and Installation
 Run these commands in sequence to set up the development environment:
 ```bash
-pip install --upgrade pip
-pip install -e .
+uv pip install --upgrade pip
+uv pip install -e .
 ```
 - Installation takes approximately 5 minutes. NEVER CANCEL.
 - This installs DPGEN2 in development mode with all core dependencies
 - Main dependencies: numpy, dpdata, pydflow, dargs, scipy, lbg, packaging, fpop, dpgui, cp2kdata
+- Prefer `uv` for faster dependency resolution and installation
 
 ### Install Development Tools
 ```bash
-pip install mock coverage pytest fakegaussian ruff isort
+uv pip install mock coverage pytest fakegaussian ruff isort
 ```
 - Takes under 1 minute
 - Required for testing and linting
+- Use `uv` for faster installation of development dependencies
 
 ### Test the Installation
 ```bash
@@ -212,14 +238,14 @@ Example configurations are in `examples/` directory:
 
 ### No Complex Build Process
 DPGEN2 is a pure Python package - no compilation required:
-- Install with `pip install -e .`
+- Install with `uv pip install -e .`
 - No Makefile, configure scripts, or build system
 - Dependencies are managed through pyproject.toml
 
 ### Documentation
 Located in `docs/` directory:
 - Uses Sphinx with MyST parser for Markdown support
-- Requires additional dependencies: `pip install sphinx sphinx-book-theme myst-parser`
+- Requires additional dependencies: `uv pip install sphinx sphinx-book-theme myst-parser`
 - Build with `cd docs && make html` (may require deepmodeling-sphinx)
 
 ### CI/CD Pipeline
@@ -231,7 +257,7 @@ GitHub Actions workflow (`.github/workflows/test.yml`):
 ## Timing Expectations and "NEVER CANCEL" Guidelines
 
 **Installation and Setup:**
-- `pip install -e .`: ~5 minutes - NEVER CANCEL
+- `uv pip install -e .`: ~5 minutes - NEVER CANCEL
 - Development tools install: <1 minute
 
 **Testing:**
