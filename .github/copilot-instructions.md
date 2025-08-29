@@ -103,20 +103,34 @@ After making changes, always test these core workflows:
    dpgen2 submit --help
    dpgen2 status --help
    ```
+   - Should show command help without errors
 
-2. **Run Unit Tests:**
+2. **Module Import Test:**
+   ```bash
+   python -c "from dpgen2.entrypoint.main import main_parser; from dpgen2.flow import dpgen_loop; print('Imports work')"
+   ```
+   - Validates core modules can be imported
+
+3. **Quick Unit Tests:**
    ```bash
    cd tests
    SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest entrypoint.test_argparse -v
    ```
    - Takes ~1 second, validates argument parsing
 
-3. **Test Core Workflow Components:**
+4. **Core Workflow Components:**
    ```bash
    cd tests  
    SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest test_block_cl -v
    ```
    - Takes ~30 seconds, tests core concurrent learning workflow
+
+5. **Multiple Test Files (Validation Suite):**
+   ```bash
+   cd tests
+   SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest entrypoint.test_argparse entrypoint.test_workflow test_collect_data -v
+   ```
+   - Takes ~3 seconds, tests multiple components
 
 ## Repository Structure and Key Locations
 
@@ -177,8 +191,10 @@ Always run these commands and ensure they pass:
 ```bash
 ruff format dpgen2/
 isort dpgen2/
-cd tests && SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest entrypoint.test_argparse -v
+cd tests && SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest entrypoint.test_argparse entrypoint.test_workflow test_collect_data -v
 ```
+- Formatting: <1 second each
+- Validation tests: ~3 seconds total
 
 ### Working with Examples
 Example configurations are in `examples/` directory:
