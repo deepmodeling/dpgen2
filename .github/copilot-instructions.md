@@ -146,7 +146,7 @@ After making changes, always test these core workflows:
 
 4. **Core Workflow Components:**
    ```bash
-   cd tests  
+   cd tests
    SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest test_block_cl -v
    ```
    - Takes ~30 seconds, tests core concurrent learning workflow
@@ -165,7 +165,7 @@ After making changes, always test these core workflows:
   - `dpgen2/entrypoint/` - CLI commands and main entry points
   - `dpgen2/flow/` - Core workflow implementations
   - `dpgen2/op/` - Individual operators (training, exploration, etc.)
-  - `dpgen2/exploration/` - Exploration strategies and task groups  
+  - `dpgen2/exploration/` - Exploration strategies and task groups
   - `dpgen2/fp/` - First-principles calculation interfaces
 - `tests/` - Unit tests (use DFLOW_DEBUG=1 for local execution)
 - `examples/` - Example configuration files
@@ -173,7 +173,7 @@ After making changes, always test these core workflows:
 
 ### Important Files
 - `dpgen2/entrypoint/main.py` - Main CLI entry point
-- `dpgen2/flow/dpgen_loop.py` - Core DPGEN workflow implementation  
+- `dpgen2/flow/dpgen_loop.py` - Core DPGEN workflow implementation
 - `examples/almg/input.json` - Example workflow configuration
 - `pyproject.toml` - Project configuration and dependencies
 - `.pre-commit-config.yaml` - Pre-commit hooks configuration
@@ -187,7 +187,7 @@ DPGEN2 implements a concurrent learning algorithm with these main components:
 
 **Key Steps in Each Iteration:**
 - `prep_run_dp_train` - Prepare and run model training
-- `prep_run_lmp` - Prepare and run LAMMPS exploration 
+- `prep_run_lmp` - Prepare and run LAMMPS exploration
 - `select_confs` - Select configurations for labeling
 - `prep_run_fp` - Prepare and run first-principles calculations
 - `collect_data` - Collect results and update dataset
@@ -201,7 +201,7 @@ DPGEN2 implements a concurrent learning algorithm with these main components:
    SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest entrypoint.test_argparse -v
    ```
 
-2. **Core functionality** (workflow tests): ~30 seconds  
+2. **Core functionality** (workflow tests): ~30 seconds
    ```bash
    cd tests
    SKIP_UT_WITH_DFLOW=0 DFLOW_DEBUG=1 python -m unittest test_block_cl -v
@@ -261,7 +261,7 @@ GitHub Actions workflow (`.github/workflows/test.yml`):
 - Development tools install: <1 minute
 
 **Testing:**
-- Individual unit tests: 1-30 seconds  
+- Individual unit tests: 1-30 seconds
 - Full test suite: 5-15 minutes - NEVER CANCEL, set 30+ minute timeout
 - Linting (ruff/isort): <1 second
 
