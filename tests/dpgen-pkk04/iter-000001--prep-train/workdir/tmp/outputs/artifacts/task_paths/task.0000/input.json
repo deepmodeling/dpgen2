@@ -1,0 +1,8 @@
+{
+    "seed": 0,
+    "data": [
+        "/home/runner/work/dpgen2/dpgen2/tests/init_data/bar",
+        "/home/runner/work/dpgen2/dpgen2/tests/init_data/foo",
+        "/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/iter-000000--collect-data/workdir/tmp/outputs/artifacts/iter_data/iter-000000"
+    ]
+}

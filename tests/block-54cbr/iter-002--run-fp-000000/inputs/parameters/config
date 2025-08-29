@@ -1,0 +1,1 @@
+{"inputs": {"py/object": "dpgen2.fp.vasp_input.VaspInputs", "kspacing": 0.16, "kgamma": true, "_incar_template": "incar template", "_potcars": {"foo": "bar"}}}

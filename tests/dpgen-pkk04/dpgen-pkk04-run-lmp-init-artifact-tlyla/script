@@ -1,0 +1,19 @@
+import os, json
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/log/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/log/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/traj/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/traj/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/model_devi/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/model_devi/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/plm_output/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/plm_output/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/optional_output/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/optional_output/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/extra_outputs/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/dpgen-pkk04/dpgen-pkk04-run-lmp-init-artifact-tlyla/workdir/tmp/outputs/artifacts/extra_outputs/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)

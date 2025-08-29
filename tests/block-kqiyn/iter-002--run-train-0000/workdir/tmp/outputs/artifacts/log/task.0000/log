@@ -1,0 +1,6 @@
+init_model /home/runner/work/dpgen2/dpgen2/tests/model.000.pb OK
+data /home/runner/work/dpgen2/dpgen2/tests/init_data/bar OK
+data /home/runner/work/dpgen2/dpgen2/tests/init_data/foo OK
+data /home/runner/work/dpgen2/dpgen2/tests/iter-000 OK
+data /home/runner/work/dpgen2/dpgen2/tests/iter-001 OK
+script /home/runner/work/dpgen2/dpgen2/tests/block-kqiyn/iter-002--prep-train/workdir/tmp/outputs/artifacts/task_paths/task.0000/input.json OK

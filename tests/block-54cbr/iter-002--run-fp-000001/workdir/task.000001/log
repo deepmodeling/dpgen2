@@ -1,0 +1,4 @@
+select conf.1
+mocked conf 1
+mocked input 1
+incar template

@@ -1,0 +1,1 @@
+{"mixed_type": true, "finetune_mode": {"py/object": "dflow.io.ArgoVar", "expr": "inputs.parameters['optional_parameter']['finetune_mode']", "is_str": true}}

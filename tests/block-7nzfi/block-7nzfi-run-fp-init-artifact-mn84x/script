@@ -1,0 +1,10 @@
+import os, json
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/log/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/log/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/labeled_data/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/labeled_data/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
+os.makedirs(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/extra_outputs/.dflow', exist_ok=True)
+with open(r'/home/runner/work/dpgen2/dpgen2/tests/block-7nzfi/block-7nzfi-run-fp-init-artifact-mn84x/workdir/tmp/outputs/artifacts/extra_outputs/.dflow/init', 'w') as f:
+    json.dump({'path_list': []}, f)
