@@ -327,18 +327,16 @@ def main():
     # Configure root logger for consistent logging format and level
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    formatter = logging.Formatter("[%(asctime)s] %(name)s - %(levelname)-7s - %(message)s")
+    formatter = logging.Formatter("[%(asctime)s] %(name)s - %(levelname)-5s : %(message)s")
 
     if root_logger.hasHandlers():
         # If handlers already exist (e.g., created by other modules), update their formatter and level
         for handler in root_logger.handlers:
             handler.setFormatter(formatter)
             handler.setLevel(logging.INFO)
-        logging.info("Logging configuration has been updated.")
     else:
         # If no handlers exist, initialize logging with the desired format and level
-        logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(name)s - %(levelname)-7s - %(message)s")
-        logging.info("Logging system initialized.")
+        logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(name)s - %(levelname)-5s : %(message)s")
 
     args = parse_args()
     dict_args = vars(args)
