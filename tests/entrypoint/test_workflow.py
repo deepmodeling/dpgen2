@@ -1,19 +1,10 @@
 import json
-import os
-import shutil
 import textwrap
 import unittest
 
-import dflow
 import mock
-from dflow import (
-    Workflow,
-)
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.workflow import (
     execute_workflow_subcommand,
 )

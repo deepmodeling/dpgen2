@@ -1,40 +1,19 @@
-import json
-import os
 import shutil
 import time
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
-    upload_packages,
 )
 
 try:
@@ -65,10 +44,10 @@ class TestMockedCollectData(unittest.TestCase):
         self.labeled_data = [Path(ii) for ii in self.labeled_data]
         for ii in self.iter_data:
             ii.mkdir(exist_ok=True, parents=True)
-            (ii / "data").write_text(f"data of {str(ii)}")
+            (ii / "data").write_text(f"data of {ii!s}")
         for ii in self.labeled_data:
             (ii).mkdir(exist_ok=True, parents=True)
-            (ii / "data").write_text(f"data of {str(ii)}")
+            (ii / "data").write_text(f"data of {ii!s}")
         self.type_map = []
 
     def tearDown(self):
@@ -115,10 +94,10 @@ class TestMockedCollectDataArgo(unittest.TestCase):
         self.labeled_data = [Path(ii) for ii in self.labeled_data]
         for ii in self.iter_data:
             ii.mkdir(exist_ok=True, parents=True)
-            (ii / "data").write_text(f"data of {str(ii)}")
+            (ii / "data").write_text(f"data of {ii!s}")
         for ii in self.labeled_data:
             (ii).mkdir(exist_ok=True, parents=True)
-            (ii / "data").write_text(f"data of {str(ii)}")
+            (ii / "data").write_text(f"data of {ii!s}")
         self.iter_data = upload_artifact(list(self.iter_data))
         self.labeled_data = upload_artifact(self.labeled_data)
         self.type_map = []

@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import time
@@ -6,33 +5,15 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
 )
 
 try:
@@ -89,7 +70,8 @@ def _check_log(
             lines.append(" ".join(ww))
     else:
         lines = lines_
-    revised_fname = lambda ff: Path(ff).name if only_check_name else Path(ff)
+    def revised_fname(ff):
+        return Path(ff).name if only_check_name else Path(ff)
     tcase.assertEqual(
         lines[0].split(" "),
         ["init_model", str(revised_fname(Path(path) / init_model)), "OK"],
@@ -234,7 +216,7 @@ class TestMockedRunDPTrain(unittest.TestCase):
             Path(self.train_scripts[ii]).write_text("{}")
 
     def tearDown(self):
-        for ii in ["init_data", "iter_data"] + self.task_names:
+        for ii in ["init_data", "iter_data", *self.task_names]:
             if Path(ii).exists():
                 shutil.rmtree(str(ii))
         for ii in self.init_models:
@@ -302,7 +284,7 @@ class TestTrainDp(unittest.TestCase):
         ]
 
     def tearDown(self):
-        for ii in ["init_data", "iter_data"] + self.task_names:
+        for ii in ["init_data", "iter_data", *self.task_names]:
             if Path(ii).exists():
                 shutil.rmtree(str(ii))
         for ii in self.str_init_models:

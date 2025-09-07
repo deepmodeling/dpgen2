@@ -1,21 +1,9 @@
 import json
-import os
-import random
-import shutil
-import tempfile
 import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
 
-import dpdata
-import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.args import (
     normalize,
 )

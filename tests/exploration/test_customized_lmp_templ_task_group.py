@@ -1,17 +1,11 @@
 import itertools
 import os
-import shutil
 import textwrap
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import numpy as np
 
 try:
     from exploration.context import (
@@ -20,10 +14,6 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from unittest.mock import (
-    Mock,
-    patch,
-)
 
 from dpgen2.constants import (
     lmp_conf_name,
@@ -32,7 +22,6 @@ from dpgen2.constants import (
 )
 from dpgen2.exploration.task import (
     CustomizedLmpTemplateTaskGroup,
-    ExplorationStage,
 )
 
 from .test_lmp_templ_task_group import (

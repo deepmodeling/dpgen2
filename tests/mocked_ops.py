@@ -1,9 +1,7 @@
 from dflow.python import (
     OP,
     OPIO,
-    Artifact,
     FatalError,
-    OPIOSign,
     upload_packages,
 )
 
@@ -11,7 +9,6 @@ upload_packages.append(__file__)
 
 import json
 import os
-import pickle
 import re
 import shutil
 from pathlib import (
@@ -31,18 +28,13 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from dpgen2.constants import (
-    calypso_check_opt_file,
-    calypso_run_opt_file,
     fp_task_pattern,
     lmp_conf_name,
     lmp_input_name,
     lmp_log_name,
     lmp_model_devi_name,
-    lmp_task_pattern,
     lmp_traj_name,
     model_name_pattern,
-    train_log_name,
-    train_script_name,
     train_task_pattern,
 )
 from dpgen2.exploration.report import (
@@ -64,7 +56,6 @@ from dpgen2.fp import (
     RunVasp,
 )
 from dpgen2.fp.vasp import (
-    VaspInputs,
     vasp_conf_name,
     vasp_input_name,
 )
@@ -79,9 +70,6 @@ from dpgen2.op.prep_caly_dp_optim import (
 )
 from dpgen2.op.prep_dp_train import (
     PrepDPTrain,
-)
-from dpgen2.op.prep_lmp import (
-    PrepExplorationTaskGroup,
 )
 from dpgen2.op.run_caly_dp_optim import (
     RunCalyDPOptim,
@@ -221,15 +209,15 @@ class MockedRunDPTrain(RunDPTrain):
 
         assert init_model.exists()
         with log.open("w") as f:
-            f.write(f"init_model {str(init_model)} OK\n")
+            f.write(f"init_model {init_model!s} OK\n")
         for ii in jtmp["data"]:
             assert Path(ii).exists()
             assert (ii in init_data_str) or (ii in iter_data_str)
             with log.open("a") as f:
-                f.write(f"data {str(ii)} OK\n")
+                f.write(f"data {ii!s} OK\n")
         assert script.exists()
         with log.open("a") as f:
-            f.write(f"script {str(script)} OK\n")
+            f.write(f"script {script!s} OK\n")
 
         with model.open("w") as f:
             f.write("read from init model: \n")
@@ -328,10 +316,10 @@ class MockedRunDPTrainNoneInitModel(RunDPTrain):
             assert Path(ii).exists()
             assert (ii in init_data_str) or (ii in iter_data_str)
             with log.open("a") as f:
-                f.write(f"data {str(ii)} OK\n")
+                f.write(f"data {ii!s} OK\n")
         assert script.exists()
         with log.open("a") as f:
-            f.write(f"script {str(script)} OK\n")
+            f.write(f"script {script!s} OK\n")
 
         with model.open("w") as f:
             f.write("read from init model: \n")
@@ -865,7 +853,7 @@ class MockedConfSelector(ConfSelector):
         self,
         trajs: List[Path],
         model_devis: List[Path],
-        type_map: List[str] = None,
+        type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         confs = []
@@ -922,7 +910,7 @@ class MockedConstTrustLevelStageScheduler(ConvergenceCheckStageScheduler):
         self,
         stage: ExplorationStage,
         conv_accuracy: float = 0.9,
-        max_numb_iter: int = None,
+        max_numb_iter: Optional[int] = None,
     ):
         self.selector = MockedConfSelector(
             conv_accuracy=conv_accuracy,
@@ -982,7 +970,7 @@ class MockedCollRunCaly(CollRunCaly):
         finished = "true" if int(cnt_num) == int(max_step) else "false"
         if finished == "false":
             for i in range(5):
-                Path(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+                Path(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
 
             if step is None:
                 Path("step").write_text("2")

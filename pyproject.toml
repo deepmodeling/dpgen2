@@ -111,4 +111,3 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["W291"]  # Ignore trailing whitespace in tests to preserve string content
-"docs/**/*.py" = ["DTZ011"]  # Ignore datetime.date.today() in docs

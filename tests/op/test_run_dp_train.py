@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 import shutil
@@ -8,14 +7,9 @@ from pathlib import (
 )
 
 import dpdata
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
     FatalError,
-    OPIOSign,
-    TransientError,
 )
 from fake_data_set import (
     fake_multi_sys,
@@ -27,17 +21,12 @@ from mock import (
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     train_script_name,
-    train_task_pattern,
 )
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
-    _make_train_command,
     split_valid,
 )
 

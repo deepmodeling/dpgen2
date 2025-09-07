@@ -1,21 +1,13 @@
 import json
 import os
-import random
-import shutil
-import tempfile
 import textwrap
 import unittest
 from pathlib import (
     Path,
 )
 
-import dpdata
-import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
@@ -28,7 +20,6 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReport,
     ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.scheduler import (
@@ -37,10 +28,6 @@ from dpgen2.exploration.scheduler import (
 )
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
-)
-from dpgen2.exploration.task import (
-    ExplorationStage,
-    ExplorationTaskGroup,
 )
 from mocked_ops import (
     MockedExplorationReport,
@@ -431,7 +418,7 @@ class TestSubmitCmdDist(unittest.TestCase):
         )
 
         config["mode"] = None
-        for ii in self.touched_files + ["POSCAR"]:
+        for ii in [*self.touched_files, "POSCAR"]:
             os.remove(ii)
 
     def test(self):

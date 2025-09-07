@@ -1,15 +1,5 @@
-import os
-import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
-from typing import (
-    List,
-    Set,
-)
 
-import numpy as np
 
 try:
     from exploration.context import (
@@ -18,24 +8,7 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
-from dflow.python import (
-    FatalError,
-)
 
-from dpgen2.exploration.report import (
-    ExplorationReport,
-)
-from dpgen2.exploration.scheduler import (
-    ConvergenceCheckStageScheduler,
-    ExplorationScheduler,
-)
-from dpgen2.exploration.selector import (
-    ConfSelectorFrames,
-)
-from dpgen2.exploration.task import (
-    ExplorationStage,
-    ExplorationTaskGroup,
-)
 from dpgen2.utils.dflow_query import (
     find_slice_ranges,
     get_all_schedulers,
@@ -49,14 +22,6 @@ from dpgen2.utils.dflow_query import (
 )
 
 # isort: off
-import utils.context
-from mocked_ops import (
-    MockedExplorationReport,
-    MockedExplorationTaskGroup,
-    MockedExplorationTaskGroup1,
-    MockedStage,
-    MockedStage1,
-)
 
 # isort: on
 
@@ -198,7 +163,7 @@ class TestDflowQuery(unittest.TestCase):
         )
         self.assertEqual(value, 10)
 
-    def test_get_last_scheduler(self):
+    def test_get_last_scheduler_none_global_false(self):
         value = get_last_scheduler(
             MockedWF(none_global=False),
             ["iter-1--scheduler", "foo", "bar", "iter-0--scheduler", "init--scheduler"],
@@ -220,7 +185,7 @@ class TestDflowQuery(unittest.TestCase):
         idxes = find_slice_ranges(dpgen_keys, "run-lmp")
         self.assertEqual(idxes, [[8, 14], [30, 36]])
 
-    def test_sort_slice_ops(self):
+    def test_sort_slice_ops_nice_format(self):
         expected_output = [
             "init--scheduler",
             "init--id",
@@ -266,7 +231,7 @@ class TestDflowQuery(unittest.TestCase):
             "              3 -> 5 : iter-000000--run-train-0000 -> iter-000000--run-train-0002",
             "                   6 : iter-000000--prep-run-train",
         ]
-        expected_output = "\n".join(expected_output + [""])
+        expected_output = "\n".join([*expected_output, ""])
 
         ret = print_keys_in_nice_format(
             dpgen_keys[:7],

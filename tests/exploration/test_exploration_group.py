@@ -1,15 +1,6 @@
-import os
 import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
-from typing import (
-    List,
-    Set,
-)
 
-import numpy as np
 
 try:
     from exploration.context import (
@@ -19,13 +10,11 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from unittest.mock import (
-    Mock,
     patch,
 )
 
 from dpgen2.constants import (
     calypso_input_file,
-    calypso_run_opt_file,
     lmp_conf_name,
     lmp_input_name,
 )

@@ -4,3 +4,8 @@ from .traj_render import (
 from .traj_render_lammps import (
     TrajRenderLammps,
 )
+
+__all__ = [
+    "TrajRender",
+    "TrajRenderLammps",
+]

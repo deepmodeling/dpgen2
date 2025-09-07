@@ -1,4 +1,3 @@
-import json
 import shutil
 import unittest
 from pathlib import (
@@ -6,35 +5,15 @@ from pathlib import (
 )
 
 import dpdata
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    TransientError,
 )
 from fake_data_set import (
     fake_multi_sys,
     fake_system,
 )
-from mock import (
-    call,
-    mock,
-    patch,
-)
 
 # isort: off
-from .context import (
-    dpgen2,
-)
-from dpgen2.constants import (
-    lmp_conf_name,
-    lmp_input_name,
-    lmp_log_name,
-    lmp_model_devi_name,
-    lmp_traj_name,
-)
 from dpgen2.op.collect_data import (
     CollectData,
 )

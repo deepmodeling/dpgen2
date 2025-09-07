@@ -1,6 +1,4 @@
-import json
 import os
-import pickle
 import shutil
 import time
 import unittest
@@ -9,32 +7,16 @@ from pathlib import (
 )
 from typing import (
     List,
-    Set,
 )
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
 )
 
 try:
@@ -63,10 +45,6 @@ from dpgen2.constants import (
     lmp_model_devi_name,
     lmp_task_pattern,
     lmp_traj_name,
-    model_name_pattern,
-    train_log_name,
-    train_script_name,
-    train_task_pattern,
 )
 from dpgen2.exploration.task import (
     BaseExplorationTaskGroup,

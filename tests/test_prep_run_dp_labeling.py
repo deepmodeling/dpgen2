@@ -1,6 +1,4 @@
-import os
 import shutil
-import sys
 import unittest
 from pathlib import (
     Path,
@@ -8,9 +6,6 @@ from pathlib import (
 
 import dpdata
 import numpy as np
-from dargs import (
-    Argument,
-)
 from dflow.python import (
     FatalError,
 )

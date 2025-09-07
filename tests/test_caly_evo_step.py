@@ -1,40 +1,19 @@
-import json
 import os
-import pickle
 import shutil
 import time
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
     Slices,
 )
 
@@ -60,36 +39,12 @@ from context import (
 )
 from mocked_ops import (
     MockedCollRunCaly,
-    MockedPrepCalyDPOptim,
     MockedRunCalyDPOptim,
     mocked_numb_models,
 )
 
-from dpgen2.constants import (
-    lmp_conf_name,
-    lmp_input_name,
-    lmp_log_name,
-    lmp_model_devi_name,
-    lmp_task_pattern,
-    lmp_traj_name,
-    model_name_pattern,
-    train_log_name,
-    train_script_name,
-    train_task_pattern,
-)
-from dpgen2.exploration.task import (
-    ExplorationTask,
-    ExplorationTaskGroup,
-)
 from dpgen2.op import (
     PrepCalyDPOptim,
-    RunCalyDPOptim,
-)
-from dpgen2.op.collect_run_caly import (
-    CollRunCaly,
-)
-from dpgen2.op.prep_caly_input import (
-    PrepCalyInput,
 )
 from dpgen2.superop.caly_evo_step import (
     CalyEvoStep,
@@ -167,7 +122,7 @@ class TestMockedRunDPOptim(unittest.TestCase):
         self.file_storage.mkdir(parents=True, exist_ok=True)
         for i in range(5):
             self.file_storage.joinpath(f"POSCAR_{i}").write_text(f"POSCAR_{i}")
-        self.file_storage.joinpath(f"frozen_model.pb").write_text(f"model.{i}.pb")
+        self.file_storage.joinpath("frozen_model.pb").write_text(f"model.{i}.pb")
         self.caly_run_opt_file = self.file_storage.joinpath(calypso_run_opt_file)
         self.caly_run_opt_file.write_text("caly_run_opt_script")
         self.caly_check_opt_file = self.file_storage.joinpath(calypso_check_opt_file)
@@ -233,7 +188,7 @@ class TestCalyEvoStep(unittest.TestCase):
         for ii in range(self.nmodels):
             model_path = self.work_dir.joinpath(f"task.{ii}")
             model_path.mkdir(exist_ok=True, parents=True)
-            model = model_path.joinpath(f"model.ckpt.pt")
+            model = model_path.joinpath("model.ckpt.pt")
             model.write_text(f"model {ii}")
             self.model_list.append(model)
         self.models = upload_artifact(self.model_list)

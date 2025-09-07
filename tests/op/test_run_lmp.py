@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import unittest
@@ -9,22 +8,15 @@ from pathlib import (
 import dpdata
 import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
     TransientError,
 )
 from mock import (
     call,
-    mock,
     patch,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -240,7 +232,7 @@ run             3000 upto
         # check if the teacher model is linked to model.000.pb
         ii = 0
         self.assertEqual(
-            (work_dir / (model_name_pattern % ii)).read_text(), f"teacher model"
+            (work_dir / (model_name_pattern % ii)).read_text(), "teacher model"
         )
 
         ii = 1

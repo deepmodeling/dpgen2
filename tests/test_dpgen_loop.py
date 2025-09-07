@@ -1,42 +1,16 @@
-import json
 import os
-import pickle
 import shutil
-import textwrap
 import time
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
-)
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
-    upload_packages,
 )
 
 try:
@@ -47,26 +21,17 @@ except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
 from context import (
-    default_host,
     default_image,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     upload_python_packages,
-)
-from dflow.python import (
-    FatalError,
 )
 from mocked_ops import (
     MockedCollectData,
     MockedCollectDataCheckOptParam,
     MockedCollectDataFailed,
     MockedCollectDataRestart,
-    MockedConfSelector,
     MockedConstTrustLevelStageScheduler,
-    MockedExplorationReport,
-    MockedExplorationTaskGroup,
-    MockedExplorationTaskGroup1,
-    MockedExplorationTaskGroup2,
     MockedPrepDPTrain,
     MockedPrepVasp,
     MockedRunDPTrain,
@@ -79,8 +44,6 @@ from mocked_ops import (
     MockedStage,
     MockedStage1,
     MockedStage2,
-    make_mocked_init_data,
-    make_mocked_init_models,
     mocked_incar_template,
     mocked_numb_models,
     mocked_numb_select,
@@ -89,34 +52,17 @@ from mocked_ops import (
 
 from dpgen2.constants import (
     fp_task_pattern,
-    lmp_conf_name,
-    lmp_input_name,
-    lmp_log_name,
-    lmp_traj_name,
     model_name_pattern,
-    train_log_name,
-    train_script_name,
     train_task_pattern,
-)
-from dpgen2.exploration.report import (
-    ExplorationReport,
 )
 from dpgen2.exploration.scheduler import (
     ExplorationScheduler,
-)
-from dpgen2.exploration.task import (
-    ExplorationStage,
-    ExplorationTask,
-    ExplorationTaskGroup,
 )
 from dpgen2.flow.dpgen_loop import (
     ConcurrentLearning,
 )
 from dpgen2.fp.vasp import (
     VaspInputs,
-    vasp_conf_name,
-    vasp_input_name,
-    vasp_pot_name,
 )
 from dpgen2.op.prep_lmp import (
     PrepLmp,

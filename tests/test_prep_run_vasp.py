@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import time
@@ -6,34 +5,15 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
 from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
     Step,
-    Steps,
     Workflow,
-    argo_range,
     download_artifact,
     upload_artifact,
 )
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
 )
 
 try:
@@ -63,7 +43,6 @@ from dpgen2.fp.vasp import (
     VaspInputs,
     vasp_conf_name,
     vasp_input_name,
-    vasp_pot_name,
 )
 from dpgen2.superop.prep_run_fp import (
     PrepRunFp,
@@ -153,7 +132,7 @@ class TestMockedRunVasp(unittest.TestCase):
             work_path = Path(fp_task_pattern % ii)
             work_path.mkdir(exist_ok=True, parents=True)
             (work_path / vasp_conf_name).write_text(f"conf {ii}")
-            (work_path / vasp_input_name).write_text(f"incar template")
+            (work_path / vasp_input_name).write_text("incar template")
             self.task_list.append(work_path)
 
     def check_run_lmp_output(
@@ -238,7 +217,7 @@ class TestPrepRunVasp(unittest.TestCase):
         fc = []
         ii = int(task_name.split(".")[1])
         fc.append(f"conf {ii}")
-        fc.append(f"incar template")
+        fc.append("incar template")
         self.assertEqual(fc, Path("log").read_text().strip().split("\n"))
         self.assertEqual(
             f"labeled_data of {task_name}\nconf {ii}",

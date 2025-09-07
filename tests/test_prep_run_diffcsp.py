@@ -119,6 +119,6 @@ class TestPrepRunDiffCSP(unittest.TestCase):
         self.assertEqual(len(model_devis), 4)
 
     def tearDown(self):
-        for d in glob.glob("test-prep-run-diffcsp-*") + ["task.000000", "task.000001"]:
+        for d in [*glob.glob("test-prep-run-diffcsp-*"), "task.000000", "task.000001"]:
             if os.path.isdir(d):
                 shutil.rmtree(d)
