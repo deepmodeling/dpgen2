@@ -1,21 +1,12 @@
 import argparse
 import json
 import logging
-import os
 import textwrap
 from typing import (
     List,
     Optional,
 )
 
-import dflow
-from dflow import (
-    Step,
-    Steps,
-    Workflow,
-    download_artifact,
-    upload_artifact,
-)
 
 from dpgen2 import (
     __version__,
@@ -41,11 +32,8 @@ from .status import (
     status,
 )
 from .submit import (
-    make_concurrent_learning_op,
-    make_naive_exploration_scheduler,
     resubmit_concurrent_learning,
     submit_concurrent_learning,
-    workflow_concurrent_learning,
 )
 from .watch import (
     default_watching_keys,
@@ -327,7 +315,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     args = parse_args()
-    dict_args = vars(args)
+    vars(args)
 
     if args.command == "submit":
         with open(args.CONFIG) as fp:

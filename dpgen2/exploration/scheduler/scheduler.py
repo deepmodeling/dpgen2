@@ -23,7 +23,6 @@ from dpgen2.exploration.selector import (
     ConfSelector,
 )
 from dpgen2.exploration.task import (
-    ExplorationStage,
     ExplorationTaskGroup,
 )
 
@@ -252,8 +251,8 @@ class ExplorationScheduler:
         )
 
         if self.complete():
-            ret.append(f"# All stages converged")
-        return "\n".join(ret + [""])
+            ret.append("# All stages converged")
+        return "\n".join([*ret, ""])
 
     def print_convergence(self):
         ret = []
@@ -288,5 +287,5 @@ class ExplorationScheduler:
                 _summary = self._print_prev_summary(prev_stg_idx)
                 assert _summary is not None
                 ret.append(_summary)
-                ret.append(f"# All stages converged")
-        return "\n".join(ret + [""])
+                ret.append("# All stages converged")
+        return "\n".join([*ret, ""])

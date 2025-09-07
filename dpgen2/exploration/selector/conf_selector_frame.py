@@ -1,7 +1,4 @@
 import copy
-from collections import (
-    Counter,
-)
 from pathlib import (
     Path,
 )
@@ -12,8 +9,6 @@ from typing import (
     Union,
 )
 
-import dpdata
-import numpy as np
 from dflow.python.opio import (
     HDF5Dataset,
 )

@@ -1,6 +1,6 @@
 from .deviation_manager import (
-    DeviManager,
+    DeviManager as DeviManager,
 )
 from .deviation_std import (
-    DeviManagerStd,
+    DeviManagerStd as DeviManagerStd,
 )

@@ -80,3 +80,22 @@ exclude = [
 [tool.isort]
 profile = "black"
 force_grid_wrap = 1
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    "E", # errors
+    "W", # warning
+    "F", # pyflakes
+    "RUF", # ruff
+    "NPY", # numpy
+    "DTZ", # datetime
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py files
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120

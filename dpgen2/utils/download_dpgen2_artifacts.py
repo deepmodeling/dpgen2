@@ -8,7 +8,6 @@ from typing import (
     Optional,
 )
 
-import numpy as np
 from dflow import (
     Workflow,
     download_artifact,

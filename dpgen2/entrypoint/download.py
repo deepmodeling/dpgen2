@@ -3,7 +3,6 @@ from typing import (
     Dict,
     List,
     Optional,
-    Union,
 )
 
 from dflow import (
@@ -13,9 +12,6 @@ from dflow import (
 from dpgen2.entrypoint.args import normalize as normalize_args
 from dpgen2.entrypoint.common import (
     global_config_workflow,
-)
-from dpgen2.utils.dflow_query import (
-    matched_step_key,
 )
 from dpgen2.utils.download_dpgen2_artifacts import (
     download_dpgen2_artifacts,

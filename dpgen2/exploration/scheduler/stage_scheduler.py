@@ -22,7 +22,6 @@ from dpgen2.exploration.selector import (
     ConfSelector,
 )
 from dpgen2.exploration.task import (
-    ExplorationStage,
     ExplorationTaskGroup,
 )
 

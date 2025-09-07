@@ -5,10 +5,8 @@ from abc import (
 from typing import (
     List,
     Optional,
-    Tuple,
 )
 
-import numpy as np
 
 from ..deviation import (
     DeviManager,

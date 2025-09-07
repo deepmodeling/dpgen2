@@ -6,29 +6,16 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
     List,
-    Optional,
-    Set,
     Tuple,
-    Union,
 )
 
 import dpdata
 import numpy as np
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    BigParameter,
-    FatalError,
-    OPIOSign,
     TransientError,
 )
 
@@ -49,7 +36,6 @@ from .run_fp import (
 )
 from .vasp_input import (
     VaspInputs,
-    make_kspacing_kpoints,
 )
 
 # global static variables

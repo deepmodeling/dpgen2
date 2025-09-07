@@ -2,15 +2,11 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     Any,
     Dict,
     List,
     Optional,
-    Set,
     Type,
     Union,
 )
@@ -25,25 +21,12 @@ from dflow import (
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
-    argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
-    Slices,
 )
 
-from dpgen2.op import (
-    CollectData,
-)
 from dpgen2.utils.step_config import (
     init_executor,
 )

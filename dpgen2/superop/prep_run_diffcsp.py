@@ -2,40 +2,24 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
-    Any,
-    Dict,
     List,
     Optional,
     Type,
-    Union,
 )
 
 from dflow import (
     InputArtifact,
     InputParameter,
     Inputs,
-    OPTemplate,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
@@ -138,7 +122,7 @@ def _prep_run_diffcsp(
     block_id = prep_run_diffcsp_steps.inputs.parameters["block_id"]
     expl_task_grp = prep_run_diffcsp_steps.inputs.parameters["expl_task_grp"]
     expl_config = prep_run_diffcsp_steps.inputs.parameters["explore_config"]
-    type_map = prep_run_diffcsp_steps.inputs.parameters["type_map"]
+    prep_run_diffcsp_steps.inputs.parameters["type_map"]
     models = prep_run_diffcsp_steps.inputs.artifacts["models"]
 
     diffcsp_gen = Step(

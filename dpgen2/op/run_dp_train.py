@@ -9,19 +9,16 @@ from pathlib import (
     Path,
 )
 from typing import (
+    ClassVar,
     Dict,
     List,
     Optional,
-    Tuple,
     Union,
 )
 
 import dpdata
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
     OP,
@@ -32,12 +29,10 @@ from dflow.python import (
     NestedDict,
     OPIOSign,
     Parameter,
-    TransientError,
 )
 
 from dpgen2.constants import (
     train_script_name,
-    train_task_pattern,
 )
 from dpgen2.utils.chdir import (
     set_directory,
@@ -45,6 +40,8 @@ from dpgen2.utils.chdir import (
 from dpgen2.utils.run_command import (
     run_command,
 )
+import functools
+import operator
 
 
 def _make_train_command(
@@ -69,7 +66,7 @@ def _make_train_command(
         checkpoint = None
     # case of restart
     if checkpoint is not None:
-        command = dp_command + ["train", "--restart", checkpoint, train_script_name]
+        command = [*dp_command, "train", "--restart", checkpoint, train_script_name]
         return command
     # case of init model and finetune
     assert checkpoint is None
@@ -79,25 +76,18 @@ def _make_train_command(
     )
     if case_init_model:
         init_flag = "--init-frz-model" if impl == "tensorflow" else "--init-model"
-        command = dp_command + [
-            "train",
-            init_flag,
-            str(init_model),
-            train_script_name,
-        ]
+        command = [*dp_command, "train", init_flag, str(init_model), train_script_name]
     elif case_finetune:
-        command = (
-            dp_command
-            + [
-                "train",
-                train_script_name,
-                "--finetune",
-                str(init_model),
-            ]
-            + finetune_args.split()
-        )
+        command = [
+            *dp_command,
+            "train",
+            train_script_name,
+            "--finetune",
+            str(init_model),
+            *finetune_args.split(),
+        ]
     else:
-        command = dp_command + ["train", train_script_name]
+        command = [*dp_command, "train", train_script_name]
     command += train_args.split()
     return command
 
@@ -112,7 +102,7 @@ class RunDPTrain(OP):
 
     """
 
-    default_optional_parameter = {
+    default_optional_parameter: ClassVar = {
         "mixed_type": False,
         "finetune_mode": "no",
     }
@@ -236,7 +226,7 @@ class RunDPTrain(OP):
                 len_init = len(init_data)
             numb_old = len_init + len(iter_data_old_exp)
             numb_new = numb_old + len(iter_data_new_exp)
-            auto_prob_str = f"prob_sys_size; 0:{numb_old}:{old_ratio}; {numb_old}:{numb_new}:{1.-old_ratio:g}"
+            auto_prob_str = f"prob_sys_size; 0:{numb_old}:{old_ratio}; {numb_old}:{numb_new}:{1.0 - old_ratio:g}"
 
         # update the input dict
         train_dict = RunDPTrain.write_data_to_input_script(
@@ -488,7 +478,7 @@ class RunDPTrain(OP):
                 old_data_size_level = int(config["init_model_policy"].split(":")[-1])
                 if isinstance(init_data, dict):
                     init_data_size = _get_data_size_of_all_systems(
-                        sum(init_data.values(), [])
+                        functools.reduce(operator.iadd, init_data.values(), [])
                     )
                 else:
                     init_data_size = _get_data_size_of_all_systems(init_data)
