@@ -20,13 +20,7 @@ from typing import (
     Tuple,
 )
 
-try:
-    from flow.context import (
-        dpgen2,
-    )
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
+# case of upload everything to argo, no context needed
 from dpgen2.constants import (
     fp_task_pattern,
     lmp_conf_name,

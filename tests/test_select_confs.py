@@ -9,13 +9,7 @@ from dflow.python import (
     FatalError,
 )
 
-try:
-    from context import (
-        dpgen2,
-    )
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
+# case of upload everything to argo, no context needed
 from mocked_ops import (
     MockedConfSelector,
     MockedSelectConfs,

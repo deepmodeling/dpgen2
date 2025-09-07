@@ -1,13 +1,7 @@
 import unittest
 
 
-try:
-    from exploration.context import (
-        dpgen2,
-    )
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
+# case of upload everything to argo, no context needed
 
 from dpgen2.utils.dflow_query import (
     find_slice_ranges,

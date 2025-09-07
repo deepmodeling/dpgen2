@@ -5,13 +5,7 @@ from pathlib import (
 )
 
 
-try:
-    from exploration.context import (
-        dpgen2,
-    )
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
+# case of upload everything to argo, no context needed
 from dpgen2.exploration.task import (
     CalyTaskGroup,
     LmpTemplateTaskGroup,
