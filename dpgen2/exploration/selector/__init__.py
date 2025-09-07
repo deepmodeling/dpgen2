@@ -21,12 +21,12 @@ conf_filter_styles = {
 }
 
 __all__ = [
+    "BoxLengthFilter",
+    "BoxSkewnessConfFilter",
     "ConfFilter",
     "ConfFilters",
     "ConfSelector",
     "ConfSelectorFrames",
-    "BoxLengthFilter",
-    "BoxSkewnessConfFilter",
     "DistanceConfFilter",
     "conf_filter_styles",
 ]

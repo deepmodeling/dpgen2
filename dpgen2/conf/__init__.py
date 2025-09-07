@@ -15,7 +15,7 @@ conf_styles = {
 
 __all__ = [
     "AlloyConfGenerator",
-    "ConfGenerator", 
+    "ConfGenerator",
     "FileConfGenerator",
     "conf_styles",
 ]
