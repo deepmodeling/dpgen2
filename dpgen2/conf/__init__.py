@@ -2,7 +2,7 @@ from .alloy_conf import (
     AlloyConfGenerator,
 )
 from .conf_generator import (
-    ConfGenerator as ConfGenerator,
+    ConfGenerator,
 )
 from .file_conf import (
     FileConfGenerator,

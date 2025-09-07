@@ -108,9 +108,3 @@ ignore = [
     "D401", # TODO: first line should be in imperative mood
     "D404", # TODO: first word of the docstring should not be This
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # Allow unused imports in __init__.py files
-
-[tool.ruff.lint.pycodestyle]
-max-line-length = 120
