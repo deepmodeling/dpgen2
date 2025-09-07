@@ -64,8 +64,10 @@ def _check_log(
             lines.append(" ".join(ww))
     else:
         lines = lines_
+
     def revised_fname(ff):
         return Path(ff).name if only_check_name else Path(ff)
+
     tcase.assertEqual(
         lines[0].split(" "),
         ["init_model", str(revised_fname(Path(path) / init_model)), "OK"],
