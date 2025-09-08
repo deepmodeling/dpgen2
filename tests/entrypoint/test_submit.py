@@ -28,6 +28,11 @@ from dpgen2.exploration.scheduler import (
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
+
+# isort: off
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,
