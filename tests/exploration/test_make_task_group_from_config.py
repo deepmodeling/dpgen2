@@ -4,7 +4,6 @@ from pathlib import (
     Path,
 )
 
-
 # case of upload everything to argo, no context needed
 from dpgen2.exploration.task import (
     CalyTaskGroup,

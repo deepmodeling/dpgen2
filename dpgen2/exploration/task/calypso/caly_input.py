@@ -4,7 +4,6 @@ from typing import (
 
 import numpy as np
 
-
 calypso_run_opt_str = """#!/usr/bin/env python3
 
 import os

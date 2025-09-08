@@ -1,7 +1,9 @@
+import functools
 import glob
 import json
 import logging
 import math
+import operator
 import os
 import random
 import shutil
@@ -40,8 +42,6 @@ from dpgen2.utils.chdir import (
 from dpgen2.utils.run_command import (
     run_command,
 )
-import functools
-import operator
 
 
 def _make_train_command(

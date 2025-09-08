@@ -5,18 +5,6 @@ from pathlib import (
     Path,
 )
 
-from dflow import (
-    Step,
-    Workflow,
-    upload_artifact,
-)
-
-from dpgen2.constants import (
-    calypso_check_opt_file,
-    calypso_input_file,
-    calypso_run_opt_file,
-)
-
 # case of upload everything to argo, no context needed
 from context import (
     default_host,
@@ -25,6 +13,11 @@ from context import (
     skip_ut_with_dflow_reason,
     upload_python_packages,
 )
+from dflow import (
+    Step,
+    Workflow,
+    upload_artifact,
+)
 from mocked_ops import (
     MockedCollRunCaly,
     MockedRunCalyDPOptim,
@@ -32,6 +25,11 @@ from mocked_ops import (
     mocked_numb_models,
 )
 
+from dpgen2.constants import (
+    calypso_check_opt_file,
+    calypso_input_file,
+    calypso_run_opt_file,
+)
 from dpgen2.exploration.task import (
     BaseExplorationTaskGroup,
     ExplorationTask,

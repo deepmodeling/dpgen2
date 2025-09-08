@@ -9,7 +9,6 @@ from dpgen2.exploration.selector import (
     DistanceConfFilter,
 )
 
-
 POSCAR_valid = """ Er
 1.0
    7.00390434172054       0.000000000000000E+000  0.000000000000000E+000

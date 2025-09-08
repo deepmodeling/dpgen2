@@ -6,7 +6,6 @@ from pathlib import (
     Path,
 )
 
-
 # isort: off
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,

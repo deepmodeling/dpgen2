@@ -1,3 +1,6 @@
+import functools
+import operator
+
 from dflow import (
     Workflow,
 )
@@ -12,8 +15,6 @@ from dpgen2.entrypoint.submit import (
 from dpgen2.utils import (
     print_keys_in_nice_format,
 )
-import functools
-import operator
 
 
 def showkey(

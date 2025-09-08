@@ -7,7 +7,6 @@ from typing import (
     Optional,
 )
 
-
 from dpgen2 import (
     __version__,
 )

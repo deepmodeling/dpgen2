@@ -5,7 +5,6 @@ from typing import (
     Tuple,
 )
 
-
 from . import (
     ExplorationReport,
 )

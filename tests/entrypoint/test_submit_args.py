@@ -2,7 +2,6 @@ import json
 import textwrap
 import unittest
 
-
 # isort: off
 from dpgen2.entrypoint.args import (
     normalize,

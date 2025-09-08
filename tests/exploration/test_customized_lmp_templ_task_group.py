@@ -6,9 +6,6 @@ from pathlib import (
     Path,
 )
 
-
-# case of upload everything to argo, no context needed
-
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -25,6 +22,10 @@ from .test_lmp_templ_task_group import (
     in_lmp_template,
     in_plm_template,
 )
+
+# case of upload everything to argo, no context needed
+
+
 
 in_extra_py_file = textwrap.dedent(
     """from pathlib import Path

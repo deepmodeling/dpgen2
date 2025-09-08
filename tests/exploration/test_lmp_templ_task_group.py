@@ -6,9 +6,6 @@ from pathlib import (
     Path,
 )
 
-
-# case of upload everything to argo, no context needed
-
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -17,6 +14,9 @@ from dpgen2.constants import (
 from dpgen2.exploration.task import (
     LmpTemplateTaskGroup,
 )
+
+# case of upload everything to argo, no context needed
+
 
 in_lmp_template = textwrap.dedent(
     """variable        NSTEPS          equal V_NSTEPS

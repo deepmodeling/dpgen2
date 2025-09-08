@@ -7,7 +7,6 @@ from typing import (
     Optional,
 )
 
-
 from ..deviation import (
     DeviManager,
 )

@@ -9,6 +9,14 @@ from typing import (
     List,
 )
 
+# case of upload everything to argo, no context needed
+from context import (
+    default_host,
+    default_image,
+    skip_ut_with_dflow,
+    skip_ut_with_dflow_reason,
+    upload_python_packages,
+)
 from dflow import (
     Step,
     Workflow,
@@ -17,15 +25,6 @@ from dflow import (
 )
 from dflow.python import (
     OPIO,
-)
-
-# case of upload everything to argo, no context needed
-from context import (
-    default_host,
-    default_image,
-    skip_ut_with_dflow,
-    skip_ut_with_dflow_reason,
-    upload_python_packages,
 )
 from mocked_ops import (
     MockedRunLmp,

@@ -1,8 +1,5 @@
 import unittest
 
-
-# case of upload everything to argo, no context needed
-
 from dpgen2.utils.dflow_query import (
     find_slice_ranges,
     get_all_schedulers,
@@ -14,6 +11,9 @@ from dpgen2.utils.dflow_query import (
     print_keys_in_nice_format,
     sort_slice_ops,
 )
+
+# case of upload everything to argo, no context needed
+
 
 # isort: off
 

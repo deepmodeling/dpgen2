@@ -1,6 +1,8 @@
 import copy
+import functools
 import json
 import logging
+import operator
 import os
 from copy import (
     deepcopy,
@@ -107,8 +109,6 @@ from dpgen2.utils import (
     upload_artifact_and_print_uri,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
-import functools
-import operator
 
 default_config = normalize_step_dict(
     {

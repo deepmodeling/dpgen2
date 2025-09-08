@@ -5,7 +5,6 @@ from pathlib import (
     Path,
 )
 
-
 # isort: off
 from dpgen2.utils.run_command import (
     run_command,
