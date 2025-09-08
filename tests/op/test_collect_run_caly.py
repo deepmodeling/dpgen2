@@ -1,37 +1,23 @@
-import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
     TransientError,
 )
 from mock import (
-    call,
-    mock,
     patch,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     calypso_task_pattern,
     calypso_input_file,
-    calypso_log_name,
 )
 from dpgen2.op.collect_run_caly import CollRunCaly, get_value_from_inputdat
-from dpgen2.utils import (
-    BinaryFileInput,
-)
 
 # isort: on
 
@@ -71,13 +57,13 @@ class TestCollRunCaly(unittest.TestCase):
     def test_get_max_step(self):
         max_step, vsc = get_value_from_inputdat(self.input_file)
         self.assertTrue(max_step == 3)
-        self.assertTrue(vsc == True)
+        self.assertTrue(vsc)
 
         temp_input_file = self.input_file_path.joinpath("temp_input_dat")
         temp_input_file.write_text("input.dat\n")
         max_step, vsc = get_value_from_inputdat(temp_input_file)
         self.assertTrue(max_step == 0)
-        self.assertTrue(vsc == False)
+        self.assertTrue(not vsc)
 
     @patch("dpgen2.op.collect_run_caly.run_command")
     def test_step_st_maxstep_01(self, mocked_run):
@@ -86,7 +72,7 @@ class TestCollRunCaly(unittest.TestCase):
 
         def side_effect(*args, **kwargs):
             for i in range(5):
-                Path().joinpath(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+                Path().joinpath(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
             Path("step").write_text("3")
             Path("results").mkdir(parents=True, exist_ok=True)
             return (0, "foo\n", "")
@@ -122,7 +108,7 @@ class TestCollRunCaly(unittest.TestCase):
 
         def side_effect(*args, **kwargs):
             for i in range(5):
-                Path().joinpath(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+                Path().joinpath(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
             Path("step").write_text("2")
             Path("results").mkdir(parents=True, exist_ok=True)
             return (0, "foo\n", "")
@@ -153,7 +139,7 @@ class TestCollRunCaly(unittest.TestCase):
 
         def side_effect(*args, **kwargs):
             for i in range(5):
-                Path().joinpath(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+                Path().joinpath(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
             Path("step").write_text("4")
             Path("results").mkdir(parents=True, exist_ok=True)
             return (0, "foo\n", "")
@@ -185,7 +171,7 @@ class TestCollRunCaly(unittest.TestCase):
 
         def side_effect(*args, **kwargs):
             for i in range(5):
-                Path().joinpath(f"POSCAR_{str(i)}").write_text(f"POSCAR_{str(i)}")
+                Path().joinpath(f"POSCAR_{i!s}").write_text(f"POSCAR_{i!s}")
             Path("step").write_text("3")
             Path("results").mkdir(parents=True, exist_ok=True)
             return (1, "foo\n", "")

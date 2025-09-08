@@ -5,7 +5,6 @@ from pathlib import (
 )
 from typing import (
     List,
-    Optional,
     Tuple,
     Union,
 )
@@ -14,7 +13,6 @@ import dpdata
 import numpy as np
 from dargs import (
     Argument,
-    Variant,
 )
 
 from .conf_generator import (

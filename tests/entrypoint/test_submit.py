@@ -1,21 +1,12 @@
 import json
 import os
-import random
-import shutil
-import tempfile
 import textwrap
 import unittest
 from pathlib import (
     Path,
 )
 
-import dpdata
-import numpy as np
-
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
@@ -28,7 +19,6 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
-    ExplorationReport,
     ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.scheduler import (
@@ -38,10 +28,12 @@ from dpgen2.exploration.scheduler import (
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
 )
-from dpgen2.exploration.task import (
-    ExplorationStage,
-    ExplorationTaskGroup,
-)
+
+# isort: off
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from mocked_ops import (
     MockedExplorationReport,
     MockedExplorationTaskGroup,
@@ -431,7 +423,7 @@ class TestSubmitCmdDist(unittest.TestCase):
         )
 
         config["mode"] = None
-        for ii in self.touched_files + ["POSCAR"]:
+        for ii in [*self.touched_files, "POSCAR"]:
             os.remove(ii)
 
     def test(self):
@@ -481,129 +473,129 @@ input_std = textwrap.dedent(
     """
 {
     "default_step_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+    "template_config" : {
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "step_configs":{
-	"run_train_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+    "run_train_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_explore_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_explore_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_fp_config" : {
-	    "template_config" : {
-		"image" : "vasp:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_fp_config" : {
+        "template_config" : {
+        "image" : "vasp:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+        },
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "inputs": {
-	"type_map":		["Al", "Mg"],
-	"mass_map":		[27, 24],
-	"init_data_prefix":	null,
-	"init_data_sys":	[
-	    "init"
-	],
-	"_comment" : "all"
+    "type_map":        ["Al", "Mg"],
+    "mass_map":        [27, 24],
+    "init_data_prefix":    null,
+    "init_data_sys":    [
+        "init"
+    ],
+    "_comment" : "all"
     },
     "train":{
-	"type" :	"dp",
-	"numb_models" : 2,
-	"config" : {},
-	"template_script" : ["foo", "foo1"],
+    "type" :    "dp",
+    "numb_models" : 2,
+    "config" : {},
+    "template_script" : ["foo", "foo1"],
 "init_models_paths" : ["bar", "tar"],
-	"_comment" : "all"
+    "_comment" : "all"
     },
 
     "explore" : {
-	"type" : "lmp",
-	"config" : {
-	    "command": "lmp -var restart 0"
-	},
-	"convergence": {
-	    "type" :	"fixed-levels",
-	    "conv_accuracy" :	0.9,
-	    "level_f_lo":	0.05,
-	    "level_f_hi":	0.50,
-	    "_comment" : "all"
-	},
-	"max_numb_iter" :	5,
-	"fatal_at_max" :	false,
-	"output_nopbc":		false,
-	"configuration_prefix": null,
-	"configurations":	[
-	    {
-		"type": "alloy",
-		"lattice" : ["fcc", 4.57],
-		"replicate" : [2, 2, 2],
-		"numb_confs" : 30,
-		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-	    }
-	],
-	"_comment" : "Stage is of type List[List[dict]]. ",
-	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
-	"stages":	[
-	    [
-		{
-		    "type" : "lmp-md",
-		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
-		    "conf_idx": [0], "n_sample" : 3
-		},
-		{
-		    "type" : "customized-lmp-template",
+    "type" : "lmp",
+    "config" : {
+        "command": "lmp -var restart 0"
+    },
+    "convergence": {
+        "type" :    "fixed-levels",
+        "conv_accuracy" :    0.9,
+        "level_f_lo":    0.05,
+        "level_f_hi":    0.50,
+        "_comment" : "all"
+    },
+    "max_numb_iter" :    5,
+    "fatal_at_max" :    false,
+    "output_nopbc":        false,
+    "configuration_prefix": null,
+    "configurations":    [
+        {
+        "type": "alloy",
+        "lattice" : ["fcc", 4.57],
+        "replicate" : [2, 2, 2],
+        "numb_confs" : 30,
+        "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+        }
+    ],
+    "_comment" : "Stage is of type List[List[dict]]. ",
+    "_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
+    "stages":    [
+        [
+        {
+            "type" : "lmp-md",
+            "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+            "conf_idx": [0], "n_sample" : 3
+        },
+        {
+            "type" : "customized-lmp-template",
                     "custom_shell_commands": ["mkdir aaa && cp conf.lmp lmp.template plm.template aaa"],
-		    "input_lmp_tmpl_name": "lmp.template", 
+            "input_lmp_tmpl_name": "lmp.template", 
                     "input_plm_tmpl_name": "plm.template",
                     "output_dir_pattern": ["aaa"],
                     "output_lmp_tmpl_name": "lmp.template",
                     "output_plm_tmpl_name": "plm.template",
-		    "conf_idx": [0], "n_sample" : 3
-		}
-	    ]
-	],
-	"_comment" : "all"
+            "conf_idx": [0], "n_sample" : 3
+        }
+        ]
+    ],
+    "_comment" : "all"
     },
     "fp" : {
-	"type" :	"vasp",
-	"task_max":	2,
-	"inputs_config" : {
-	    "pp_files":	{"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
-	    "incar":    "INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
-	},
-	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
-	},
-	"_comment" : "all"
+    "type" :    "vasp",
+    "task_max":    2,
+    "inputs_config" : {
+        "pp_files":    {"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
+        "incar":    "INCAR",
+        "kspacing":    0.32,
+        "kgamma":    true
+    },
+    "run_config" : {
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+    },
+    "_comment" : "all"
     }
 }
 """
@@ -737,8 +729,8 @@ input_dist = textwrap.dedent(
         "_comment": "all"
     },
     "fp" : {
-        "type" :	"deepmd",
-        "task_max":	2,
+        "type" :    "deepmd",
+        "task_max":    2,
         "run_config" : {
             "teacher_model_path": "teacher_model.pb",
             "type_map": ["H", "C"]
@@ -753,10 +745,10 @@ input_dist = textwrap.dedent(
             "command": "lmp -var restart 0"
         },
         "convergence": {
-            "type" :	"fixed-levels",
-            "conv_accuracy" :	0.9,
-            "level_f_lo":	0.05,
-            "level_f_hi":	0.50,
+            "type" :    "fixed-levels",
+            "conv_accuracy" :    0.9,
+            "level_f_lo":    0.05,
+            "level_f_hi":    0.50,
             "_comment" : "all"
         },
         "max_numb_iter": 2,
@@ -791,119 +783,119 @@ input_finetune = textwrap.dedent(
     """
 {
     "default_step_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+    "template_config" : {
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "step_configs":{
-	"run_train_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+    "run_train_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_explore_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_explore_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_fp_config" : {
-	    "template_config" : {
-		"image" : "vasp:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_fp_config" : {
+        "template_config" : {
+        "image" : "vasp:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+        },
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
     "inputs": {
-	"type_map":		["Al", "Mg"],
-	"mass_map":		[27, 24],
-	"init_data_prefix":	null,
-	"init_data_sys":	[
-	    "init"
-	],
-	"_comment" : "all"
+    "type_map":        ["Al", "Mg"],
+    "mass_map":        [27, 24],
+    "init_data_prefix":    null,
+    "init_data_sys":    [
+        "init"
+    ],
+    "_comment" : "all"
     },
     "train":{
-	"type" :	"dp",
-	"numb_models" : 2,
-	"config" : {},
-	"template_script" : ["foo", "foo1"],
+    "type" :    "dp",
+    "numb_models" : 2,
+    "config" : {},
+    "template_script" : ["foo", "foo1"],
 "init_models_paths" : ["bar", "tar"],
         "do_finetune": true,
-	"_comment" : "all"
+    "_comment" : "all"
     },
 
     "explore" : {
-	"type" : "lmp",
-	"config" : {
-	    "command": "lmp -var restart 0"
-	},
-	"convergence": {
-	    "type" :	"fixed-levels",
-	    "conv_accuracy" :	0.9,
-	    "level_f_lo":	0.05,
-	    "level_f_hi":	0.50,
-	    "_comment" : "all"
-	},
-	"max_numb_iter" :	5,
-	"fatal_at_max" :	false,
-	"output_nopbc":		false,
-	"configuration_prefix": null,
-	"configurations":	[
-	    {
-		"type": "alloy",
-		"lattice" : ["fcc", 4.57],
-		"replicate" : [2, 2, 2],
-		"numb_confs" : 30,
-		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-	    }
-	],
-	"_comment" : "Stage is of type List[List[dict]]. ",
-	"_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
-	"stages":	[
-	    [
-		{
-		    "type" : "lmp-md",
-		    "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
-		    "conf_idx": [0], "n_sample" : 3
-		}
-	    ]
-	],
-	"_comment" : "all"
+    "type" : "lmp",
+    "config" : {
+        "command": "lmp -var restart 0"
+    },
+    "convergence": {
+        "type" :    "fixed-levels",
+        "conv_accuracy" :    0.9,
+        "level_f_lo":    0.05,
+        "level_f_hi":    0.50,
+        "_comment" : "all"
+    },
+    "max_numb_iter" :    5,
+    "fatal_at_max" :    false,
+    "output_nopbc":        false,
+    "configuration_prefix": null,
+    "configurations":    [
+        {
+        "type": "alloy",
+        "lattice" : ["fcc", 4.57],
+        "replicate" : [2, 2, 2],
+        "numb_confs" : 30,
+        "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+        }
+    ],
+    "_comment" : "Stage is of type List[List[dict]]. ",
+    "_comment" : "The outer list gives stages, the inner list gives the task groups of the stage, and dict describes the task group.",
+    "stages":    [
+        [
+        {
+            "type" : "lmp-md",
+            "ensemble": "nvt", "nsteps":  50, "press": [1e0], "temps": [50], "trj_freq": 10,
+            "conf_idx": [0], "n_sample" : 3
+        }
+        ]
+    ],
+    "_comment" : "all"
     },
     "fp" : {
-	"type" :	"vasp",
-	"task_max":	2,
-	"inputs_config" : {
-	    "pp_files":	{"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
-	    "incar":    "INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
-	},
-	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
-	},
-	"_comment" : "all"
+    "type" :    "vasp",
+    "task_max":    2,
+    "inputs_config" : {
+        "pp_files":    {"Al" : "POTCAR.Al", "Mg" : "POTCAR.Mg"},
+        "incar":    "INCAR",
+        "kspacing":    0.32,
+        "kgamma":    true
+    },
+    "run_config" : {
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+    },
+    "_comment" : "all"
     }
 }
 """

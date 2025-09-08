@@ -1,23 +1,16 @@
-import json
-import os
-import random
 import shutil
-import tempfile
 import textwrap
 import unittest
 from pathlib import (
     Path,
 )
+from typing import (
+    ClassVar,
+)
 
-import dflow
-import dpdata
 import mock
-import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.utils.download_dpgen2_artifacts import (
     DownloadDefinition,
     _get_all_iterations,
@@ -59,7 +52,7 @@ class MockedStep:
 
 
 class Mockedwf:
-    keys = [
+    keys: ClassVar = [
         "iter-000000--prep-run-train",
         "iter-000001--prep-run-train",
         "iter-000000--prep-run-explore",

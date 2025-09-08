@@ -1,38 +1,19 @@
-import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
     TransientError,
 )
 from mock import (
-    call,
-    mock,
     patch,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
-from dpgen2.constants import (
-    calypso_task_pattern,
-    model_name_pattern,
-    calypso_run_opt_file,
-    calypso_check_opt_file,
-)
 from dpgen2.op import RunCalyDPOptim
-from dpgen2.utils import (
-    BinaryFileInput,
-)
 
 # isort: on
 
@@ -57,9 +38,9 @@ class TestRunDPOptim(unittest.TestCase):
     def test_00_success(self, mocked_run):
         def side_effect(*args, **kwargs):
             for i in range(1, 11):
-                Path().joinpath(f"CONTCAR_{str(i)}").write_text(f"CONTCAR_{str(i)}")
-                Path().joinpath(f"OUTCAR_{str(i)}").write_text(f"OUTCAR_{str(i)}")
-                Path().joinpath(f"{str(i)}.traj").write_text(f"{str(i)}.traj")
+                Path().joinpath(f"CONTCAR_{i!s}").write_text(f"CONTCAR_{i!s}")
+                Path().joinpath(f"OUTCAR_{i!s}").write_text(f"OUTCAR_{i!s}")
+                Path().joinpath(f"{i!s}.traj").write_text(f"{i!s}.traj")
             return (0, "foo\n", "")
 
         mocked_run.side_effect = side_effect
@@ -106,9 +87,9 @@ class TestRunDPOptim(unittest.TestCase):
     def test_01_error(self, mocked_run):
         def side_effect(*args, **kwargs):
             for i in range(1, 6):
-                Path().joinpath(f"CONTCAR_{str(i)}").write_text(f"CONTCAR_{str(i)}")
-                Path().joinpath(f"OUTCAR_{str(i)}").write_text(f"OUTCAR_{str(i)}")
-                Path().joinpath(f"{str(i)}.traj").write_text(f"{str(i)}.traj")
+                Path().joinpath(f"CONTCAR_{i!s}").write_text(f"CONTCAR_{i!s}")
+                Path().joinpath(f"OUTCAR_{i!s}").write_text(f"OUTCAR_{i!s}")
+                Path().joinpath(f"{i!s}.traj").write_text(f"{i!s}.traj")
             return (1, "foo\n", "")
 
         mocked_run.side_effect = side_effect

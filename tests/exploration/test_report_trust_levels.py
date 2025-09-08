@@ -1,9 +1,4 @@
-import os
-import textwrap
 import unittest
-from collections import (
-    Counter,
-)
 
 import numpy as np
 from dargs import (
@@ -11,9 +6,6 @@ from dargs import (
 )
 
 # isort: off
-from context import (
-    dpgen2,
-)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,

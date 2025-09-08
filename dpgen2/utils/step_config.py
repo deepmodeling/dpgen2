@@ -1,12 +1,6 @@
-import os
-
-import dargs
 from dargs import (
     Argument,
     Variant,
-)
-from dflow.config import (
-    config,
 )
 from dflow.plugins.dispatcher import (
     DispatcherExecutor,
@@ -23,7 +17,7 @@ def dispatcher_args():
 
 
 def variant_executor():
-    doc = f"The type of the executor."
+    doc = "The type of the executor."
     return Variant(
         "type",
         [

@@ -13,13 +13,14 @@
 import os
 import sys
 from datetime import (
-    date,
+    datetime,
+    timezone,
 )
 
 # -- Project information -----------------------------------------------------
 
 project = "DPGEN2"
-copyright = "2022-%d, DeepModeling" % date.today().year
+copyright = "2022-%d, DeepModeling" % datetime.now(timezone.utc).year
 author = "DeepModeling"
 
 
