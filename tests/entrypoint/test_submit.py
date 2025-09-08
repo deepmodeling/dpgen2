@@ -31,6 +31,7 @@ from dpgen2.exploration.selector import (
 
 # isort: off
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from mocked_ops import (
