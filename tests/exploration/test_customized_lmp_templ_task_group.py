@@ -26,7 +26,6 @@ from .test_lmp_templ_task_group import (
 # case of upload everything to argo, no context needed
 
 
-
 in_extra_py_file = textwrap.dedent(
     """from pathlib import Path
 import os,shutil
