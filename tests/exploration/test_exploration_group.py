@@ -514,7 +514,7 @@ class TestCPTGroup(unittest.TestCase):
                 in_template_nvt % (self.tt[j_idx]),
             )
 
-    @patch("dpgen2.exploration.task.npt_task_group.random.shuffle")
+    @patch("dpgen2.exploration.task.conf_sampling_task_group.random.shuffle")
     @patch("dpgen2.exploration.task.lmp.lmp_input.random.randrange")
     def test_nvt_sample_random(self, mock_randrange, mock_shuffle):
         mock_randrange.return_value = 1110
