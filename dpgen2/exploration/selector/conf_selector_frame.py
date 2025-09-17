@@ -1,4 +1,6 @@
 import copy
+import math
+import random
 from collections import (
     Counter,
 )
@@ -48,11 +50,13 @@ class ConfSelectorFrames(ConfSelector):
         report: ExplorationReport,
         max_numb_sel: Optional[int] = None,
         conf_filters: Optional[ConfFilters] = None,
+        async_ratio: float = 0.0,
     ):
         self.max_numb_sel = max_numb_sel
         self.conf_filters = conf_filters
         self.traj_render = traj_render
         self.report = report
+        self.async_ratio = async_ratio
 
     def select(
         self,
@@ -60,7 +64,7 @@ class ConfSelectorFrames(ConfSelector):
         model_devis: Union[List[Path], List[HDF5Dataset]],
         type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
-    ) -> Tuple[List[Path], ExplorationReport]:
+    ) -> Tuple[List[Path], List[Path], ExplorationReport]:
         """Select configurations
 
         Parameters
@@ -81,6 +85,8 @@ class ConfSelectorFrames(ConfSelector):
         -------
         confs : List[Path]
             The selected confgurations, stored in a folder in deepmd/npy format, can be parsed as dpdata.MultiSystems. The `list` only has one item.
+        async_confs : List[Path]
+            The selected confgurations for async fp, stored in a folder in deepmd/npy format, can be parsed as dpdata.MultiSystems. The `list` only has one item.
         report : ExplorationReport
             The exploration report recoding the status of the exploration.
 
@@ -102,8 +108,33 @@ class ConfSelectorFrames(ConfSelector):
             optional_outputs,
         )
 
+        async_confs = []
+        if self.async_ratio > 0:
+            async_ms, ms = split_multisystems(ms, self.async_ratio)
+            if len(async_ms) > 0:
+                async_out_path = Path("async_confs")
+                async_out_path.mkdir(exist_ok=True)
+                async_ms.to_deepmd_npy(async_out_path)  # type: ignore
+                async_confs = [async_out_path]
+
         out_path = Path("confs")
         out_path.mkdir(exist_ok=True)
         ms.to_deepmd_npy(out_path)  # type: ignore
 
-        return [out_path], copy.deepcopy(self.report)
+        return [out_path], async_confs, copy.deepcopy(self.report)
+
+
+def split_multisystems(ms, ratio):
+    selected_ms = dpdata.MultiSystems()
+    unselected_ms = dpdata.MultiSystems()
+    for s in ms:
+        nsel = math.floor(len(s) * ratio)
+        if random.random() < len(s) * ratio - nsel:
+            nsel += 1
+        selected_indices = random.sample(range(len(s)), nsel)
+        unselected_indices = list(set(range(len(s))).difference(selected_indices))
+        if len(selected_indices) > 0:
+            selected_ms.append(s.sub_system(selected_indices))
+        if len(unselected_indices) > 0:
+            unselected_ms.append(s.sub_system(unselected_indices))
+    return selected_ms, unselected_ms
