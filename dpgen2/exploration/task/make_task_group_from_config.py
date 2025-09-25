@@ -19,6 +19,9 @@ from dpgen2.exploration.task.caly_task_group import (
 from dpgen2.exploration.task.customized_lmp_template_task_group import (
     CustomizedLmpTemplateTaskGroup,
 )
+from dpgen2.exploration.task.lmp_spin_task_group import (
+    LmpSpinTaskGroup,
+)
 from dpgen2.exploration.task.lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
@@ -306,11 +309,51 @@ def customized_lmp_template_task_group_args():
     ]
 
 
+def lmp_spin_task_group_args():
+    doc_lmp_template_fname = "The file name of lammps input template"
+    doc_plm_template_fname = "The file name of plumed input template"
+    doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
+
+    return [
+        Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
+        Argument(
+            "n_sample",
+            int,
+            optional=True,
+            default=None,
+            doc=doc_n_sample,
+        ),
+        Argument(
+            "lmp_template_fname",
+            str,
+            optional=False,
+            doc=doc_lmp_template_fname,
+            alias=["lmp_template", "lmp"],
+        ),
+        Argument(
+            "plm_template_fname",
+            str,
+            optional=True,
+            default=None,
+            doc=doc_plm_template_fname,
+            alias=["plm_template", "plm"],
+        ),
+        Argument(
+            "revisions",
+            dict,
+            optional=True,
+            default={},
+            doc=doc_revisions,
+        ),
+    ]
+
+
 def variant_task_group():
     doc = "the type of the task group"
     doc_lmp_md = "Lammps MD tasks. DPGEN will generate the lammps input script"
     doc_lmp_template = "Lammps MD tasks defined by templates. User provide lammps (and plumed) template for lammps tasks. The variables in templates are revised by the revisions key. Notice that the lines for pair style, dump and plumed are reserved for the revision of dpgen2, and the users should not write these lines by themselves. Rather, users notify dpgen2 the poistion of the line for `pair_style` by writting 'pair_style deepmd', the line for `dump` by writting 'dump dpgen_dump'. If plumed is used, the line for `fix plumed` shouldbe written exactly as 'fix dpgen_plm'. "
     doc_customized_lmp_template = "Lammps MD tasks defined by user customized shell commands and templates. User provided shell script generates a series of folders, and each folder contains a lammps template task group. "
+    doc_lmp_spin = "Lammps SPIN tasks defined by templates. User provides lammps template and revision keys."
     return Variant(
         "type",
         [
@@ -328,6 +371,12 @@ def variant_task_group():
                 dict,
                 customized_lmp_template_task_group_args(),
                 doc=doc_customized_lmp_template,
+            ),
+            Argument(
+                "lmp-spin",
+                dict,
+                lmp_spin_task_group_args(),
+                doc=doc_lmp_spin,
             ),
         ],
         doc=doc,
@@ -662,6 +711,15 @@ def make_lmp_task_group_from_config(
         tgroup.set_lmp(
             numb_models,
             sh_cmd,
+            **config,
+        )
+    elif config["type"] == "lmp-spin":
+        tgroup = LmpSpinTaskGroup()
+        config.pop("type")
+        lmp_spin_template = config.pop("lmp_template_fname")
+        tgroup.set_lmp(
+            numb_models,
+            lmp_spin_template,
             **config,
         )
     else:
