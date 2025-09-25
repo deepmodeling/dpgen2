@@ -124,7 +124,7 @@ class CalyTaskGroup(ExplorationTaskGroup):
 
             if any(map(lambda s: (set(s) - overlap) == 0, name_of_atoms)):
                 raise ValueError(
-                    f"Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
+                    "Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
                 )
 
             while True:

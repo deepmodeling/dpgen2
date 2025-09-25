@@ -2,16 +2,11 @@ import os
 import unittest
 
 import dpdata
-import numpy as np
 
 from dpgen2.exploration.selector import (
     BoxLengthFilter,
     BoxSkewnessConfFilter,
     DistanceConfFilter,
-)
-
-from .context import (
-    dpgen2,
 )
 
 POSCAR_valid = """ Er

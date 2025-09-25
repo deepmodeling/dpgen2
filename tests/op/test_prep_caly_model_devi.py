@@ -1,38 +1,15 @@
-import os
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
-    TransientError,
-)
-from mock import (
-    call,
-    mock,
-    patch,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
-from dpgen2.constants import (
-    calypso_task_pattern,
-    model_name_pattern,
-    calypso_run_opt_file,
-    calypso_check_opt_file,
-)
 from dpgen2.op import PrepCalyModelDevi
-from dpgen2.utils import (
-    BinaryFileInput,
-)
 
 # isort: on
 

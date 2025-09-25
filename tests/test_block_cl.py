@@ -1,50 +1,12 @@
-import json
 import os
-import pickle
 import shutil
 import time
 import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
-import jsonpickle
-import numpy as np
-from dflow import (
-    InputArtifact,
-    InputParameter,
-    Inputs,
-    OutputArtifact,
-    OutputParameter,
-    Outputs,
-    S3Artifact,
-    Step,
-    Steps,
-    Workflow,
-    argo_range,
-    download_artifact,
-    upload_artifact,
-)
-from dflow.python import (
-    OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
-    PythonOPTemplate,
-    upload_packages,
-)
-
-try:
-    from context import (
-        dpgen2,
-    )
-except ModuleNotFoundError:
-    # case of upload everything to argo, no context needed
-    pass
+# case of upload everything to argo, no context needed
 from context import (
     default_host,
     default_image,
@@ -52,14 +14,16 @@ from context import (
     skip_ut_with_dflow_reason,
     upload_python_packages,
 )
-from mock import (
-    patch,
+from dflow import (
+    Step,
+    Workflow,
+    download_artifact,
+    upload_artifact,
 )
 from mocked_ops import (
     MockedCollectData,
     MockedCollectDataCheckOptParam,
     MockedConfSelector,
-    MockedExplorationReport,
     MockedExplorationTaskGroup,
     MockedPrepDPTrain,
     MockedPrepVasp,
@@ -78,18 +42,8 @@ from mocked_ops import (
 
 from dpgen2.constants import (
     fp_task_pattern,
-    lmp_conf_name,
-    lmp_input_name,
-    lmp_log_name,
-    lmp_traj_name,
     model_name_pattern,
-    train_log_name,
-    train_script_name,
     train_task_pattern,
-)
-from dpgen2.exploration.task import (
-    ExplorationTask,
-    ExplorationTaskGroup,
 )
 from dpgen2.fp.vasp import (
     VaspInputs,
@@ -108,10 +62,6 @@ from dpgen2.superop.prep_run_fp import (
 )
 from dpgen2.superop.prep_run_lmp import (
     PrepRunLmp,
-)
-from dpgen2.utils import (
-    dump_object_to_file,
-    load_object_from_file,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
 

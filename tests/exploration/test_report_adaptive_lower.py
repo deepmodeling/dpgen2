@@ -1,9 +1,4 @@
-import os
-import textwrap
 import unittest
-from collections import (
-    Counter,
-)
 
 import mock
 import numpy as np
@@ -12,9 +7,6 @@ from dargs import (
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
@@ -183,8 +175,20 @@ class TestTrajsExplorationReport(unittest.TestCase):
             for jj in ii:
                 expected_fail.add((idx, jj))
         expected_cand = set(
-            [(0, 6), (0, 7), (0, 5)]
-            + [(0, 1), (0, 3), (0, 4), (1, 0), (1, 1), (1, 5), (1, 6), (1, 7), (1, 8)]
+            [
+                (0, 6),
+                (0, 7),
+                (0, 5),
+                (0, 1),
+                (0, 3),
+                (0, 4),
+                (1, 0),
+                (1, 1),
+                (1, 5),
+                (1, 6),
+                (1, 7),
+                (1, 8),
+            ]
         )
         expected_accu = set([])
 

@@ -3,6 +3,7 @@ from pathlib import (
 )
 from typing import (
     List,
+    Tuple,
 )
 
 import dpdata
@@ -130,11 +131,6 @@ class PrepFpOpAbacus(OP):
         )
         op = PrepAbacus()
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
-
-
-from typing import (
-    Tuple,
-)
 
 
 def get_suffix_calculation(INPUT: List[str]) -> Tuple[str, str]:

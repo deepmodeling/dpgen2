@@ -1,4 +1,5 @@
 """Prep and Run Gaussian tasks."""
+
 import os
 from pathlib import (
     Path,
@@ -6,7 +7,6 @@ from pathlib import (
 from typing import (
     Any,
     List,
-    Optional,
     Tuple,
 )
 
@@ -18,7 +18,6 @@ from dargs import (
 )
 from dflow.python import (
     FatalError,
-    TransientError,
 )
 
 from dpgen2.constants import (

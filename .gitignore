@@ -49,6 +49,7 @@ tests/caly-*
 tests/coll-*
 tests/dpgen-*
 tests/upload
+upload/
 tests/init_data/
 tests/incar
 tests/potcar

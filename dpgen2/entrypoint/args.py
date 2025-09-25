@@ -9,12 +9,8 @@ from dargs import (
     Variant,
 )
 
-import dpgen2
 from dpgen2.conf import (
     conf_styles,
-)
-from dpgen2.constants import (
-    default_image,
 )
 from dpgen2.exploration.report import (
     conv_styles,
@@ -83,7 +79,6 @@ def dp_dist_train_args():
 
 def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
-    doc_config = "Configuration of training"
     doc_template_script = "File names of the template training script. It can be a `List[str]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `str`, the models share the same template training script. "
     doc_init_models_paths = "the paths to initial models"
     doc_init_models_uri = "The URI of initial models"

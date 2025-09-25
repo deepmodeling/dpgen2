@@ -1,24 +1,11 @@
-import json
-import os
-import random
-import shutil
-import tempfile
 import unittest
-from pathlib import (
-    Path,
-)
 
-import dpdata
-import numpy as np
 from dflow.config import (
     config,
     s3_config,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.utils import (
     dflow_config,
     dflow_s3_config,
@@ -74,7 +61,7 @@ class TestDflowConfig(unittest.TestCase):
         dflow_s3_config(config_data)
         self.assertEqual(s3_config["endpoint"], "bar")
 
-    def test_none(self):
+    def test_none_s3_config(self):
         config_data = {
             "endpoint": None,
         }

@@ -446,7 +446,8 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.candi_picked = [(ii[0], ii[1]) for ii in self.candi]
         if max_nframes is not None and max_nframes < len(self.candi_picked):
             prob = self._choice_prob_inv_pop_f(self.candi_picked)
-            indices = np.random.choice(
+            rng = np.random.default_rng()
+            indices = rng.choice(
                 len(self.candi_picked),
                 size=max_nframes,
                 replace=False,

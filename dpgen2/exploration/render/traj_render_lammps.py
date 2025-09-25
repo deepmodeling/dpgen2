@@ -9,7 +9,6 @@ from typing import (
     TYPE_CHECKING,
     List,
     Optional,
-    Tuple,
     Union,
 )
 

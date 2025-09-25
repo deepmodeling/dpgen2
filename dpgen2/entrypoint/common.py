@@ -3,9 +3,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
     List,
-    Optional,
     Union,
 )
 
@@ -13,14 +11,8 @@ import dflow
 
 from dpgen2.utils import (
     bohrium_config_from_dict,
-    dump_object_to_file,
-    load_object_from_file,
-    matched_step_key,
-    print_keys_in_nice_format,
-    sort_slice_ops,
     workflow_config_from_dict,
 )
-from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 
 def global_config_workflow(

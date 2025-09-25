@@ -1,19 +1,8 @@
-import random
 from typing import (
     List,
-    Optional,
 )
 
-import dpdata
 import numpy as np
-import scipy.constants as pc
-from packaging.version import (
-    Version,
-)
-
-from dpgen2.constants import (
-    lmp_traj_name,
-)
 
 calypso_run_opt_str = """#!/usr/bin/env python3
 
@@ -322,9 +311,9 @@ def make_calypso_input(
 
     file_str = ""
     for key, value in necessary_keys.items():
-        file_str += f"{key} = {str(value)}\n"
+        file_str += f"{key} = {value!s}\n"
     for key, value in default_key_value.items():
-        file_str += f"{key} = {str(value)}\n"
+        file_str += f"{key} = {value!s}\n"
     file_str += "@DistanceOfIon\n"
     file_str += distance_of_ions_str + "\n"
     file_str += "@End\n"

@@ -8,10 +8,11 @@ import numpy as np
 
 
 def make_one(out_dir):
+    rng = np.random.default_rng()
     # [0.5, 1)
-    [aa, bb, cc] = np.random.random(3) * 0.5 + 0.5
+    [aa, bb, cc] = rng.random(3) * 0.5 + 0.5
     # [1, 179)
-    [alpha, beta, gamma] = np.random.random(3) * (178 / 180) + 1
+    [alpha, beta, gamma] = rng.random(3) * (178 / 180) + 1
     # make cell
     cell = ase.geometry.cellpar_to_cell([aa, bb, cc, alpha, beta, gamma])
     sys = dpdata.System("POSCAR")

@@ -1,8 +1,5 @@
-import glob
-import json
 import os
 import shutil
-import sys
 import textwrap
 import unittest
 from pathlib import (
@@ -10,24 +7,14 @@ from pathlib import (
 )
 
 import dpdata
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    FatalError,
-    OPIOSign,
-    TransientError,
 )
 from fake_data_set import (
     fake_multi_sys,
-    fake_system,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     fp_task_pattern,
 )
@@ -38,9 +25,6 @@ from dpgen2.fp.vasp import (
     vasp_input_name,
     vasp_kp_name,
     vasp_pot_name,
-)
-from dpgen2.utils import (
-    dump_object_to_file,
 )
 
 # isort: on

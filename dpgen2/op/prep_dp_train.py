@@ -6,7 +6,6 @@ from pathlib import (
 )
 from typing import (
     List,
-    Tuple,
     Union,
 )
 
@@ -79,7 +78,7 @@ class PrepDPTrain(OP):
         template = ip["template_script"]
         numb_models = ip["numb_models"]
         osubdirs = []
-        if type(template) != list:
+        if not isinstance(template, list):
             template = [template for ii in range(numb_models)]
         else:
             if not (len(template) == numb_models):
