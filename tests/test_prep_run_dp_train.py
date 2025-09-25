@@ -53,8 +53,11 @@ from mocked_ops import (
     MockedPrepDPTrain,
     MockedRunDPTrain,
     MockedRunDPTrainNoneInitModel,
+    MockedRunNvNMDTrain,
+    MockedRunNvNMDTrainNoneInitModel,
     make_mocked_init_data,
     make_mocked_init_models,
+    make_mocked_init_nvnmd_models,
     mocked_numb_models,
     mocked_template_script,
 )
@@ -132,6 +135,19 @@ def _check_model(
         tcase.assertEqual(flines[ii + 1], mlines[ii])
 
 
+def _check_nvnmd_model_files(tcase, cwd, init_model):
+    """Helper to check all nvnmd model files."""
+    model_checks = [
+        ("nvnmd_models/frozen_model.pb", init_model / "frozen_model.pb"),
+        ("nvnmd_models/model.pb", init_model / "frozen_model.pb"),
+        ("nvnmd_models/model.ckpt.meta", init_model / "model.ckpt.meta"),
+        ("nvnmd_models/model.ckpt.data-00000-of-00001", init_model / "model.ckpt.data"),
+        ("nvnmd_models/model.ckpt.index", init_model / "model.ckpt.index"),
+    ]
+    for output_file, expected_file in model_checks:
+        _check_model(tcase, output_file, cwd, expected_file)
+
+
 def _check_lcurve(
     tcase,
     fname,
@@ -170,6 +186,32 @@ def check_run_train_dp_output(
     )
     _check_model(tcase, "model.pb", cwd, init_model)
     _check_lcurve(tcase, "lcurve.out", cwd, script)
+    os.chdir(cwd)
+
+
+def check_run_train_nvnmd_output(
+    tcase,
+    work_dir,
+    script,
+    init_model,
+    init_data,
+    iter_data,
+    only_check_name=False,
+):
+    cwd = os.getcwd()
+    os.chdir(work_dir)
+    _check_log(
+        tcase,
+        "log",
+        cwd,
+        script,
+        init_model,
+        init_data,
+        iter_data,
+        only_check_name=only_check_name,
+    )
+    _check_nvnmd_model_files(tcase, cwd, init_model)
+    _check_lcurve(tcase, "nvnmd_cnn/lcurve.out", cwd, script)
     os.chdir(cwd)
 
 
@@ -261,6 +303,95 @@ class TestMockedRunDPTrain(unittest.TestCase):
             self.assertEqual(op["log"], Path(train_task_pattern % ii) / "log")
             self.assertEqual(op["lcurve"], Path(train_task_pattern % ii) / "lcurve.out")
             check_run_train_dp_output(
+                self,
+                self.task_names[ii],
+                self.train_scripts[ii],
+                self.init_models[ii],
+                self.init_data,
+                self.iter_data,
+            )
+
+
+class TestMockedRunNvNMDTrain(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+
+        self.init_models = make_mocked_init_nvnmd_models(self.numb_models)
+
+        tmp_init_data = make_mocked_init_data()
+        self.init_data = tmp_init_data
+
+        tmp_iter_data = [Path("iter_data/foo"), Path("iter_data/bar")]
+        for ii in tmp_iter_data:
+            ii.mkdir(exist_ok=True, parents=True)
+            (ii / "a").write_text("data a")
+            (ii / "b").write_text("data b")
+        self.iter_data = tmp_iter_data
+
+        self.template_script = mocked_template_script.copy()
+
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+
+        for ii in range(3):
+            Path(self.task_names[ii]).mkdir(exist_ok=True, parents=True)
+            Path(self.train_scripts[ii]).write_text("{}")
+
+    def tearDown(self):
+        for ii in ["init_data", "iter_data"] + self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+        for ii in self.init_models:
+            if Path(ii).exists():
+                shutil.rmtree(ii)
+
+    def test(self):
+        for ii in range(3):
+            run = MockedRunNvNMDTrain()
+            ip = OPIO(
+                {
+                    "config": {},
+                    "task_name": self.task_names[ii],
+                    "task_path": self.task_paths[ii],
+                    "init_model": self.init_models[ii],
+                    "init_data": self.init_data,
+                    "iter_data": self.iter_data,
+                }
+            )
+            op = run.execute(ip)
+            self.assertEqual(op["script"], Path(train_task_pattern % ii) / "input.json")
+            self.assertTrue(op["script"].is_file())
+            self.assertEqual(
+                op["model"] / "frozen_model.pb",
+                Path(train_task_pattern % ii) / "nvnmd_models/frozen_model.pb",
+            )
+            self.assertEqual(
+                op["model"] / "model.pb",
+                Path(train_task_pattern % ii) / "nvnmd_models/model.pb",
+            )
+            self.assertEqual(
+                op["model"] / "model.ckpt.meta",
+                Path(train_task_pattern % ii) / "nvnmd_models/model.ckpt.meta",
+            )
+            self.assertEqual(
+                op["model"] / "model.ckpt.data-00000-of-00001",
+                Path(train_task_pattern % ii)
+                / "nvnmd_models/model.ckpt.data-00000-of-00001",
+            )
+            self.assertEqual(
+                op["model"] / "model.ckpt.index",
+                Path(train_task_pattern % ii) / "nvnmd_models/model.ckpt.index",
+            )
+            self.assertEqual(op["log"], Path(train_task_pattern % ii) / "log")
+            self.assertEqual(
+                op["lcurve"], Path(train_task_pattern % ii) / "nvnmd_cnn/lcurve.out"
+            )
+            check_run_train_nvnmd_output(
                 self,
                 self.task_names[ii],
                 self.train_scripts[ii],
@@ -449,3 +580,127 @@ class TestTrainDp(unittest.TestCase):
                 self.path_iter_data,
                 only_check_name=True,
             )
+
+
+@unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
+class TestTrainNvNMD(unittest.TestCase):
+    def setUp(self):
+        self.numb_models = mocked_numb_models
+
+        tmp_models = make_mocked_init_nvnmd_models(self.numb_models)
+        self.init_models = upload_artifact(tmp_models)
+        self.str_init_models = tmp_models
+
+        tmp_init_data = make_mocked_init_data()
+        self.init_data = upload_artifact(tmp_init_data)
+        self.path_init_data = tmp_init_data
+
+        tmp_iter_data = [Path("iter_data/foo"), Path("iter_data/bar")]
+        for ii in tmp_iter_data:
+            ii.mkdir(exist_ok=True, parents=True)
+            (ii / "a").write_text("data a")
+            (ii / "b").write_text("data b")
+        self.iter_data = upload_artifact(tmp_iter_data)
+        self.path_iter_data = tmp_iter_data
+
+        self.template_script = mocked_template_script.copy()
+
+        self.task_names = ["task.0000", "task.0001", "task.0002"]
+        self.task_paths = [Path(ii) for ii in self.task_names]
+        self.train_scripts = [
+            Path("task.0000/input.json"),
+            Path("task.0001/input.json"),
+            Path("task.0002/input.json"),
+        ]
+
+    def tearDown(self):
+        for ii in ["init_data", "iter_data"] + self.task_names:
+            if Path(ii).exists():
+                shutil.rmtree(str(ii))
+        for ii in self.str_init_models:
+            if Path(ii).exists():
+                shutil.rmtree(ii)
+
+    def test_train(self):
+        steps = PrepRunDPTrain(
+            "train-steps",
+            MockedPrepDPTrain,
+            MockedRunNvNMDTrain,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+        )
+        train_step = Step(
+            "train-step",
+            template=steps,
+            parameters={
+                "numb_models": self.numb_models,
+                "template_script": self.template_script,
+                "train_config": {},
+            },
+            artifacts={
+                "init_models": self.init_models,
+                "init_data": self.init_data,
+                "iter_data": self.iter_data,
+            },
+        )
+        wf = Workflow(name="nvnmd-train", host=default_host)
+        wf.add(train_step)
+        wf.submit()
+
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="train-step")[0]
+        self.assertEqual(step.phase, "Succeeded")
+
+        download_artifact(step.outputs.artifacts["scripts"])
+        download_artifact(step.outputs.artifacts["models"])
+        download_artifact(step.outputs.artifacts["logs"])
+        download_artifact(step.outputs.artifacts["lcurves"])
+
+        for ii in range(3):
+            check_run_train_nvnmd_output(
+                self,
+                self.task_names[ii],
+                self.train_scripts[ii],
+                self.str_init_models[ii],
+                self.path_init_data,
+                self.path_iter_data,
+                only_check_name=True,
+            )
+
+    def test_train_no_init_model(self):
+        steps = PrepRunDPTrain(
+            "train-steps",
+            MockedPrepDPTrain,
+            MockedRunNvNMDTrainNoneInitModel,
+            upload_python_packages=upload_python_packages,
+            prep_config=default_config,
+            run_config=default_config,
+        )
+        train_step = Step(
+            "train-step",
+            template=steps,
+            parameters={
+                "numb_models": self.numb_models,
+                "template_script": self.template_script,
+                "train_config": {},
+            },
+            artifacts={
+                "init_models": None,
+                "init_data": self.init_data,
+                "iter_data": self.iter_data,
+            },
+        )
+        wf = Workflow(name="nvnmd-train", host=default_host)
+        wf.add(train_step)
+        wf.submit()
+
+        while wf.query_status() in ["Pending", "Running"]:
+            time.sleep(4)
+
+        self.assertEqual(wf.query_status(), "Succeeded")
+        step = wf.query_step(name="train-step")[0]
+        self.assertEqual(step.phase, "Succeeded")
