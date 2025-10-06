@@ -1,7 +1,4 @@
-import json
-import os
 import random
-import shutil
 import tempfile
 import unittest
 from pathlib import (
@@ -12,7 +9,6 @@ import dpdata
 import numpy as np
 
 # isort: off
-from .context import dpgen2
 from dpgen2.conf.alloy_conf import (
     AlloyConf,
     AlloyConfGenerator,

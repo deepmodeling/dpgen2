@@ -1,16 +1,11 @@
-import json
 import shutil
 import unittest
 from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
     TransientError,
 )
 from mock import (

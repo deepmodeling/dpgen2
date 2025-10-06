@@ -20,8 +20,9 @@ from dpgen2.constants import (
 
 
 def _sample_sphere():
+    rng = np.random.default_rng()
     while True:
-        vv = np.array([np.random.normal(), np.random.normal(), np.random.normal()])
+        vv = np.array([rng.normal(), rng.normal(), rng.normal()])
         vn = np.linalg.norm(vv)
         if vn < 0.2:
             continue

@@ -1,15 +1,10 @@
-import json
 import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     List,
     Optional,
-    Set,
     Type,
 )
 
@@ -23,27 +18,18 @@ from dflow import (
     S3Artifact,
     Step,
     Steps,
-    Workflow,
     argo_len,
-    argo_range,
     argo_sequence,
-    download_artifact,
     upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    BigParameter,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
 
 from dpgen2.constants import (
     train_index_pattern,
-    train_script_name,
-    train_task_pattern,
 )
 from dpgen2.op import (
     RunDPTrain,

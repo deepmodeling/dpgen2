@@ -1,8 +1,4 @@
-import json
-import os
-import random
 import shutil
-import tempfile
 import textwrap
 import unittest
 from pathlib import (
@@ -13,9 +9,6 @@ import dpdata
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.conf.file_conf import (
     FileConfGenerator,
 )

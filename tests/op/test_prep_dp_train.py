@@ -5,21 +5,14 @@ from pathlib import (
     Path,
 )
 
-import numpy as np
 from dflow.python import (
-    OP,
     OPIO,
-    Artifact,
-    OPIOSign,
 )
 from mock import (
     mock,
 )
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.constants import (
     train_script_name,
     train_task_pattern,

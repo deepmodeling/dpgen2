@@ -148,9 +148,6 @@ class DistanceConfFilter(ConfFilter):
         from ase import (
             Atoms,
         )
-        from ase.build import (
-            make_supercell,
-        )
 
         safe_dist = deepcopy(safe_dist_dict)
         safe_dist.update(self.custom_safe_dist)

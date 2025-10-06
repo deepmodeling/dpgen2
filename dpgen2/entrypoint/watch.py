@@ -4,7 +4,6 @@ from typing import (
     Dict,
     List,
     Optional,
-    Union,
 )
 
 from dflow import (
@@ -43,15 +42,15 @@ def update_finished_steps(
     if finished_keys is not None:
         diff_keys = []
         for kk in wf_keys:
-            if not (kk in finished_keys):
+            if kk not in finished_keys:
                 diff_keys.append(kk)
     else:
         diff_keys = wf_keys
     for kk in diff_keys:
-        logging.info(f'steps {kk.ljust(50,"-")} finished')
+        logging.info(f"steps {kk.ljust(50, '-')} finished")
         if download:
             download_dpgen2_artifacts(wf, kk, prefix=prefix, chk_pnt=chk_pnt)
-            logging.info(f'steps {kk.ljust(50,"-")} downloaded')
+            logging.info(f"steps {kk.ljust(50, '-')} downloaded")
     finished_keys = wf_keys
     return finished_keys
 
