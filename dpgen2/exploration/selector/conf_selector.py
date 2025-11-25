@@ -37,5 +37,5 @@ class ConfSelector(ABC):
         model_devis: Union[List[Path], List[HDF5Dataset]],
         type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
-    ) -> Tuple[List[Path], ExplorationReport]:
+    ) -> Tuple[List[Path], List[Path], ExplorationReport]:
         pass
