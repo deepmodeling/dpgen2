@@ -74,7 +74,9 @@ def main_parser() -> argparse.ArgumentParser:
         help="Submit DPGEN2 workflow",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_run.add_argument("CONFIG", help="the config file in json format defining the workflow.")
+    parser_run.add_argument(
+        "CONFIG", help="the config file in json format defining the workflow."
+    )
 
     ##########################################
     # resubmit
@@ -369,7 +371,9 @@ def main():
             download_by_def(
                 wfid,
                 config,
-                iterations=(expand_idx(args.iterations) if args.iterations is not None else None),
+                iterations=(
+                    expand_idx(args.iterations) if args.iterations is not None else None
+                ),
                 step_defs=args.step_definitions,
                 prefix=args.prefix,
                 chk_pnt=args.no_check_point,

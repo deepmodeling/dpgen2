@@ -1,5 +1,7 @@
 import argparse
-from typing import Optional
+from typing import (
+    Optional,
+)
 
 from dflow import (
     Workflow,
