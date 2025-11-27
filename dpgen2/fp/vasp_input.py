@@ -10,7 +10,6 @@ from typing import (
     Union,
 )
 
-import dpdata
 import numpy as np
 from dargs import (
     Argument,
@@ -92,8 +91,12 @@ class VaspInputs:
     def args():
         doc_pp_files = 'The pseudopotential files set by a dict, e.g. {"Al" : "path/to/the/al/pp/file", "Mg" : "path/to/the/mg/pp/file"}'
         doc_incar = "The path to the template incar file"
-        doc_kspacing = "The spacing of k-point sampling. `ksapcing` will overwrite the incar template"
-        doc_kgamma = "If the k-mesh includes the gamma point. `kgamma` will overwrite the incar template"
+        doc_kspacing = (
+            "The spacing of k-point sampling. `ksapcing` will overwrite the incar template"
+        )
+        doc_kgamma = (
+            "If the k-mesh includes the gamma point. `kgamma` will overwrite the incar template"
+        )
         return [
             Argument("incar", str, optional=False, doc=doc_incar),
             Argument("pp_files", dict, optional=False, doc=doc_pp_files),
