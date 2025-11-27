@@ -64,6 +64,10 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self.fmt_str = " ".join([f"%{ii}s" for ii in spaces])
         self.fmt_flt = "%.4f"
         self.header_str = "#" + self.fmt_str % print_tuple
+        self._no_candidate = False
+        self._failed_ratio = None
+        self._accurate_ratio = None
+        self._candidate_ratio = None
 
     @staticmethod
     def args() -> List[Argument]:
@@ -133,6 +137,16 @@ class ExplorationReportTrustLevels(ExplorationReport):
         assert len(self.traj_accu) == ntraj
         assert len(self.traj_fail) == ntraj
         self.model_devi = model_devi
+        self._no_candidate = sum([len(ii) for ii in self.traj_cand]) == 0
+        self._failed_ratio = float(sum([len(ii) for ii in self.traj_fail])) / float(
+            sum(self.traj_nframes)
+        )
+        self._accurate_ratio = float(sum([len(ii) for ii in self.traj_accu])) / float(
+            sum(self.traj_nframes)
+        )
+        self._candidate_ratio = float(sum([len(ii) for ii in self.traj_cand])) / float(
+            sum(self.traj_nframes)
+        )
 
     def _get_indexes(
         self,
@@ -205,22 +219,22 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self,
         tag=None,
     ):
-        traj_nf = [len(ii) for ii in self.traj_fail]
-        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
+        return self._failed_ratio
 
     def accurate_ratio(
         self,
         tag=None,
     ):
-        traj_nf = [len(ii) for ii in self.traj_accu]
-        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
+        return self._accurate_ratio
 
     def candidate_ratio(
         self,
         tag=None,
     ):
-        traj_nf = [len(ii) for ii in self.traj_cand]
-        return float(sum(traj_nf)) / float(sum(self.traj_nframes))
+        return self._candidate_ratio
+
+    def no_candidate(self) -> bool:
+        return self._no_candidate
 
     @abstractmethod
     def get_candidate_ids(

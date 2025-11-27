@@ -3,6 +3,7 @@ import logging
 from typing import (
     Any,
     List,
+    Optional,
     Tuple,
 )
 
@@ -134,6 +135,7 @@ class RunGaussian(RunFp):
         self,
         command: str,
         out: str,
+        post_command: Optional[str] = None,
     ) -> Tuple[str, str]:
         r"""Defines how one FP task runs
 
@@ -170,6 +172,23 @@ class RunGaussian(RunFp):
                 )
             )
             raise TransientError("gaussian failed")
+        if post_command is not None:
+            ret, out, err = run_command(post_command, shell=True)
+            if ret != 0:
+                logging.error(
+                    "".join(
+                        (
+                            "gaussian postprocessing failed\n",
+                            "out msg: ",
+                            out,
+                            "\n",
+                            "err msg: ",
+                            err,
+                            "\n",
+                        )
+                    )
+                )
+                raise TransientError("gaussian postprocessing failed")
         # convert the output to deepmd/npy format
         sys = dpdata.LabeledSystem(gaussian_output_name, fmt="gaussian/log")
         sys.to("deepmd/npy", out_name)
@@ -187,6 +206,7 @@ class RunGaussian(RunFp):
 
         doc_gaussian_cmd = "The command of Gaussian"
         doc_gaussian_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
+        doc_post_command = "The command after Gaussian"
         return [
             Argument(
                 "command", str, optional=True, default="g16", doc=doc_gaussian_cmd
@@ -197,5 +217,8 @@ class RunGaussian(RunFp):
                 optional=True,
                 default=fp_default_out_data_name,
                 doc=doc_gaussian_out,
+            ),
+            Argument(
+                "post_command", str, optional=True, default=None, doc=doc_post_command
             ),
         ]

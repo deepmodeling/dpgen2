@@ -19,7 +19,7 @@ from .context import (
 from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
-    fold_keys,
+    get_resubmit_keys,
     print_list_steps,
     submit_concurrent_learning,
     update_reuse_step_scheduler,
@@ -959,109 +959,98 @@ PRINT ARG=restraint.bias
 )
 
 
-def test_fold_keys_lmp():
-    all_step_keys = [
-        "init--scheduler",
-        "init--id",
-        "iter-000000--prep-run-train",
-        "iter-000000--prep-train",
-        "iter-000000--run-train-0000",
-        "iter-000000--run-train-0001",
-        "iter-000000--run-train-0002",
-        "iter-000000--run-train-0003",
-        "iter-000000--prep-run-explore",
-        "iter-000000--prep-lmp",
-        "iter-000000--run-lmp-000000",
-        "iter-000000--run-lmp-000001",
-        "iter-000000--select-confs",
-        "iter-000000--prep-run-fp",
-        "iter-000000--prep-fp",
-        "iter-000000--run-fp-000000",
-        "iter-000000--run-fp-000001",
-        "iter-000000--run-fp-000002",
-    ]
-    folded_keys = fold_keys(all_step_keys)
-    assert folded_keys == {
-        "init--scheduler": ["init--scheduler"],
-        "init--id": ["init--id"],
-        "iter-000000--prep-run-train": [
-            "iter-000000--prep-train",
-            "iter-000000--run-train-0000",
-            "iter-000000--run-train-0001",
-            "iter-000000--run-train-0002",
-            "iter-000000--run-train-0003",
-        ],
-        "iter-000000--prep-run-explore": [
-            "iter-000000--prep-lmp",
-            "iter-000000--run-lmp-000000",
-            "iter-000000--run-lmp-000001",
-        ],
-        "iter-000000--select-confs": ["iter-000000--select-confs"],
-        "iter-000000--prep-run-fp": [
-            "iter-000000--prep-fp",
-            "iter-000000--run-fp-000000",
-            "iter-000000--run-fp-000001",
-            "iter-000000--run-fp-000002",
-        ],
-    }
+class MockedArgoStep:
+    def __init__(self, key, phase):
+        self.key = key
+        self.id = key
+        self.phase = phase
 
 
-def test_fold_keys_caly():
-    all_step_keys = [
-        "init--scheduler",
-        "init--id",
-        "iter-000000--prep-run-train",
-        "iter-000000--prep-train",
-        "iter-000000--run-train-0000",
-        "iter-000000--run-train-0001",
-        "iter-000000--run-train-0002",
-        "iter-000000--run-train-0003",
-        "iter-000000--prep-run-explore",
-        "iter-000000--prep-caly-input",
-        "iter-000000--prep-run-dp-optim-000000-0",
-        "iter-000000--prep-run-dp-optim-000000-1",
-        "iter-000000--prep-run-dp-optim-000001-0",
-        "iter-000000--prep-run-dp-optim-000001-1",
-        "iter-000000--collect-run-calypso-000000-0",
-        "iter-000000--collect-run-calypso-000000-1",
-        "iter-000000--collect-run-calypso-000001-0",
-        "iter-000000--collect-run-calypso-000001-1",
-        "iter-000000--run-caly-model-devi",
-        "iter-000000--select-confs",
-        "iter-000000--prep-run-fp",
-        "iter-000000--prep-fp",
-        "iter-000000--run-fp-000000",
-        "iter-000000--run-fp-000001",
-        "iter-000000--run-fp-000002",
-    ]
-    folded_keys = fold_keys(all_step_keys)
-    assert folded_keys == {
-        "init--scheduler": ["init--scheduler"],
-        "init--id": ["init--id"],
-        "iter-000000--prep-run-train": [
-            "iter-000000--prep-train",
-            "iter-000000--run-train-0000",
-            "iter-000000--run-train-0001",
-            "iter-000000--run-train-0002",
-            "iter-000000--run-train-0003",
-        ],
-        "iter-000000--prep-run-explore": [
-            "iter-000000--prep-caly-input",
-            "iter-000000--prep-run-dp-optim-000000-0",
-            "iter-000000--prep-run-dp-optim-000000-1",
-            "iter-000000--prep-run-dp-optim-000001-0",
-            "iter-000000--prep-run-dp-optim-000001-1",
-            "iter-000000--collect-run-calypso-000000-0",
-            "iter-000000--collect-run-calypso-000000-1",
-            "iter-000000--collect-run-calypso-000001-0",
-            "iter-000000--collect-run-calypso-000001-1",
-            "iter-000000--run-caly-model-devi",
-        ],
-        "iter-000000--select-confs": ["iter-000000--select-confs"],
-        "iter-000000--prep-run-fp": [
-            "iter-000000--prep-fp",
-            "iter-000000--run-fp-000000",
-            "iter-000000--run-fp-000001",
-            "iter-000000--run-fp-000002",
-        ],
-    }
+steps = [
+    MockedArgoStep(key="init--scheduler", phase="Succeeded"),
+    MockedArgoStep(key="init--id", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--loop", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--block", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--prep-run-train", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--prep-run-explore", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--select-confs", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--prep-run-fp", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--collect-data", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--scheduler", phase="Succeeded"),
+    MockedArgoStep(key="iter-000000--id", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--block", phase="Failed"),
+    MockedArgoStep(key="iter-000001--prep-run-train", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--prep-train", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-train-0000", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-train-0001", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-train-0002", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-train-0003", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--prep-run-explore", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--prep-lmp", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-lmp-000000", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-lmp-000001", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-lmp-000002", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--select-confs", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--prep-run-fp", phase="Failed"),
+    MockedArgoStep(key="iter-000001--prep-fp", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-fp-000000", phase="Succeeded"),
+    MockedArgoStep(key="iter-000001--run-fp-000001", phase="Failed"),
+]
+
+
+class MockedWorkflowInfo:
+    def get_step(self, parent_id=None, sort_by_generation=False):
+        if parent_id is None:
+            return steps
+        if parent_id == "iter-000000--prep-run-train":
+            return [steps[4]]
+        if parent_id == "iter-000000--prep-run-explore":
+            return [steps[5]]
+        if parent_id == "iter-000000--prep-run-fp":
+            return [steps[7]]
+        if parent_id == "iter-000001--prep-run-train":
+            return steps[13:18]
+        if parent_id == "iter-000001--prep-run-explore":
+            return steps[19:23]
+        if parent_id == "iter-000001--prep-run-fp":
+            return steps[25:28]
+
+
+class MockedWorkflow:
+    def query(self):
+        return MockedWorkflowInfo()
+
+
+expected_folded_keys = {
+    "init--scheduler": ["init--scheduler"],
+    "init--id": ["init--id"],
+    "iter-000000--prep-run-train": ["iter-000000--prep-run-train"],
+    "iter-000000--prep-run-explore": ["iter-000000--prep-run-explore"],
+    "iter-000000--select-confs": ["iter-000000--select-confs"],
+    "iter-000000--prep-run-fp": ["iter-000000--prep-run-fp"],
+    "iter-000000--collect-data": ["iter-000000--collect-data"],
+    "iter-000000--scheduler": ["iter-000000--scheduler"],
+    "iter-000000--id": ["iter-000000--id"],
+    "iter-000001--prep-run-train": [
+        "iter-000001--prep-train",
+        "iter-000001--run-train-0000",
+        "iter-000001--run-train-0001",
+        "iter-000001--run-train-0002",
+        "iter-000001--run-train-0003",
+    ],
+    "iter-000001--prep-run-explore": [
+        "iter-000001--prep-lmp",
+        "iter-000001--run-lmp-000000",
+        "iter-000001--run-lmp-000001",
+        "iter-000001--run-lmp-000002",
+    ],
+    "iter-000001--select-confs": ["iter-000001--select-confs"],
+    "iter-000001--prep-fp": ["iter-000001--prep-fp"],
+    "iter-000001--run-fp-000000": ["iter-000001--run-fp-000000"],
+}
+
+
+def test_get_resubmit_keys():
+    wf = MockedWorkflow()
+    folded_keys = get_resubmit_keys(wf)
+    assert folded_keys == expected_folded_keys

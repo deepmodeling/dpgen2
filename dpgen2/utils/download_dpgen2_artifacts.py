@@ -63,11 +63,13 @@ op_download_setting = {
     "prep-run-explore": DownloadDefinition()
     .add_output("logs")
     .add_output("trajs")
-    .add_output("model_devis"),
+    .add_output("model_devis")
+    .add_output("extra_outputs"),
     "prep-run-fp": DownloadDefinition()
     .add_input("confs")
     .add_output("logs")
-    .add_output("labeled_data"),
+    .add_output("labeled_data")
+    .add_output("extra_outputs"),
     "collect-data": DownloadDefinition().add_output("iter_data"),
 }
 
@@ -358,9 +360,9 @@ def _dl_step_item(
     [step_key, io, name] = item.split(global_step_def_split)
     pref = _item_path(prefix, item)
     if io in ["input"]:
-        target = step.inputs.artifacts[name]
+        target = step.inputs.artifacts.get(name)
     elif io in ["output"]:
-        target = step.outputs.artifacts[name]
+        target = step.outputs.artifacts.get(name)
     else:
         raise RuntimeError("unknown io style {io}")
     try:

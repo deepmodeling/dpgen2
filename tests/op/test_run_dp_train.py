@@ -7,6 +7,7 @@ from pathlib import (
     Path,
 )
 
+import dpdata
 import numpy as np
 from dflow.python import (
     OP,
@@ -37,7 +38,7 @@ from dpgen2.op.run_dp_train import (
     RunDPTrain,
     _get_data_size_of_all_mult_sys,
     _make_train_command,
-    _make_train_command_old,
+    split_valid,
 )
 
 # isort: on
@@ -693,6 +694,7 @@ class TestRunDPTrain(unittest.TestCase):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
         config = self.config.copy()
+        config["init_model_policy"] = "yes"
         task_path = self.task_path
         Path(task_path).mkdir(exist_ok=True)
         with open(Path(task_path) / train_script_name, "w") as fp:
@@ -712,7 +714,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "iter_data": [Path(ii) for ii in self.iter_data],
                     "optional_parameter": {
                         "mixed_type": False,
-                        "finetune_mode": "train-init",
+                        "finetune_mode": "no",
                     },
                 }
             )
@@ -749,7 +751,7 @@ class TestRunDPTrain(unittest.TestCase):
         )
         with open(out["script"]) as fp:
             jdata = json.load(fp)
-            self.assertDictEqual(jdata, self.expected_odict_v2)
+            self.assertDictEqual(jdata, self.expected_init_model_odict_v2)
 
 
 class TestRunDPTrainNullIterData(unittest.TestCase):
@@ -944,50 +946,42 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
 
-class TestMakeTrainCommand(unittest.TestCase):
+class TestSplitValid(unittest.TestCase):
     def setUp(self):
-        pass
+        s = fake_system(10, 1)
+        s.to_deepmd_npy("fake_data")
+        ms = fake_multi_sys([10, 20], [1, 2])
+        ms.to_deepmd_npy_mixed("fake_mixed_data")
+
+    def test_split_valid(self):
+        train_systems, valid_systems = split_valid(["fake_data"], 0.1)
+        self.assertEqual(len(train_systems), 1)
+        s = dpdata.LabeledSystem(train_systems[0], fmt="deepmd/npy")
+        self.assertEqual(len(s), 9)
+        self.assertEqual(len(valid_systems), 1)
+        s = dpdata.LabeledSystem(valid_systems[0], fmt="deepmd/npy")
+        self.assertEqual(len(s), 1)
+
+    def test_split_valid_mixed(self):
+        train_systems, valid_systems = split_valid(
+            ["fake_mixed_data/1", "fake_mixed_data/2"], 0.1
+        )
+        self.assertEqual(len(train_systems), 2)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(train_systems[0], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 9)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(train_systems[1], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 18)
+        self.assertEqual(len(valid_systems), 2)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(valid_systems[0], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 1)
+        ms = dpdata.MultiSystems()
+        ms.load_systems_from_file(valid_systems[1], fmt="deepmd/npy/mixed")
+        self.assertEqual(len(ms[0]), 2)
 
     def tearDown(self):
-        pass
-
-    def test_consistency_impl(self):
-        dp_command = ["foo"]
-        train_script_name = "bar.json"
-        finetune_args = "piz"
-        init_model = "fox.pt"
-
-        # restart, impl, do_init, finetune_model, init_model_w_finetune
-        for res, ii, dim, fm, imwf in itertools.product(
-            [True, False],
-            ["tensorflow", "pytorch"],
-            [True, False],
-            ["finetune", "train-init"],
-            [True, False],
-        ):
-            if res:
-                if ii == "tensorflow":
-                    Path("checkpoint").write_text("")
-                else:
-                    Path("model.ckpt-000.pt").write_text("")
-                    Path("model.ckpt-001.pt").write_text("")
-
-            args = [
-                dp_command,
-                train_script_name,
-                ii,
-                dim,
-                init_model,
-                fm,
-                finetune_args,
-                imwf,
-            ]
-            cmd_new = _make_train_command(*args)
-            cmd_old = _make_train_command_old(*args)
-
-            self.assertEqual(cmd_old, cmd_new)
-
-            if res:
-                for ii in ["model.ckpt-000.pt", "model.ckpt-001.pt", "checkpoint"]:
-                    if os.path.exists(ii):
-                        os.remove(ii)
+        for f in ["fake_data", "fake_mixed_data", "train_data", "valid_data"]:
+            if os.path.exists(f):
+                shutil.rmtree(f)

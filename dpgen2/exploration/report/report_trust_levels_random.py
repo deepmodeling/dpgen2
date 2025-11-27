@@ -41,17 +41,23 @@ class ExplorationReportTrustLevelsRandom(ExplorationReportTrustLevels):
         converged  bool
             If the exploration is converged.
         """
-        return self.accurate_ratio() >= self.conv_accuracy
+        accurate_ratio = self.accurate_ratio()
+        assert isinstance(accurate_ratio, float)
+        return accurate_ratio >= self.conv_accuracy
 
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
+        clear: bool = True,
     ) -> List[List[int]]:
         ntraj = len(self.traj_nframes)
         id_cand = self._get_candidates(max_nframes)
         id_cand_list = [[] for ii in range(ntraj)]
         for ii in id_cand:
             id_cand_list[ii[0]].append(ii[1])
+        # free the memory, this method should only be called once
+        if clear:
+            self.clear()
         return id_cand_list
 
     def _get_candidates(

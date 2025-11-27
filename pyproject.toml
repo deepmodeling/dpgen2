@@ -16,14 +16,15 @@ classifiers = [
 ]
 dependencies = [
 	     'numpy',
-	     'dpdata',
-	     'pydflow>=1.6.57',
+	     'dpdata>=0.2.20',
+	     'pydflow>=1.8.97',
 	     'dargs>=0.3.1',
 	     'scipy',
 	     'lbg',
 	     'packaging',
 	     'fpop',
 	     'dpgui',
+             'cp2kdata',
 ]
 requires-python = ">=3.7"
 readme = "README.md"
@@ -44,11 +45,11 @@ dpgen2 = "dpgen2.entrypoint.main:main"
 docs = [
      'sphinx',
      'recommonmark',
-     'sphinx_rtd_theme>=1.0.0rc1',
+     'sphinx-book-theme',
      'numpydoc',
      'myst_parser',
-     'deepmodeling_sphinx',
-     'sphinx-argparse',
+     'deepmodeling-sphinx>=0.3.0',
+     'sphinx-argparse<0.5.0',
      "dargs>=0.4.1",
 ]
 test = [

@@ -6,6 +6,7 @@ from pathlib import (
     Path,
 )
 
+import dpdata
 import numpy as np
 from dflow.python import (
     OP,
@@ -34,6 +35,8 @@ from dpgen2.constants import (
 )
 from dpgen2.op.run_lmp import (
     RunLmp,
+    get_ele_temp,
+    merge_pimd_files,
     set_models,
 )
 from dpgen2.utils import (
@@ -122,6 +125,29 @@ class TestRunLmp(unittest.TestCase):
             ),
         ]
         mocked_run.assert_has_calls(calls)
+
+    def test_extra_outputs(self):
+        op = RunLmp()
+        out = op.execute(
+            OPIO(
+                {
+                    "config": {
+                        "command": "echo Hello > foo.txt",
+                        "extra_output_files": ["foo.txt"],
+                    },
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": self.models,
+                }
+            )
+        )
+        work_dir = Path(self.task_name)
+        # check output
+        self.assertEqual(out["extra_outputs"], [work_dir / "foo.txt"])
+        self.assertEqual(
+            (work_dir / "foo.txt").read_text().strip(),
+            "Hello -i in.lammps -log log.lammps",
+        )
 
 
 class TestRunLmpDist(unittest.TestCase):
@@ -263,3 +289,86 @@ class TestSetModels(unittest.TestCase):
         input_name.write_text(lmp_config)
         with self.assertRaises(RuntimeError) as re:
             set_models(input_name, self.model_names)
+
+
+class TestGetEleTemp(unittest.TestCase):
+    def test_get_ele_temp_none(self):
+        with open("log", "w") as f:
+            f.write(
+                "pair_style      deepmd model.000.pb model.001.pb model.002.pb model.003.pb model.004.pb out_freq 10 out_file model_devi.out"
+            )
+        ele_temp = get_ele_temp("log")
+        self.assertIsNone(ele_temp)
+
+    def test_get_ele_temp(self):
+        with open("log", "w") as f:
+            f.write(
+                "pair_style      deepmd model.000.pb model.001.pb model.002.pb model.003.pb model.004.pb out_freq 10 out_file model_devi.out fparam 6.6"
+            )
+        ele_temp = get_ele_temp("log")
+        self.assertEqual(ele_temp, 6.6)
+
+    def tearDown(self):
+        if os.path.exists("log"):
+            os.remove("log")
+
+
+class TestMergePIMDFiles(unittest.TestCase):
+    def test_merge_pimd_files(self):
+        for i in range(1, 3):
+            with open("traj.%s.dump" % i, "w") as f:
+                f.write(
+                    """ITEM: TIMESTEP
+0
+ITEM: NUMBER OF ATOMS
+3
+ITEM: BOX BOUNDS xy xz yz pp pp pp
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+ITEM: ATOMS id type x y z
+1 8 7.23489 0.826309 4.61669
+2 1 8.04419 0.520382 5.14395
+3 1 6.48126 0.446895 4.99766
+ITEM: TIMESTEP
+10
+ITEM: NUMBER OF ATOMS
+3
+ITEM: BOX BOUNDS xy xz yz pp pp pp
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+0.0000000000000000e+00 1.2444661140399999e+01 0.0000000000000000e+00
+ITEM: ATOMS id type x y z
+1 8 7.23103 0.814939 4.59892
+2 1 7.96453 0.61699 5.19158
+3 1 6.43661 0.370311 5.09854
+"""
+                )
+        for i in range(1, 3):
+            with open("model_devi.%s.out" % i, "w") as f:
+                f.write(
+                    """#       step         max_devi_v         min_devi_v         avg_devi_v         max_devi_f         min_devi_f         avg_devi_f
+           0       9.023897e-17       3.548771e-17       5.237314e-17       8.196123e-16       1.225653e-16       3.941002e-16
+          10       1.081667e-16       4.141596e-17       7.534462e-17       9.070597e-16       1.067947e-16       4.153524e-16
+"""
+                )
+
+        merge_pimd_files()
+        self.assertTrue(os.path.exists(lmp_traj_name))
+        self.assertTrue(os.path.exists(lmp_model_devi_name))
+        s = dpdata.System(lmp_traj_name, fmt="lammps/dump")
+        assert len(s) == 4
+        model_devi = np.loadtxt(lmp_model_devi_name)
+        assert model_devi.shape[0] == 4
+
+    def tearDown(self):
+        for f in [
+            lmp_traj_name,
+            "traj.1.dump",
+            "traj.2.dump",
+            lmp_model_devi_name,
+            "model_devi.1.out",
+            "model_devi.2.out",
+        ]:
+            if os.path.exists(f):
+                os.remove(f)

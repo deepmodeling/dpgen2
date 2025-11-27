@@ -60,9 +60,10 @@ class ExplorationReport(ABC):
         """
         pass
 
+    @abstractmethod
     def no_candidate(self) -> bool:
         r"""If no candidate configuration is found"""
-        return all([len(ii) == 0 for ii in self.get_candidate_ids()])
+        pass
 
     @abstractmethod
     def get_candidate_ids(

@@ -1,3 +1,4 @@
+import glob
 import json
 import logging
 import os
@@ -13,6 +14,7 @@ from typing import (
     Tuple,
 )
 
+import numpy as np
 from dargs import (
     Argument,
     ArgumentEncoder,
@@ -25,6 +27,7 @@ from dflow.python import (
     Artifact,
     BigParameter,
     FatalError,
+    HDF5Datasets,
     OPIOSign,
     TransientError,
 )
@@ -79,6 +82,8 @@ class RunLmp(OP):
                 "traj": Artifact(Path),
                 "model_devi": Artifact(Path),
                 "plm_output": Artifact(Path, optional=True),
+                "optional_output": Artifact(Path, optional=True),
+                "extra_outputs": Artifact(List[Path]),
             }
         )
 
@@ -150,28 +155,7 @@ class RunLmp(OP):
                 elif ext == ".pt":
                     # freeze model
                     mname = pytorch_model_name_pattern % (idx)
-                    freeze_args = "-o %s" % mname
-                    if config.get("head") is not None:
-                        freeze_args += " --head %s" % config["head"]
-                    freeze_cmd = "dp --pt freeze -c %s %s" % (mm, freeze_args)
-                    ret, out, err = run_command(freeze_cmd, shell=True)
-                    if ret != 0:
-                        logging.error(
-                            "".join(
-                                (
-                                    "freeze failed\n",
-                                    "command was",
-                                    freeze_cmd,
-                                    "out msg",
-                                    out,
-                                    "\n",
-                                    "err msg",
-                                    err,
-                                    "\n",
-                                )
-                            )
-                        )
-                        raise TransientError("freeze failed")
+                    freeze_model(mm, mname, config.get("model_frozen_head"))
                 else:
                     raise RuntimeError(
                         "Model file with extension '%s' is not supported" % ext
@@ -204,10 +188,22 @@ class RunLmp(OP):
                 )
                 raise TransientError("lmp failed")
 
+            ele_temp = None
+            if config.get("use_ele_temp", 0):
+                ele_temp = get_ele_temp(lmp_log_name)
+                if ele_temp is not None:
+                    data = {
+                        "ele_temp": ele_temp,
+                    }
+                    with open("job.json", "w") as f:
+                        json.dump(data, f, indent=4)
+
+            merge_pimd_files()
+
         ret_dict = {
             "log": work_dir / lmp_log_name,
             "traj": work_dir / lmp_traj_name,
-            "model_devi": work_dir / lmp_model_devi_name,
+            "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (
             {"plm_output": work_dir / plm_output_name}
@@ -215,8 +211,17 @@ class RunLmp(OP):
             else {}
         )
         ret_dict.update(plm_output)
+        if ele_temp is not None:
+            ret_dict["optional_output"] = work_dir / "job.json"
 
+        extra_outputs = []
+        for fname in config["extra_output_files"]:
+            extra_outputs += list(work_dir.glob(fname))
+        ret_dict["extra_outputs"] = extra_outputs  # type: ignore
         return OPIO(ret_dict)
+
+    def get_model_devi(self, model_devi_file):
+        return model_devi_file
 
     @staticmethod
     def lmp_args():
@@ -224,6 +229,9 @@ class RunLmp(OP):
         doc_teacher_model = "The teacher model in `Knowledge Distillation`"
         doc_shuffle_models = "Randomly pick a model from the group of models to drive theexploration MD simulation"
         doc_head = "Select a head from multitask"
+        doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
+        doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+        doc_extra_output_files = "Extra output file names, support wildcards"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
             Argument(
@@ -241,6 +249,26 @@ class RunLmp(OP):
                 doc=doc_shuffle_models,
             ),
             Argument("head", str, optional=True, default=None, doc=doc_head),
+            Argument(
+                "use_ele_temp", int, optional=True, default=0, doc=doc_use_ele_temp
+            ),
+            Argument(
+                "model_frozen_head", str, optional=True, default=None, doc=doc_head
+            ),
+            Argument(
+                "use_hdf5",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_use_hdf5,
+            ),
+            Argument(
+                "extra_output_files",
+                list,
+                optional=True,
+                default=[],
+                doc=doc_extra_output_files,
+            ),
         ]
 
     @staticmethod
@@ -310,3 +338,77 @@ def find_only_one_key(lmp_lines, key, raise_not_found=True):
         else:
             return None
     return found[0]
+
+
+def get_ele_temp(lmp_log_name):
+    with open(lmp_log_name, encoding="utf8") as f:
+        lmp_log_lines = f.readlines()
+
+    for line in lmp_log_lines:
+        fields = line.split()
+        if fields[:2] == ["pair_style", "deepmd"]:
+            if "fparam" in fields:
+                # for rendering variables
+                try:
+                    return float(fields[fields.index("fparam") + 1])
+                except Exception:
+                    pass
+            if "aparam" in fields:
+                try:
+                    return float(fields[fields.index("aparam") + 1])
+                except Exception:
+                    pass
+
+    return None
+
+
+def freeze_model(input_model, frozen_model, head=None):
+    freeze_args = "-o %s" % frozen_model
+    if head is not None:
+        freeze_args += " --head %s" % head
+    freeze_cmd = "dp --pt freeze -c %s %s" % (input_model, freeze_args)
+    ret, out, err = run_command(freeze_cmd, shell=True)
+    if ret != 0:
+        logging.error(
+            "".join(
+                (
+                    "freeze failed\n",
+                    "command was",
+                    freeze_cmd,
+                    "out msg",
+                    out,
+                    "\n",
+                    "err msg",
+                    err,
+                    "\n",
+                )
+            )
+        )
+        raise TransientError("freeze failed")
+
+
+def merge_pimd_files():
+    traj_files = glob.glob("traj.*.dump")
+    if len(traj_files) > 0:
+        with open(lmp_traj_name, "w") as f:
+            for traj_file in sorted(traj_files):
+                with open(traj_file, "r") as f2:
+                    f.write(f2.read())
+    model_devi_files = glob.glob("model_devi.*.out")
+    if len(model_devi_files) > 0:
+        with open(lmp_model_devi_name, "w") as f:
+            for model_devi_file in sorted(model_devi_files):
+                with open(model_devi_file, "r") as f2:
+                    f.write(f2.read())
+
+
+class RunLmpHDF5(RunLmp):
+    @classmethod
+    def get_output_sign(cls):
+        output_sign = super().get_output_sign()
+        output_sign["traj"] = Artifact(HDF5Datasets)
+        output_sign["model_devi"] = Artifact(HDF5Datasets)
+        return output_sign
+
+    def get_model_devi(self, model_devi_file):
+        return np.loadtxt(model_devi_file)

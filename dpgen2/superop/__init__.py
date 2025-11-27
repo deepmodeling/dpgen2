@@ -4,6 +4,9 @@ from .block import (
 from .prep_run_calypso import (
     PrepRunCaly,
 )
+from .prep_run_diffcsp import (
+    PrepRunDiffCSP,
+)
 from .prep_run_dp_train import (
     PrepRunDPTrain,
 )

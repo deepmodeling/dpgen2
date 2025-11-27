@@ -30,6 +30,9 @@ from dpgen2.utils.download_dpgen2_artifacts import (
 
 
 class MockedArti:
+    def get(self, key):
+        return self.__getitem__(key)
+
     def __getitem__(
         self,
         key,

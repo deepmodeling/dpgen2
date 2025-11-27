@@ -9,6 +9,7 @@ from pathlib import (
 from typing import (
     List,
     Optional,
+    Union,
 )
 
 import jsonpickle
@@ -35,6 +36,7 @@ from dflow.python import (
     OPIO,
     Artifact,
     BigParameter,
+    HDF5Datasets,
     OPIOSign,
     PythonOPTemplate,
     Slices,
@@ -77,6 +79,13 @@ def make_block_optional_parameter(cl_optional_parameter):
     }
 
 
+def make_next_optional_parameter(optional_parameter):
+    return {
+        "data_mixed_type": optional_parameter["data_mixed_type"],
+        "finetune_mode": "no",  # not to do finetune for `next` loop
+    }
+
+
 class SchedulerWrapper(OP):
     @classmethod
     def get_input_sign(cls):
@@ -84,7 +93,7 @@ class SchedulerWrapper(OP):
             {
                 "exploration_scheduler": BigParameter(ExplorationScheduler),
                 "exploration_report": BigParameter(ExplorationReport),
-                "trajs": Artifact(List[Path]),
+                "trajs": Artifact(Union[List[Path], HDF5Datasets]),
             }
         )
 
@@ -426,7 +435,9 @@ def _loop(
         "exploration_scheduler": scheduler_step.outputs.parameters[
             "exploration_scheduler"
         ],
-        "optional_parameter": steps.inputs.parameters["optional_parameter"],
+        "optional_parameter": make_next_optional_parameter(
+            steps.inputs.parameters["optional_parameter"]
+        ),
         "expl_task_grp": scheduler_step.outputs.parameters["expl_task_grp"],
     }
     next_step = Step(

@@ -127,6 +127,10 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.fmt_str = " ".join([f"%{ii}s" for ii in spaces])
         self.fmt_flt = "%.4f"
         self.header_str = "#" + self.fmt_str % print_tuple
+        self._no_candidate = False
+        self._failed_ratio = None
+        self._accurate_ratio = None
+        self._candidate_ratio = None
 
     @staticmethod
     def doc() -> str:
@@ -239,7 +243,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
                 ii, md_f[ii], md_v[ii]
             )
             self.nframes += add_nframes
-            self.accur = self.accur.union(add_accur)
+            self.accur.update(add_accur)
             self.failed += add_failed
             coll_f += add_f
             coll_v += add_v
@@ -274,6 +278,10 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         # accurate set is substracted by the candidate set
         self.accur = self.accur - self.candi
         self.model_devi = model_devi
+        self._no_candidate = len(self.candi) == 0
+        self._failed_ratio = float(len(self.failed)) / float(self.nframes)
+        self._accurate_ratio = float(len(self.accur)) / float(self.nframes)
+        self._candidate_ratio = float(len(self.candi)) / float(self.nframes)
 
     def _record_one_traj(
         self,
@@ -346,29 +354,36 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         tag=None,
     ):
-        return float(len(self.failed)) / float(self.nframes)
+        return self._failed_ratio
 
     def accurate_ratio(
         self,
         tag=None,
     ):
-        return float(len(self.accur)) / float(self.nframes)
+        return self._accurate_ratio
 
     def candidate_ratio(
         self,
         tag=None,
     ):
-        return float(len(self.candi)) / float(self.nframes)
+        return self._candidate_ratio
+
+    def no_candidate(self) -> bool:
+        return self._no_candidate
 
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
+        clear: bool = True,
     ) -> List[List[int]]:
         ntraj = self.ntraj
         id_cand = self._get_candidates(max_nframes)
         id_cand_list = [[] for ii in range(ntraj)]
         for ii in id_cand:
             id_cand_list[ii[0]].append(ii[1])
+        # free the memory, this method should only be called once
+        if clear:
+            self.clear()
         return id_cand_list
 
     def _get_candidates(
@@ -431,11 +446,13 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.candi_picked = [(ii[0], ii[1]) for ii in self.candi]
         if max_nframes is not None and max_nframes < len(self.candi_picked):
             prob = self._choice_prob_inv_pop_f(self.candi_picked)
-            ret = random.choices(
-                self.candi_picked,
-                weights=prob,
-                k=max_nframes,
+            indices = np.random.choice(
+                len(self.candi_picked),
+                size=max_nframes,
+                replace=False,
+                p=prob / np.sum(prob),
             )
+            ret = [self.candi_picked[i] for i in indices]
         else:
             ret = self.candi_picked
         return ret

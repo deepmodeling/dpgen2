@@ -6,6 +6,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from typing import (
+    List,
+)
 
 import dpdata
 import numpy as np
@@ -15,23 +18,14 @@ class ConfFilter(ABC):
     @abstractmethod
     def check(
         self,
-        coords: np.ndarray,
-        cell: np.ndarray,
-        atom_types: np.ndarray,
-        nopbc: bool,
+        frame: dpdata.System,
     ) -> bool:
         """Check if the configuration is valid.
 
         Parameters
         ----------
-        coords : numpy.array
-            The coordinates, numpy array of shape natoms x 3
-        cell : numpy.array
-            The cell tensor. numpy array of shape 3 x 3
-        atom_types : numpy.array
-            The atom types. numpy array of shape natoms
-        nopbc : bool
-            If no periodic boundary condition.
+        frame : dpdata.System
+            A dpdata.System containing a single frame
 
         Returns
         -------
@@ -40,6 +34,25 @@ class ConfFilter(ABC):
 
         """
         pass
+
+    def batched_check(
+        self,
+        frames: List[dpdata.System],
+    ) -> List[bool]:
+        """Check if a list of configurations are valid.
+
+        Parameters
+        ----------
+        frames : List[dpdata.System]
+            A list of dpdata.System each containing a single frame
+
+        Returns
+        -------
+        valid : List[bool]
+            `True` if the configuration is a valid configuration, else `False`.
+
+        """
+        return list(map(self.check, frames))
 
 
 class ConfFilters:
@@ -57,21 +70,20 @@ class ConfFilters:
 
     def check(
         self,
-        conf: dpdata.System,
-    ) -> dpdata.System:
-        natoms = sum(conf["atom_numbs"])  # type: ignore
-        selected_idx = np.arange(conf.get_nframes())
+        ms: dpdata.MultiSystems,
+    ) -> dpdata.MultiSystems:
+        selected_idx = []
+        for i in range(len(ms)):
+            for j in range(ms[i].get_nframes()):
+                selected_idx.append((i, j))
         for ff in self._filters:
-            fsel = np.where(
-                [
-                    ff.check(
-                        conf["coords"][ii],
-                        conf["cells"][ii],
-                        conf["atom_types"],
-                        conf.nopbc,
-                    )
-                    for ii in range(conf.get_nframes())
-                ]
-            )[0]
-            selected_idx = np.intersect1d(selected_idx, fsel)
-        return conf.sub_system(selected_idx)
+            res = ff.batched_check([ms[i][j] for i, j in selected_idx])
+            selected_idx = [idx for i, idx in enumerate(selected_idx) if res[i]]
+        selected_idx_list = [[] for _ in range(len(ms))]
+        for i, j in selected_idx:
+            selected_idx_list[i].append(j)
+        ms2 = dpdata.MultiSystems(type_map=ms.atom_names)
+        for i in range(len(ms)):
+            if len(selected_idx_list[i]) > 0:
+                ms2.append(ms[i].sub_system(selected_idx_list[i]))
+        return ms2

@@ -35,6 +35,6 @@ def showkey(
     all_step_keys = sum(folded_keys.values(), [])
     prt_str = print_keys_in_nice_format(
         all_step_keys,
-        ["run-train", "run-lmp", "run-fp"],
+        ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
     )
     print(prt_str)

@@ -11,6 +11,9 @@ from typing import (
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
+    lmp_model_devi_name,
+    lmp_pimd_model_devi_name,
+    lmp_pimd_traj_name,
     lmp_traj_name,
     model_name_pattern,
     plm_input_name,
@@ -43,16 +46,35 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
         traj_freq: int = 10,
+        extra_pair_style_args: str = "",
+        pimd_bead: Optional[str] = None,
+        input_extra_files: Optional[List[str]] = None,
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
         self.traj_freq = traj_freq
+        self.extra_pair_style_args = extra_pair_style_args
+        self.pimd_bead = pimd_bead
+        if input_extra_files is not None:
+            self.input_extra_files = [Path(ii).name for ii in input_extra_files]
+            self.input_extra_file_contents = [
+                Path(ii).read_text() for ii in input_extra_files
+            ]
+        else:
+            self.input_extra_files = []
+            self.input_extra_file_contents = []
         self.lmp_set = True
         self.model_list = sorted([model_name_pattern % ii for ii in range(numb_models)])
         self.lmp_template = revise_lmp_input_model(
-            self.lmp_template, self.model_list, self.traj_freq
+            self.lmp_template,
+            self.model_list,
+            self.traj_freq,
+            self.extra_pair_style_args,
+            self.pimd_bead,
         )
-        self.lmp_template = revise_lmp_input_dump(self.lmp_template, self.traj_freq)
+        self.lmp_template = revise_lmp_input_dump(
+            self.lmp_template, self.traj_freq, self.pimd_bead
+        )
         if plm_template_fname is not None:
             self.plm_template = Path(plm_template_fname).read_text().split("\n")
             self.plm_set = True
@@ -121,6 +143,13 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
                 plm_input_name,
                 plm_cont,
             )
+
+        # Add extra files to the task
+        for file_name, file_content in zip(
+            self.input_extra_files, self.input_extra_file_contents
+        ):
+            task.add_file(file_name, file_content)
+
         return task
 
 
@@ -138,22 +167,40 @@ def find_only_one_key(lmp_lines, key):
     return found[0]
 
 
-def revise_lmp_input_model(lmp_lines, task_model_list, trj_freq, deepmd_version="1"):
+def revise_lmp_input_model(
+    lmp_lines,
+    task_model_list,
+    trj_freq,
+    extra_pair_style_args="",
+    pimd_bead=None,
+    deepmd_version="1",
+):
     idx = find_only_one_key(lmp_lines, ["pair_style", "deepmd"])
+    if extra_pair_style_args:
+        extra_pair_style_args = " " + extra_pair_style_args
     graph_list = " ".join(task_model_list)
-    lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file model_devi.out" % (
+    model_devi_file_name = (
+        lmp_pimd_model_devi_name % pimd_bead
+        if pimd_bead is not None
+        else lmp_model_devi_name
+    )
+    lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file %s%s" % (
         graph_list,
         trj_freq,
+        model_devi_file_name,
+        extra_pair_style_args,
     )
     return lmp_lines
 
 
-def revise_lmp_input_dump(lmp_lines, trj_freq):
+def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None):
     idx = find_only_one_key(lmp_lines, ["dump", "dpgen_dump"])
-    lmp_lines[idx] = (
-        f"dump            dpgen_dump all custom %d {lmp_traj_name} id type x y z"
-        % trj_freq
+    lmp_traj_file_name = (
+        lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
     )
+    lmp_lines[
+        idx
+    ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
     return lmp_lines
 
 

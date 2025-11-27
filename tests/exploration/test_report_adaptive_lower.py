@@ -88,7 +88,7 @@ class TestTrajsExplorationReport(unittest.TestCase):
         self.assertFalse(ter.converged([mr, mr1, mr]))
         self.assertTrue(ter.converged([mr1, mr, mr]))
 
-        picked = ter.get_candidate_ids(2)
+        picked = ter.get_candidate_ids(2, clear=False)
         npicked = 0
         self.assertEqual(len(picked), 2)
         for ii in range(2):
@@ -198,32 +198,34 @@ class TestTrajsExplorationReport(unittest.TestCase):
         )
 
         def faked_choices(
-            candi,
-            weights=None,
-            k=0,
+            a,  # numb_candi
+            size=None,  # numb_select
+            replace=False,  # non-repeative sampling
+            p=None,  # normalized prob
         ):
             # hist: 2bins, 0.1-0.4 5candi, 0.4-0.7 7candi
             # only return those with mdf 0.1-0.4
-            self.assertEqual(len(weights), 12)
-            self.assertEqual(len(candi), 12)
-            ret = []
-            for ii in range(len(candi)):
+            candi = ter.candi_picked
+            self.assertEqual(a, 12)
+            self.assertEqual(len(p), 12)
+            ret_indices = []
+            for ii in range(a):
                 tidx, fidx = candi[ii]
                 this_mdf = md_f[tidx][fidx]
                 if this_mdf < 0.4:
-                    self.assertAlmostEqual(weights[ii], 1.0 / 5.0)
-                    ret.append(candi[ii])
+                    self.assertAlmostEqual(p[ii], 0.1)  # 1/5 / 2.0
+                    ret_indices.append(ii)
                 else:
-                    self.assertAlmostEqual(weights[ii], 1.0 / 7.0)
-            return ret
+                    self.assertAlmostEqual(p[ii], 1.0 / 14.0)  # 1/7 / 2.0
+            return ret_indices
 
         ter.record(model_devi)
-        with mock.patch("random.choices", faked_choices):
-            picked = ter.get_candidate_ids(11)
-        self.assertFalse(ter.converged([]))
         self.assertEqual(ter.candi, expected_cand)
         self.assertEqual(ter.accur, expected_accu)
         self.assertEqual(set(ter.failed), expected_fail)
+        with mock.patch("numpy.random.choice", faked_choices):
+            picked = ter.get_candidate_ids(11)
+        self.assertFalse(ter.converged([]))
         self.assertEqual(len(picked), 2)
         self.assertEqual(sorted(picked[0]), [1, 3])
         self.assertEqual(sorted(picked[1]), [1, 5, 7])
