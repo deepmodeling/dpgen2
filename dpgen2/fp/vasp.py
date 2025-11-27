@@ -179,7 +179,9 @@ class RunVasp(RunFp):
                     system.data["fparam"] = np.tile(data["ele_temp"], [1, 1])
                 elif data["use_ele_temp"] == 2:
                     setup_ele_temp(True)
-                    system.data["aparam"] = np.tile(data["ele_temp"], [1, system.get_natoms(), 1])
+                    system.data["aparam"] = np.tile(
+                        data["ele_temp"], [1, system.get_natoms(), 1]
+                    )
 
     def run_task(
         self,
@@ -213,7 +215,9 @@ class RunVasp(RunFp):
         ret, out, err = run_command(command, shell=True)
         if ret != 0:
             logging.error(
-                "".join(("vasp failed\n", "out msg: ", out, "\n", "err msg: ", err, "\n"))
+                "".join(
+                    ("vasp failed\n", "out msg: ", out, "\n", "err msg: ", err, "\n")
+                )
             )
             raise TransientError("vasp failed")
         # convert the output to deepmd/npy format
@@ -234,9 +238,7 @@ class RunVasp(RunFp):
 
         doc_vasp_cmd = "The command of VASP"
         doc_vasp_log = "The log file name of VASP"
-        doc_vasp_out = (
-            "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
-        )
+        doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         return [
             Argument("command", str, optional=True, default="vasp", doc=doc_vasp_cmd),
             Argument(
@@ -246,5 +248,7 @@ class RunVasp(RunFp):
                 default=fp_default_out_data_name,
                 doc=doc_vasp_out,
             ),
-            Argument("log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log),
+            Argument(
+                "log", str, optional=True, default=fp_default_log_name, doc=doc_vasp_log
+            ),
         ]
