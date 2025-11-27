@@ -2,13 +2,9 @@ import os
 from copy import (
     deepcopy,
 )
-from pathlib import (
-    Path,
-)
 from typing import (
     List,
     Optional,
-    Set,
     Type,
 )
 
@@ -17,30 +13,17 @@ from dflow import (
     InputParameter,
     Inputs,
     OutputArtifact,
-    OutputParameter,
     Outputs,
     Step,
     Steps,
-    Workflow,
-    argo_len,
-    argo_range,
-    argo_sequence,
-    download_artifact,
     if_expression,
-    upload_artifact,
 )
 from dflow.python import (
     OP,
-    OPIO,
-    Artifact,
-    OPIOSign,
     PythonOPTemplate,
     Slices,
 )
 
-from dpgen2.constants import (
-    calypso_index_pattern,
-)
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -141,7 +124,7 @@ def _caly_evo_step(
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
-    prep_template_config = prep_config.pop("template_config")
+    prep_config.pop("template_config")
     run_template_config = run_config.pop("template_config")
     prep_executor_config = prep_config.pop("executor")
     run_executor_config = run_config.pop("executor")

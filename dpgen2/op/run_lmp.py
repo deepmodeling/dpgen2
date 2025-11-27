@@ -10,30 +10,23 @@ from pathlib import (
 from typing import (
     List,
     Optional,
-    Set,
-    Tuple,
 )
 
 import numpy as np
 from dargs import (
     Argument,
-    ArgumentEncoder,
-    Variant,
-    dargs,
 )
 from dflow.python import (
     OP,
     OPIO,
     Artifact,
     BigParameter,
-    FatalError,
     HDF5Datasets,
     OPIOSign,
     TransientError,
 )
 
 from dpgen2.constants import (
-    lmp_conf_name,
     lmp_input_name,
     lmp_log_name,
     lmp_model_devi_name,
@@ -132,13 +125,13 @@ class RunLmp(OP):
         work_dir = Path(task_name)
 
         if teacher_model is not None:
-            assert (
-                len(model_files) == 1
-            ), "One model is enough in knowledge distillation"
+            assert len(model_files) == 1, (
+                "One model is enough in knowledge distillation"
+            )
             ext = os.path.splitext(teacher_model.file_name)[-1]
             teacher_model_file = "teacher_model" + ext
             teacher_model.save_as_file(teacher_model_file)
-            model_files = [Path(teacher_model_file).resolve()] + model_files
+            model_files = [Path(teacher_model_file).resolve(), *model_files]
 
         with set_directory(work_dir):
             # link input files
@@ -306,10 +299,10 @@ def set_models(lmp_input_name: str, model_names: List[str]):
                 break
     if match_first == -1:
         raise RuntimeError(
-            f"cannot file model pattern {pattern} in line " f" {lmp_input_lines[idx]}"
+            f"cannot file model pattern {pattern} in line  {lmp_input_lines[idx]}"
         )
     if match_last == -1:
-        raise RuntimeError(f"last matching index should not be -1, terribly wrong ")
+        raise RuntimeError("last matching index should not be -1, terribly wrong ")
     for ii in range(match_last, len(new_line_split)):
         if re.fullmatch(pattern, new_line_split[ii]) is not None:
             raise RuntimeError(

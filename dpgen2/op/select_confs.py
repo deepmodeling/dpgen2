@@ -1,12 +1,8 @@
-import json
-import os
 from pathlib import (
     Path,
 )
 from typing import (
     List,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -111,11 +107,11 @@ class SelectConfs(OP):
         ntrajs = len(trajs)
         if ntrajs != len(model_devis):
             raise FatalError(
-                "length of trajs list is not equal to the " "model_devis list"
+                "length of trajs list is not equal to the model_devis list"
             )
         if optional_outputs and ntrajs != len(optional_outputs):
             raise FatalError(
-                "length of trajs list is not equal to the " "optional_output list"
+                "length of trajs list is not equal to the optional_output list"
             )
         rett = []
         retm = []

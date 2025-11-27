@@ -1,11 +1,5 @@
-import os
-from collections.abc import (
-    Sequence,
-)
 from typing import (
     Dict,
-    List,
-    Tuple,
 )
 
 
@@ -17,7 +11,7 @@ class ExplorationTask:
     >>> # this example dumps all files needed by the task.
     >>> files = exploration_task.files()
     ... for file_name, file_content in files.items():
-    ...     with open(file_name, 'w') as fp:
+    ...     with open(file_name, "w") as fp:
     ...         fp.write(file_content)
 
     """

@@ -8,9 +8,6 @@ from pathlib import (
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.utils import (
     BinaryFileInput,
 )
@@ -147,7 +144,8 @@ class TestBinaryFileInput(unittest.TestCase):
         )
 
         # check binary file
-        tensor = np.random.random((3, 2))
+        rng = np.random.default_rng()
+        tensor = rng.random((3, 2))
         np.save(self.task_output_path / "tensor.npy", tensor)
         t = BinaryFileInput(self.task_output_path / "tensor.npy", "npy")
         t = serialization(t)

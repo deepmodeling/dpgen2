@@ -1,5 +1,3 @@
-import copy
-
 from dflow.config import (
     config,
     s3_config,

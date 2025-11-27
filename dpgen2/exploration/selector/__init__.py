@@ -19,3 +19,14 @@ conf_filter_styles = {
     "box_skewness": BoxSkewnessConfFilter,
     "box_length": BoxLengthFilter,
 }
+
+__all__ = [
+    "BoxLengthFilter",
+    "BoxSkewnessConfFilter",
+    "ConfFilter",
+    "ConfFilters",
+    "ConfSelector",
+    "ConfSelectorFrames",
+    "DistanceConfFilter",
+    "conf_filter_styles",
+]

@@ -1,12 +1,9 @@
-import json
-import os
 from pathlib import (
     Path,
 )
 from typing import (
+    ClassVar,
     List,
-    Set,
-    Tuple,
 )
 
 import dpdata
@@ -14,7 +11,6 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
-    BigParameter,
     OPIOSign,
     Parameter,
 )
@@ -35,7 +31,7 @@ class CollectData(OP):
 
     """
 
-    default_optional_parameter = {
+    default_optional_parameter: ClassVar = {
         "mixed_type": False,
     }
 

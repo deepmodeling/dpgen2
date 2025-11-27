@@ -1,9 +1,7 @@
 import logging
 from typing import (
     Dict,
-    List,
     Optional,
-    Union,
 )
 
 from dflow import (
@@ -15,7 +13,6 @@ from dpgen2.entrypoint.common import (
     global_config_workflow,
 )
 from dpgen2.utils.dflow_query import (
-    get_all_schedulers,
     get_last_scheduler,
 )
 

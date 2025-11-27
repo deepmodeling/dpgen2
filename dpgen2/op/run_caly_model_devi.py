@@ -14,7 +14,6 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
-    BigParameter,
     OPIOSign,
     Parameter,
 )
@@ -107,7 +106,7 @@ class RunCalyModelDevi(OP):
                     if atoms_list is None:
                         continue
                     for atoms in atoms_list:
-                        natoms = len(atoms)
+                        len(atoms)
                         dump_str = atoms2lmpdump(atoms, tcount, type_map, ignore=True)
                         dump_str_dict[tcount].append(dump_str)
 
@@ -128,9 +127,9 @@ class RunCalyModelDevi(OP):
 
                 traj_str = dump_str_dict[key]
                 model_devis = devis_dict[key]
-                assert len(traj_str) == len(
-                    model_devis
-                ), "The length of traj_str and model_devis should be same."
+                assert len(traj_str) == len(model_devis), (
+                    "The length of traj_str and model_devis should be same."
+                )
                 for idx in range(len(model_devis)):
                     traj_str[idx] = traj_str[idx] % idx
                     model_devis[idx][0] = idx
@@ -284,9 +283,8 @@ def parse_traj(traj_file):
         if len(trajs) >= 20:
             selected_traj = [trajs[iii] for iii in [4, 9, -10, -5, -1]]
         elif 5 <= len(trajs) < 20:
-            selected_traj = [
-                trajs[np.random.randint(3, len(trajs) - 1)] for _ in range(4)
-            ]
+            rng = np.random.default_rng()
+            selected_traj = [trajs[rng.integers(3, len(trajs) - 1)] for _ in range(4)]
             selected_traj.append(trajs[-1])
         elif 3 <= len(trajs) < 5:
             selected_traj = [trajs[round((len(trajs) - 1) / 2)]]

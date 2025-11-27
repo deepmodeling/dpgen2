@@ -1,15 +1,8 @@
-import os
 import unittest
-from pathlib import (
-    Path,
-)
 
 import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.exploration.deviation import (
     DeviManager,
     DeviManagerStd,
@@ -53,7 +46,7 @@ class TestDeviManagerStd(unittest.TestCase):
 
         self.assertRaisesRegex(
             AssertionError,
-            "Error: deviation\(shape: ",
+            r"Error: deviation\(shape: ",
             model_devi.add,
             DeviManager.MAX_DEVI_F,
             np.array([[1], [2], [3]]),
@@ -61,7 +54,7 @@ class TestDeviManagerStd(unittest.TestCase):
 
         self.assertRaisesRegex(
             AssertionError,
-            "Error: deviation\(type: ",
+            r"Error: deviation\(type: ",
             model_devi.add,
             DeviManager.MAX_DEVI_F,
             "foo",
@@ -99,13 +92,13 @@ class TestDeviManagerStd(unittest.TestCase):
         model_devi.add(DeviManager.MAX_DEVI_V, np.array([4, 5]))
         self.assertRaisesRegex(
             AssertionError,
-            f"Error: the number of frames in",
+            "Error: the number of frames in",
             model_devi.get,
             DeviManager.MAX_DEVI_F,
         )
         self.assertRaisesRegex(
             AssertionError,
-            f"Error: the number of frames in",
+            "Error: the number of frames in",
             model_devi.get,
             DeviManager.MAX_DEVI_V,
         )

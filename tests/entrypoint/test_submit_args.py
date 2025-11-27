@@ -1,21 +1,8 @@
 import json
-import os
-import random
-import shutil
-import tempfile
 import textwrap
 import unittest
-from pathlib import (
-    Path,
-)
-
-import dpdata
-import numpy as np
 
 # isort: off
-from .context import (
-    dpgen2,
-)
 from dpgen2.entrypoint.args import (
     normalize,
 )
@@ -164,153 +151,153 @@ old_str = textwrap.dedent(
     "fp_style" : "vasp",
 
     "default_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+    "template_config" : {
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "run_train_config" : {
-	"template_config" : {
-	    "image" : "deepmd-kit:wanghan",
-	    "_comment" : "all"
-	},
-	"executor" : {
+    "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+    },
+    "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	},
-	"_comment" : "all"
+    },
+    "_comment" : "all"
     },
     "run_explore_config" : {
-	"template_config" : {
-	    "image" : "deepmd-kit:wanghan",
-	    "_comment" : "all"
-	},
-	"executor" : {
+    "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+    },
+    "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	},
-	"_comment" : "all"
+    },
+    "_comment" : "all"
     },
     "run_fp_config" : {
-	"template_config" : {
-	    "image" : "vasp:wanghan",
-	    "_comment" : "all"
-	},
-	"executor" : {
+    "template_config" : {
+        "image" : "vasp:wanghan",
+        "_comment" : "all"
+    },
+    "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	},
-	"_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "lmp_config": {
-	"command": "lmp -var restart 0"
+    "command": "lmp -var restart 0"
     },
     "fp_config": {
-	"command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std",
+    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std",
         "log" : "fp.log",
         "out" : "data"
     },
 
     "dflow_config" : {
-	"host" : "http://60.205.112.9:2746",
-	"s3_endpoint" : "60.205.112.9:9000",
-	"_catalog_file_name" : "dflow"
+    "host" : "http://60.205.112.9:2746",
+    "s3_endpoint" : "60.205.112.9:9000",
+    "_catalog_file_name" : "dflow"
     },
 
     "_comment" : "upload the dpgen2 package if it is not in the images",
     "upload_python_packages" : "/path/to/dpgen2",
 
-    "max_numb_iter" :	5,
-    "conv_accuracy" :	0.9,
-    "fatal_at_max" :	false,
+    "max_numb_iter" :    5,
+    "conv_accuracy" :    0.9,
+    "fatal_at_max" :    false,
 
-    "type_map":		["Al", "Mg"],
-    "mass_map":		[27, 24],
+    "type_map":        ["Al", "Mg"],
+    "mass_map":        [27, 24],
 
-    "init_data_prefix":	"",
-    "init_data_sys":	[
-	"init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
-	"init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+    "init_data_prefix":    "",
+    "init_data_sys":    [
+    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
     ],
     "sys_configs_prefix": "", 
-    "sys_configs":	[
-	{
-	    "lattice" : ["fcc", 4.57],
-	    "replicate" : [2, 2, 2],
-	    "numb_confs" : 30,
+    "sys_configs":    [
+    {
+        "lattice" : ["fcc", 4.57],
+        "replicate" : [2, 2, 2],
+        "numb_confs" : 30,
             "atom_pert_dist" : 0.0,
             "cell_pert_frac" : 0.0,
-	    "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-	}
+        "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+    }
     ],
 
-    "_comment":		" 00.train ",
-    "numb_models":	4,
+    "_comment":        " 00.train ",
+    "numb_models":    4,
     "default_training_param" : {
-	"model" : {
-	    "type_map":		["Al", "Mg"],
-	    "descriptor": {
-		"type":		"se_a",
-		"sel":		[90, 90],
-		"rcut_smth":	1.80,
-		"rcut":		6.00,
-		"neuron":	[25, 50, 100],
-		"resnet_dt":	false,
-		"axis_neuron":	4,
-		"seed":		1
-	    },
-	    "fitting_net" : {
-		"neuron":	[128, 128, 128],
-		"resnet_dt":	true,
-		"seed":		1
-	    }
-	},
-
-	"loss" : {
-	    "start_pref_e":	0.02,
-	    "limit_pref_e":	1,
-	    "start_pref_f":	1000,
-	    "limit_pref_f":	1,
-	    "start_pref_v":	0,
-	    "limit_pref_v":	0
-	},
-
-	"learning_rate" : {
-	    "start_lr":		0.001,
-	    "stop_lr":		1e-8,
-            "decay_steps":	100
-	},
-
-	"training" : {
-	    "training_data": {
-		"systems": [],
-		"batch_size":"auto"
-	    },
-	    "numb_steps":1000,
-	    "seed":10,
-	    "disp_file":"lcurve.out",
-	    "disp_freq":100,
-	    "save_freq":1000
-	}
+    "model" : {
+        "type_map":        ["Al", "Mg"],
+        "descriptor": {
+        "type":        "se_a",
+        "sel":        [90, 90],
+        "rcut_smth":    1.80,
+        "rcut":        6.00,
+        "neuron":    [25, 50, 100],
+        "resnet_dt":    false,
+        "axis_neuron":    4,
+        "seed":        1
+        },
+        "fitting_net" : {
+        "neuron":    [128, 128, 128],
+        "resnet_dt":    true,
+        "seed":        1
+        }
     },
 
-    "_comment":		" 01.model_devi ",
+    "loss" : {
+        "start_pref_e":    0.02,
+        "limit_pref_e":    1,
+        "start_pref_f":    1000,
+        "limit_pref_f":    1,
+        "start_pref_v":    0,
+        "limit_pref_v":    0
+    },
+
+    "learning_rate" : {
+        "start_lr":        0.001,
+        "stop_lr":        1e-8,
+            "decay_steps":    100
+    },
+
+    "training" : {
+        "training_data": {
+        "systems": [],
+        "batch_size":"auto"
+        },
+        "numb_steps":1000,
+        "seed":10,
+        "disp_file":"lcurve.out",
+        "disp_freq":100,
+        "save_freq":1000
+    }
+    },
+
+    "_comment":        " 01.model_devi ",
     "_comment": "model_devi_skip: the first x of the recorded frames",
-    "model_devi_f_trust_lo":	0.05,
-    "model_devi_f_trust_hi":	0.50,
-    "model_devi_jobs":	[
-	{ "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 }
+    "model_devi_f_trust_lo":    0.05,
+    "model_devi_f_trust_hi":    0.50,
+    "model_devi_jobs":    [
+    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 }
     ],
 
-    "_comment":		" 02.fp ",    
-    "fp_style":		"vasp",
-    "fp_task_max":	2,
-    "fp_pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+    "_comment":        " 02.fp ",    
+    "fp_style":        "vasp",
+    "fp_task_max":    2,
+    "fp_pp_files":    {"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
     "fp_incar":         "vasp/INCAR",
-    "_comment":		" that's all "
+    "_comment":        " that's all "
 }
 """
 )
@@ -320,118 +307,118 @@ new_str = textwrap.dedent(
     """
 {
     "dflow_config" : {
-	"host" : "http://address.of.the.host:port"
+    "host" : "http://address.of.the.host:port"
     },
     "dflow_s3_config" : {
-	"s3_endpoint" : "address.of.the.s3.sever:port"
+    "s3_endpoint" : "address.of.the.s3.sever:port"
     },
 
 
     "default_step_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+    "template_config" : {
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "step_configs":{
-	"run_train_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+    "run_train_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_explore_config" : {
-	    "template_config" : {
-		"image" : "deepmd-kit:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_explore_config" : {
+        "template_config" : {
+        "image" : "deepmd-kit:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"run_fp_config" : {
-	    "template_config" : {
-		"image" : "vasp:wanghan",
-		"_comment" : "all"
-	    },
-	    "executor" : {
+        },
+        "_comment" : "all"
+    },
+    "run_fp_config" : {
+        "template_config" : {
+        "image" : "vasp:wanghan",
+        "_comment" : "all"
+        },
+        "executor" : {
                 "type": "dispatcher",
                 "username": "foo"
-	    },
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+        },
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "upload_python_packages" : "/path/to/dpgen2",
 
     "inputs": {
-	"type_map":		["Al", "Mg"],
-	"mass_map":		[27, 24],
-	"init_data_prefix":	"",
-	"init_data_sys":	[
-	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
-	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
-	],
-	"_comment" : "all"
+    "type_map":        ["Al", "Mg"],
+    "mass_map":        [27, 24],
+    "init_data_prefix":    "",
+    "init_data_sys":    [
+        "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+        "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+    ],
+    "_comment" : "all"
     },
     "train":{
-	"type" :	"dp",
-	"numb_models" : 4,
-	"config" : {},
-	"template_script" : "dp_input_template"
+    "type" :    "dp",
+    "numb_models" : 4,
+    "config" : {},
+    "template_script" : "dp_input_template"
     },
     "explore" : {
-	"type" : "lmp",
-	"config" : {
-	    "command": "lmp -var restart 0"
-	},
-	"max_numb_iter" :	5,
-	"fatal_at_max" :	false,
+    "type" : "lmp",
+    "config" : {
+        "command": "lmp -var restart 0"
+    },
+    "max_numb_iter" :    5,
+    "fatal_at_max" :    false,
         "convergence":{
                 "type": "fixed-levels",
-                "level_f_lo":		0.05,
-                "level_f_hi":		0.50,
-                "conv_accuracy" :	0.9
+                "level_f_lo":        0.05,
+                "level_f_hi":        0.50,
+                "conv_accuracy" :    0.9
         },
-	"configuration_prefix": null, 
-	"configuration":	[
-	    {
+    "configuration_prefix": null, 
+    "configuration":    [
+        {
                 "type" : "alloy",
-		"lattice" : ["fcc", 4.57],
-		"replicate" : [2, 2, 2],
-		"numb_confs" : 30,
-		"concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
-	    }
-	],
-	"stages":	[[
-	    { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
-	    }
-	]],
-	"_comment" : "all"
+        "lattice" : ["fcc", 4.57],
+        "replicate" : [2, 2, 2],
+        "numb_confs" : 30,
+        "concentration" : [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+        }
+    ],
+    "stages":    [[
+        { "_idx": 0, "ensemble": "nvt", "nsteps": 20, "press": [1.0,2.0], "sys_idx": [0], "temps": [50,100], "trj_freq": 10, "n_sample" : 3 
+        }
+    ]],
+    "_comment" : "all"
     },
     "fp" : {
-	"type" :	"vasp",
-	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
-	},
-	"task_max":	2,
-	"inputs_config" : {
-	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	    "incar":    "vasp/INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
-	},
-	"_comment" : "all"
+    "type" :    "vasp",
+    "run_config" : {
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+    },
+    "task_max":    2,
+    "inputs_config" : {
+        "pp_files":    {"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+        "incar":    "vasp/INCAR",
+        "kspacing":    0.32,
+        "kgamma":    true
+    },
+    "_comment" : "all"
     }
 }
 """
@@ -448,70 +435,70 @@ new_str_bhr = textwrap.dedent(
     },
 
     "default_step_config" : {
-	"template_config" : {
-	    "image" : "dflow:1.1.4",
-	    "_comment" : "all"
-	},
-	"_comment" : "all"
+    "template_config" : {
+        "image" : "dflow:1.1.4",
+        "_comment" : "all"
+    },
+    "_comment" : "all"
     },
 
     "step_configs":{
-	"_comment" : "all"
+    "_comment" : "all"
     },
 
     "upload_python_packages" : "/path/to/dpgen2",
 
     "inputs": {
-	"type_map":		["Al", "Mg"],
-	"mass_map":		[27, 24],
-	"init_data_prefix":	"",
-	"init_data_sys":	[
-	    "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
-	    "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
-	],
-	"_comment" : "all"
+    "type_map":        ["Al", "Mg"],
+    "mass_map":        [27, 24],
+    "init_data_prefix":    "",
+    "init_data_sys":    [
+        "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+        "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+    ],
+    "_comment" : "all"
     },
     "train":{
-	"type" :	"dp",
-	"numb_models" : 4,
-	"config" : {},
-	"template_script" : "dp_input_template",
-	"_comment" : "all"
+    "type" :    "dp",
+    "numb_models" : 4,
+    "config" : {},
+    "template_script" : "dp_input_template",
+    "_comment" : "all"
     },
 
     "explore" : {
-	"type" : "lmp",
-	"config" : {
-	    "command": "lmp -var restart 0"
-	},
-	"max_numb_iter" :	5,
-	"fatal_at_max" :	false,
+    "type" : "lmp",
+    "config" : {
+        "command": "lmp -var restart 0"
+    },
+    "max_numb_iter" :    5,
+    "fatal_at_max" :    false,
         "convergence":{
                 "type": "fixed-levels",
-                "level_f_lo":		0.05,
-                "level_f_hi":		0.50,
-                "conv_accuracy" :	0.9
+                "level_f_lo":        0.05,
+                "level_f_hi":        0.50,
+                "conv_accuracy" :    0.9
         },
-	"configuration_prefix": null, 
-	"configuration":	[
-	],
-	"stages":	[
-	],
-	"_comment" : "all"
+    "configuration_prefix": null, 
+    "configuration":    [
+    ],
+    "stages":    [
+    ],
+    "_comment" : "all"
     },
     "fp" : {
-	"type" :	"vasp",
-	"run_config" : {
-	    "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
-	},
-	"task_max":	2,
-	"inputs_config" : {
-	    "pp_files":	{"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
-	    "incar":    "vasp/INCAR",
-	    "kspacing":	0.32,
-	    "kgamma":	true
-	},
-	"_comment" : "all"
+    "type" :    "vasp",
+    "run_config" : {
+        "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+    },
+    "task_max":    2,
+    "inputs_config" : {
+        "pp_files":    {"Al" : "vasp/POTCAR.Al", "Mg" : "vasp/POTCAR.Mg"},
+        "incar":    "vasp/INCAR",
+        "kspacing":    0.32,
+        "kgamma":    true
+    },
+    "_comment" : "all"
     }
 }
 """

@@ -1,5 +1,4 @@
 import itertools
-import random
 from pathlib import (
     Path,
 )
@@ -22,9 +21,6 @@ from dpgen2.constants import (
 
 from .conf_sampling_task_group import (
     ConfSamplingTaskGroup,
-)
-from .lmp import (
-    make_lmp_input,
 )
 from .task import (
     ExplorationTask,
@@ -198,9 +194,9 @@ def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None):
     lmp_traj_file_name = (
         lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
     )
-    lmp_lines[
-        idx
-    ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    lmp_lines[idx] = (
+        f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    )
     return lmp_lines
 
 

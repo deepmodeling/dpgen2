@@ -11,7 +11,6 @@ from typing import (
 )
 
 import dpdata
-import numpy as np
 
 
 class ConfFilter(ABC):
