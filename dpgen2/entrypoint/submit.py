@@ -1,10 +1,7 @@
 import copy
-import glob
 import json
 import logging
 import os
-import pickle
-import re
 from copy import (
     deepcopy,
 )
@@ -15,12 +12,8 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
-    Type,
-    Union,
 )
 
-import dpdata
 from dflow import (
     ArgoStep,
     InputArtifact,
@@ -588,7 +581,7 @@ def workflow_concurrent_learning(
     if fp_style == "deepmd":
         assert (
             "teacher_model_path" in fp_config["run"]
-        ), f"Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
+        ), "Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
         assert os.path.exists(
             fp_config["run"]["teacher_model_path"]
         ), f"No such file: {fp_config['run']['teacher_model_path']}"
