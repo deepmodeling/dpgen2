@@ -57,7 +57,7 @@ def update_finished_steps(
 
 def watch(
     workflow_id,
-    wf_config: Optional[Dict] | None = None,
+    wf_config: Optional[dict] = None,
     watching_keys: Optional[List] = default_watching_keys,
     frequency: float = 600.0,
     download: bool = False,

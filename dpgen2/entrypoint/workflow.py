@@ -35,7 +35,7 @@ def add_subparser_workflow_subcommand(subparsers, command: str):
 def execute_workflow_subcommand(
     command: str,
     wfid: str,
-    wf_config: Optional[dict] | None = None,
+    wf_config: Optional[dict] = None,
 ):
     wf_config = wf_config or {}
     wf_config = normalize_args(wf_config)
