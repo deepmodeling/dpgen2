@@ -1,8 +1,11 @@
 train_index_pattern = "%04d"
 train_task_pattern = "task." + train_index_pattern
 train_script_name = "input.json"
+train_cnn_script_name = "input_cnn.json"
+train_qnn_script_name = "input_qnn.json"
 train_log_name = "train.log"
 model_name_pattern = "model.%03d.pb"
+nvnmd_model_name_pattern = "nvnmd_model.%03d"
 pytorch_model_name_pattern = "model.%03d.pth"
 model_name_match_pattern = r"model\.[0-9]{3,}(\.pb|\.pth)"
 lmp_index_pattern = "%06d"

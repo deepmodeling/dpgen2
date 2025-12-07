@@ -109,6 +109,10 @@ class TrajRenderLammps(TrajRender):
         conf_filters: Optional["ConfFilters"] = None,
         optional_outputs: Optional[List[Path]] = None,
     ) -> dpdata.MultiSystems:
+        from ase.io import (  # type: ignore
+            read,
+        )
+
         ntraj = len(trajs)
         ele_temp = None
         if optional_outputs:
@@ -123,12 +127,16 @@ class TrajRenderLammps(TrajRender):
                     traj = StringIO(trajs[ii].get_data())  # type: ignore
                 else:
                     traj = trajs[ii]
-                ss = dpdata.System(traj, fmt=traj_fmt, type_map=type_map)
-                ss.nopbc = self.nopbc
-                if ele_temp:
-                    self.set_ele_temp(ss, ele_temp[ii])
-                ss = ss.sub_system(id_selected[ii])
-                ms.append(ss)
+                # ss = dpdata.System(traj, fmt=traj_fmt, type_map=type_map)
+                ss = read(
+                    str(traj), format="lammps-dump-text", index=":", specorder=type_map
+                )
+                for jj in id_selected[ii]:
+                    s = dpdata.System(ss[jj], fmt="ase/structure", type_map=type_map)
+                    s.nopbc = self.nopbc
+                    if ele_temp:
+                        self.set_ele_temp(s, ele_temp[ii])
+                    ms.append(s)
         if conf_filters is not None:
             ms = conf_filters.check(ms)
         return ms
