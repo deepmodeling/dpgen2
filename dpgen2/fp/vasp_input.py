@@ -10,7 +10,6 @@ from typing import (
     Union,
 )
 
-import dpdata
 import numpy as np
 from dargs import (
     Argument,

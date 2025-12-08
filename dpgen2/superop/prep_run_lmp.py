@@ -76,6 +76,7 @@ class PrepRunLmp(Steps):
             "model_devis": OutputArtifact(),
             "plm_output": OutputArtifact(),
             "optional_outputs": OutputArtifact(),
+            "extra_outputs": OutputArtifact(),
         }
 
         super().__init__(
@@ -179,6 +180,7 @@ def _prep_run_lmp(
                     "model_devi",
                     "plm_output",
                     "optional_output",
+                    "extra_outputs",
                 ],
                 **template_slice_config,
             ),
@@ -217,5 +219,8 @@ def _prep_run_lmp(
     prep_run_steps.outputs.artifacts[
         "optional_outputs"
     ]._from = run_lmp.outputs.artifacts["optional_output"]
+    prep_run_steps.outputs.artifacts["extra_outputs"]._from = run_lmp.outputs.artifacts[
+        "extra_outputs"
+    ]
 
     return prep_run_steps

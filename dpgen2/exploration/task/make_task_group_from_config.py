@@ -51,6 +51,9 @@ def npt_task_group_args():
     doc_ele_temp_f = "The electron temperature set by frame style"
     doc_ele_temp_a = "The electron temperature set by atomistic style"
     doc_pimd_bead = "Bead index for PIMD, None for non-PIMD"
+    doc_input_extra_files = (
+        "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    )
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -73,7 +76,7 @@ def npt_task_group_args():
             int,
             optional=True,
             default=10,
-            doc=doc_nsteps,
+            doc=doc_traj_freq,
             alias=["t_freq", "trj_freq", "traj_freq"],
         ),
         Argument("tau_t", float, optional=True, default=5e-2, doc=doc_tau_t),
@@ -119,6 +122,13 @@ def npt_task_group_args():
             default=None,
             doc=doc_pimd_bead,
         ),
+        Argument(
+            "input_extra_files",
+            list,
+            optional=True,
+            default=[],
+            doc=doc_input_extra_files,
+        ),
     ]
 
 
@@ -129,6 +139,9 @@ def lmp_template_task_group_args():
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
     doc_extra_pair_style_args = "The extra arguments for pair_style"
     doc_pimd_bead = "Bead index for PIMD, None for non-PIMD"
+    doc_input_extra_files = (
+        "Extra files that may be needed during exploration (e.g., ZBL parameter files)"
+    )
 
     return [
         Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
@@ -176,6 +189,13 @@ def lmp_template_task_group_args():
             optional=True,
             default=None,
             doc=doc_pimd_bead,
+        ),
+        Argument(
+            "input_extra_files",
+            list,
+            optional=True,
+            default=[],
+            doc=doc_input_extra_files,
         ),
     ]
 

@@ -424,6 +424,7 @@ class MockedRunLmp(RunLmp):
                 "log": work_dir / log,
                 "traj": work_dir / traj,
                 "model_devi": work_dir / model_devi,
+                "extra_outputs": [],
             }
         )
 

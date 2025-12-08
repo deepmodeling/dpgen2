@@ -1,7 +1,4 @@
 import argparse
-import json
-import logging
-import os
 from typing import (
     Optional,
 )
@@ -38,8 +35,9 @@ def add_subparser_workflow_subcommand(subparsers, command: str):
 def execute_workflow_subcommand(
     command: str,
     wfid: str,
-    wf_config: Optional[dict] = {},
+    wf_config: Optional[dict] = None,
 ):
+    wf_config = wf_config or {}
     wf_config = normalize_args(wf_config)
     global_config_workflow(wf_config)
     wf = Workflow(id=wfid)

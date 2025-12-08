@@ -42,3 +42,14 @@ dbconfig.json
 .idea/*
 _build
 dpgen2/_version.py
+
+# Test artifacts from dflow debug mode
+tests/block-*
+tests/caly-*
+tests/coll-*
+tests/dpgen-*
+tests/upload
+tests/init_data/
+tests/incar
+tests/potcar
+tests/tmp*

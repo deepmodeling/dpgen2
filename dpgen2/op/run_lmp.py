@@ -83,6 +83,7 @@ class RunLmp(OP):
                 "model_devi": Artifact(Path),
                 "plm_output": Artifact(Path, optional=True),
                 "optional_output": Artifact(Path, optional=True),
+                "extra_outputs": Artifact(List[Path]),
             }
         )
 
@@ -213,6 +214,10 @@ class RunLmp(OP):
         if ele_temp is not None:
             ret_dict["optional_output"] = work_dir / "job.json"
 
+        extra_outputs = []
+        for fname in config["extra_output_files"]:
+            extra_outputs += list(work_dir.glob(fname))
+        ret_dict["extra_outputs"] = extra_outputs  # type: ignore
         return OPIO(ret_dict)
 
     def get_model_devi(self, model_devi_file):
@@ -226,6 +231,7 @@ class RunLmp(OP):
         doc_head = "Select a head from multitask"
         doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
         doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+        doc_extra_output_files = "Extra output file names, support wildcards"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
             Argument(
@@ -255,6 +261,13 @@ class RunLmp(OP):
                 optional=True,
                 default=False,
                 doc=doc_use_hdf5,
+            ),
+            Argument(
+                "extra_output_files",
+                list,
+                optional=True,
+                default=[],
+                doc=doc_extra_output_files,
             ),
         ]
 

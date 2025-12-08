@@ -126,6 +126,29 @@ class TestRunLmp(unittest.TestCase):
         ]
         mocked_run.assert_has_calls(calls)
 
+    def test_extra_outputs(self):
+        op = RunLmp()
+        out = op.execute(
+            OPIO(
+                {
+                    "config": {
+                        "command": "echo Hello > foo.txt",
+                        "extra_output_files": ["foo.txt"],
+                    },
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": self.models,
+                }
+            )
+        )
+        work_dir = Path(self.task_name)
+        # check output
+        self.assertEqual(out["extra_outputs"], [work_dir / "foo.txt"])
+        self.assertEqual(
+            (work_dir / "foo.txt").read_text().strip(),
+            "Hello -i in.lammps -log log.lammps",
+        )
+
 
 class TestRunLmpDist(unittest.TestCase):
     lmp_config = """variable        NSTEPS          equal 1000
