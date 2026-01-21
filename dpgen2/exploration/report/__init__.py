@@ -10,9 +10,13 @@ from .report_trust_levels_max import (
 from .report_trust_levels_random import (
     ExplorationReportTrustLevelsRandom,
 )
+from .report_trust_levels_spin import (
+    ExplorationReportTrustLevelsSpin,
+)
 
 conv_styles = {
     "fixed-levels": ExplorationReportTrustLevelsRandom,
     "fixed-levels-max-select": ExplorationReportTrustLevelsMax,
+    "fixed-levels-max-select-spin": ExplorationReportTrustLevelsSpin,
     "adaptive-lower": ExplorationReportAdaptiveLower,
 }

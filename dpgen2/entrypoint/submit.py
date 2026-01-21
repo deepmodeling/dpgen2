@@ -56,6 +56,7 @@ from dpgen2.entrypoint.common import (
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,
+    TrajRenderLammpsSpin,
 )
 from dpgen2.exploration.report import (
     ExplorationReportTrustLevelsRandom,
@@ -74,6 +75,7 @@ from dpgen2.exploration.task import (
     CustomizedLmpTemplateTaskGroup,
     ExplorationStage,
     ExplorationTask,
+    LmpSpinTaskGroup,
     LmpTemplateTaskGroup,
     NPTTaskGroup,
     caly_normalize,
@@ -371,7 +373,10 @@ def make_lmp_naive_exploration_scheduler(config):
     # report
     conv_style = convergence.pop("type")
     report = conv_styles[conv_style](**convergence)
-    render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp)
+    if "spin" in conv_style:
+        render = TrajRenderLammpsSpin(nopbc=output_nopbc, use_ele_temp=use_ele_temp)
+    else:
+        render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp)
     # selector
     selector = ConfSelectorFrames(
         render,
