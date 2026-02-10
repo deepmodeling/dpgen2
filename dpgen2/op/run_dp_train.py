@@ -44,6 +44,7 @@ from dpgen2.utils.chdir import (
 )
 from dpgen2.utils.run_command import (
     run_command,
+    run_command_streaming,
 )
 
 
@@ -292,7 +293,8 @@ class RunDPTrain(OP):
                 train_args,
             )
 
-            ret, out, err = run_command(command)
+            # Use streaming output for real-time monitoring
+            ret, out, err = run_command_streaming(command, log_file="train.log")
             if ret != 0:
                 clean_before_quit()
                 logging.error(
@@ -309,10 +311,12 @@ class RunDPTrain(OP):
                     )
                 )
                 raise FatalError("dp train failed")
-            fplog.write("#=================== train std out ===================\n")
-            fplog.write(out)
-            fplog.write("#=================== train std err ===================\n")
-            fplog.write(err)
+            # Note: output is already written to log file by run_command_streaming
+            # No need to write again here to avoid duplication
+            # fplog.write("#=================== train std out ===================\n")
+            # fplog.write(out)
+            # fplog.write("#=================== train std err ===================\n")
+            # fplog.write(err)
 
             if finetune_mode == "finetune" and os.path.exists("input_v2_compat.json"):
                 shutil.copy2("input_v2_compat.json", train_script_name)
@@ -339,10 +343,10 @@ class RunDPTrain(OP):
                     )
                     raise FatalError("dp freeze failed")
                 model_file = "frozen_model.pb"
-            fplog.write("#=================== freeze std out ===================\n")
-            fplog.write(out)
-            fplog.write("#=================== freeze std err ===================\n")
-            fplog.write(err)
+                fplog.write("#=================== freeze std out ===================\n")
+                fplog.write(out)
+                fplog.write("#=================== freeze std err ===================\n")
+                fplog.write(err)
 
             clean_before_quit()
 
