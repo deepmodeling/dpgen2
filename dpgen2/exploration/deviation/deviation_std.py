@@ -65,6 +65,9 @@ class DeviManagerStd(DeviManager):
             DeviManager.MAX_DEVI_F,
             DeviManager.MIN_DEVI_F,
             DeviManager.AVG_DEVI_F,
+            DeviManager.MAX_DEVI_MF,
+            DeviManager.MIN_DEVI_MF,
+            DeviManager.AVG_DEVI_MF,
         )
         # check the length of model deviations
         frames = {}

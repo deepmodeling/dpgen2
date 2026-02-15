@@ -42,9 +42,14 @@ class TrajRenderLammps(TrajRender):
         self,
         nopbc: bool = False,
         use_ele_temp: int = 0,
+        lammps_input_file: str = None,  # type: ignore
     ):
         self.nopbc = nopbc
         self.use_ele_temp = use_ele_temp
+        if lammps_input_file is not None:
+            self.lammps_input = Path(lammps_input_file).read_text()
+        else:
+            self.lammps_input = None
 
     def get_model_devi(
         self,
@@ -74,6 +79,11 @@ class TrajRenderLammps(TrajRender):
         model_devi.add(DeviManager.MAX_DEVI_F, dd[:, 4])  # type: ignore
         model_devi.add(DeviManager.MIN_DEVI_F, dd[:, 5])  # type: ignore
         model_devi.add(DeviManager.AVG_DEVI_F, dd[:, 6])  # type: ignore
+        # assume the 7-9 columns are for MF
+        if dd.shape[1] >= 10:  # type: ignore
+            model_devi.add(DeviManager.MAX_DEVI_MF, dd[:, 7])  # type: ignore
+            model_devi.add(DeviManager.MIN_DEVI_MF, dd[:, 8])  # type: ignore
+            model_devi.add(DeviManager.AVG_DEVI_MF, dd[:, 9])  # type: ignore
 
     def get_ele_temp(self, optional_outputs):
         ele_temp = []
@@ -117,13 +127,21 @@ class TrajRenderLammps(TrajRender):
 
         traj_fmt = "lammps/dump"
         ms = dpdata.MultiSystems(type_map=type_map)
+        if self.lammps_input is not None:
+            lammps_input_file = "lammps_input.in"
+            Path(lammps_input_file).write_text(self.lammps_input)
+        else:
+            lammps_input_file = None
         for ii in range(ntraj):
             if len(id_selected[ii]) > 0:
                 if isinstance(trajs[ii], HDF5Dataset):
                     traj = StringIO(trajs[ii].get_data())  # type: ignore
                 else:
                     traj = trajs[ii]
-                ss = dpdata.System(traj, fmt=traj_fmt, type_map=type_map)
+                # for spin job, need to read input file to get the key of the spin data
+                ss = dpdata.System(
+                    traj, fmt=traj_fmt, type_map=type_map, input_file=lammps_input_file
+                )
                 ss.nopbc = self.nopbc
                 if ele_temp:
                     self.set_ele_temp(ss, ele_temp[ii])
