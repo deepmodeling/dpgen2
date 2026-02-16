@@ -50,6 +50,7 @@ class CollectData(OP):
                     default=CollectData.default_optional_parameter,
                 ),
                 "labeled_data": Artifact(List[Path]),
+                "async_labeled_data": Artifact(List[Path], optional=True),
                 "iter_data": Artifact(List[Path]),
             }
         )
@@ -91,10 +92,11 @@ class CollectData(OP):
         type_map = ip["type_map"]
         mixed_type = ip["optional_parameter"]["mixed_type"]
         labeled_data = ip["labeled_data"]
+        async_labeled_data = ip["async_labeled_data"]
         iter_data = ip["iter_data"]
 
         ms = dpdata.MultiSystems(type_map=type_map)
-        for ii in labeled_data:
+        for ii in labeled_data + (async_labeled_data or []):
             if ii and len(list(ii.rglob("fparam.npy"))) > 0:
                 setup_ele_temp(False)
             if ii and len(list(ii.rglob("aparam.npy"))) > 0:

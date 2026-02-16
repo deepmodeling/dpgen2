@@ -188,6 +188,7 @@ class ConcurrentLearningLoop(Steps):
             "init_models": InputArtifact(optional=True),
             "init_data": InputArtifact(),
             "iter_data": InputArtifact(),
+            "async_confs": InputArtifact(optional=True),
         }
         self._output_parameters = {
             "exploration_scheduler": OutputParameter(),
@@ -279,6 +280,7 @@ class ConcurrentLearning(Steps):
             "init_models": InputArtifact(optional=True),
             "init_data": InputArtifact(),
             "iter_data": InputArtifact(),
+            "async_confs": InputArtifact(optional=True),
         }
         self._output_parameters = {
             "exploration_scheduler": OutputParameter(),
@@ -376,6 +378,7 @@ def _loop(
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],
+            "async_confs": steps.inputs.artifacts["async_confs"],
         },
         key=step_keys["block"],
     )
@@ -448,6 +451,7 @@ def _loop(
             "init_models": block_step.outputs.artifacts["models"],
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": block_step.outputs.artifacts["iter_data"],
+            "async_confs": block_step.outputs.artifacts["async_confs"],
         },
         when="%s == false" % (scheduler_step.outputs.parameters["converged"]),
     )
@@ -552,6 +556,7 @@ def _dpgen(
             "init_models": steps.inputs.artifacts["init_models"],
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],
+            "async_confs": steps.inputs.artifacts["async_confs"],
         },
         key="--".join(["%s" % id_step.outputs.parameters["block_id"], loop_key]),
     )

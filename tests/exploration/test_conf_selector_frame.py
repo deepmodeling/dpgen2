@@ -99,7 +99,7 @@ class TestConfSelectorFrames(unittest.TestCase):
             traj_render,
             report,
         )
-        confs, report = conf_selector.select(
+        confs, _, report = conf_selector.select(
             self.trajs, self.model_devis, self.type_map
         )
         ms = dpdata.MultiSystems(type_map=self.type_map)
@@ -124,7 +124,7 @@ class TestConfSelectorFrames(unittest.TestCase):
         report = ExplorationReportTrustLevelsRandom(0.25, 0.35, conv_accuracy=0.9)
         traj_render = TrajRenderLammps()
         conf_selector = ConfSelectorFrames(traj_render, report)
-        confs, report = conf_selector.select(
+        confs, _, report = conf_selector.select(
             self.trajs, self.model_devis, self.type_map
         )
         ms = dpdata.MultiSystems(type_map=self.type_map)
@@ -150,7 +150,7 @@ class TestConfSelectorFrames(unittest.TestCase):
             traj_render,
             report,
         )
-        confs, report = conf_selector.select(
+        confs, _, report = conf_selector.select(
             self.trajs, self.model_devis, self.type_map
         )
         ms = dpdata.MultiSystems(type_map=self.type_map)
@@ -180,7 +180,7 @@ class TestConfSelectorFrames(unittest.TestCase):
             report,
             max_numb_sel=1,
         )
-        confs, report = conf_selector.select(
+        confs, _, report = conf_selector.select(
             self.trajs, self.model_devis, self.type_map
         )
         ms = dpdata.MultiSystems(type_map=self.type_map)
@@ -192,3 +192,25 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertAlmostEqual(report.candidate_ratio(), 1.0 / 3.0)
         self.assertAlmostEqual(report.accurate_ratio(), 0.0 / 3.0)
         self.assertAlmostEqual(report.failed_ratio(), 2.0 / 3.0)
+
+    def test_async_confs(self):
+        report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)
+        traj_render = TrajRenderLammps()
+        conf_selector = ConfSelectorFrames(
+            traj_render,
+            report,
+            async_ratio=0.5,
+        )
+        confs, async_confs, report = conf_selector.select(
+            self.trajs, self.model_devis, self.type_map
+        )
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(len(ms), 1)
+        ss = ms[0]
+        self.assertEqual(ss.get_nframes(), 3)
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(async_confs[0], labeled=False)
+        self.assertEqual(len(ms), 1)
+        ss = ms[0]
+        self.assertEqual(ss.get_nframes(), 3)

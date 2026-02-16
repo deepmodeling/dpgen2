@@ -163,6 +163,7 @@ def make_concurrent_learning_op(
     valid_data: Optional[S3Artifact] = None,
     train_optional_files: Optional[List[str]] = None,
     explore_config: Optional[dict] = None,
+    async_fp: bool = False,
 ):
     if train_style in ("dp", "dp-dist"):
         prep_run_train_op = PrepRunDPTrain(
@@ -261,6 +262,7 @@ def make_concurrent_learning_op(
         select_confs_config=select_confs_config,
         collect_data_config=collect_data_config,
         upload_python_packages=upload_python_packages,
+        async_fp=async_fp,
     )
     # dpgen
     dpgen_op = ConcurrentLearning(
@@ -301,6 +303,7 @@ def get_conf_filters(config):
 def make_naive_exploration_scheduler_without_conf(config, explore_style):
     model_devi_jobs = config["explore"]["stages"]
     fp_task_max = config["fp"]["task_max"]
+    fp_async_ratio = config["fp"]["async_ratio"]
     max_numb_iter = config["explore"]["max_numb_iter"]
     fatal_at_max = config["explore"]["fatal_at_max"]
     convergence = config["explore"]["convergence"]
@@ -318,6 +321,7 @@ def make_naive_exploration_scheduler_without_conf(config, explore_style):
         report,
         fp_task_max,
         conf_filters,
+        fp_async_ratio,
     )
 
     for job_ in model_devi_jobs:
@@ -361,6 +365,7 @@ def make_lmp_naive_exploration_scheduler(config):
     type_map = config["inputs"]["type_map"]
     numb_models = config["train"]["numb_models"]
     fp_task_max = config["fp"]["task_max"]
+    fp_async_ratio = config["fp"]["async_ratio"]
     max_numb_iter = config["explore"]["max_numb_iter"]
     fatal_at_max = config["explore"]["fatal_at_max"]
     convergence = config["explore"]["convergence"]
@@ -378,6 +383,7 @@ def make_lmp_naive_exploration_scheduler(config):
         report,
         fp_task_max,
         conf_filters,
+        fp_async_ratio,
     )
 
     sys_configs_lmp = []
@@ -483,6 +489,7 @@ def workflow_concurrent_learning(
     cl_step_config = config["step_configs"]["cl_step_config"]
     upload_python_packages = config.get("upload_python_packages", None)
     train_optional_files = config["train"].get("optional_files", None)
+    fp_async_ratio = config["fp"]["async_ratio"]
 
     if train_style == "dp":
         init_models_paths = config["train"].get("init_models_paths", None)
@@ -549,6 +556,7 @@ def workflow_concurrent_learning(
         valid_data=valid_data,
         train_optional_files=train_optional_files,
         explore_config=explore_config,
+        async_fp=(fp_async_ratio > 0),
     )
     scheduler = make_naive_exploration_scheduler(config)
 
@@ -657,6 +665,7 @@ def workflow_concurrent_learning(
             "init_models": init_models,
             "init_data": init_data,
             "iter_data": iter_data,
+            "async_confs": upload_artifact([]),
         },
     )
     return dpgen_step
