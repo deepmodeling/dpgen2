@@ -47,6 +47,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         revisions: dict = {},
         traj_freq: int = 10,
         extra_pair_style_args: str = "",
+        nvnmd_version: Optional[str] = None,
         pimd_bead: Optional[str] = None,
         input_extra_files: Optional[List[str]] = None,
     ) -> None:
@@ -54,6 +55,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         self.revisions = revisions
         self.traj_freq = traj_freq
         self.extra_pair_style_args = extra_pair_style_args
+        self.nvnmd_version = nvnmd_version
         self.pimd_bead = pimd_bead
         if input_extra_files is not None:
             self.input_extra_files = [Path(ii).name for ii in input_extra_files]
@@ -71,10 +73,16 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             self.traj_freq,
             self.extra_pair_style_args,
             self.pimd_bead,
+            nvnmd_version=self.nvnmd_version,
         )
         self.lmp_template = revise_lmp_input_dump(
-            self.lmp_template, self.traj_freq, self.pimd_bead
+            self.lmp_template,
+            self.traj_freq,
+            self.pimd_bead,
+            nvnmd_version=self.nvnmd_version,
         )
+        if nvnmd_version is not None:
+            self.lmp_template = revise_lmp_input_rerun(self.lmp_template)
         if plm_template_fname is not None:
             self.plm_template = Path(plm_template_fname).read_text().split("\n")
             self.plm_set = True
@@ -174,8 +182,8 @@ def revise_lmp_input_model(
     extra_pair_style_args="",
     pimd_bead=None,
     deepmd_version="1",
+    nvnmd_version=None,
 ):
-    idx = find_only_one_key(lmp_lines, ["pair_style", "deepmd"])
     if extra_pair_style_args:
         extra_pair_style_args = " " + extra_pair_style_args
     graph_list = " ".join(task_model_list)
@@ -184,23 +192,39 @@ def revise_lmp_input_model(
         if pimd_bead is not None
         else lmp_model_devi_name
     )
-    lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file %s%s" % (
-        graph_list,
-        trj_freq,
-        model_devi_file_name,
-        extra_pair_style_args,
-    )
+    if nvnmd_version is None:
+        idx = find_only_one_key(lmp_lines, ["pair_style", "deepmd"])
+        lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file %s%s" % (
+            graph_list,
+            trj_freq,
+            model_devi_file_name,
+            extra_pair_style_args,
+        )
+    else:
+        idx = find_only_one_key(lmp_lines, ["pair_style", "nvnmd"])
+        lmp_lines[idx] = "pair_style      nvnmd %s %s" % (
+            "model.pb",
+            extra_pair_style_args,
+        )
+
     return lmp_lines
 
 
-def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None):
+def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None, nvnmd_version=None):
     idx = find_only_one_key(lmp_lines, ["dump", "dpgen_dump"])
     lmp_traj_file_name = (
         lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
     )
-    lmp_lines[
-        idx
-    ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    if nvnmd_version is None:
+        lmp_lines[
+            idx
+        ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    else:
+        lmp_lines[idx] = (
+            "dump            dpgen_dump all custom %s ${rerun}_%s id type x y z fx fy fz"
+            % (trj_freq, lmp_traj_file_name)
+        )
+        lmp_lines.insert(idx + 1, 'if "${rerun} > 0" then "jump SELF rerun"')
     return lmp_lines
 
 
@@ -210,6 +234,14 @@ def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
         in_plm,
         out_plm,
     )
+    return lmp_lines
+
+
+def revise_lmp_input_rerun(lmp_lines):
+    lmp_lines.append("jump SELF end")
+    lmp_lines.append("label rerun")
+    lmp_lines.append(f"rerun 0_{lmp_traj_name} dump x y z fx fy fz add yes")
+    lmp_lines.append("label end")
     return lmp_lines
 
 

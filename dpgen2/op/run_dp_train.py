@@ -1,3 +1,4 @@
+import copy
 import glob
 import json
 import logging
@@ -414,9 +415,11 @@ class RunDPTrain(OP):
         config,
         do_init_model,
         major_version: str = "1",
+        do_quantized: bool = False,
     ):
-        odict = idict.copy()
+        odict = copy.deepcopy(idict)
         odict["training"]["disp_file"] = "lcurve.out"
+        odict["training"]["save_ckpt"] = "model.ckpt"
         if do_init_model:
             odict["learning_rate"]["start_lr"] = config["init_model_start_lr"]
             if "loss_dict" in odict:
@@ -437,6 +440,13 @@ class RunDPTrain(OP):
                 raise RuntimeError(
                     "unsupported DeePMD-kit major version", major_version
                 )
+
+        if do_quantized:
+            if major_version == "1":
+                odict["training"]["stop_batch"] = 0
+            elif major_version == "2":
+                odict["training"]["numb_steps"] = 0
+
         return odict
 
     @staticmethod

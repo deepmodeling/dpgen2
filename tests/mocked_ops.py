@@ -41,6 +41,7 @@ from dpgen2.constants import (
     lmp_task_pattern,
     lmp_traj_name,
     model_name_pattern,
+    nvnmd_model_name_pattern,
     train_log_name,
     train_script_name,
     train_task_pattern,
@@ -95,6 +96,12 @@ from dpgen2.op.run_dp_train import (
 from dpgen2.op.run_lmp import (
     RunLmp,
 )
+from dpgen2.op.run_nvnmd import (
+    RunNvNMD,
+)
+from dpgen2.op.run_nvnmd_train import (
+    RunNvNMDTrain,
+)
 from dpgen2.op.select_confs import (
     SelectConfs,
 )
@@ -112,6 +119,23 @@ def make_mocked_init_models(numb_models):
         ff = Path(model_name_pattern % ii)
         ff.write_text(f"This is init model {ii}")
         tmp_models.append(ff)
+    return tmp_models
+
+
+def make_mocked_init_nvnmd_models(numb_models):
+    tmp_models = []
+    for ii in range(numb_models):
+        nvnmd_models_dir = Path(nvnmd_model_name_pattern % ii)
+        nvnmd_models_dir.mkdir(exist_ok=True, parents=True)
+        for jj in (
+            "frozen_model.pb",
+            "model.ckpt.meta",
+            "model.ckpt.data",
+            "model.ckpt.index",
+        ):
+            ff = nvnmd_models_dir / jj
+            ff.write_text(f"This is init {jj} {ii}")
+        tmp_models.append(nvnmd_models_dir)
     return tmp_models
 
 
@@ -351,6 +375,306 @@ class MockedRunDPTrainNoneInitModel(RunDPTrain):
         )
 
 
+class MockedPrepNvNMDTrain(PrepDPTrain):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        template = ip["template_script"]
+        numb_models = ip["numb_models"]
+        ofiles = []
+        osubdirs = []
+
+        assert template == mocked_template_script
+        assert numb_models == mocked_numb_models
+
+        for ii in range(numb_models):
+            jtmp = template
+            jtmp["seed"] = ii
+            subdir = Path(train_task_pattern % ii)
+            subdir.mkdir(exist_ok=True, parents=True)
+            fname = subdir / "input.json"
+            with open(fname, "w") as fp:
+                json.dump(jtmp, fp, indent=4)
+            osubdirs.append(str(subdir))
+            ofiles.append(fname)
+
+        op = OPIO(
+            {
+                "task_names": osubdirs,
+                "task_paths": [Path(ii) for ii in osubdirs],
+            }
+        )
+        return op
+
+
+class MockedRunNvNMDTrain(RunNvNMDTrain):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        work_dir = Path(ip["task_name"])
+        script = ip["task_path"] / "input.json"
+        init_model = ip["init_model"]
+        init_data = ip["init_data"]
+        iter_data = ip["iter_data"]
+
+        assert script.is_file()
+        assert ip["task_path"].is_dir()
+        assert ip["init_model"].is_dir()
+        assert len(init_data) == 2
+        assert re.match("task.[0-9][0-9][0-9][0-9]", ip["task_name"])
+        task_id = int(ip["task_name"].split(".")[1])
+        assert ip["task_name"] in str(ip["task_path"])
+        init_frz_model = ip["init_model"] / "frozen_model.pb"
+        init_model_ckpt_data = ip["init_model"] / "model.ckpt.data"
+        init_model_ckpt_meta = ip["init_model"] / "model.ckpt.meta"
+        init_model_ckpt_index = ip["init_model"] / "model.ckpt.index"
+
+        assert ".pb" in str(init_frz_model)
+        assert "ckpt.meta" in str(init_model_ckpt_meta)
+        assert "ckpt.data" in str(init_model_ckpt_data)
+        assert "ckpt.index" in str(init_model_ckpt_index)
+        list_init_data = sorted([str(ii) for ii in init_data])
+        assert "init_data/bar" in list_init_data[0]
+        assert "init_data/foo" in list_init_data[1]
+        assert Path(list_init_data[0]).is_dir()
+        assert Path(list_init_data[1]).is_dir()
+
+        script = Path(script).resolve()
+        init_model = init_model.resolve()
+        init_frz_model = init_frz_model.resolve()
+        init_model_ckpt_data = init_model_ckpt_data.resolve()
+        init_model_ckpt_meta = init_model_ckpt_meta.resolve()
+        init_model_ckpt_index = init_model_ckpt_index.resolve()
+        init_data = [ii.resolve() for ii in init_data]
+        iter_data = [ii.resolve() for ii in iter_data]
+        init_data_str = [str(ii) for ii in init_data]
+        iter_data_str = [str(ii) for ii in iter_data]
+
+        with open(script) as fp:
+            jtmp = json.load(fp)
+        data = []
+        for ii in sorted(init_data_str):
+            data.append(ii)
+        for ii in sorted(iter_data_str):
+            data.append(ii)
+        jtmp["data"] = data
+        with open(script, "w") as fp:
+            json.dump(jtmp, fp, indent=4)
+
+        cwd = os.getcwd()
+        work_dir.mkdir(exist_ok=True, parents=True)
+        os.chdir(work_dir)
+
+        for script_str in ["input.json", "input_cnn.json", "input_qnn.json"]:
+            oscript = Path(script_str)
+            if not oscript.exists():
+                from shutil import (
+                    copyfile,
+                )
+
+                copyfile(script, oscript)
+
+        oscript = Path("input.json")
+        cnn_dir = Path("nvnmd_cnn")
+        qnn_dir = Path("nvnmd_qnn")
+        cnn_model = cnn_dir / Path("frozen_model.pb")
+        qnn_model = qnn_dir / Path("model.pb")
+        model_ckpt_meta_file = cnn_dir / Path("model.ckpt.meta")
+        model_ckpt_data_file = cnn_dir / Path("model.ckpt.data-00000-of-00001")
+        model_ckpt_index_file = cnn_dir / Path("model.ckpt.index")
+        lcurve = cnn_dir / Path("lcurve.out")
+        log = Path("log")
+
+        assert init_frz_model.exists()
+        assert init_model_ckpt_meta.exists()
+        assert init_model_ckpt_data.exists()
+        assert init_model_ckpt_index.exists()
+        with log.open("w") as f:
+            f.write(f"init_model {str(init_model)} OK\n")
+        for ii in jtmp["data"]:
+            assert Path(ii).exists()
+            assert (ii in init_data_str) or (ii in iter_data_str)
+            with log.open("a") as f:
+                f.write(f"data {str(ii)} OK\n")
+        assert script.exists()
+        with log.open("a") as f:
+            f.write(f"script {str(script)} OK\n")
+
+        cnn_dir.mkdir(exist_ok=True, parents=True)
+        with cnn_model.open("w") as f:
+            f.write("read from init model: \n")
+            f.write(init_frz_model.read_text() + "\n")
+        with model_ckpt_meta_file.open("w") as f:
+            f.write("read from init model: \n")
+            f.write(init_model_ckpt_meta.read_text() + "\n")
+        with model_ckpt_data_file.open("w") as f:
+            f.write("read from init model: \n")
+            f.write(init_model_ckpt_data.read_text() + "\n")
+        with model_ckpt_index_file.open("w") as f:
+            f.write("read from init model: \n")
+            f.write(init_model_ckpt_index.read_text() + "\n")
+
+        qnn_dir.mkdir(exist_ok=True, parents=True)
+        with qnn_model.open("w") as f:
+            f.write("read from init model: \n")
+            f.write(init_frz_model.read_text() + "\n")
+        with lcurve.open("w") as f:
+            f.write("read from train_script: \n")
+            f.write(script.read_text() + "\n")
+
+        model_files = "nvnmd_models"
+        os.makedirs(model_files, exist_ok=True)
+        shutil.copy(cnn_model, "nvnmd_models")
+        shutil.copy(qnn_model, "nvnmd_models")
+        shutil.copy(model_ckpt_meta_file, "nvnmd_models")
+        shutil.copy(model_ckpt_data_file, "nvnmd_models")
+        shutil.copy(model_ckpt_index_file, "nvnmd_models")
+
+        os.chdir(cwd)
+
+        return OPIO(
+            {
+                "script": work_dir / oscript,
+                "model": work_dir / model_files,
+                "lcurve": work_dir / lcurve,
+                "log": work_dir / log,
+            }
+        )
+
+
+class MockedRunNvNMDTrainCheckOptParam(RunDPTrain):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        if not ip["optional_parameter"]["mixed_type"]:
+            raise FatalError(
+                f"the value of mixed_type is {ip['optional_parameter']['mixed_type']} "
+            )
+        if not ip["optional_parameter"]["finetune_mode"]:
+            raise FatalError(
+                f"the value of finetune_mode is {ip['optional_parameter']['finetune_mode']} "
+            )
+        return MockedRunDPTrain.execute(self, ip)
+
+
+class MockedRunNvNMDTrainNoneInitModel(RunNvNMDTrain):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        work_dir = Path(ip["task_name"])
+        script = ip["task_path"] / "input.json"
+        if ip["init_model"] is not None:
+            raise FatalError("init model is not None")
+        init_data = ip["init_data"]
+        iter_data = ip["iter_data"]
+
+        assert script.is_file()
+        assert ip["task_path"].is_dir()
+        assert len(init_data) == 2
+        assert re.match("task.[0-9][0-9][0-9][0-9]", ip["task_name"])
+        task_id = int(ip["task_name"].split(".")[1])
+        assert ip["task_name"] in str(ip["task_path"])
+        list_init_data = sorted([str(ii) for ii in init_data])
+        assert "init_data/bar" in list_init_data[0]
+        assert "init_data/foo" in list_init_data[1]
+        assert Path(list_init_data[0]).is_dir()
+        assert Path(list_init_data[1]).is_dir()
+
+        script = Path(script).resolve()
+        init_data = [ii.resolve() for ii in init_data]
+        iter_data = [ii.resolve() for ii in iter_data]
+        init_data_str = [str(ii) for ii in init_data]
+        iter_data_str = [str(ii) for ii in iter_data]
+
+        with open(script) as fp:
+            jtmp = json.load(fp)
+        data = []
+        for ii in sorted(init_data_str):
+            data.append(ii)
+        for ii in sorted(iter_data_str):
+            data.append(ii)
+        jtmp["data"] = data
+        with open(script, "w") as fp:
+            json.dump(jtmp, fp, indent=4)
+
+        cwd = os.getcwd()
+        work_dir.mkdir(exist_ok=True, parents=True)
+        os.chdir(work_dir)
+
+        for script_str in ["input.json", "input_cnn.json", "input_qnn.json"]:
+            oscript = Path(script_str)
+            if not oscript.exists():
+                from shutil import (
+                    copyfile,
+                )
+
+                copyfile(script, oscript)
+
+        oscript = Path("input.json")
+        cnn_dir = Path("nvnmd_cnn")
+        qnn_dir = Path("nvnmd_qnn")
+        cnn_model = cnn_dir / Path("frozen_model.pb")
+        qnn_model = qnn_dir / Path("model.pb")
+        model_ckpt_meta_file = cnn_dir / Path("model.ckpt.meta")
+        model_ckpt_data_file = cnn_dir / Path("model.ckpt.data-00000-of-00001")
+        model_ckpt_index_file = cnn_dir / Path("model.ckpt.index")
+        lcurve = cnn_dir / Path("lcurve.out")
+        log = Path("log")
+
+        for ii in jtmp["data"]:
+            assert Path(ii).exists()
+            assert (ii in init_data_str) or (ii in iter_data_str)
+            with log.open("a") as f:
+                f.write(f"data {str(ii)} OK\n")
+        assert script.exists()
+        with log.open("a") as f:
+            f.write(f"script {str(script)} OK\n")
+
+        cnn_dir.mkdir(exist_ok=True, parents=True)
+        with cnn_model.open("w") as f:
+            f.write("read from init model: \n")
+        with model_ckpt_meta_file.open("w") as f:
+            f.write("read from init model ckpt: \n")
+        with model_ckpt_data_file.open("w") as f:
+            f.write("read from init model ckpt: \n")
+        with model_ckpt_index_file.open("w") as f:
+            f.write("read from init model ckpt: \n")
+
+        qnn_dir.mkdir(exist_ok=True, parents=True)
+        with qnn_model.open("w") as f:
+            f.write("read from init model: \n")
+        with lcurve.open("w") as f:
+            f.write("read from train_script: \n")
+            f.write(script.read_text() + "\n")
+
+        model_files = "nvnmd_models"
+        os.makedirs(model_files, exist_ok=True)
+        shutil.copy(cnn_model, "nvnmd_models")
+        shutil.copy(qnn_model, "nvnmd_models")
+        shutil.copy(model_ckpt_meta_file, "nvnmd_models")
+        shutil.copy(model_ckpt_data_file, "nvnmd_models")
+        shutil.copy(model_ckpt_index_file, "nvnmd_models")
+
+        os.chdir(cwd)
+
+        return OPIO(
+            {
+                "script": work_dir / oscript,
+                "model": work_dir / model_files,
+                "lcurve": work_dir / lcurve,
+                "log": work_dir / log,
+            }
+        )
+
+
 class MockedRunLmp(RunLmp):
     @OP.exec_sign_check
     def execute(
@@ -425,6 +749,83 @@ class MockedRunLmp(RunLmp):
                 "traj": work_dir / traj,
                 "model_devi": work_dir / model_devi,
                 "extra_outputs": [],
+            }
+        )
+
+
+class MockedRunNvNMD(RunNvNMD):
+    @OP.exec_sign_check
+    def execute(
+        self,
+        ip: OPIO,
+    ) -> OPIO:
+        task_name = ip["task_name"]
+        task_path = ip["task_path"]
+        models = ip["models"]
+
+        assert ip["task_path"].is_dir()
+        assert re.match("task.[0-9][0-9][0-9][0-9][0-9][0-9]", ip["task_name"])
+        task_id = int(ip["task_name"].split(".")[1])
+        assert task_path.is_dir()
+        assert ip["task_name"] in str(ip["task_path"])
+        assert (
+            len(models) == mocked_numb_models
+        ), f"{len(models)} == {mocked_numb_models}"
+        for ii in range(mocked_numb_models):
+            assert ip["models"][ii].is_file()
+            assert "model" in str(ip["models"][ii])
+            assert ".pb" in str(ip["models"][ii])
+        assert (task_path / lmp_conf_name).is_file()
+        assert (task_path / lmp_input_name).is_file()
+
+        task_path = task_path.resolve()
+        models = [ii.resolve() for ii in models]
+        models_str = [str(ii) for ii in models]
+
+        work_dir = Path(task_name)
+
+        cwd = os.getcwd()
+        work_dir.mkdir(exist_ok=True, parents=True)
+        os.chdir(work_dir)
+
+        import glob
+
+        ifiles = glob.glob(str(task_path / "*"))
+        for ii in ifiles:
+            if not Path(Path(ii).name).exists():
+                Path(Path(ii).name).symlink_to(ii)
+        for ii in models:
+            if not Path(Path(ii).name).exists():
+                Path(Path(ii).name).symlink_to(ii)
+
+        log = Path(lmp_log_name)
+        traj = Path(lmp_traj_name)
+        model_devi = Path(lmp_model_devi_name)
+
+        # fc = ['log of {task_name}']
+        # for ii in ['conf.lmp', 'in.lammps'] + models_str:
+        #     if Path(ii).exists():
+        #         fc.append(f'{ii} OK')
+        # log.write_text('\n'.join(fc))
+        # log.write_text('log of {task_name}')
+        fc = []
+        for ii in [lmp_conf_name, lmp_input_name] + [ii.name for ii in models]:
+            fc.append(Path(ii).read_text())
+        log.write_text("\n".join(fc))
+        model_devi.write_text(f"model_devi of {task_name}")
+        traj_out = []
+        traj_out.append(f"traj of {task_name}")
+        traj_out.append(Path(lmp_conf_name).read_text())
+        traj_out.append(Path(lmp_input_name).read_text())
+        traj.write_text("\n".join(traj_out))
+
+        os.chdir(cwd)
+
+        return OPIO(
+            {
+                "log": work_dir / log,
+                "traj": work_dir / traj,
+                "model_devi": work_dir / model_devi,
             }
         )
 

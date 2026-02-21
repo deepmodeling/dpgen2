@@ -119,15 +119,20 @@ class PrepDPTrain(OP):
         input_dict,
     ):
         jtmp = input_dict.copy()
-        if "model_dict" in jtmp["model"]:
-            for d in jtmp["model"]["model_dict"].values():
-                if isinstance(d["descriptor"], str):
-                    self._set_desc_seed(jtmp["model"]["shared_dict"][d["descriptor"]])
-                d["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (2**32)
-        else:
-            self._set_desc_seed(jtmp["model"]["descriptor"])
-            jtmp["model"]["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (
-                2**32
-            )
+        if "model" in jtmp:
+            if "model_dict" in jtmp["model"]:
+                for d in jtmp["model"]["model_dict"].values():
+                    if isinstance(d["descriptor"], str):
+                        self._set_desc_seed(
+                            jtmp["model"]["shared_dict"][d["descriptor"]]
+                        )
+                    d["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (2**32)
+            else:
+                self._set_desc_seed(jtmp["model"]["descriptor"])
+                jtmp["model"]["fitting_net"]["seed"] = random.randrange(sys.maxsize) % (
+                    2**32
+                )
+        elif "nvnmd" in jtmp:
+            jtmp["nvnmd"]["seed"] = random.randrange(sys.maxsize) % (2**32)
         jtmp["training"]["seed"] = random.randrange(sys.maxsize) % (2**32)
         return jtmp

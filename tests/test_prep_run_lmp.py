@@ -53,6 +53,7 @@ from context import (
 )
 from mocked_ops import (
     MockedRunLmp,
+    MockedRunNvNMD,
     mocked_numb_models,
 )
 
@@ -206,6 +207,77 @@ class TestMockedRunLmp(unittest.TestCase):
                 }
             )
             op = MockedRunLmp()
+            out = op.execute(ip)
+            self.assertEqual(out["log"], Path(f"task.{ii:06d}") / lmp_log_name)
+            self.assertEqual(out["traj"], Path(f"task.{ii:06d}") / lmp_traj_name)
+            self.assertEqual(
+                out["model_devi"], Path(f"task.{ii:06d}") / lmp_model_devi_name
+            )
+            self.assertTrue(out["log"].is_file())
+            self.assertTrue(out["traj"].is_file())
+            self.assertTrue(out["model_devi"].is_file())
+            self.check_run_lmp_output(self.task_list_str[ii], self.model_list)
+
+
+class TestMockedRunNvNMD(unittest.TestCase):
+    def setUp(self):
+        self.ntask = 2
+        self.nmodels = 3
+        self.task_list = []
+        self.model_list = []
+        for ii in range(self.ntask):
+            work_path = Path(lmp_task_pattern % ii)
+            work_path.mkdir(exist_ok=True, parents=True)
+            (work_path / lmp_conf_name).write_text(f"conf {ii}")
+            (work_path / lmp_input_name).write_text(f"input {ii}")
+            self.task_list.append(work_path)
+        for ii in range(self.nmodels):
+            model = Path(f"model{ii}.pb")
+            model.write_text(f"model {ii}")
+            self.model_list.append(model)
+
+    def check_run_lmp_output(
+        self,
+        task_name: str,
+        models: List[Path],
+    ):
+        cwd = os.getcwd()
+        os.chdir(task_name)
+        fc = []
+        for ii in [lmp_conf_name, lmp_input_name] + [ii.name for ii in models]:
+            fc.append(Path(ii).read_text())
+        self.assertEqual(fc, Path(lmp_log_name).read_text().strip().split("\n"))
+        self.assertEqual(
+            f"traj of {task_name}", Path(lmp_traj_name).read_text().split("\n")[0]
+        )
+        self.assertEqual(
+            f"model_devi of {task_name}", Path(lmp_model_devi_name).read_text()
+        )
+        os.chdir(cwd)
+
+    def tearDown(self):
+        for ii in range(self.ntask):
+            work_path = Path(lmp_task_pattern % ii)
+            if work_path.is_dir():
+                shutil.rmtree(work_path)
+        for ii in range(self.nmodels):
+            model = Path(f"model{ii}.pb")
+            if model.is_file():
+                os.remove(model)
+
+    def test(self):
+        self.task_list_str = [str(ii) for ii in self.task_list]
+        self.model_list_str = [str(ii) for ii in self.model_list]
+        for ii in range(self.ntask):
+            ip = OPIO(
+                {
+                    "task_name": self.task_list_str[ii],
+                    "task_path": self.task_list[ii],
+                    "models": self.model_list,
+                    "config": {},
+                }
+            )
+            op = MockedRunNvNMD()
             out = op.execute(ip)
             self.assertEqual(out["log"], Path(f"task.{ii:06d}") / lmp_log_name)
             self.assertEqual(out["traj"], Path(f"task.{ii:06d}") / lmp_traj_name)

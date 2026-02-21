@@ -11,6 +11,7 @@ from typing import (
     Optional,
     Set,
     Type,
+    Union,
 )
 
 from dflow import (
@@ -47,6 +48,7 @@ from dpgen2.constants import (
 )
 from dpgen2.op import (
     RunDPTrain,
+    RunNvNMDTrain,
 )
 from dpgen2.utils.step_config import (
     init_executor,
@@ -59,7 +61,7 @@ class PrepRunDPTrain(Steps):
         self,
         name: str,
         prep_train_op: Type[OP],
-        run_train_op: Type[RunDPTrain],
+        run_train_op: Type[Union[RunDPTrain, RunNvNMDTrain]],
         prep_config: Optional[dict] = None,
         run_config: Optional[dict] = None,
         upload_python_packages: Optional[List[os.PathLike]] = None,
@@ -150,7 +152,7 @@ def _prep_run_dp_train(
     train_steps,
     step_keys,
     prep_train_op: Type[OP],
-    run_train_op: Type[RunDPTrain],
+    run_train_op: Type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
