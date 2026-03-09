@@ -96,6 +96,7 @@ class ConcurrentLearningBlock(Steps):
         select_confs_config: dict = normalize_step_dict({}),
         collect_data_config: dict = normalize_step_dict({}),
         upload_python_packages: Optional[List[os.PathLike]] = None,
+        async_fp: bool = False,
     ):
         self._input_parameters = {
             "block_id": InputParameter(),
@@ -115,6 +116,7 @@ class ConcurrentLearningBlock(Steps):
             "init_models": InputArtifact(optional=True),
             "init_data": InputArtifact(),
             "iter_data": InputArtifact(),
+            "async_confs": InputArtifact(optional=True),
         }
         self._output_parameters = {
             "exploration_report": OutputParameter(),
@@ -123,6 +125,7 @@ class ConcurrentLearningBlock(Steps):
             "models": OutputArtifact(),
             "iter_data": OutputArtifact(),
             "trajs": OutputArtifact(),
+            "async_confs": OutputArtifact(),
         }
 
         super().__init__(
@@ -163,6 +166,7 @@ class ConcurrentLearningBlock(Steps):
             select_confs_config=select_confs_config,
             collect_data_config=collect_data_config,
             upload_python_packages=upload_python_packages,
+            async_fp=async_fp,
         )
 
     @property
@@ -198,6 +202,7 @@ def _block_cl(
     select_confs_config: dict = normalize_step_dict({}),
     collect_data_config: dict = normalize_step_dict({}),
     upload_python_packages: Optional[List[os.PathLike]] = None,
+    async_fp: bool = False,
 ):
     select_confs_config = deepcopy(select_confs_config)
     collect_data_config = deepcopy(collect_data_config)
@@ -231,7 +236,25 @@ def _block_cl(
             ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
         ),
     )
-    block_steps.add(prep_run_dp_train)
+    if async_fp:
+        async_fp_step = Step(
+            name=name + "-async-prep-run-fp",
+            template=prep_run_fp_op,
+            parameters={
+                "block_id": f"{block_steps.inputs.parameters['block_id']}-async",
+                "fp_config": block_steps.inputs.parameters["fp_config"],
+                "type_map": block_steps.inputs.parameters["type_map"],
+            },
+            artifacts={
+                "confs": block_steps.inputs.artifacts["async_confs"],
+            },
+            key=f"{block_steps.inputs.parameters['block_id']}-async--prep-run-fp",
+        )
+        block_steps.add([prep_run_dp_train, async_fp_step])
+        async_labeled_data = async_fp_step.outputs.artifacts["labeled_data"]
+    else:
+        block_steps.add(prep_run_dp_train)
+        async_labeled_data = None
 
     prep_run_explore = Step(
         name=name + "-prep-run-explore",
@@ -309,6 +332,7 @@ def _block_cl(
         artifacts={
             "iter_data": block_steps.inputs.artifacts["iter_data"],
             "labeled_data": prep_run_fp.outputs.artifacts["labeled_data"],
+            "async_labeled_data": async_labeled_data,
         },
         key=step_keys["collect-data"],
         executor=collect_data_executor,
@@ -327,6 +351,9 @@ def _block_cl(
     ]
     block_steps.outputs.artifacts["trajs"]._from = prep_run_explore.outputs.artifacts[
         "trajs"
+    ]
+    block_steps.outputs.artifacts["async_confs"]._from = select_confs.outputs.artifacts[
+        "async_confs"
     ]
 
     return block_steps
