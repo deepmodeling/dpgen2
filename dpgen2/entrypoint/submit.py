@@ -104,6 +104,8 @@ from dpgen2.op import (
     RunDPTrain,
     RunLmp,
     RunLmpHDF5,
+    RunNvNMD,
+    RunNvNMDTrain,
     RunRelax,
     RunRelaxHDF5,
     SelectConfs,
@@ -175,6 +177,17 @@ def make_concurrent_learning_op(
             valid_data=valid_data,
             optional_files=train_optional_files,
         )
+    elif train_style == "dp-nvnmd":
+        prep_run_train_op = PrepRunDPTrain(
+            "prep-run-nvnmd-train",
+            PrepDPTrain,
+            RunNvNMDTrain,
+            prep_config=prep_train_config,
+            run_config=run_train_config,
+            upload_python_packages=upload_python_packages,
+            valid_data=valid_data,
+            optional_files=train_optional_files,
+        )
     else:
         raise RuntimeError(f"unknown train_style {train_style}")
     if explore_style == "lmp":
@@ -182,6 +195,15 @@ def make_concurrent_learning_op(
             "prep-run-lmp",
             PrepLmp,
             RunLmpHDF5 if explore_config["use_hdf5"] else RunLmp,  # type: ignore
+            prep_config=prep_explore_config,
+            run_config=run_explore_config,
+            upload_python_packages=upload_python_packages,
+        )
+    elif "lmp-nvnmd" in explore_style:
+        prep_run_explore_op = PrepRunLmp(
+            "prep-run-nvnmd",
+            PrepLmp,
+            RunNvNMD,
             prep_config=prep_explore_config,
             run_config=run_explore_config,
             upload_python_packages=upload_python_packages,
@@ -279,7 +301,7 @@ def make_naive_exploration_scheduler(
     # use npt task group
     explore_style = config["explore"]["type"]
 
-    if explore_style == "lmp":
+    if explore_style in ("lmp", "lmp-nvnmd"):
         return make_lmp_naive_exploration_scheduler(config)
     elif "calypso" in explore_style or explore_style == "diffcsp":
         return make_naive_exploration_scheduler_without_conf(config, explore_style)
@@ -367,6 +389,7 @@ def make_lmp_naive_exploration_scheduler(config):
     output_nopbc = config["explore"]["output_nopbc"]
     conf_filters = get_conf_filters(config["explore"]["filters"])
     use_ele_temp = config["inputs"]["use_ele_temp"]
+    config["explore"]["type"]
     scheduler = ExplorationScheduler()
     # report
     conv_style = convergence.pop("type")
@@ -499,6 +522,16 @@ def workflow_concurrent_learning(
             else None
         )
         config["train"]["numb_models"] = 1
+
+    elif train_style == "dp-nvnmd":
+        init_models_paths = config["train"].get("init_models_paths", None)
+        numb_models = config["train"]["numb_models"]
+        if init_models_paths is not None and len(init_models_paths) != numb_models:
+            raise RuntimeError(
+                f"{len(init_models_paths)} init models provided, which does "
+                "not match numb_models={numb_models}"
+            )
+
     else:
         raise RuntimeError(f"unknown params, train_style: {train_style}")
 
