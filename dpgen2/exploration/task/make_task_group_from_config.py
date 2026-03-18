@@ -338,7 +338,9 @@ def ase_task_group_args():
             doc=doc_n_sample,
         ),
         Argument("temps", list, optional=False, doc=doc_temps, alias=["Ts"]),
-        Argument("press", list, optional=True, default=[None], doc=doc_press, alias=["Ps"]),
+        Argument(
+            "press", list, optional=True, default=[None], doc=doc_press, alias=["Ps"]
+        ),
         Argument(
             "ens", str, optional=True, default="nvt", doc=doc_ens, alias=["ensemble"]
         ),

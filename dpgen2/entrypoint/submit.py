@@ -925,7 +925,14 @@ def get_resubmit_keys(
             ]
             sub_keys = sort_slice_ops(
                 sub_keys,
-                ["run-train", "run-lmp", "run-ase", "run-fp", "diffcsp-gen", "run-relax"],
+                [
+                    "run-train",
+                    "run-lmp",
+                    "run-ase",
+                    "run-fp",
+                    "diffcsp-gen",
+                    "run-relax",
+                ],
             )
             if step.phase == "Succeeded":
                 folded_keys[step.key] = sub_keys

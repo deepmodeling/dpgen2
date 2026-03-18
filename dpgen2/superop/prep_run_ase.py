@@ -109,9 +109,7 @@ class PrepRunAse(Steps):
         self._keys = ["prep-ase", "run-ase"]
         self.step_keys = {}
         ii = "prep-ase"
-        self.step_keys[ii] = "--".join(
-            ["%s" % self.inputs.parameters["block_id"], ii]
-        )
+        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
         ii = "run-ase"
         self.step_keys[ii] = "--".join(
             ["%s" % self.inputs.parameters["block_id"], ii + "-{{item}}"]

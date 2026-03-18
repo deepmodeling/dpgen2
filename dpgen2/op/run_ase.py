@@ -430,8 +430,8 @@ def _run_ase_md(model_names: List[str], config: dict) -> None:
         # devi_v / devi_f each have shape (nframes, 3) → take frame 0
         row = np.array(
             [frame_idx]
-            + list(devi_v[0])   # max_devi_v, min_devi_v, avg_devi_v
-            + list(devi_f[0])   # max_devi_f, min_devi_f, avg_devi_f
+            + list(devi_v[0])  # max_devi_v, min_devi_v, avg_devi_v
+            + list(devi_f[0])  # max_devi_f, min_devi_f, avg_devi_f
         )
         devi_rows.append(row)
 
@@ -459,10 +459,10 @@ def _atoms_to_lmpdump(atoms, frame_idx: int, type_map: List[str]) -> str:
     :func:`~dpgen2.op.run_caly_model_devi.atoms2lmpdump` so that
     :class:`~dpgen2.exploration.render.TrajRenderLammps` can parse it.
     """
+    import ase as _ase  # type: ignore
     from ase.geometry import (  # type: ignore
         cellpar_to_cell,
     )
-    import ase as _ase  # type: ignore
 
     cellpars = atoms.cell.cellpar()
     new_cell = cellpar_to_cell(cellpars)
@@ -528,9 +528,9 @@ def _write_model_devi_out(
     what :class:`~dpgen2.exploration.render.TrajRenderLammps` expects
     (same as LAMMPS ``model_devi.out``).
     """
-    assert devi.shape[1] == 7, (
-        f"Expected 7 columns in model_devi array, got {devi.shape[1]}"
-    )
+    assert (
+        devi.shape[1] == 7
+    ), f"Expected 7 columns in model_devi array, got {devi.shape[1]}"
     col_header = "%10s%19s%19s%19s%19s%19s%19s" % (
         "step",
         "max_devi_v",

@@ -14,8 +14,14 @@ import json
 import os
 import shutil
 import unittest
-from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from pathlib import (
+    Path,
+)
+from unittest.mock import (
+    MagicMock,
+    call,
+    patch,
+)
 
 import numpy as np
 from dflow.python import (
@@ -180,9 +186,7 @@ class TestRunAse(unittest.TestCase):
         self.task_path = Path("task_path")
         self.task_path.mkdir()
         (self.task_path / ase_conf_name).write_text(_FAKE_CONF_LMP)
-        (self.task_path / ase_input_name).write_text(
-            json.dumps(_FAKE_ASE_INPUT)
-        )
+        (self.task_path / ase_input_name).write_text(json.dumps(_FAKE_ASE_INPUT))
 
         # Create fake model files
         self.model_dir = Path("models")
@@ -350,13 +354,17 @@ class TestRunAseHDF5(unittest.TestCase):
     """Tests for :class:`RunAseHDF5` output signature."""
 
     def test_output_sign_has_hdf5_traj(self):
-        from dflow.python import HDF5Datasets
+        from dflow.python import (
+            HDF5Datasets,
+        )
 
         sign = RunAseHDF5.get_output_sign()
         self.assertEqual(sign["traj"].type, HDF5Datasets)
 
     def test_output_sign_has_hdf5_model_devi(self):
-        from dflow.python import HDF5Datasets
+        from dflow.python import (
+            HDF5Datasets,
+        )
 
         sign = RunAseHDF5.get_output_sign()
         self.assertEqual(sign["model_devi"].type, HDF5Datasets)

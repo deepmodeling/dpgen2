@@ -216,7 +216,9 @@ class TestSubmitGetResubmitKeysAse(unittest.TestCase):
         """resubmit_concurrent_learning must include 'run-ase' in print_keys_in_nice_format."""
         # Both sort_slice_ops and print_keys_in_nice_format should have run-ase
         count = SUBMIT_SRC.count('"run-ase"')
-        self.assertGreaterEqual(count, 2, "Expected 'run-ase' to appear at least twice in submit.py")
+        self.assertGreaterEqual(
+            count, 2, "Expected 'run-ase' to appear at least twice in submit.py"
+        )
 
 
 # ===========================================================================
@@ -229,7 +231,9 @@ class TestArgsImportable(unittest.TestCase):
 
     def test_ase_args_importable(self):
         """ase_args() must be importable from dpgen2.entrypoint.args."""
-        from dpgen2.entrypoint.args import ase_args
+        from dpgen2.entrypoint.args import (
+            ase_args,
+        )
 
         result = ase_args()
         self.assertIsInstance(result, list)
@@ -237,7 +241,9 @@ class TestArgsImportable(unittest.TestCase):
 
     def test_run_ase_args_importable(self):
         """run_ase_args() must be importable from dpgen2.entrypoint.args."""
-        from dpgen2.entrypoint.args import run_ase_args
+        from dpgen2.entrypoint.args import (
+            run_ase_args,
+        )
 
         result = run_ase_args()
         self.assertIsInstance(result, list)
@@ -245,7 +251,9 @@ class TestArgsImportable(unittest.TestCase):
 
     def test_variant_explore_includes_ase(self):
         """variant_explore() must include 'ase' as a choice."""
-        from dpgen2.entrypoint.args import variant_explore
+        from dpgen2.entrypoint.args import (
+            variant_explore,
+        )
 
         v = variant_explore()
         choice_names = [a.name for a in v.choice_dict.values()]
@@ -253,28 +261,36 @@ class TestArgsImportable(unittest.TestCase):
 
     def test_ase_args_config_key(self):
         """ase_args() must have a 'config' key."""
-        from dpgen2.entrypoint.args import ase_args
+        from dpgen2.entrypoint.args import (
+            ase_args,
+        )
 
         keys = [a.name for a in ase_args()]
         self.assertIn("config", keys)
 
     def test_ase_args_stages_key(self):
         """ase_args() must have a 'stages' key."""
-        from dpgen2.entrypoint.args import ase_args
+        from dpgen2.entrypoint.args import (
+            ase_args,
+        )
 
         keys = [a.name for a in ase_args()]
         self.assertIn("stages", keys)
 
     def test_ase_args_configurations_key(self):
         """ase_args() must have a 'configurations' key."""
-        from dpgen2.entrypoint.args import ase_args
+        from dpgen2.entrypoint.args import (
+            ase_args,
+        )
 
         keys = [a.name for a in ase_args()]
         self.assertIn("configurations", keys)
 
     def test_run_ase_args_use_hdf5_key(self):
         """run_ase_args() must have a 'use_hdf5' key."""
-        from dpgen2.entrypoint.args import run_ase_args
+        from dpgen2.entrypoint.args import (
+            run_ase_args,
+        )
 
         keys = [a.name for a in run_ase_args()]
         self.assertIn("use_hdf5", keys)

@@ -43,9 +43,7 @@ class TestPrepRunAseSourceCode(unittest.TestCase):
 
     def test_PrepRunAse_class_defined(self):
         class_names = [
-            node.name
-            for node in ast.walk(self.tree)
-            if isinstance(node, ast.ClassDef)
+            node.name for node in ast.walk(self.tree) if isinstance(node, ast.ClassDef)
         ]
         self.assertIn("PrepRunAse", class_names)
 
@@ -154,7 +152,7 @@ class TestPrepRunAseSourceCode(unittest.TestCase):
         """trajs and model_devis must be wired from run_ase outputs."""
         # The source may have line breaks inside the subscript expression,
         # so we check for the key names independently.
-        self.assertIn('run_ase.outputs.artifacts', self.source)
+        self.assertIn("run_ase.outputs.artifacts", self.source)
         self.assertIn('"traj"', self.source)
         self.assertIn('"model_devi"', self.source)
         # Verify the wiring lines are present (may span multiple lines)
