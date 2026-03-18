@@ -1,0 +1,246 @@
+{
+    "_comment": "Example dpgen2 input for ASE MD exploration driven by a DeePMD potential.",
+    "_comment": "Replace placeholder paths and credentials before use.",
+
+    "bohrium_config": {
+        "username":   "__write your bohrium username",
+        "password":   "__write your bohrium password",
+        "_project_id": "__write your bohrium project ID",
+        "project_id": 123456,
+        "_comment": "all"
+    },
+
+    "default_step_config": {
+        "template_config": {
+            "image": "dpgen2:master",
+            "_comment": "all"
+        },
+        "executor": {
+            "type": "dispatcher",
+            "image_pull_policy": "IfNotPresent",
+            "machine_dict": {
+                "batch_type": "Bohrium",
+                "context_type": "Bohrium",
+                "remote_profile": {
+                    "input_data": {
+                        "job_type": "container",
+                        "platform": "ali",
+                        "scass_type": "c2_m8_cpu"
+                    }
+                }
+            }
+        },
+        "_comment": "all"
+    },
+
+    "step_configs": {
+        "run_train_config": {
+            "template_config": {
+                "image": "deepmd-kit:latest",
+                "_comment": "all"
+            },
+            "executor": {
+                "type": "dispatcher",
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_1 * NVIDIA V100"
+                        }
+                    }
+                }
+            },
+            "_comment": "all"
+        },
+        "run_explore_config": {
+            "_comment": "ASE MD runs in-process (no subprocess), so a CPU node is sufficient.",
+            "template_config": {
+                "image": "deepmd-kit:latest",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.80,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c8_m32_cpu"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 20,
+                "pool_size": 5
+            },
+            "_comment": "all"
+        },
+        "run_fp_config": {
+            "template_config": {
+                "image": "vasp:latest",
+                "_comment": "all"
+            },
+            "continue_on_success_ratio": 0.80,
+            "executor": {
+                "type": "dispatcher",
+                "retry_on_submission_error": 10,
+                "image_pull_policy": "IfNotPresent",
+                "machine_dict": {
+                    "batch_type": "Bohrium",
+                    "context_type": "Bohrium",
+                    "remote_profile": {
+                        "input_data": {
+                            "job_type": "container",
+                            "platform": "ali",
+                            "scass_type": "c16_m64_cpu"
+                        }
+                    }
+                }
+            },
+            "template_slice_config": {
+                "group_size": 20,
+                "pool_size": 1
+            },
+            "_comment": "all"
+        },
+        "_comment": "all"
+    },
+
+    "upload_python_packages": "/path/to/dpgen2",
+
+    "inputs": {
+        "type_map":  ["Al", "Mg"],
+        "mass_map":  [26.982, 24.305],
+        "mixed_type": false,
+        "init_data_prefix": null,
+        "init_data_sys": [
+            "init/al.fcc.01x01x01/02.md/sys-0004/deepmd",
+            "init/mg.fcc.01x01x01/02.md/sys-0004/deepmd"
+        ],
+        "_comment": "all"
+    },
+
+    "train": {
+        "type": "dp",
+        "numb_models": 4,
+        "config": {
+            "init_model_policy": "no"
+        },
+        "template_script": "dp_template.json",
+        "_comment": "all"
+    },
+
+    "explore": {
+        "_comment": "Use ASE MD driven by a DeePMD potential for exploration.",
+        "type": "ase",
+
+        "_comment_config": "RunAse configuration.  model_frozen_head is only needed for multitask models.",
+        "config": {
+            "model_frozen_head": null
+        },
+
+        "convergence": {
+            "type": "fixed-levels",
+            "conv_accuracy": 0.9,
+            "level_f_lo": 0.05,
+            "level_f_hi": 0.50,
+            "_comment": "all"
+        },
+
+        "max_numb_iter": 5,
+        "fatal_at_max": false,
+        "output_nopbc": false,
+
+        "configurations": [
+            {
+                "type": "alloy",
+                "lattice": ["fcc", 4.05],
+                "replicate": [2, 2, 2],
+                "numb_confs": 30,
+                "concentration": [[1.0, 0.0], [0.5, 0.5], [0.0, 1.0]]
+            },
+            {
+                "type": "file",
+                "files": ["/path/to/extra/confs/*"],
+                "fmt": "deepmd/npy"
+            }
+        ],
+
+        "_comment_stages": "stages is List[List[dict]].  Outer list = stages, inner list = task groups per stage.",
+        "stages": [
+            [
+                {
+                    "_comment": "NVT stage: Langevin thermostat at multiple temperatures.",
+                    "type": "ase-md",
+                    "ensemble": "nvt",
+                    "temps": [300, 600, 900],
+                    "dt": 0.002,
+                    "nsteps": 1000,
+                    "trj_freq": 10,
+                    "tau_t": 0.1,
+                    "init_velocities": true,
+                    "conf_idx": [0],
+                    "n_sample": 5
+                }
+            ],
+            [
+                {
+                    "_comment": "NPT stage: Berendsen NPT at multiple temperatures and pressures.",
+                    "type": "ase-md",
+                    "ensemble": "npt",
+                    "temps": [300, 600],
+                    "press": [1.0, 1000.0],
+                    "dt": 0.002,
+                    "nsteps": 2000,
+                    "trj_freq": 10,
+                    "tau_t": 0.1,
+                    "tau_p": 0.5,
+                    "init_velocities": true,
+                    "conf_idx": [0, 1],
+                    "n_sample": 3
+                },
+                {
+                    "_comment": "NVE stage: microcanonical ensemble for high-energy sampling.",
+                    "type": "ase-md",
+                    "ensemble": "nve",
+                    "temps": [1200],
+                    "dt": 0.001,
+                    "nsteps": 500,
+                    "trj_freq": 5,
+                    "init_velocities": true,
+                    "conf_idx": [0],
+                    "n_sample": 2
+                }
+            ]
+        ],
+        "_comment": "all"
+    },
+
+    "fp": {
+        "type": "vasp",
+        "task_max": 20,
+        "inputs_config": {
+            "pp_files": {
+                "Al": "vasp/POTCAR.Al",
+                "Mg": "vasp/POTCAR.Mg"
+            },
+            "incar": "vasp/INCAR",
+            "kspacing": 0.32,
+            "kgamma": true
+        },
+        "run_config": {
+            "command": "source /opt/intel/oneapi/setvars.sh && mpirun -n 16 vasp_std"
+        },
+        "_comment": "all"
+    }
+}
