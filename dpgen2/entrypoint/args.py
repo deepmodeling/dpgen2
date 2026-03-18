@@ -25,6 +25,9 @@ from dpgen2.exploration.selector import (
 from dpgen2.fp import (
     fp_styles,
 )
+from dpgen2.op.run_ase import (
+    RunAse,
+)
 from dpgen2.op.run_dp_train import (
     RunDPTrain,
 )
@@ -355,6 +358,85 @@ def caly_args():
     ]
 
 
+def run_ase_args():
+    doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+    return [
+        Argument(
+            "use_hdf5",
+            bool,
+            optional=True,
+            default=False,
+            doc=doc_use_hdf5,
+        ),
+    ]
+
+
+def ase_args():
+    doc_config = "Configuration of ASE MD exploration"
+    doc_max_numb_iter = "Maximum number of iterations per stage"
+    doc_fatal_at_max = (
+        "Fatal when the number of iteration per stage reaches the `max_numb_iter`"
+    )
+    doc_output_nopbc = "Remove pbc of the output configurations"
+    doc_convergence = "The method of convergence check."
+    doc_configuration = "A list of initial configurations."
+    doc_stages = (
+        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
+        "The outer list provides the enumeration of the exploration stages. "
+        "Then each stage is defined by a list of exploration task groups. "
+        "Each task group is described in :ref:`the task group definition<task_group_sec>` "
+    )
+    doc_filters = "A list of configuration filters"
+
+    return [
+        Argument(
+            "config",
+            dict,
+            RunAse.ase_args(),
+            optional=True,
+            default=RunAse.normalize_config({}),
+            doc=doc_config,
+        ),
+        Argument(
+            "max_numb_iter", int, optional=True, default=10, doc=doc_max_numb_iter
+        ),
+        Argument(
+            "fatal_at_max", bool, optional=True, default=True, doc=doc_fatal_at_max
+        ),
+        Argument(
+            "output_nopbc", bool, optional=True, default=False, doc=doc_output_nopbc
+        ),
+        Argument(
+            "convergence",
+            dict,
+            [],
+            [variant_conv()],
+            optional=False,
+            doc=doc_convergence,
+        ),
+        Argument(
+            "configurations",
+            list,
+            [],
+            [variant_conf()],
+            optional=False,
+            repeat=True,
+            doc=doc_configuration,
+            alias=["configuration"],
+        ),
+        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument(
+            "filters",
+            list,
+            [],
+            [variant_filter()],
+            optional=True,
+            default=[],
+            doc=doc_filters,
+        ),
+    ]
+
+
 def run_diffcsp_args():
     doc_gen_tasks = "Number of DiffCSP generation tasks"
     doc_gen_command = "Command for DiffCSP generation"
@@ -450,6 +532,7 @@ def variant_explore():
     doc_lmp = "The exploration by LAMMPS simulations"
     doc_calypso = "The exploration by CALYPSO structure prediction"
     doc_diffcsp = "The exploration by DiffCSP"
+    doc_ase = "The exploration by ASE MD simulations driven by a DeePMD potential"
     return Variant(
         "type",
         [
@@ -458,6 +541,7 @@ def variant_explore():
             Argument("calypso:default", dict, caly_args(), doc=doc_calypso),
             Argument("calypso:merge", dict, caly_args(), doc=doc_calypso),
             Argument("diffcsp", dict, diffcsp_args(), doc=doc_diffcsp),
+            Argument("ase", dict, ase_args(), doc=doc_ase),
         ],
         doc=doc,
     )

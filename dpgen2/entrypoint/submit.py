@@ -76,8 +76,10 @@ from dpgen2.exploration.task import (
     ExplorationTask,
     LmpTemplateTaskGroup,
     NPTTaskGroup,
+    ase_normalize,
     caly_normalize,
     diffcsp_normalize,
+    make_ase_task_group_from_config,
     make_calypso_task_group_from_config,
     make_diffcsp_task_group_from_config,
     make_lmp_task_group_from_config,
@@ -93,12 +95,15 @@ from dpgen2.op import (
     CollectData,
     CollRunCaly,
     DiffCSPGen,
+    PrepAse,
     PrepCalyDPOptim,
     PrepCalyInput,
     PrepCalyModelDevi,
     PrepDPTrain,
     PrepLmp,
     PrepRelax,
+    RunAse,
+    RunAseHDF5,
     RunCalyDPOptim,
     RunCalyModelDevi,
     RunDPTrain,
@@ -113,6 +118,7 @@ from dpgen2.op.caly_evo_step_merge import (
 )
 from dpgen2.superop import (
     ConcurrentLearningBlock,
+    PrepRunAse,
     PrepRunCaly,
     PrepRunDiffCSP,
     PrepRunDPTrain,
@@ -235,6 +241,15 @@ def make_concurrent_learning_op(
             run_config=run_explore_config,
             upload_python_packages=upload_python_packages,
         )
+    elif explore_style == "ase":
+        prep_run_explore_op = PrepRunAse(
+            "prep-run-ase",
+            PrepAse,
+            RunAseHDF5 if explore_config.get("use_hdf5", False) else RunAse,
+            prep_config=prep_explore_config,
+            run_config=run_explore_config,
+            upload_python_packages=upload_python_packages,
+        )
     else:
         raise RuntimeError(f"unknown explore_style {explore_style}")
 
@@ -283,6 +298,8 @@ def make_naive_exploration_scheduler(
         return make_lmp_naive_exploration_scheduler(config)
     elif "calypso" in explore_style or explore_style == "diffcsp":
         return make_naive_exploration_scheduler_without_conf(config, explore_style)
+    elif explore_style == "ase":
+        return make_ase_naive_exploration_scheduler(config)
     else:
         raise KeyError(f"Unknown explore_style `{explore_style}`")
 
@@ -339,6 +356,85 @@ def make_naive_exploration_scheduler_without_conf(config, explore_style):
             else:
                 raise KeyError(f"Unknown explore_style `{explore_style}`")
             # add the list to task group
+            tasks = tgroup.make_task()
+            stage.add_task_group(tasks)
+        # stage_scheduler
+        stage_scheduler = ConvergenceCheckStageScheduler(
+            stage,
+            selector,
+            max_numb_iter=max_numb_iter,
+            fatal_at_max=fatal_at_max,
+        )
+        # scheduler
+        scheduler.add_stage_scheduler(stage_scheduler)
+
+    return scheduler
+
+
+def make_ase_naive_exploration_scheduler(config):
+    """Build an :class:`ExplorationScheduler` for ASE MD exploration.
+
+    Mirrors :func:`make_lmp_naive_exploration_scheduler` but uses
+    :func:`make_ase_task_group_from_config` and reads ``configurations``
+    from the explore config to generate initial structures.
+    """
+    model_devi_jobs = config["explore"]["stages"]
+    sys_configs = config["explore"]["configurations"]
+    mass_map = config["inputs"]["mass_map"]
+    type_map = config["inputs"]["type_map"]
+    numb_models = config["train"]["numb_models"]
+    fp_task_max = config["fp"]["task_max"]
+    max_numb_iter = config["explore"]["max_numb_iter"]
+    fatal_at_max = config["explore"]["fatal_at_max"]
+    convergence = config["explore"]["convergence"]
+    output_nopbc = config["explore"]["output_nopbc"]
+    conf_filters = get_conf_filters(config["explore"]["filters"])
+    scheduler = ExplorationScheduler()
+    # report
+    conv_style = convergence.pop("type")
+    report = conv_styles[conv_style](**convergence)
+    # trajectory render — ASE outputs LAMMPS dump format, so TrajRenderLammps
+    # can be reused without modification.
+    render = TrajRenderLammps(nopbc=output_nopbc)
+    # selector
+    selector = ConfSelectorFrames(
+        render,
+        report,
+        fp_task_max,
+        conf_filters,
+    )
+
+    sys_configs_lmp = []
+    for sys_config in sys_configs:
+        conf_style = sys_config.pop("type")
+        generator = conf_styles[conf_style](**sys_config)
+        sys_configs_lmp.append(generator.get_file_content(type_map))
+
+    for job_ in model_devi_jobs:
+        if not isinstance(job_, list):
+            job = [job_]
+        else:
+            job = job_
+        # stage
+        stage = ExplorationStage()
+        for jj in job:
+            jconf = ase_normalize(jj)
+            n_sample = jconf.pop("n_sample")
+            # get all file names of md initial configurations
+            sys_idx = jconf.pop("conf_idx")
+            conf_list = []
+            for ii in sys_idx:
+                conf_list += sys_configs_lmp[ii]
+            # make task group
+            tgroup = make_ase_task_group_from_config(
+                numb_models, mass_map, type_map, jconf
+            )
+            # add the list to task group
+            tgroup.set_conf(
+                conf_list,
+                n_sample=n_sample,
+                random_sample=True,
+            )
             tasks = tgroup.make_task()
             stage.add_task_group(tasks)
         # stage_scheduler
@@ -829,7 +925,7 @@ def get_resubmit_keys(
             ]
             sub_keys = sort_slice_ops(
                 sub_keys,
-                ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
+                ["run-train", "run-lmp", "run-ase", "run-fp", "diffcsp-gen", "run-relax"],
             )
             if step.phase == "Succeeded":
                 folded_keys[step.key] = sub_keys
@@ -865,7 +961,7 @@ def resubmit_concurrent_learning(
     if list_steps:
         prt_str = print_keys_in_nice_format(
             all_step_keys,
-            ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
+            ["run-train", "run-lmp", "run-ase", "run-fp", "diffcsp-gen", "run-relax"],
         )
         print(prt_str)
 
