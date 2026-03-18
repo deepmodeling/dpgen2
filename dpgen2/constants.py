@@ -29,6 +29,14 @@ calypso_run_opt_file = "calypso_run_opt.py"
 calypso_check_opt_file = "calypso_check_opt.py"
 calypso_opt_log_name = "opt.log"
 calypso_traj_log_name = "traj.traj"
+# ASE exploration constants
+ase_index_pattern = "%06d"
+ase_task_pattern = "task." + ase_index_pattern
+ase_conf_name = "conf.lmp"
+ase_input_name = "ase_input.json"
+ase_traj_name = "traj.dump"
+ase_model_devi_name = "model_devi.out"
+ase_log_name = "ase.log"
 
 default_image = "dptechnology/dpgen2:latest"
 default_host = "127.0.0.1:2746"

@@ -1,3 +1,6 @@
+from .ase_task_group import (
+    AseTaskGroup,
+)
 from .caly_task_group import (
     CalyTaskGroup,
 )
@@ -14,6 +17,8 @@ from .lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
 from .make_task_group_from_config import (
+    ase_normalize,
+    ase_task_group_args,
     caly_normalize,
     caly_task_group_args,
     diffcsp_normalize,
@@ -23,6 +28,7 @@ from .make_task_group_from_config import (
 )
 from .make_task_group_from_config import (
     lmp_task_group_args,
+    make_ase_task_group_from_config,
     make_calypso_task_group_from_config,
     make_diffcsp_task_group_from_config,
     make_lmp_task_group_from_config,

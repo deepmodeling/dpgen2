@@ -13,6 +13,9 @@ from dpgen2.constants import (
 from dpgen2.exploration.task import (
     DiffCSPTaskGroup,
 )
+from dpgen2.exploration.task.ase_task_group import (
+    AseTaskGroup,
+)
 from dpgen2.exploration.task.caly_task_group import (
     CalyTaskGroup,
 )
@@ -306,11 +309,67 @@ def customized_lmp_template_task_group_args():
     ]
 
 
+def ase_task_group_args():
+    doc_temps = "A list of temperatures in K."
+    doc_press = "A list of pressures in bar. Required for NPT ensembles."
+    doc_ens = (
+        "The ensemble. Allowed options are 'nve', 'nvt', 'npt', 'npt-mtk'. "
+        "'nvt' uses a Langevin thermostat. "
+        "'npt' uses Berendsen NPT (NPTBerendsen). "
+        "'npt-mtk' uses the Martyna-Tobias-Klein NPT integrator."
+    )
+    doc_dt = "The timestep in picoseconds (consistent with LAMMPS convention)."
+    doc_nsteps = "The number of MD steps."
+    doc_trj_freq = "The frequency (in steps) of writing trajectory frames and evaluating model deviations."
+    doc_tau_t = "Thermostat time constant in picoseconds."
+    doc_tau_p = "Barostat time constant in picoseconds. Only used for NPT ensembles."
+    doc_init_velocities = (
+        "If True (default), initialise atomic velocities from a Maxwell-Boltzmann "
+        "distribution at the target temperature before starting MD."
+    )
+
+    return [
+        Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
+        Argument(
+            "n_sample",
+            int,
+            optional=True,
+            default=None,
+            doc=doc_n_sample,
+        ),
+        Argument("temps", list, optional=False, doc=doc_temps, alias=["Ts"]),
+        Argument("press", list, optional=True, default=[None], doc=doc_press, alias=["Ps"]),
+        Argument(
+            "ens", str, optional=True, default="nvt", doc=doc_ens, alias=["ensemble"]
+        ),
+        Argument("dt", float, optional=True, default=1e-3, doc=doc_dt),
+        Argument("nsteps", int, optional=True, default=1000, doc=doc_nsteps),
+        Argument(
+            "trj_freq",
+            int,
+            optional=True,
+            default=10,
+            doc=doc_trj_freq,
+            alias=["t_freq", "traj_freq"],
+        ),
+        Argument("tau_t", float, optional=True, default=0.1, doc=doc_tau_t),
+        Argument("tau_p", float, optional=True, default=0.5, doc=doc_tau_p),
+        Argument(
+            "init_velocities",
+            bool,
+            optional=True,
+            default=True,
+            doc=doc_init_velocities,
+        ),
+    ]
+
+
 def variant_task_group():
     doc = "the type of the task group"
     doc_lmp_md = "Lammps MD tasks. DPGEN will generate the lammps input script"
     doc_lmp_template = "Lammps MD tasks defined by templates. User provide lammps (and plumed) template for lammps tasks. The variables in templates are revised by the revisions key. Notice that the lines for pair style, dump and plumed are reserved for the revision of dpgen2, and the users should not write these lines by themselves. Rather, users notify dpgen2 the poistion of the line for `pair_style` by writting 'pair_style deepmd', the line for `dump` by writting 'dump dpgen_dump'. If plumed is used, the line for `fix plumed` shouldbe written exactly as 'fix dpgen_plm'. "
     doc_customized_lmp_template = "Lammps MD tasks defined by user customized shell commands and templates. User provided shell script generates a series of folders, and each folder contains a lammps template task group. "
+    doc_ase_md = "ASE MD tasks. DPGEN will run molecular dynamics using the ASE library driven by a DeePMD potential."
     return Variant(
         "type",
         [
@@ -329,6 +388,12 @@ def variant_task_group():
                 customized_lmp_template_task_group_args(),
                 doc=doc_customized_lmp_template,
             ),
+            Argument(
+                "ase-md",
+                dict,
+                ase_task_group_args(),
+                doc=doc_ase_md,
+            ),
         ],
         doc=doc,
     )
@@ -343,6 +408,64 @@ def lmp_normalize(data):
     data = args.normalize_value(data, trim_pattern="_*")
     args.check_value(data, strict=False)
     return data
+
+
+def ase_normalize(data):
+    """Normalize and validate an ASE task group config dict.
+
+    Parameters
+    ----------
+    data : dict
+        Raw task group config, must contain ``"type": "ase-md"``.
+
+    Returns
+    -------
+    dict
+        Normalised config.
+    """
+    args = lmp_task_group_args()
+    data = args.normalize_value(data, trim_pattern="_*")
+    args.check_value(data, strict=False)
+    return data
+
+
+def make_ase_task_group_from_config(
+    numb_models: int,
+    mass_map,
+    type_map,
+    config: dict,
+) -> AseTaskGroup:
+    """Convert a normalised config dict to an :class:`AseTaskGroup`.
+
+    Parameters
+    ----------
+    numb_models : int
+        Number of DeePMD models used for model deviation.
+    mass_map : list of float
+        Atomic masses in amu, ordered by ``type_map``.
+    type_map : list of str
+        Element symbols ordered by type index.
+    config : dict
+        Task group config.  Must have ``"type": "ase-md"`` and the
+        keys accepted by :meth:`AseTaskGroup.set_md`.
+
+    Returns
+    -------
+    AseTaskGroup
+    """
+    # Work around the required conf_idx (stripped before calling set_md).
+    config["conf_idx"] = [] if "conf_idx" not in config else config["conf_idx"]
+    config = ase_normalize(config)
+    config = config_strip_confidx(config)
+    config.pop("type")
+    tgroup = AseTaskGroup()
+    tgroup.set_md(
+        numb_models=numb_models,
+        mass_map=mass_map,
+        type_map=type_map,
+        **config,
+    )
+    return tgroup
 
 
 def caly_task_grp_args():
