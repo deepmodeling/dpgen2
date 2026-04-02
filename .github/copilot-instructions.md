@@ -250,7 +250,7 @@ Located in `docs/` directory:
 
 ### CI/CD Pipeline
 GitHub Actions workflow (`.github/workflows/test.yml`):
-- Tests Python 3.8, 3.9, 3.10
+- Tests Python 3.9, 3.13
 - Runs full test suite with coverage
 - Validates formatting and import organization
 
