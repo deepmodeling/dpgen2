@@ -19,6 +19,9 @@ from dpgen2.exploration.task.caly_task_group import (
 from dpgen2.exploration.task.customized_lmp_template_task_group import (
     CustomizedLmpTemplateTaskGroup,
 )
+from dpgen2.exploration.task.lmp_spin_task_group import (
+    LmpSpinTaskGroup,
+)
 from dpgen2.exploration.task.lmp_template_task_group import (
     LmpTemplateTaskGroup,
 )
@@ -197,6 +200,45 @@ def lmp_template_task_group_args():
     ]
 
 
+def lmp_spin_task_group_args():
+    doc_lmp_template_fname = "The file name of lammps input template"
+    doc_plm_template_fname = "The file name of plumed input template"
+    doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
+
+    return [
+        Argument("conf_idx", list, optional=False, doc=doc_conf_idx, alias=["sys_idx"]),
+        Argument(
+            "n_sample",
+            int,
+            optional=True,
+            default=None,
+            doc=doc_n_sample,
+        ),
+        Argument(
+            "lmp_template_fname",
+            str,
+            optional=False,
+            doc=doc_lmp_template_fname,
+            alias=["lmp_template", "lmp"],
+        ),
+        Argument(
+            "plm_template_fname",
+            str,
+            optional=True,
+            default=None,
+            doc=doc_plm_template_fname,
+            alias=["plm_template", "plm"],
+        ),
+        Argument(
+            "revisions",
+            dict,
+            optional=True,
+            default={},
+            doc=doc_revisions,
+        ),
+    ]
+
+
 def customized_lmp_template_task_group_args():
     doc_input_lmp_tmpl_name = "The file name of lammps input template"
     doc_input_plm_tmpl_name = "The file name of plumed input template"
@@ -321,6 +363,12 @@ def variant_task_group():
                 "lmp-template",
                 dict,
                 lmp_template_task_group_args(),
+                doc=doc_lmp_template,
+            ),
+            Argument(
+                "lmp-spin",
+                dict,
+                lmp_spin_task_group_args(),
                 doc=doc_lmp_template,
             ),
             Argument(
@@ -648,6 +696,15 @@ def make_lmp_task_group_from_config(
         )
     elif config["type"] == "lmp-template":
         tgroup = LmpTemplateTaskGroup()
+        config.pop("type")
+        lmp_template = config.pop("lmp_template_fname")
+        tgroup.set_lmp(
+            numb_models,
+            lmp_template,
+            **config,
+        )
+    elif config["type"] == "lmp-spin":
+        tgroup = LmpSpinTaskGroup()
         config.pop("type")
         lmp_template = config.pop("lmp_template_fname")
         tgroup.set_lmp(
