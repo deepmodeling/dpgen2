@@ -1,4 +1,4 @@
-FROM dptechnology/dflow:latest
+FROM python:3.10
 
 WORKDIR /data/dpgen2
 COPY ./ ./
