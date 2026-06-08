@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import shutil
 import tempfile
 import unittest
@@ -23,8 +24,20 @@ from dpgen2.conf.alloy_conf import (
 # isort: on
 
 
+# dpdata >= 1.0.2 emits a "Masses" section in the lammps/lmp output
+_dpdata_ver = tuple(int(x) for x in re.findall(r"\d+", dpdata.__version__)[:3])
+_lmp_masses = (
+    "Masses\n\n     1   26.9815386000 # Al\n     2   24.3050000000 # Mg\n\n"
+    if _dpdata_ver >= (1, 0, 2)
+    else ""
+)
+
 ofc0 = "\n1 atoms\n2 atom types\n   0.0000000000    2.0000000000 xlo xhi\n   0.0000000000    2.0000000000 ylo yhi\n   0.0000000000    2.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      1    0.0000000000    0.0000000000    0.0000000000\n"
-ofc1 = "\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
+ofc1 = (
+    "\n1 atoms\n2 atom types\n   0.0000000000    3.0000000000 xlo xhi\n   0.0000000000    3.0000000000 ylo yhi\n   0.0000000000    3.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\n"
+    + _lmp_masses
+    + "Atoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
+)
 ofc2 = "\n1 atoms\n2 atom types\n   0.0000000000    4.0000000000 xlo xhi\n   0.0000000000    4.0000000000 ylo yhi\n   0.0000000000    4.0000000000 zlo zhi\n   0.0000000000    0.0000000000    0.0000000000 xy xz yz\n\nAtoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
 
 
