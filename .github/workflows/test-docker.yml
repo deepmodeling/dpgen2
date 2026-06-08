@@ -1,0 +1,27 @@
+# Build the Docker image on PRs without pushing, so base-image / dependency
+# breakage (e.g. a Python version mismatch) is caught before it reaches the
+# publish workflow on master. No registry login or secrets are needed because
+# nothing is pushed, which keeps this working for pull requests from forks.
+
+name: Test Docker image build
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'pyproject.toml'
+      - '.github/workflows/test-docker.yml'
+
+jobs:
+  build:
+    name: Build Docker image (no push)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Build Docker image
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
+        with:
+          context: .
+          push: false
