@@ -247,7 +247,9 @@ def revise_by_keys(lmp_lines, keys, values):
 
 # Regex pattern for dpgen-style revision placeholders: V_ followed by uppercase letters/digits/underscores.
 # This matches the universal convention in dpgen v1/v2 (all tests, docs, and examples use V_XXX).
-_REVISION_VARIABLE_PATTERN = re.compile(r"(?<![A-Za-z0-9_])V_[A-Z][A-Z0-9_]*(?![A-Za-z0-9_])")
+_REVISION_VARIABLE_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_])V_[A-Z][A-Z0-9_]*(?![A-Za-z0-9_])"
+)
 
 
 def find_unreplaced_variables(content: str) -> Set[str]:
