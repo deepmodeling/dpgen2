@@ -388,6 +388,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             idx += 1
 
     def test_lmp_empty(self):
+        """Empty revisions with template containing V_* should now raise ValueError."""
         task_group = LmpTemplateTaskGroup()
         task_group.set_conf(self.confs)
         task_group.set_lmp(
@@ -396,24 +397,10 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             revisions=self.rev_empty,
             traj_freq=self.traj_freq,
         )
-        task_group.make_task()
-        ngroup = len(task_group)
-        self.assertEqual(
-            ngroup,
-            len(self.confs),
-        )
-        idx = 0
-        for cc in range(len(self.confs)):
-            ee = expected_lmp_template.split("\n")
-            self.assertEqual(
-                task_group[idx].files()[lmp_conf_name],
-                self.confs[cc],
-            )
-            self.assertEqual(
-                task_group[idx].files()[lmp_input_name].split("\n"),
-                ee,
-            )
-            idx += 1
+        with self.assertRaises(ValueError) as ctx:
+            task_group.make_task()
+        self.assertIn("V_NSTEPS", str(ctx.exception))
+        self.assertIn("V_TEMP", str(ctx.exception))
 
     def test_lmp_pimd(self):
         task_group = LmpTemplateTaskGroup()
@@ -436,3 +423,157 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             task_group[0].files()[lmp_input_name].split("\n"),
             ee,
         )
+
+
+class TestRevisionVariablePrecheck(unittest.TestCase):
+    """Test PR6: validation of revision variables in LAMMPS templates."""
+
+    def setUp(self):
+        self.lmp_template_fname = Path("lmp_precheck.template")
+        self.numb_models = 4
+        self.confs = ["foo"]
+        self.traj_freq = 10
+
+    def tearDown(self):
+        if self.lmp_template_fname.exists():
+            os.remove(self.lmp_template_fname)
+
+    def _write_template(self, content):
+        self.lmp_template_fname.write_text(content)
+
+    def test_undefined_variable_raises(self):
+        """Template has V_PRESS but revisions only define V_NSTEPS and V_TEMP."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+            variable        TEMP            equal V_TEMP
+            variable        PRESS           equal V_PRESS
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
+            traj_freq=self.traj_freq,
+        )
+        with self.assertRaises(ValueError) as ctx:
+            task_group.make_task()
+        self.assertIn("V_PRESS", str(ctx.exception))
+        self.assertIn("undefined revision variable", str(ctx.exception).lower())
+
+    def test_no_revisions_but_template_has_variables(self):
+        """Template has V_* variables but no revisions provided at all."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+            variable        TEMP            equal V_TEMP
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={},
+            traj_freq=self.traj_freq,
+        )
+        with self.assertRaises(ValueError) as ctx:
+            task_group.make_task()
+        self.assertIn("V_NSTEPS", str(ctx.exception))
+        self.assertIn("V_TEMP", str(ctx.exception))
+
+    def test_all_variables_defined_no_error(self):
+        """All V_* variables are covered by revisions — should succeed."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+            variable        TEMP            equal V_TEMP
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000], "V_TEMP": [300, 600]},
+            traj_freq=self.traj_freq,
+        )
+        # Should not raise
+        task_group.make_task()
+        self.assertEqual(len(task_group), 2)  # 1 conf * 2 V_TEMP values
+
+    def test_unused_revision_key_warns(self):
+        """Revision defines V_TYPO that doesn't appear in template — should warn."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000], "V_TYPO": [42]},
+            traj_freq=self.traj_freq,
+        )
+        import warnings as _warnings
+
+        with _warnings.catch_warnings(record=True) as w:
+            _warnings.simplefilter("always")
+            task_group.make_task()
+            # Should have at least one warning about V_TYPO
+            typo_warnings = [x for x in w if "V_TYPO" in str(x.message)]
+            self.assertGreater(len(typo_warnings), 0)
+
+    def test_lammps_internal_variables_not_flagged(self):
+        """${NSTEPS} and similar LAMMPS internal refs should NOT be flagged."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            velocity        all create ${TEMP} 12345
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000]},
+            traj_freq=self.traj_freq,
+        )
+        # ${TEMP} is LAMMPS syntax, not a dpgen revision variable — should not raise
+        task_group.make_task()
+        self.assertEqual(len(task_group), 1)

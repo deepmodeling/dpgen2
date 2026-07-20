@@ -1,11 +1,14 @@
 import itertools
 import random
+import re
+import warnings
 from pathlib import (
     Path,
 )
 from typing import (
     List,
     Optional,
+    Set,
 )
 
 from dpgen2.constants import (
@@ -101,6 +104,28 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         if self.plm_set:
             templates.append(self.plm_template)
         conts = self.make_cont(templates, self.revisions)
+        # Validate: check for unreplaced V_* variables in substituted templates
+        if self.revisions:
+            template_raw = "\n".join(self.lmp_template)
+            if self.plm_set:
+                template_raw += "\n" + "\n".join(self.plm_template)
+            check_revisions_completeness(
+                conts[0],
+                list(self.revisions.keys()),
+                template_raw=template_raw,
+            )
+        else:
+            # Even without revisions, check if template has V_* that need substitution
+            combined = "\n".join(self.lmp_template)
+            if self.plm_set:
+                combined += "\n" + "\n".join(self.plm_template)
+            unreplaced = find_unreplaced_variables(combined)
+            if unreplaced:
+                raise ValueError(
+                    f"LAMMPS template contains revision variable(s) {sorted(unreplaced)} "
+                    f"but no 'revisions' dict was provided. "
+                    f"Please define them in 'revisions' in your exploration config."
+                )
         nconts = len(conts[0])
         for cc, ii in itertools.product(confs, range(nconts)):  # type: ignore
             if not self.plm_set:
@@ -218,3 +243,77 @@ def revise_by_keys(lmp_lines, keys, values):
         for ii in range(len(lmp_lines)):
             lmp_lines[ii] = lmp_lines[ii].replace(kk, str(vv))
     return lmp_lines
+
+
+# Regex pattern for dpgen-style revision placeholders: V_ followed by uppercase letters/digits/underscores.
+# This matches the universal convention in dpgen v1/v2 (all tests, docs, and examples use V_XXX).
+_REVISION_VARIABLE_PATTERN = re.compile(r"(?<![A-Za-z0-9_])V_[A-Z][A-Z0-9_]*(?![A-Za-z0-9_])")
+
+
+def find_unreplaced_variables(content: str) -> Set[str]:
+    """Scan text for remaining V_* revision placeholders that were not substituted.
+
+    Parameters
+    ----------
+    content : str
+        The LAMMPS input content after revision substitution.
+
+    Returns
+    -------
+    Set[str]
+        Set of variable names (e.g. {"V_PRESS", "V_UNDEFINED"}) still present.
+    """
+    return set(_REVISION_VARIABLE_PATTERN.findall(content))
+
+
+def check_revisions_completeness(
+    templates_content: List[str],
+    revision_keys: List[str],
+    template_raw: str = "",
+) -> None:
+    """Validate that all V_* placeholders in the template have been substituted.
+
+    This function performs two checks:
+    1. **Post-substitution residual check**: After applying revisions, scan the output
+       for any remaining V_* variables that were not replaced. This catches typos in
+       template variables or missing keys in revisions.
+    2. **Unused key warning**: If a revision key is defined but never appears in the
+       raw template, emit a warning (possible typo in the key name).
+
+    Parameters
+    ----------
+    templates_content : List[str]
+        List of template strings after revision substitution (one per revision combo).
+    revision_keys : List[str]
+        The keys defined in the revisions dict.
+    template_raw : str
+        The raw template content before substitution (for unused key detection).
+
+    Raises
+    ------
+    ValueError
+        If unreplaced V_* variables are found in substituted templates.
+    """
+    # Check 1: Residual unreplaced variables
+    all_unreplaced: Set[str] = set()
+    for content in templates_content:
+        all_unreplaced.update(find_unreplaced_variables(content))
+
+    if all_unreplaced:
+        raise ValueError(
+            f"LAMMPS template contains undefined revision variable(s): "
+            f"{sorted(all_unreplaced)}. "
+            f"Defined revisions: {sorted(revision_keys)}. "
+            f"Please add missing variables to 'revisions' in your exploration config, "
+            f"or remove them from the template."
+        )
+
+    # Check 2: Unused revision keys (warning only)
+    if template_raw and revision_keys:
+        for key in revision_keys:
+            if key not in template_raw:
+                warnings.warn(
+                    f"Revision key '{key}' is defined but does not appear in the "
+                    f"LAMMPS/PLUMED template. Possible typo?",
+                    stacklevel=3,
+                )
