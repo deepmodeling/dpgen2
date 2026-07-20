@@ -577,3 +577,43 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         # ${TEMP} is LAMMPS syntax, not a dpgen revision variable — should not raise
         task_group.make_task()
         self.assertEqual(len(task_group), 1)
+
+    def test_plumed_template_undefined_variable_raises(self):
+        """V_* in PLUMED template but not in revisions should also be caught."""
+        lmp_template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+            variable        TEMP            equal V_TEMP
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            fix             dpgen_plm
+            run             ${NSTEPS}
+            """
+        )
+        plm_template = textwrap.dedent(
+            """\
+            DISTANCE ATOMS=3,5 LABEL=d1
+            RESTRAINT ARG=d1 AT=V_DIST0 KAPPA=150.0 LABEL=restraint
+            """
+        )
+        self._write_template(lmp_template)
+        plm_fname = Path("plm_precheck.template")
+        plm_fname.write_text(plm_template)
+        try:
+            task_group = LmpTemplateTaskGroup()
+            task_group.set_conf(self.confs)
+            task_group.set_lmp(
+                self.numb_models,
+                self.lmp_template_fname,
+                plm_template_fname=str(plm_fname),
+                # V_DIST0 is used in PLUMED template but NOT defined here
+                revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
+                traj_freq=self.traj_freq,
+            )
+            with self.assertRaises(ValueError) as ctx:
+                task_group.make_task()
+            self.assertIn("V_DIST0", str(ctx.exception))
+        finally:
+            plm_fname.unlink(missing_ok=True)

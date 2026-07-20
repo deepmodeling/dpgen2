@@ -109,8 +109,10 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             template_raw = "\n".join(self.lmp_template)
             if self.plm_set:
                 template_raw += "\n" + "\n".join(self.plm_template)
+            # Flatten all template variants (LAMMPS + PLUMED) for validation
+            all_conts = [c for c_list in conts for c in c_list]
             check_revisions_completeness(
-                conts[0],
+                all_conts,
                 list(self.revisions.keys()),
                 template_raw=template_raw,
             )
