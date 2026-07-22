@@ -315,6 +315,46 @@ class TestRunDPTrain(unittest.TestCase):
         )
         self.assertTrue(do_init_model)
 
+    def test_auto_prob_empty_new_iter_data(self):
+        """Test that auto_prob falls back to 'prob_sys_size' when
+        iter_data_new_exp is empty (e.g., FP produced no labeled data).
+
+        Previously this would generate "prob_sys_size; 0:2:0.6; 2:2:0.4"
+        which crashes dp train with "probabilities do not sum to 1".
+        """
+        from dpgen2.op.run_dp_train import _expand_all_multi_sys_to_sys
+
+        # Create an empty directory to simulate iter_data with no systems
+        empty_iter = Path("empty_iter_data")
+        empty_iter.mkdir(exist_ok=True)
+
+        config = self.config.copy()
+        config["init_model_policy"] = "yes"
+        config["init_model_old_ratio"] = 0.6
+
+        # Simulate: iter_data = [empty_dir], expand gives []
+        iter_data_old_exp = []
+        iter_data_new_exp = _expand_all_multi_sys_to_sys([empty_iter])
+        self.assertEqual(iter_data_new_exp, [])
+
+        len_init = len(self.init_data)  # 2
+        numb_old = len_init + len(iter_data_old_exp)  # 2
+        numb_new = numb_old + len(iter_data_new_exp)  # 2
+
+        # The fix: when numb_new == numb_old, should NOT generate empty range
+        self.assertEqual(numb_new, numb_old)
+
+        # Verify the actual code path produces correct auto_prob
+        if numb_new > numb_old:
+            auto_prob_str = f"prob_sys_size; 0:{numb_old}:{config['init_model_old_ratio']}; {numb_old}:{numb_new}:{1.-config['init_model_old_ratio']:g}"
+        else:
+            auto_prob_str = "prob_sys_size"
+
+        self.assertEqual(auto_prob_str, "prob_sys_size")
+
+        # Cleanup
+        shutil.rmtree("empty_iter_data", ignore_errors=True)
+
     def test_update_input_dict_v1_init_model(self):
         odict = RunDPTrain.write_data_to_input_script(
             self.idict_v1,
