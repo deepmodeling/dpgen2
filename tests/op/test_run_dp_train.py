@@ -322,7 +322,9 @@ class TestRunDPTrain(unittest.TestCase):
         Previously this would generate "prob_sys_size; 0:2:0.6; 2:2:0.4"
         which crashes dp train with "probabilities do not sum to 1".
         """
-        from dpgen2.op.run_dp_train import _expand_all_multi_sys_to_sys
+        from dpgen2.op.run_dp_train import (
+            _expand_all_multi_sys_to_sys,
+        )
 
         # Create an empty directory to simulate iter_data with no systems
         empty_iter = Path("empty_iter_data")
