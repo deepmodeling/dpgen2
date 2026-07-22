@@ -117,16 +117,20 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
                 template_raw=template_raw,
             )
         else:
-            # Even without revisions, check if template has V_* that need substitution
+            # Warn (but don't error) if template has V_* but no revisions provided.
+            # This can be legitimate for customized-lmp-template workflows or tests.
             combined = "\n".join(self.lmp_template)
             if self.plm_set:
                 combined += "\n" + "\n".join(self.plm_template)
             unreplaced = find_unreplaced_variables(combined)
             if unreplaced:
-                raise ValueError(
+                warnings.warn(
                     f"LAMMPS template contains revision variable(s) {sorted(unreplaced)} "
                     f"but no 'revisions' dict was provided. "
-                    f"Please define them in 'revisions' in your exploration config."
+                    f"These variables will NOT be substituted. "
+                    f"If this is unintentional, add them to 'revisions' in your "
+                    f"exploration config.",
+                    stacklevel=2,
                 )
         nconts = len(conts[0])
         for cc, ii in itertools.product(confs, range(nconts)):  # type: ignore

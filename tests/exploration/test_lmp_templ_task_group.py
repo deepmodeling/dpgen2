@@ -388,7 +388,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             idx += 1
 
     def test_lmp_empty(self):
-        """Empty revisions with template containing V_* should now raise ValueError."""
+        """Empty revisions with template containing V_* should warn but succeed."""
         task_group = LmpTemplateTaskGroup()
         task_group.set_conf(self.confs)
         task_group.set_lmp(
@@ -397,10 +397,16 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             revisions=self.rev_empty,
             traj_freq=self.traj_freq,
         )
-        with self.assertRaises(ValueError) as ctx:
+        import warnings as _warnings
+
+        with _warnings.catch_warnings(record=True) as w:
+            _warnings.simplefilter("always")
             task_group.make_task()
-        self.assertIn("V_NSTEPS", str(ctx.exception))
-        self.assertIn("V_TEMP", str(ctx.exception))
+            var_warnings = [x for x in w if "V_NSTEPS" in str(x.message)]
+            self.assertGreater(len(var_warnings), 0)
+        # Should still produce tasks
+        ngroup = len(task_group)
+        self.assertEqual(ngroup, len(self.confs))
 
     def test_lmp_pimd(self):
         task_group = LmpTemplateTaskGroup()
@@ -470,7 +476,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         self.assertIn("undefined revision variable", str(ctx.exception).lower())
 
     def test_no_revisions_but_template_has_variables(self):
-        """Template has V_* variables but no revisions provided at all."""
+        """Template has V_* variables but no revisions — should warn, not error."""
         template = textwrap.dedent(
             """\
             variable        NSTEPS          equal V_NSTEPS
@@ -491,10 +497,15 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             revisions={},
             traj_freq=self.traj_freq,
         )
-        with self.assertRaises(ValueError) as ctx:
+        import warnings as _warnings
+
+        with _warnings.catch_warnings(record=True) as w:
+            _warnings.simplefilter("always")
             task_group.make_task()
-        self.assertIn("V_NSTEPS", str(ctx.exception))
-        self.assertIn("V_TEMP", str(ctx.exception))
+            var_warnings = [x for x in w if "V_NSTEPS" in str(x.message)]
+            self.assertGreater(len(var_warnings), 0)
+        # Should still succeed
+        self.assertEqual(len(task_group), 1)
 
     def test_all_variables_defined_no_error(self):
         """All V_* variables are covered by revisions — should succeed."""
