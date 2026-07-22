@@ -53,3 +53,4 @@ tests/init_data/
 tests/incar
 tests/potcar
 tests/tmp*
+upload/
