@@ -258,8 +258,29 @@ _REVISION_VARIABLE_PATTERN = re.compile(
 )
 
 
+def _strip_lammps_comments(content: str) -> str:
+    """Remove LAMMPS-style comments (# to end of line) to avoid false positives.
+
+    This prevents V_* patterns in comments (e.g., "# set V_PRESS later")
+    from being flagged as unreplaced variables.
+    """
+    lines = content.split("\n")
+    stripped = []
+    for line in lines:
+        # LAMMPS comments start with # (not inside quotes for our purposes)
+        idx = line.find("#")
+        if idx >= 0:
+            stripped.append(line[:idx])
+        else:
+            stripped.append(line)
+    return "\n".join(stripped)
+
+
 def find_unreplaced_variables(content: str) -> Set[str]:
     """Scan text for remaining V_* revision placeholders that were not substituted.
+
+    Strips LAMMPS comments before scanning to avoid false positives from
+    commented-out variable references.
 
     Parameters
     ----------
@@ -271,7 +292,8 @@ def find_unreplaced_variables(content: str) -> Set[str]:
     Set[str]
         Set of variable names (e.g. {"V_PRESS", "V_UNDEFINED"}) still present.
     """
-    return set(_REVISION_VARIABLE_PATTERN.findall(content))
+    stripped = _strip_lammps_comments(content)
+    return set(_REVISION_VARIABLE_PATTERN.findall(stripped))
 
 
 def check_revisions_completeness(

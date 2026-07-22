@@ -628,3 +628,30 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.assertIn("V_DIST0", str(ctx.exception))
         finally:
             plm_fname.unlink(missing_ok=True)
+
+    def test_commented_variables_not_flagged(self):
+        """V_* in LAMMPS comments should NOT trigger errors."""
+        template = textwrap.dedent(
+            """\
+            variable        NSTEPS          equal V_NSTEPS
+            # TODO: add V_PRESS support later
+            # variable      PRESS           equal V_PRESS
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             ${NSTEPS}
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000]},
+            traj_freq=self.traj_freq,
+        )
+        # V_PRESS is only in comments — should NOT raise
+        task_group.make_task()
+        self.assertEqual(len(task_group), 1)
