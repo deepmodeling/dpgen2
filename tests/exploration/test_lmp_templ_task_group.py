@@ -410,7 +410,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             idx += 1
 
     def test_lmp_empty(self):
-        """Empty revisions with template containing V_* should warn but succeed."""
+        """Non-strict empty revisions should warn but succeed."""
         task_group = LmpTemplateTaskGroup()
         task_group.set_conf(self.confs)
         task_group.set_lmp(
@@ -418,6 +418,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             self.lmp_template_fname,
             revisions=self.rev_empty,
             traj_freq=self.traj_freq,
+            strict_revisions=False,
         )
         import warnings as _warnings
 
@@ -497,8 +498,8 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         self.assertIn("V_PRESS", str(ctx.exception))
         self.assertIn("undefined revision variable", str(ctx.exception).lower())
 
-    def test_no_revisions_but_template_has_variables(self):
-        """Template has V_* variables but no revisions — should warn, not error."""
+    def test_no_revisions_strict_mode_raises(self):
+        """Strict mode rejects V_* variables when no revisions are provided."""
         template = textwrap.dedent(
             """\
             variable        NSTEPS          equal V_NSTEPS
@@ -519,15 +520,9 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             revisions={},
             traj_freq=self.traj_freq,
         )
-        import warnings as _warnings
 
-        with _warnings.catch_warnings(record=True) as w:
-            _warnings.simplefilter("always")
+        with self.assertRaisesRegex(FatalError, "V_NSTEPS"):
             task_group.make_task()
-            var_warnings = [x for x in w if "V_NSTEPS" in str(x.message)]
-            self.assertGreater(len(var_warnings), 0)
-        # Should still succeed
-        self.assertEqual(len(task_group), 1)
 
     def test_all_variables_defined_no_error(self):
         """All V_* variables are covered by revisions — should succeed."""

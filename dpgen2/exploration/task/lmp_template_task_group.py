@@ -111,37 +111,20 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             templates.append(self.plm_template)
         conts = self.make_cont(templates, self.revisions)
         # Validate: check for unreplaced V_* variables in substituted templates
-        if self.revisions:
-            template_raw = "\n".join(self.lmp_template)
-            if self.plm_set:
-                template_raw += "\n" + "\n".join(self.plm_template)
-            # Flatten all template variants (LAMMPS + PLUMED) for validation
-            all_conts = [c for c_list in conts for c in c_list]
-            try:
-                check_revisions_completeness(
-                    all_conts,
-                    list(self.revisions.keys()),
-                    template_raw=template_raw,
-                    strict=self.strict_revisions,
-                )
-            except ValueError as exc:
-                raise FatalError(str(exc)) from exc
-        else:
-            # Warn (but don't error) if template has V_* but no revisions provided.
-            # This can be legitimate for customized-lmp-template workflows or tests.
-            combined = "\n".join(self.lmp_template)
-            if self.plm_set:
-                combined += "\n" + "\n".join(self.plm_template)
-            unreplaced = find_unreplaced_variables(combined)
-            if unreplaced:
-                warnings.warn(
-                    f"LAMMPS template contains revision variable(s) {sorted(unreplaced)} "
-                    f"but no 'revisions' dict was provided. "
-                    f"These variables will NOT be substituted. "
-                    f"If this is unintentional, add them to 'revisions' in your "
-                    f"exploration config.",
-                    stacklevel=2,
-                )
+        template_raw = "\n".join(self.lmp_template)
+        if self.plm_set:
+            template_raw += "\n" + "\n".join(self.plm_template)
+        # Flatten all template variants (LAMMPS + PLUMED) for validation
+        all_conts = [c for c_list in conts for c in c_list]
+        try:
+            check_revisions_completeness(
+                all_conts,
+                list(self.revisions.keys()),
+                template_raw=template_raw,
+                strict=self.strict_revisions,
+            )
+        except ValueError as exc:
+            raise FatalError(str(exc)) from exc
         nconts = len(conts[0])
         for cc, ii in itertools.product(confs, range(nconts)):  # type: ignore
             if not self.plm_set:
