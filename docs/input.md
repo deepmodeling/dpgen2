@@ -106,6 +106,7 @@ This section defines how the configuration space is explored.
 		    "type" : "lmp-template",
 		    "lmp" : "template.lammps", "plm" : "template.plumed",
 		    "trj_freq" : 10, "revisions" : {"V_NSTEPS" : [40], "V_TEMP" : [150, 200]},
+		    "strict_revisions": true,
 		    "conf_idx": [0], "n_sample" : 3
 		}
 	    ],
@@ -120,6 +121,14 @@ This section defines how the configuration space is explored.
 	]
 }
 ```
+
+For an `"lmp-template"` task group, `revisions` keys are replaced as complete
+tokens in both LAMMPS and PLUMED templates. By default, `strict_revisions` is
+`true`: any standalone `V_*` token not listed in `revisions` stops task
+generation before submission. Set `strict_revisions` to `false` only when a
+template intentionally uses `V_*` as a native LAMMPS or PLUMED identifier; the
+unknown tokens are then preserved and reported as warnings.
+
 The {dargs:argument}`"type" : "lmp"<explore>` means that configurations are explored by LAMMPS DPMD runs.
 The {dargs:argument}`"config"<explore[lmp]/config>` key defines the lmp configs.
 The {dargs:argument}`"configurations"<explore[lmp]/configurations>` provides the initial configurations (coordinates of atoms and the simulation cell) of the DPMD simulations. It is a list. The elements of the list are `dict`s that defines how the configurations are generated

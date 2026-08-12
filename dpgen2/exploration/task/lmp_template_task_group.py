@@ -264,8 +264,9 @@ def revise_by_keys(lmp_lines, keys, values):
     return lmp_lines
 
 
-# Regex pattern for dpgen-style revision placeholders: V_ followed by uppercase letters/digits/underscores.
-# This matches the universal convention in dpgen v1/v2 (all tests, docs, and examples use V_XXX).
+# DPGEN and DPGEN2 templates conventionally use standalone V_* tokens for
+# revisions. Native LAMMPS or PLUMED identifiers may use the same spelling;
+# strict_revisions controls whether unexpected tokens are errors or warnings.
 _REVISION_VARIABLE_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_])V_[A-Z][A-Z0-9_]*(?![A-Za-z0-9_])"
 )
@@ -305,7 +306,7 @@ def _strip_lammps_comments(content: str) -> str:
 
 
 def find_unreplaced_variables(content: str) -> Set[str]:
-    """Scan text for remaining V_* revision placeholders that were not substituted.
+    """Scan text for standalone V_* tokens that may be unreplaced revisions.
 
     Strips LAMMPS comments before scanning to avoid false positives from
     commented-out variable references.
@@ -329,6 +330,7 @@ def report_undefined_revision_variables(
     revision_keys: List[str],
     strict: bool,
 ) -> None:
+    """Raise for undefined tokens in strict mode, otherwise emit a warning."""
     if not variables:
         return
     message = (
@@ -370,11 +372,20 @@ def check_revisions_completeness(
         The keys defined in the revisions dict.
     template_raw : str
         The raw template content before substitution (for unused key detection).
+    strict : bool
+        If true, undefined V_* tokens are errors. If false, warn and continue
+        so templates may use V_* as native LAMMPS or PLUMED identifiers.
 
     Raises
     ------
     ValueError
-        If unreplaced V_* variables are found in substituted templates.
+        If undefined V_* tokens are found and strict is true.
+
+    Warns
+    -----
+    UserWarning
+        If undefined V_* tokens are found and strict is false, or if a
+        revision key is unused.
     """
     revision_key_set = set(revision_keys)
 
