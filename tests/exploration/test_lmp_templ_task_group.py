@@ -348,6 +348,19 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
             )
             idx += 1
 
+    def test_set_lmp_preserves_positional_traj_freq(self):
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            None,
+            self.lmp_rev_mat,
+            self.traj_freq,
+        )
+
+        self.assertEqual(task_group.traj_freq, self.traj_freq)
+        self.assertTrue(task_group.strict_revisions)
+
     def test_lmp_plm(self):
         task_group = LmpTemplateTaskGroup()
         task_group.set_conf(self.confs)

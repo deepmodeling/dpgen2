@@ -52,11 +52,11 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         lmp_template_fname: str,
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
-        strict_revisions: bool = True,
         traj_freq: int = 10,
         extra_pair_style_args: str = "",
         pimd_bead: Optional[str] = None,
         input_extra_files: Optional[List[str]] = None,
+        strict_revisions: bool = True,
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
