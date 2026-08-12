@@ -33,6 +33,10 @@ from dpgen2.exploration.task import (
     ExplorationStage,
     LmpTemplateTaskGroup,
 )
+from dpgen2.exploration.task.lmp_template_task_group import (
+    find_unreplaced_variables,
+    revise_by_keys,
+)
 
 in_lmp_template = textwrap.dedent(
     """variable        NSTEPS          equal V_NSTEPS
@@ -655,3 +659,46 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         # V_PRESS is only in comments — should NOT raise
         task_group.make_task()
         self.assertEqual(len(task_group), 1)
+
+    def test_undefined_longer_placeholder_raises_before_substitution(self):
+        """A defined prefix must not erase a longer undefined placeholder."""
+        template = textwrap.dedent(
+            """\
+            variable        TEMP            equal V_TEMPERATURE
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            run             1
+            """
+        )
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_TEMP": [300]},
+            traj_freq=self.traj_freq,
+        )
+        with self.assertRaisesRegex(ValueError, "V_TEMPERATURE"):
+            task_group.make_task()
+
+    def test_overlapping_defined_placeholders_are_replaced_as_tokens(self):
+        lines = ["print V_TEMP V_TEMPERATURE"]
+        revised = revise_by_keys(lines, ["V_TEMP", "V_TEMPERATURE"], [300, 450])
+        self.assertEqual(revised, ["print 300 450"])
+
+    def test_quoted_hashes_preserve_revision_placeholders(self):
+        content = textwrap.dedent(
+            r"""\
+            print "# target V_MISSING"
+            print 'hash # target V_OTHER'
+            print "escaped \"# target V_ESCAPED"
+            # V_COMMENT_ONLY
+            """
+        )
+        self.assertEqual(
+            find_unreplaced_variables(content),
+            {"V_MISSING", "V_OTHER", "V_ESCAPED"},
+        )

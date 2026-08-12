@@ -229,9 +229,9 @@ def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None):
     lmp_traj_file_name = (
         lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
     )
-    lmp_lines[
-        idx
-    ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    lmp_lines[idx] = (
+        f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    )
     return lmp_lines
 
 
@@ -245,9 +245,12 @@ def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
 
 
 def revise_by_keys(lmp_lines, keys, values):
+    """Replace complete revision tokens without matching identifier prefixes."""
     for kk, vv in zip(keys, values):  # type: ignore
+        replacement = str(vv)
+        pattern = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(kk)}(?![A-Za-z0-9_])")
         for ii in range(len(lmp_lines)):
-            lmp_lines[ii] = lmp_lines[ii].replace(kk, str(vv))
+            lmp_lines[ii] = pattern.sub(lambda _match: replacement, lmp_lines[ii])
     return lmp_lines
 
 
@@ -259,20 +262,35 @@ _REVISION_VARIABLE_PATTERN = re.compile(
 
 
 def _strip_lammps_comments(content: str) -> str:
-    """Remove LAMMPS-style comments (# to end of line) to avoid false positives.
+    """Remove unquoted LAMMPS comments while preserving quoted hash characters.
 
     This prevents V_* patterns in comments (e.g., "# set V_PRESS later")
-    from being flagged as unreplaced variables.
+    from being flagged as unreplaced variables without hiding executable
+    placeholders inside single- or double-quoted strings.
     """
-    lines = content.split("\n")
-    stripped = []
-    for line in lines:
-        # LAMMPS comments start with # (not inside quotes for our purposes)
-        idx = line.find("#")
-        if idx >= 0:
-            stripped.append(line[:idx])
-        else:
-            stripped.append(line)
+    stripped: List[str] = []
+    for line in content.split("\n"):
+        quote: Optional[str] = None
+        escaped = False
+        kept: List[str] = []
+        for char in line:
+            if escaped:
+                kept.append(char)
+                escaped = False
+            elif char == "\\" and quote is not None:
+                kept.append(char)
+                escaped = True
+            elif char in ("'", '"'):
+                if quote == char:
+                    quote = None
+                elif quote is None:
+                    quote = char
+                kept.append(char)
+            elif char == "#" and quote is None:
+                break
+            else:
+                kept.append(char)
+        stripped.append("".join(kept))
     return "\n".join(stripped)
 
 
@@ -303,11 +321,13 @@ def check_revisions_completeness(
 ) -> None:
     """Validate that all V_* placeholders in the template have been substituted.
 
-    This function performs two checks:
-    1. **Post-substitution residual check**: After applying revisions, scan the output
+    This function performs three checks:
+    1. **Raw-template definition check**: Compare complete placeholder tokens with
+       the revision keys before applying substitutions.
+    2. **Post-substitution residual check**: After applying revisions, scan the output
        for any remaining V_* variables that were not replaced. This catches typos in
        template variables or missing keys in revisions.
-    2. **Unused key warning**: If a revision key is defined but never appears in the
+    3. **Unused key warning**: If a revision key is defined but never appears in the
        raw template, emit a warning (possible typo in the key name).
 
     Parameters
@@ -324,7 +344,21 @@ def check_revisions_completeness(
     ValueError
         If unreplaced V_* variables are found in substituted templates.
     """
-    # Check 1: Residual unreplaced variables
+    revision_key_set = set(revision_keys)
+
+    # Check 1: Compare raw tokens before substitution so a shorter defined key
+    # cannot erase the prefix of a longer undefined placeholder.
+    raw_variables = find_unreplaced_variables(template_raw) if template_raw else set()
+    undefined_raw = raw_variables - revision_key_set
+    if undefined_raw:
+        raise ValueError(
+            f"LAMMPS template contains undefined revision variable(s): "
+            f"{sorted(undefined_raw)}. Defined revisions: {sorted(revision_keys)}. "
+            f"Please add missing variables to 'revisions' in your exploration config, "
+            f"or remove them from the template."
+        )
+
+    # Check 2: Residual unreplaced variables
     all_unreplaced: Set[str] = set()
     for content in templates_content:
         all_unreplaced.update(find_unreplaced_variables(content))
@@ -338,7 +372,7 @@ def check_revisions_completeness(
             f"or remove them from the template."
         )
 
-    # Check 2: Unused revision keys (warning only)
+    # Check 3: Unused revision keys (warning only)
     if template_raw and revision_keys:
         for key in revision_keys:
             if key not in template_raw:
