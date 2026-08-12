@@ -236,22 +236,22 @@ class RunDPTrain(OP):
                 len_init = len(init_data)
             numb_old = len_init + len(iter_data_old_exp)
             numb_new = numb_old + len(iter_data_new_exp)
-            if numb_new > numb_old:
-                auto_prob_str = f"prob_sys_size; 0:{numb_old}:{old_ratio}; {numb_old}:{numb_new}:{1.-old_ratio:g}"
+            if numb_old > 0 and numb_new > numb_old:
+                auto_prob_str = f"prob_sys_size; 0:{numb_old}:{old_ratio}; {numb_old}:{numb_new}:{1.0 - old_ratio:g}"
             else:
-                # No new systems from the latest iteration.
-                # This can happen when FP labeling fails on all conformations
-                # and continue_on_success_ratio allows the workflow to proceed.
+                # Both weighted ranges must be non-empty. Either the workflow has
+                # no old data yet, or the latest iteration produced no new data.
                 # Fall back to uniform prob_sys_size to avoid generating an
-                # empty range (e.g. "0:2:0.6; 2:2:0.4") that crashes with
+                # empty range (e.g. "0:0:0.6" or "2:2:0.4") that crashes with
                 # "ValueError: probabilities do not sum to 1".
                 auto_prob_str = "prob_sys_size"
                 logging.warning(
-                    "No new systems from the latest iteration "
-                    "(iter_data_new_exp is empty, numb_old == numb_new == %d). "
+                    "Cannot build two non-empty auto_prob ranges "
+                    "(numb_old=%d, numb_new=%d). "
                     "Falling back to auto_prob='prob_sys_size'. "
-                    "Training will proceed with init_data + old iter_data only.",
+                    "Training will proceed with all available data.",
                     numb_old,
+                    numb_new,
                 )
 
         # update the input dict
