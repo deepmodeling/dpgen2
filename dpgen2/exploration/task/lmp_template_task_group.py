@@ -375,7 +375,7 @@ def check_revisions_completeness(
     # Check 3: Unused revision keys (warning only)
     if template_raw and revision_keys:
         for key in revision_keys:
-            if key not in template_raw:
+            if key not in raw_variables:
                 warnings.warn(
                     f"Revision key '{key}' is defined but does not appear in the "
                     f"LAMMPS/PLUMED template. Possible typo?",

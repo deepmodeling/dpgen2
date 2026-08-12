@@ -34,6 +34,7 @@ from dpgen2.exploration.task import (
     LmpTemplateTaskGroup,
 )
 from dpgen2.exploration.task.lmp_template_task_group import (
+    check_revisions_completeness,
     find_unreplaced_variables,
     revise_by_keys,
 )
@@ -702,3 +703,12 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             find_unreplaced_variables(content),
             {"V_MISSING", "V_OTHER", "V_ESCAPED"},
         )
+
+    def test_unused_revision_key_uses_complete_comment_aware_tokens(self):
+        template = "print V_TEMPERATURE # V_TEMP"
+        with self.assertWarnsRegex(UserWarning, "Revision key 'V_TEMP'"):
+            check_revisions_completeness(
+                templates_content=["print 450"],
+                revision_keys=["V_TEMP", "V_TEMPERATURE"],
+                template_raw=template,
+            )
