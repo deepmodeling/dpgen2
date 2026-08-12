@@ -572,8 +572,8 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             typo_warnings = [x for x in w if "V_TYPO" in str(x.message)]
             self.assertGreater(len(typo_warnings), 0)
 
-    def test_lammps_internal_variables_not_flagged(self):
-        """${NSTEPS} and similar LAMMPS internal refs should NOT be flagged."""
+    def test_lammps_variables_without_revision_prefix_are_not_flagged(self):
+        """LAMMPS references without the reserved V_* prefix remain untouched."""
         template = textwrap.dedent(
             """\
             variable        NSTEPS          equal V_NSTEPS
@@ -597,6 +597,32 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         # ${TEMP} is LAMMPS syntax, not a dpgen revision variable — should not raise
         task_group.make_task()
         self.assertEqual(len(task_group), 1)
+
+    def test_v_prefixed_lammps_identifier_is_reserved_in_strict_mode(self):
+        """Strict validation treats standalone V_* tokens as DPGEN revisions."""
+        template = textwrap.dedent(
+            f"""
+            variable        NSTEPS          equal V_NSTEPS
+            variable        V_MAX           equal 3.0
+
+            pair_style      deepmd
+            pair_coeff      * *
+            dump            dpgen_dump
+            velocity        all create {chr(36)}{{V_MAX}} 12345
+            run             {chr(36)}{{NSTEPS}}
+            """
+        ).lstrip()
+        self._write_template(template)
+        task_group = LmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000]},
+            traj_freq=self.traj_freq,
+        )
+        with self.assertRaisesRegex(FatalError, "V_MAX"):
+            task_group.make_task()
 
     def test_plumed_template_undefined_variable_raises(self):
         """V_* in PLUMED template but not in revisions should also be caught."""
