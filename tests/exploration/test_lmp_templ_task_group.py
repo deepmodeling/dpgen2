@@ -24,6 +24,10 @@ from unittest.mock import (
     patch,
 )
 
+from dflow.python import (
+    FatalError,
+)
+
 from dpgen2.constants import (
     lmp_conf_name,
     lmp_input_name,
@@ -475,7 +479,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
             traj_freq=self.traj_freq,
         )
-        with self.assertRaises(ValueError) as ctx:
+        with self.assertRaises(FatalError) as ctx:
             task_group.make_task()
         self.assertIn("V_PRESS", str(ctx.exception))
         self.assertIn("undefined revision variable", str(ctx.exception).lower())
@@ -628,7 +632,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
                 revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
                 traj_freq=self.traj_freq,
             )
-            with self.assertRaises(ValueError) as ctx:
+            with self.assertRaises(FatalError) as ctx:
                 task_group.make_task()
             self.assertIn("V_DIST0", str(ctx.exception))
         finally:
@@ -682,7 +686,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             revisions={"V_TEMP": [300]},
             traj_freq=self.traj_freq,
         )
-        with self.assertRaisesRegex(ValueError, "V_TEMPERATURE"):
+        with self.assertRaisesRegex(FatalError, "V_TEMPERATURE"):
             task_group.make_task()
 
     def test_overlapping_defined_placeholders_are_replaced_as_tokens(self):
