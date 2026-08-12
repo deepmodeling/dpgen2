@@ -624,6 +624,17 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         with self.assertRaisesRegex(FatalError, "V_MAX"):
             task_group.make_task()
 
+        task_group.set_lmp(
+            self.numb_models,
+            self.lmp_template_fname,
+            revisions={"V_NSTEPS": [1000]},
+            strict_revisions=False,
+            traj_freq=self.traj_freq,
+        )
+        with self.assertWarnsRegex(UserWarning, "V_MAX"):
+            task_group.make_task()
+        self.assertEqual(len(task_group), 1)
+
     def test_plumed_template_undefined_variable_raises(self):
         """V_* in PLUMED template but not in revisions should also be caught."""
         lmp_template = textwrap.dedent(

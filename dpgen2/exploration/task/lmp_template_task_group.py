@@ -52,6 +52,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         lmp_template_fname: str,
         plm_template_fname: Optional[str] = None,
         revisions: dict = {},
+        strict_revisions: bool = True,
         traj_freq: int = 10,
         extra_pair_style_args: str = "",
         pimd_bead: Optional[str] = None,
@@ -59,6 +60,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
+        self.strict_revisions = strict_revisions
         self.traj_freq = traj_freq
         self.extra_pair_style_args = extra_pair_style_args
         self.pimd_bead = pimd_bead
@@ -120,6 +122,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
                     all_conts,
                     list(self.revisions.keys()),
                     template_raw=template_raw,
+                    strict=self.strict_revisions,
                 )
             except ValueError as exc:
                 raise FatalError(str(exc)) from exc
@@ -321,10 +324,32 @@ def find_unreplaced_variables(content: str) -> Set[str]:
     return set(_REVISION_VARIABLE_PATTERN.findall(stripped))
 
 
+def report_undefined_revision_variables(
+    variables: Set[str],
+    revision_keys: List[str],
+    strict: bool,
+) -> None:
+    if not variables:
+        return
+    message = (
+        f"LAMMPS template contains undefined revision variable(s): "
+        f"{sorted(variables)}. Defined revisions: {sorted(revision_keys)}. "
+        f"Please add missing variables to 'revisions' in your exploration config, "
+        f"or remove them from the template."
+    )
+    if strict:
+        raise ValueError(message)
+    warnings.warn(
+        message + " Continuing because strict revision validation is disabled.",
+        stacklevel=3,
+    )
+
+
 def check_revisions_completeness(
     templates_content: List[str],
     revision_keys: List[str],
     template_raw: str = "",
+    strict: bool = True,
 ) -> None:
     """Validate that all V_* placeholders in the template have been substituted.
 
@@ -357,27 +382,22 @@ def check_revisions_completeness(
     # cannot erase the prefix of a longer undefined placeholder.
     raw_variables = find_unreplaced_variables(template_raw) if template_raw else set()
     undefined_raw = raw_variables - revision_key_set
-    if undefined_raw:
-        raise ValueError(
-            f"LAMMPS template contains undefined revision variable(s): "
-            f"{sorted(undefined_raw)}. Defined revisions: {sorted(revision_keys)}. "
-            f"Please add missing variables to 'revisions' in your exploration config, "
-            f"or remove them from the template."
-        )
+    report_undefined_revision_variables(
+        undefined_raw,
+        revision_keys,
+        strict=strict,
+    )
 
     # Check 2: Residual unreplaced variables
     all_unreplaced: Set[str] = set()
     for content in templates_content:
         all_unreplaced.update(find_unreplaced_variables(content))
 
-    if all_unreplaced:
-        raise ValueError(
-            f"LAMMPS template contains undefined revision variable(s): "
-            f"{sorted(all_unreplaced)}. "
-            f"Defined revisions: {sorted(revision_keys)}. "
-            f"Please add missing variables to 'revisions' in your exploration config, "
-            f"or remove them from the template."
-        )
+    report_undefined_revision_variables(
+        all_unreplaced - undefined_raw,
+        revision_keys,
+        strict=strict,
+    )
 
     # Check 3: Unused revision keys (warning only)
     if template_raw and revision_keys:
