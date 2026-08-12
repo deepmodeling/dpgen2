@@ -328,10 +328,13 @@ class TestRunDPTrain(unittest.TestCase):
         # Create an empty directory to simulate iter_data with no systems
         empty_iter = Path("empty_iter_data")
         empty_iter.mkdir(exist_ok=True)
+        self.addCleanup(shutil.rmtree, empty_iter, ignore_errors=True)
 
         # Create a task_path with input.json
         task_path = Path("input-auto-prob-test")
         task_path.mkdir(exist_ok=True)
+        self.addCleanup(shutil.rmtree, task_path, ignore_errors=True)
+        self.addCleanup(shutil.rmtree, Path("task-auto-prob"), ignore_errors=True)
         with open(task_path / train_script_name, "w") as fp:
             json.dump(self.idict_v2, fp, indent=4)
 
@@ -369,11 +372,6 @@ class TestRunDPTrain(unittest.TestCase):
         auto_prob = train_dict["training"]["training_data"]["auto_prob"]
         # Must be plain "prob_sys_size", NOT "prob_sys_size; 0:2:0.6; 2:2:0.4"
         self.assertEqual(auto_prob, "prob_sys_size")
-
-        # Cleanup
-        shutil.rmtree("empty_iter_data", ignore_errors=True)
-        shutil.rmtree("task-auto-prob", ignore_errors=True)
-        shutil.rmtree("input-auto-prob-test", ignore_errors=True)
 
     def test_auto_prob_empty_old_data(self):
         """The first labeled iteration falls back when no old data exists."""
