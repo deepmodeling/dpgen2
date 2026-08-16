@@ -70,6 +70,15 @@ class TestPlumedCVFilter(unittest.TestCase):
             )
             self.assertEqual(cv_filter.get_selected_ids([output], [3]), [[0, 2]])
 
+    def test_field_names_are_header_based_not_positional(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "COLVAR"
+            output.write_text(
+                "#! FIELDS time second_cv first_cv\n" "0.0 9.0 0.5\n" "1.0 0.5 9.0\n"
+            )
+            cv_filter = PlumedCVFilter(regions=[{"first_cv": [0.0, 1.0]}])
+            self.assertEqual(cv_filter.get_selected_ids([output], [2]), [[0]])
+
     def test_intervals_are_lower_inclusive_and_upper_exclusive(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "COLVAR"

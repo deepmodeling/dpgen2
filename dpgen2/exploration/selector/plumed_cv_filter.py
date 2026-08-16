@@ -22,10 +22,11 @@ from dflow.python import (
 class PlumedCVFilter:
     """Select frames in a union of PLUMED CV regions.
 
-    Each region maps field names from ``#! FIELDS`` to a lower-inclusive,
-    upper-exclusive interval. Fields within a region are ANDed; regions are
-    ORed. A region may use the legacy bare mapping or the named form
-    ``{"name": ..., "conditions": {...}}``.
+    Each region maps exact field labels from ``#! FIELDS`` to a
+    lower-inclusive, upper-exclusive interval. Labels are matched by name, not
+    column position, and are otherwise arbitrary. Fields within a region are
+    ANDed; regions are ORed. A region may use the legacy bare mapping or the
+    named form ``{"name": ..., "conditions": {...}}``.
     """
 
     @staticmethod
@@ -36,9 +37,11 @@ class PlumedCVFilter:
                 list,
                 optional=False,
                 doc=(
-                    "A list of PLUMED field-to-[lower, upper] mappings or named "
-                    "regions with name, conditions, and optional weight. Fields "
-                    "within a region are ANDed; regions are ORed."
+                    "A list of exact PLUMED FIELDS-label-to-[lower, upper] "
+                    "mappings or named regions with name, conditions, and "
+                    "optional weight. Labels are matched by name, not column "
+                    "position. Fields within a region are ANDed; regions are "
+                    "ORed."
                 ),
             ),
             Argument(
@@ -392,7 +395,9 @@ class PlumedCVFilter:
         max_devi_f: Optional[List[np.ndarray]],
         rng,
     ):
-        within_bin = self.sampling["within_bin"]
+        sampling = self.sampling
+        assert sampling is not None
+        within_bin = sampling["within_bin"]
         if within_bin == "max_deviation" and max_devi_f is None:
             raise FatalError("max_deviation sampling requires force model deviations")
 
@@ -414,7 +419,7 @@ class PlumedCVFilter:
         picked = []
         picked_set = set()
         rejected_by_gap = set()
-        grid_sizes = tuple(self.sampling["grid"].values())
+        grid_sizes = tuple(sampling["grid"].values())
         for region, quota in zip(buckets, region_quotas):
             available = {
                 cell: [item for item in items if item not in picked_set]
@@ -458,6 +463,8 @@ class PlumedCVFilter:
         picked,
         rejected_by_gap,
     ):
+        sampling = self.sampling
+        assert sampling is not None
         if count <= 0:
             return
         initially_picked = len(picked)
@@ -481,7 +488,7 @@ class PlumedCVFilter:
                     item[1],
                 ),
             )
-        min_frame_gap = self.sampling["min_frame_gap"]
+        min_frame_gap = sampling["min_frame_gap"]
         for candidate in ordered:
             if len(picked) - initially_picked >= count:
                 break
@@ -604,10 +611,12 @@ class PlumedCVFilter:
         return chosen
 
     def _cell_key(self, region_idx, fields, row):
+        sampling = self.sampling
+        assert sampling is not None
         field_idx = {field: idx for idx, field in enumerate(fields)}
         region = self.regions[region_idx]
         cell = []
-        for field, n_bins in self.sampling["grid"].items():
+        for field, n_bins in sampling["grid"].items():
             lower, upper = region[field]
             value = row[field_idx[field]]
             cell.append(

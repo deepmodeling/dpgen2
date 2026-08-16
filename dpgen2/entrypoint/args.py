@@ -216,9 +216,11 @@ def lmp_args():
     doc_cv_filter = (
         "Optional PLUMED CV candidate filter. A region may be a field-to-"
         "[lower, upper] mapping or a named conditions mapping; regions are "
-        "combined by OR. By default, one or two common CVs are covered uniformly. "
-        "Sampling also supports explicit random, uniform, grid, or report modes, "
-        "with optional frame spacing and time alignment."
+        "combined by OR. Field names are exact PLUMED FIELDS labels and are "
+        "matched independently of column order. By default, one or two common "
+        "CVs are covered uniformly. Sampling also supports explicit random, "
+        "uniform, grid, or report modes, with optional frame spacing and time "
+        "alignment."
     )
 
     return [

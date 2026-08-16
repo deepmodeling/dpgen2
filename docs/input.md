@@ -164,6 +164,49 @@ v: VORONOI_COORDINATION ...
 PRINT ARG=d,v STRIDE=10 FILE=COLVAR
 ```
 
+The condition keys are exact labels from `#! FIELDS`; DPGEN2 has no reserved
+CV names such as `iondistance` or `ionization`. Labels are matched by name, not
+by their column position, so reordering `PRINT ARG=d,v` to `PRINT ARG=v,d`
+does not change a correctly named filter. Semantic PLUMED labels are therefore
+safer than numeric column references.
+
+For a single CV, keep only that condition. Omitting `sampling` then selects
+uniformly across 10 equal-width bins by default:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "target_window",
+            "conditions": {"reaction_coordinate": [0.2, 2.0]}
+        }
+    ]
+}
+```
+
+Represent disjoint intervals as separate named regions. For example,
+`[0.2, 2.0)` and `[3.0, 4.0)` of the same CV are a union because regions are
+ORed:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "segment_1",
+            "conditions": {"reaction_coordinate": [0.2, 2.0]}
+        },
+        {
+            "name": "segment_2",
+            "conditions": {"reaction_coordinate": [3.0, 4.0]}
+        }
+    ]
+}
+```
+
+To apply another CV as an AND constraint, repeat it inside each segment's
+`conditions`. Keeping segments as regions also gives every interval its own
+name, population, selected count, and audit provenance.
+
 `LOAD` is only needed for CVs that are not built into the active PLUMED. Build
 such a plugin with that same PLUMED installation (for example, `plumed mklib
 ReactiveVoronoi.cpp`); shared libraries from a different compiler or PLUMED

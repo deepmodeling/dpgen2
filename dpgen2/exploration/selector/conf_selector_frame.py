@@ -10,6 +10,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 import dpdata
@@ -108,16 +109,21 @@ class ConfSelectorFrames(ConfSelector):
         self.report.record(md_model_devi)
         id_cand_list = None
         cv_audit = None
-        if self.plumed_cv_filter is not None:
+        plumed_cv_filter = self.plumed_cv_filter
+        plm_files = None
+        md_f = None
+        candidate_ids = None
+        if plumed_cv_filter is not None:
             if plm_outputs is None or any(output is None for output in plm_outputs):
                 raise FatalError(
                     "PLUMED CV filtering requires one output per trajectory"
                 )
-            md_f = md_model_devi.get(DeviManager.MAX_DEVI_F)
+            plm_files = [output for output in plm_outputs if output is not None]
+            md_f = cast(List[np.ndarray], md_model_devi.get(DeviManager.MAX_DEVI_F))
             candidate_ids = self.report.get_candidate_ids(None, clear=False)
-            if self.plumed_cv_filter.sampling is None:
-                allowed_ids = self.plumed_cv_filter.get_selected_ids(
-                    plm_outputs,
+            if plumed_cv_filter.sampling is None:
+                allowed_ids = plumed_cv_filter.get_selected_ids(
+                    plm_files,
                     [len(values) for values in md_f],
                 )
                 self.report.restrict_candidate_ids(allowed_ids)
@@ -126,8 +132,8 @@ class ConfSelectorFrames(ConfSelector):
                     sampled_ids,
                     records,
                     summary,
-                ) = self.plumed_cv_filter.select_candidate_ids_with_audit(
-                    plm_outputs,
+                ) = plumed_cv_filter.select_candidate_ids_with_audit(
+                    plm_files,
                     [len(values) for values in md_f],
                     candidate_ids,
                     self.max_numb_sel,
@@ -138,9 +144,12 @@ class ConfSelectorFrames(ConfSelector):
                 id_cand_list = self.report.get_candidate_ids()
         if id_cand_list is None:
             id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
-        if self.plumed_cv_filter is not None and cv_audit is None:
-            cv_audit = self.plumed_cv_filter.audit_candidate_ids(
-                plm_outputs,
+        if plumed_cv_filter is not None and cv_audit is None:
+            assert plm_files is not None
+            assert md_f is not None
+            assert candidate_ids is not None
+            cv_audit = plumed_cv_filter.audit_candidate_ids(
+                plm_files,
                 [len(values) for values in md_f],
                 candidate_ids,
                 id_cand_list,
@@ -159,6 +168,7 @@ class ConfSelectorFrames(ConfSelector):
         out_path.mkdir(exist_ok=True)
         ms.to_deepmd_npy(out_path)  # type: ignore
         if cv_audit is not None:
-            self.plumed_cv_filter.write_audit(out_path, *cv_audit)
+            assert plumed_cv_filter is not None
+            plumed_cv_filter.write_audit(out_path, *cv_audit)
 
         return [out_path], copy.deepcopy(self.report)
