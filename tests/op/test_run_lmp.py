@@ -12,6 +12,7 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    FatalError,
     OPIOSign,
     TransientError,
 )
@@ -78,8 +79,11 @@ class TestRunLmp(unittest.TestCase):
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_plm_output_file_collection(self, mocked_run):
-        mocked_run.return_value = (0, "", "")
-        (self.task_path / "COLVAR").write_text("#! FIELDS time cv\n0.0 0.5\n")
+        def run_with_plumed_output(*args, **kwargs):
+            Path("COLVAR").write_text("#! FIELDS time cv\n0.0 0.5\n")
+            return 0, "", ""
+
+        mocked_run.side_effect = run_with_plumed_output
         out = RunLmp().execute(
             OPIO(
                 {
@@ -91,6 +95,43 @@ class TestRunLmp(unittest.TestCase):
             )
         )
         self.assertEqual(out["plm_output"], Path(self.task_name) / "COLVAR")
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_plm_output_file_rejects_staged_input(self, mocked_run):
+        (self.task_path / "COLVAR").write_text("stale input")
+        with self.assertRaisesRegex(FatalError, "collides with a staged"):
+            RunLmp().execute(
+                OPIO(
+                    {
+                        "config": {"plm_output_file": "COLVAR"},
+                        "task_name": self.task_name,
+                        "task_path": self.task_path,
+                        "models": self.models,
+                    }
+                )
+            )
+        mocked_run.assert_not_called()
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_plm_output_file_does_not_reuse_stale_output(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        Path(self.task_name).mkdir()
+        stale_output = Path(self.task_name) / "COLVAR"
+        stale_output.write_text("stale output")
+
+        out = RunLmp().execute(
+            OPIO(
+                {
+                    "config": {"plm_output_file": "COLVAR"},
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": self.models,
+                }
+            )
+        )
+
+        self.assertIsNone(out["plm_output"])
+        self.assertFalse(stale_output.exists())
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_success(self, mocked_run):

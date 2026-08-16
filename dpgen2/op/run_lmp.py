@@ -129,6 +129,11 @@ class RunLmp(OP):
         # input_files = [lmp_conf_name, lmp_input_name]
         # input_files = [(Path(task_path) / ii).resolve() for ii in input_files]
         input_files = [ii.resolve() for ii in Path(task_path).iterdir()]
+        if plm_output_file in {ii.name for ii in input_files}:
+            raise FatalError(
+                f"PLUMED output file {plm_output_file!r} collides with a staged "
+                "LAMMPS input file"
+            )
         model_files = [Path(ii).resolve() for ii in models]
         work_dir = Path(task_name)
 
@@ -167,6 +172,16 @@ class RunLmp(OP):
                 random.shuffle(model_names)
 
             set_models(lmp_input_name, model_names)
+
+            # A retried task may reuse its working directory. Remove an output
+            # from an earlier attempt so it cannot be collected as fresh data.
+            plm_output_path = Path(plm_output_file)
+            if plm_output_path.is_file() or plm_output_path.is_symlink():
+                plm_output_path.unlink()
+            elif plm_output_path.exists():
+                raise FatalError(
+                    f"PLUMED output path {plm_output_file!r} is not a file"
+                )
 
             # run lmp
             command = " ".join([command, "-i", lmp_input_name, "-log", lmp_log_name])
