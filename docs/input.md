@@ -134,7 +134,8 @@ The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number o
 #### PLUMED CV candidate filtering
 
 LAMMPS exploration candidates can be restricted to a union of named PLUMED CV
-regions before the configured random or maximum-model-deviation selection:
+regions after the model-deviation trust window and before final CV-space
+coverage or an explicitly configured selection policy:
 
 ```json
 "explore": {
@@ -145,7 +146,8 @@ regions before the configured random or maximum-model-deviation selection:
         "regions": [
             {"d": [0.08, 0.12]},
             {"v": [1.8, 2.2]}
-        ]
+        ],
+        "sampling": {"mode": "report"}
     }
 }
 ```
@@ -173,8 +175,12 @@ increasing `time`, or row-to-trajectory alignment is invalid. Model-deviation
 trust levels are applied first, followed by the CV regions and then the existing
 candidate limit and selection policy.
 
-To make the final candidates cover a primary CV interval instead of clustering
-where the trajectory spends most of its time, add an optional sampling policy:
+By default, DPGEN2 prevents candidates from clustering where the trajectory
+spends most of its time. If all regions share one CV field, it uses 10
+equal-width bins along that CV. If they share two CV fields, it uses a 10 by 10
+grid. In both cases it covers separated non-empty bins or cells and selects the
+largest force model deviation within each one. An explicit policy can override
+these defaults:
 
 ```json
 "cv_filter": {
@@ -198,8 +204,63 @@ the selected non-empty bins span the available interval. `within_bin` is
 either `random` or `max_deviation`; `seed` makes random choices reproducible.
 Every region must bound the primary `field`; its other CVs remain AND
 constraints. Use `{"mode": "random", "seed": 20260815}` for reproducible
-random selection after the CV filter. If `sampling` is omitted, DPGEN2 keeps
-the convergence report's existing random or maximum-deviation selection.
+candidate-frame random selection after the CV filter; this follows the
+trajectory's CV density and can therefore cluster in a highly populated CV
+region. Use `{"mode": "report"}` to retain the
+convergence report's original random or maximum-deviation selection. If regions
+do not share exactly one or two CV fields, sampling must be specified because
+DPGEN2 cannot infer an unambiguous coverage space.
+
+For two-CV coverage and auditable reaction windows, regions may also have
+names and weights:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "incipient_contact",
+            "conditions": {
+                "iondistance": [0.2, 2.0],
+                "ionization": [0.2, 2.0]
+            }
+        },
+        {
+            "name": "separated",
+            "conditions": {
+                "iondistance": [2.0, 10.0],
+                "ionization": [0.2, 2.0]
+            },
+            "weight": 1.0
+        }
+    ],
+    "sampling": {
+        "mode": "grid",
+        "grid": {"iondistance": 8, "ionization": 4},
+        "within_bin": "max_deviation",
+        "seed": 20260815,
+        "min_frame_gap": 5
+    },
+    "time_alignment": {
+        "start": 0.0,
+        "step": 0.01,
+        "atol": 1e-8
+    }
+}
+```
+
+`grid` currently requires exactly two CV fields, both bounded by every region.
+It allocates the candidate limit across regions (using `weight` when supplied),
+covers separated non-empty cells before adding extra frames, and then uses
+`within_bin` inside each cell. `min_frame_gap` is a minimum frame-index
+separation within each trajectory. A spacing constraint may leave the result
+underfilled; DPGEN2 reports this instead of silently relaxing the constraint.
+`time_alignment` additionally verifies `time = start + frame * step` with the
+configured absolute tolerance.
+
+When a CV filter is active, the selected DeepMD data directory contains
+`cv_selection.csv` and `cv_selection_summary.json`. They record trajectory and
+frame IDs, time, maximum force model deviation, CV values, matching regions,
+grid cells, population counts, spacing rejections, and any underfilled quota.
 
 
 ### FP

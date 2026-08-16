@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 import shutil
 import textwrap
@@ -102,7 +104,9 @@ class TestConfSelectorFrames(unittest.TestCase):
             TrajRenderLammps(),
             ExplorationReportTrustLevelsMax(0.1, 0.5),
             max_numb_sel=1,
-            plumed_cv_filter=PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}]),
+            plumed_cv_filter=PlumedCVFilter(
+                regions=[{"cv": [0.0, 1.0]}], sampling={"mode": "report"}
+            ),
         )
         confs, _ = conf_selector.select(
             self.trajs,
@@ -144,6 +148,20 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.assertEqual(ms[0].get_nframes(), 2)
         self.assertAlmostEqual(ms[0]["coords"][0][0][1], 2.87, places=2)
         self.assertAlmostEqual(ms[0]["coords"][1][0][1], 4.87, places=2)
+        audit_csv = Path("confs/cv_selection.csv")
+        audit_json = Path("confs/cv_selection_summary.json")
+        self.assertTrue(audit_csv.is_file())
+        self.assertTrue(audit_json.is_file())
+        with audit_csv.open(newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        summary = json.loads(audit_json.read_text())
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({int(row["frame_idx"]) for row in rows}, {0, 2})
+        self.assertTrue(all(row["max_devi_f"] for row in rows))
+        self.assertTrue(all(row["cv_cv"] for row in rows))
+        self.assertEqual(summary["trust_candidates"], 6)
+        self.assertEqual(summary["cv_eligible_candidates"], 6)
+        self.assertEqual(summary["selected"], 2)
 
     def test_f_0(self):
         report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)

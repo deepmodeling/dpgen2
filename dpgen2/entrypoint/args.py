@@ -214,10 +214,11 @@ def lmp_args():
     )
     doc_filters = "A list of configuration filters"
     doc_cv_filter = (
-        "Optional PLUMED CV candidate filter. The regions key is a list of "
-        "field-to-[lower, upper] mappings; regions are combined by OR. An "
-        "optional sampling key selects candidates randomly or uniformly along "
-        "one primary CV."
+        "Optional PLUMED CV candidate filter. A region may be a field-to-"
+        "[lower, upper] mapping or a named conditions mapping; regions are "
+        "combined by OR. By default, one or two common CVs are covered uniformly. "
+        "Sampling also supports explicit random, uniform, grid, or report modes, "
+        "with optional frame spacing and time alignment."
     )
 
     return [
