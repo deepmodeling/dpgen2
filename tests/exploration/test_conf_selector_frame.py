@@ -97,9 +97,7 @@ class TestConfSelectorFrames(unittest.TestCase):
     def test_plumed_filter_precedes_max_selection(self):
         plm_outputs = [Path("foo.cv"), Path("bar.cv")]
         for output in plm_outputs:
-            output.write_text(
-                "#! FIELDS time cv\n0.0 0.5\n1.0 0.5\n2.0 1.5\n"
-            )
+            output.write_text("#! FIELDS time cv\n0.0 0.5\n1.0 0.5\n2.0 1.5\n")
         conf_selector = ConfSelectorFrames(
             TrajRenderLammps(),
             ExplorationReportTrustLevelsMax(0.1, 0.5),
@@ -116,6 +114,36 @@ class TestConfSelectorFrames(unittest.TestCase):
         ms.from_deepmd_npy(confs[0], labeled=False)
         self.assertEqual(ms[0].get_nframes(), 1)
         self.assertAlmostEqual(ms[0]["coords"][0][0][1], 3.87, places=2)
+
+    def test_plumed_uniform_sampling_is_final_selection(self):
+        plm_outputs = [Path("foo.cv"), Path("bar.cv")]
+        for output in plm_outputs:
+            output.write_text("#! FIELDS time cv\n0.0 0.05\n1.0 0.45\n2.0 0.95\n")
+        conf_selector = ConfSelectorFrames(
+            TrajRenderLammps(),
+            ExplorationReportTrustLevelsMax(0.1, 0.5),
+            max_numb_sel=2,
+            plumed_cv_filter=PlumedCVFilter(
+                regions=[{"cv": [0.0, 1.0]}],
+                sampling={
+                    "mode": "uniform",
+                    "field": "cv",
+                    "n_bins": 10,
+                    "within_bin": "max_deviation",
+                },
+            ),
+        )
+        confs, _ = conf_selector.select(
+            self.trajs,
+            self.model_devis,
+            self.type_map,
+            plm_outputs=plm_outputs,
+        )
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(ms[0].get_nframes(), 2)
+        self.assertAlmostEqual(ms[0]["coords"][0][0][1], 2.87, places=2)
+        self.assertAlmostEqual(ms[0]["coords"][1][0][1], 4.87, places=2)
 
     def test_f_0(self):
         report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)

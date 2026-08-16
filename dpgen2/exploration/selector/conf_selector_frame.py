@@ -104,18 +104,32 @@ class ConfSelectorFrames(ConfSelector):
 
         self.report.clear()
         self.report.record(md_model_devi)
+        id_cand_list = None
         if self.plumed_cv_filter is not None:
             if plm_outputs is None or any(output is None for output in plm_outputs):
                 raise FatalError(
                     "PLUMED CV filtering requires one output per trajectory"
                 )
             md_f = md_model_devi.get(DeviManager.MAX_DEVI_F)
-            allowed_ids = self.plumed_cv_filter.get_selected_ids(
-                plm_outputs,
-                [len(values) for values in md_f],
-            )
-            self.report.restrict_candidate_ids(allowed_ids)
-        id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
+            if self.plumed_cv_filter.sampling is None:
+                allowed_ids = self.plumed_cv_filter.get_selected_ids(
+                    plm_outputs,
+                    [len(values) for values in md_f],
+                )
+                self.report.restrict_candidate_ids(allowed_ids)
+            else:
+                candidate_ids = self.report.get_candidate_ids(None, clear=False)
+                sampled_ids = self.plumed_cv_filter.select_candidate_ids(
+                    plm_outputs,
+                    [len(values) for values in md_f],
+                    candidate_ids,
+                    self.max_numb_sel,
+                    md_f,
+                )
+                self.report.restrict_candidate_ids(sampled_ids)
+                id_cand_list = self.report.get_candidate_ids()
+        if id_cand_list is None:
+            id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
 
         ms = self.traj_render.get_confs(
             trajs,

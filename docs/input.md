@@ -173,6 +173,34 @@ increasing `time`, or row-to-trajectory alignment is invalid. Model-deviation
 trust levels are applied first, followed by the CV regions and then the existing
 candidate limit and selection policy.
 
+To make the final candidates cover a primary CV interval instead of clustering
+where the trajectory spends most of its time, add an optional sampling policy:
+
+```json
+"cv_filter": {
+    "regions": [
+        {"d": [0.08, 0.12]},
+        {"d": [0.16, 0.24], "v": [1.8, 2.2]}
+    ],
+    "sampling": {
+        "mode": "uniform",
+        "field": "d",
+        "n_bins": 10,
+        "within_bin": "max_deviation",
+        "seed": 20260815
+    }
+}
+```
+
+`uniform` divides the configured interval for `field` in each region into
+equal-width bins. Regions receive a balanced share of the FP task limit and
+the selected non-empty bins span the available interval. `within_bin` is
+either `random` or `max_deviation`; `seed` makes random choices reproducible.
+Every region must bound the primary `field`; its other CVs remain AND
+constraints. Use `{"mode": "random", "seed": 20260815}` for reproducible
+random selection after the CV filter. If `sampling` is omitted, DPGEN2 keeps
+the convergence report's existing random or maximum-deviation selection.
+
 
 ### FP
 

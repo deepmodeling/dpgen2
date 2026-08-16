@@ -76,6 +76,7 @@ class ExplorationReport(ABC):
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
+        clear: bool = True,
     ) -> List[List[int]]:
         r"""Get indexes of candidate configurations
 
@@ -83,6 +84,8 @@ class ExplorationReport(ABC):
         ----------
         max_nframes
             The maximal number of frames of candidates.
+        clear
+            Clear frame-level report data after selection.
 
         Returns
         -------
