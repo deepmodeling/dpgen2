@@ -217,6 +217,14 @@ class TestTrajsExplorationReport(unittest.TestCase):
                 npicked += 1
         self.assertEqual(npicked, 2)
 
+    def test_max_selection_after_candidate_filter(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.50, 0.55]))
+        ter = ExplorationReportTrustLevelsMax(0.3, 0.6)
+        ter.record(model_devi)
+        ter.restrict_candidate_ids([[0, 1]])
+        self.assertEqual(ter.get_candidate_ids(1), [[1]])
+
     def test_random_selection_convergence(self):
         # case 1
         model_devi = DeviManagerStd()

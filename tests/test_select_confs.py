@@ -165,3 +165,23 @@ class TestSelectConfs(unittest.TestCase):
             trajs, model_devis, optional_outputs = SelectConfs.validate_trajs(
                 trajs, model_devis, optional_outputs
             )
+
+    def test_validate_plm_outputs(self):
+        trajs = ["foo", None, "bar"]
+        model_devis = ["foo.md", None, "bar.md"]
+        self.assertEqual(
+            SelectConfs.validate_plm_outputs(
+                trajs, model_devis, ["foo.cv", None, "bar.cv"]
+            ),
+            ["foo.cv", "bar.cv"],
+        )
+        self.assertEqual(
+            SelectConfs.validate_plm_outputs(trajs, model_devis),
+            None,
+        )
+        with self.assertRaises(FatalError):
+            SelectConfs.validate_plm_outputs(trajs, model_devis, ["foo.cv"])
+        with self.assertRaises(FatalError):
+            SelectConfs.validate_plm_outputs(
+                trajs, model_devis, ["foo.cv", "unexpected.cv", "bar.cv"]
+            )

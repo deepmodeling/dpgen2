@@ -65,6 +65,13 @@ class ExplorationReport(ABC):
         r"""If no candidate configuration is found"""
         pass
 
+    def restrict_candidate_ids(
+        self,
+        allowed_ids: List[List[int]],
+    ) -> None:
+        r"""Restrict model-deviation candidates before sampling."""
+        raise NotImplementedError
+
     @abstractmethod
     def get_candidate_ids(
         self,

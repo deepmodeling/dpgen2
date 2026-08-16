@@ -14,10 +14,16 @@ from typing import (
 
 import dpdata
 import numpy as np
+from dflow.python import (
+    FatalError,
+)
 from dflow.python.opio import (
     HDF5Dataset,
 )
 
+from dpgen2.exploration.deviation import (
+    DeviManager,
+)
 from dpgen2.exploration.render import (
     TrajRender,
 )
@@ -28,6 +34,9 @@ from dpgen2.exploration.report import (
 from . import (
     ConfFilters,
     ConfSelector,
+)
+from .plumed_cv_filter import (
+    PlumedCVFilter,
 )
 
 
@@ -48,11 +57,13 @@ class ConfSelectorFrames(ConfSelector):
         report: ExplorationReport,
         max_numb_sel: Optional[int] = None,
         conf_filters: Optional[ConfFilters] = None,
+        plumed_cv_filter: Optional[PlumedCVFilter] = None,
     ):
         self.max_numb_sel = max_numb_sel
         self.conf_filters = conf_filters
         self.traj_render = traj_render
         self.report = report
+        self.plumed_cv_filter = plumed_cv_filter
 
     def select(
         self,
@@ -60,6 +71,7 @@ class ConfSelectorFrames(ConfSelector):
         model_devis: Union[List[Path], List[HDF5Dataset]],
         type_map: Optional[List[str]] = None,
         optional_outputs: Optional[List[Path]] = None,
+        plm_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         """Select configurations
 
@@ -92,6 +104,17 @@ class ConfSelectorFrames(ConfSelector):
 
         self.report.clear()
         self.report.record(md_model_devi)
+        if self.plumed_cv_filter is not None:
+            if plm_outputs is None or any(output is None for output in plm_outputs):
+                raise FatalError(
+                    "PLUMED CV filtering requires one output per trajectory"
+                )
+            md_f = md_model_devi.get(DeviManager.MAX_DEVI_F)
+            allowed_ids = self.plumed_cv_filter.get_selected_ids(
+                plm_outputs,
+                [len(values) for values in md_f],
+            )
+            self.report.restrict_candidate_ids(allowed_ids)
         id_cand_list = self.report.get_candidate_ids(self.max_numb_sel)
 
         ms = self.traj_render.get_confs(

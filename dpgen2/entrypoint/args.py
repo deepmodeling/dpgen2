@@ -20,6 +20,7 @@ from dpgen2.exploration.report import (
     conv_styles,
 )
 from dpgen2.exploration.selector import (
+    PlumedCVFilter,
     conf_filter_styles,
 )
 from dpgen2.fp import (
@@ -212,6 +213,10 @@ def lmp_args():
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
+    doc_cv_filter = (
+        "Optional PLUMED CV candidate filter. The regions key is a list of "
+        "field-to-[lower, upper] mappings; regions are combined by OR."
+    )
 
     return [
         Argument(
@@ -258,6 +263,14 @@ def lmp_args():
             optional=True,
             default=[],
             doc=doc_filters,
+        ),
+        Argument(
+            "cv_filter",
+            dict,
+            PlumedCVFilter.args(),
+            optional=True,
+            default=None,
+            doc=doc_cv_filter,
         ),
     ]
 

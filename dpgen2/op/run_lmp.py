@@ -122,6 +122,7 @@ class RunLmp(OP):
         command = config["command"]
         teacher_model: Optional[BinaryFileInput] = config["teacher_model_path"]
         shuffle_models: Optional[bool] = config["shuffle_models"]
+        plm_output_file = config["plm_output_file"]
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         models = ip["models"]
@@ -206,8 +207,8 @@ class RunLmp(OP):
             "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (
-            {"plm_output": work_dir / plm_output_name}
-            if (work_dir / plm_output_name).is_file()
+            {"plm_output": work_dir / plm_output_file}
+            if (work_dir / plm_output_file).is_file()
             else {}
         )
         ret_dict.update(plm_output)
@@ -231,6 +232,10 @@ class RunLmp(OP):
         doc_head = "Select a head from multitask"
         doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
         doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+        doc_plm_output_file = (
+            "PLUMED output artifact to collect. Set this to the FILE used by "
+            "PLUMED PRINT when filtering candidates by CV."
+        )
         doc_extra_output_files = "Extra output file names, support wildcards"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
@@ -263,6 +268,13 @@ class RunLmp(OP):
                 doc=doc_use_hdf5,
             ),
             Argument(
+                "plm_output_file",
+                str,
+                optional=True,
+                default=plm_output_name,
+                doc=doc_plm_output_file,
+            ),
+            Argument(
                 "extra_output_files",
                 list,
                 optional=True,
@@ -277,6 +289,10 @@ class RunLmp(OP):
         base = Argument("base", dict, ta)
         data = base.normalize_value(data, trim_pattern="_*")
         base.check_value(data, strict=True)
+        if data["plm_output_file"] in {"", ".", ".."} or (
+            Path(data["plm_output_file"]).name != data["plm_output_file"]
+        ):
+            raise ValueError("plm_output_file must be a file name, not a path")
         return data
 
 

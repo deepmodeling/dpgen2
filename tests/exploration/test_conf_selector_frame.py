@@ -17,10 +17,12 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
+    ExplorationReportTrustLevelsMax,
     ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
+    PlumedCVFilter,
 )
 
 # isort: on
@@ -85,12 +87,35 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.type_map = ["O", "H"]
 
     def tearDown(self):
-        for ii in ["foo.dump", "bar.dump", "foo.md", "bar.md"]:
+        for ii in ["foo.dump", "bar.dump", "foo.md", "bar.md", "foo.cv", "bar.cv"]:
             if Path(ii).is_file():
                 os.remove(ii)
         for ii in ["confs"]:
             if Path(ii).is_dir():
                 shutil.rmtree(ii)
+
+    def test_plumed_filter_precedes_max_selection(self):
+        plm_outputs = [Path("foo.cv"), Path("bar.cv")]
+        for output in plm_outputs:
+            output.write_text(
+                "#! FIELDS time cv\n0.0 0.5\n1.0 0.5\n2.0 1.5\n"
+            )
+        conf_selector = ConfSelectorFrames(
+            TrajRenderLammps(),
+            ExplorationReportTrustLevelsMax(0.1, 0.5),
+            max_numb_sel=1,
+            plumed_cv_filter=PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}]),
+        )
+        confs, _ = conf_selector.select(
+            self.trajs,
+            self.model_devis,
+            self.type_map,
+            plm_outputs=plm_outputs,
+        )
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(ms[0].get_nframes(), 1)
+        self.assertAlmostEqual(ms[0]["coords"][0][0][1], 3.87, places=2)
 
     def test_f_0(self):
         report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)

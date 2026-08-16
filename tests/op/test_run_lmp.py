@@ -67,6 +67,31 @@ class TestRunLmp(unittest.TestCase):
         if Path(self.task_name).is_dir():
             shutil.rmtree(self.task_name)
 
+    def test_plm_output_file_config(self):
+        config = RunLmp.normalize_config({"plm_output_file": "COLVAR"})
+        self.assertEqual(config["plm_output_file"], "COLVAR")
+        with self.assertRaises(ValueError):
+            RunLmp.normalize_config({"plm_output_file": "outputs/COLVAR"})
+        for invalid_name in ["", ".", ".."]:
+            with self.subTest(invalid_name=invalid_name), self.assertRaises(ValueError):
+                RunLmp.normalize_config({"plm_output_file": invalid_name})
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_plm_output_file_collection(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        (self.task_path / "COLVAR").write_text("#! FIELDS time cv\n0.0 0.5\n")
+        out = RunLmp().execute(
+            OPIO(
+                {
+                    "config": {"plm_output_file": "COLVAR"},
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": self.models,
+                }
+            )
+        )
+        self.assertEqual(out["plm_output"], Path(self.task_name) / "COLVAR")
+
     @patch("dpgen2.op.run_lmp.run_command")
     def test_success(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", "")]

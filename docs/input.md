@@ -131,6 +131,48 @@ The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stag
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
+#### PLUMED CV candidate filtering
+
+LAMMPS exploration candidates can be restricted to a union of named PLUMED CV
+regions before the configured random or maximum-model-deviation selection:
+
+```json
+"explore": {
+    "config": {
+        "plm_output_file": "COLVAR"
+    },
+    "cv_filter": {
+        "regions": [
+            {"d": [0.08, 0.12]},
+            {"v": [1.8, 2.2]}
+        ]
+    }
+}
+```
+
+Each region is a mapping from a field in the PLUMED `#! FIELDS` header to a
+lower-inclusive, upper-exclusive interval. Conditions within a region are
+combined by AND and regions are combined by OR. The PLUMED input must write the
+selected fields with the same stride as `trj_freq`, for example:
+
+```plumed
+LOAD FILE=/absolute/path/ReactiveVoronoi.so
+d: DISTANCE ATOMS=1,2
+v: VORONOI_COORDINATION ...
+PRINT ARG=d,v STRIDE=10 FILE=COLVAR
+```
+
+`LOAD` is only needed for CVs that are not built into the active PLUMED. Build
+such a plugin with that same PLUMED installation (for example, `plumed mklib
+ReactiveVoronoi.cpp`); shared libraries from a different compiler or PLUMED
+build may be ABI-incompatible.
+
+The region bounds use the units written to `COLVAR` (PLUMED's default length
+unit is nm). The filter fails if the file, field, finite values, strictly
+increasing `time`, or row-to-trajectory alignment is invalid. Model-deviation
+trust levels are applied first, followed by the CV regions and then the existing
+candidate limit and selection policy.
+
 
 ### FP
 

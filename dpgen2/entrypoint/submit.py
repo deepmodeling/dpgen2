@@ -68,6 +68,7 @@ from dpgen2.exploration.scheduler import (
 from dpgen2.exploration.selector import (
     ConfFilters,
     ConfSelectorFrames,
+    PlumedCVFilter,
     conf_filter_styles,
 )
 from dpgen2.exploration.task import (
@@ -366,6 +367,10 @@ def make_lmp_naive_exploration_scheduler(config):
     convergence = config["explore"]["convergence"]
     output_nopbc = config["explore"]["output_nopbc"]
     conf_filters = get_conf_filters(config["explore"]["filters"])
+    cv_filter_config = config["explore"]["cv_filter"]
+    cv_filter = (
+        PlumedCVFilter(**cv_filter_config) if cv_filter_config is not None else None
+    )
     use_ele_temp = config["inputs"]["use_ele_temp"]
     scheduler = ExplorationScheduler()
     # report
@@ -378,6 +383,7 @@ def make_lmp_naive_exploration_scheduler(config):
         report,
         fp_task_max,
         conf_filters,
+        cv_filter,
     )
 
     sys_configs_lmp = []

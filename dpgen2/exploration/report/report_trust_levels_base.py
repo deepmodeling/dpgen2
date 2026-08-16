@@ -236,6 +236,18 @@ class ExplorationReportTrustLevels(ExplorationReport):
     def no_candidate(self) -> bool:
         return self._no_candidate
 
+    def restrict_candidate_ids(
+        self,
+        allowed_ids: List[List[int]],
+    ) -> None:
+        if len(allowed_ids) != len(self.traj_cand):
+            raise FatalError("candidate filter and trajectories have different lengths")
+        self.traj_cand = [
+            candidates & set(allowed)
+            for candidates, allowed in zip(self.traj_cand, allowed_ids)
+        ]
+        self._no_candidate = sum(len(candidates) for candidates in self.traj_cand) == 0
+
     @abstractmethod
     def get_candidate_ids(
         self,

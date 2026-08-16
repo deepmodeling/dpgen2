@@ -371,6 +371,20 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
     def no_candidate(self) -> bool:
         return self._no_candidate
 
+    def restrict_candidate_ids(
+        self,
+        allowed_ids: List[List[int]],
+    ) -> None:
+        if len(allowed_ids) != self.ntraj:
+            raise FatalError("candidate filter and trajectories have different lengths")
+        allowed = {
+            (traj_idx, frame_idx)
+            for traj_idx, frame_ids in enumerate(allowed_ids)
+            for frame_idx in frame_ids
+        }
+        self.candi &= allowed
+        self._no_candidate = len(self.candi) == 0
+
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
