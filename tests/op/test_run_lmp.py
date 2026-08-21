@@ -32,8 +32,10 @@ from dpgen2.constants import (
     lmp_model_devi_name,
     lmp_traj_name,
     model_name_pattern,
+    pt2_model_name_pattern,
 )
 from dpgen2.op.run_lmp import (
+    PrepareDPModels,
     RunLmp,
     get_ele_temp,
     merge_pimd_files,
@@ -258,6 +260,81 @@ def swap_element(arg):
     arg[0] = bk[1]
 
 
+class TestPrepareDPModels(unittest.TestCase):
+    def setUp(self):
+        self.model_dir = Path("checkpoint_models")
+        self.model_dir.mkdir()
+        self.models = []
+        for idx in range(2):
+            model = self.model_dir / f"model.{idx}.pt"
+            model.write_text("checkpoint")
+            self.models.append(model)
+
+    def tearDown(self):
+        shutil.rmtree(self.model_dir, ignore_errors=True)
+        shutil.rmtree("prepared_models", ignore_errors=True)
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_dpa4_pt2(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        models = PrepareDPModels().execute(
+            OPIO(
+                {
+                    "config": {
+                        "model_devi_backend": "pytorch",
+                        "model_format": "pt2",
+                    },
+                    "models": self.models,
+                }
+            )
+        )["models"]
+        self.assertEqual(
+            models,
+            [
+                Path("prepared_models/model.000.pt2"),
+                Path("prepared_models/model.001.pt2"),
+            ],
+        )
+        mocked_run.assert_has_calls(
+            [
+                call(
+                    f"dp --pt freeze -c {model.resolve()} -o {Path('prepared_models') / f'model.{idx:03d}.pt2'}",
+                    shell=True,
+                )
+                for idx, model in enumerate(self.models)
+            ]
+        )
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_dpa4c_compressed_pt2(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        models = PrepareDPModels().execute(
+            OPIO(
+                {
+                    "config": {
+                        "model_devi_backend": "pt-expt",
+                        "model_format": "pt2",
+                        "dp_compress": True,
+                    },
+                    "models": self.models[:1],
+                }
+            )
+        )["models"]
+        self.assertEqual(models, [Path("prepared_models/model.000.compressed.pt2")])
+        mocked_run.assert_has_calls(
+            [
+                call(
+                    f"dp --pt-expt freeze -c {self.models[0].resolve()} -o {Path('prepared_models/model.000.pt2')} --lower-kind graph",
+                    shell=True,
+                ),
+                call(
+                    f"dp --pt-expt compress -i {Path('prepared_models/model.000.pt2')} -o {Path('prepared_models/model.000.compressed.pt2')}",
+                    shell=True,
+                ),
+            ]
+        )
+
+
 class TestSetModels(unittest.TestCase):
     def setUp(self):
         self.input_name = Path("lmp.input")
@@ -273,6 +350,16 @@ class TestSetModels(unittest.TestCase):
         input_name.write_text(lmp_config)
         set_models(input_name, self.model_names)
         self.assertEqual(input_name.read_text(), expected_output)
+
+    def test_pt2(self):
+        lmp_config = "pair_style deepmd model.000.pb model.001.pb out_freq 10\n"
+        expected_output = "pair_style deepmd model.000.pt2 model.001.pt2 out_freq 10\n"
+        self.input_name.write_text(lmp_config)
+        set_models(
+            self.input_name,
+            [pt2_model_name_pattern % 0, pt2_model_name_pattern % 1],
+        )
+        self.assertEqual(self.input_name.read_text(), expected_output)
 
     def test_failed(self):
         lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out model.002.pb\n"

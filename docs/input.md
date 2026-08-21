@@ -59,6 +59,34 @@ The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
 
+For DPA4, use the regular PyTorch training backend and deploy `.pt2` models in
+LAMMPS exploration:
+
+```json
+"train": {"type": "dp", "config": {"impl": "pytorch"}},
+"explore": {
+    "type": "lmp",
+    "config": {"model_devi_backend": "pytorch", "model_format": "pt2"}
+}
+```
+
+For DPA4C, both training and deployment use the PyTorch Exportable backend.
+Compression is optional:
+
+```json
+"train": {"type": "dp", "config": {"impl": "pytorch-exportable"}},
+"explore": {
+    "type": "lmp",
+    "config": {
+        "model_devi_backend": "pytorch-exportable",
+        "model_format": "pt2",
+        "dp_compress": true
+    }
+}
+```
+
+TensorFlow remains the default when `impl` is omitted.
+
 
 ### Exploration
 

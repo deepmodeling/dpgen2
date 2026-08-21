@@ -35,6 +35,7 @@ from .run_dp_train import (
     RunDPTrain,
 )
 from .run_lmp import (
+    PrepareDPModels,
     RunLmp,
     RunLmpHDF5,
 )

@@ -41,6 +41,7 @@ from dpgen2.constants import (
     model_name_match_pattern,
     model_name_pattern,
     plm_output_name,
+    pt2_model_name_pattern,
     pytorch_model_name_pattern,
 )
 from dpgen2.utils import (
@@ -50,6 +51,35 @@ from dpgen2.utils import (
 from dpgen2.utils.run_command import (
     run_command,
 )
+
+
+_MODEL_BACKEND_ALIASES = {"pt-expt": "pytorch-exportable"}
+_MODEL_BACKEND_FLAGS = {
+    "pytorch": "--pt",
+    "pytorch-exportable": "--pt-expt",
+}
+
+
+class PrepareDPModels(OP):
+    """Freeze DP checkpoints once before exploration tasks are fanned out."""
+
+    @classmethod
+    def get_input_sign(cls):
+        return OPIOSign(
+            {
+                "config": BigParameter(dict),
+                "models": Artifact(List[Path]),
+            }
+        )
+
+    @classmethod
+    def get_output_sign(cls):
+        return OPIOSign({"models": Artifact(List[Path])})
+
+    @OP.exec_sign_check
+    def execute(self, ip: OPIO) -> OPIO:
+        config = RunLmp.normalize_config(ip["config"] or {})
+        return OPIO({"models": prepare_dp_models(ip["models"], config)})
 
 
 class RunLmp(OP):
@@ -132,9 +162,9 @@ class RunLmp(OP):
         work_dir = Path(task_name)
 
         if teacher_model is not None:
-            assert (
-                len(model_files) == 1
-            ), "One model is enough in knowledge distillation"
+            assert len(model_files) == 1, (
+                "One model is enough in knowledge distillation"
+            )
             ext = os.path.splitext(teacher_model.file_name)[-1]
             teacher_model_file = "teacher_model" + ext
             teacher_model.save_as_file(teacher_model_file)
@@ -152,10 +182,26 @@ class RunLmp(OP):
                 if ext == ".pb":
                     mname = model_name_pattern % (idx)
                     Path(mname).symlink_to(mm)
+                elif ext == ".pth":
+                    mname = pytorch_model_name_pattern % (idx)
+                    Path(mname).symlink_to(mm)
+                elif ext == ".pt2":
+                    mname = pt2_model_name_pattern % (idx)
+                    Path(mname).symlink_to(mm)
                 elif ext == ".pt":
                     # freeze model
-                    mname = pytorch_model_name_pattern % (idx)
-                    freeze_model(mm, mname, config.get("model_frozen_head"))
+                    backend = _model_backend(config)
+                    mname = _model_name(idx, config["model_format"])
+                    freeze_model(
+                        mm,
+                        mname,
+                        config.get("model_frozen_head"),
+                        backend,
+                    )
+                    if config["dp_compress"]:
+                        compressed = _compressed_model_name(idx, config["model_format"])
+                        compress_model(mname, compressed, backend)
+                        mname = compressed
                 else:
                     raise RuntimeError(
                         "Model file with extension '%s' is not supported" % ext
@@ -232,6 +278,11 @@ class RunLmp(OP):
         doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
         doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
         doc_extra_output_files = "Extra output file names, support wildcards"
+        doc_model_devi_backend = (
+            "The DeePMD backend used to freeze models for exploration"
+        )
+        doc_model_format = "The frozen model format. Use 'pt2' for DPA4 and DPA4C"
+        doc_dp_compress = "Compress the frozen model before exploration"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
             Argument(
@@ -268,6 +319,27 @@ class RunLmp(OP):
                 optional=True,
                 default=[],
                 doc=doc_extra_output_files,
+            ),
+            Argument(
+                "model_devi_backend",
+                str,
+                optional=True,
+                default="pytorch",
+                doc=doc_model_devi_backend,
+            ),
+            Argument(
+                "model_format",
+                str,
+                optional=True,
+                default="pth",
+                doc=doc_model_format,
+            ),
+            Argument(
+                "dp_compress",
+                bool,
+                optional=True,
+                default=False,
+                doc=doc_dp_compress,
             ),
         ]
 
@@ -306,7 +378,7 @@ def set_models(lmp_input_name: str, model_names: List[str]):
                 break
     if match_first == -1:
         raise RuntimeError(
-            f"cannot file model pattern {pattern} in line " f" {lmp_input_lines[idx]}"
+            f"cannot file model pattern {pattern} in line  {lmp_input_lines[idx]}"
         )
     if match_last == -1:
         raise RuntimeError(f"last matching index should not be -1, terribly wrong ")
@@ -362,11 +434,81 @@ def get_ele_temp(lmp_log_name):
     return None
 
 
-def freeze_model(input_model, frozen_model, head=None):
+def _model_backend(config):
+    backend = _MODEL_BACKEND_ALIASES.get(
+        config["model_devi_backend"], config["model_devi_backend"]
+    )
+    model_format = config["model_format"]
+    if backend not in _MODEL_BACKEND_FLAGS:
+        raise RuntimeError(f"Unsupported model-deviation backend '{backend}'")
+    if model_format not in ["pth", "pt2"]:
+        raise RuntimeError(f"Unsupported model format '{model_format}'")
+    if model_format == "pth" and backend != "pytorch":
+        raise RuntimeError("The pth model format requires the pytorch backend")
+    if config["dp_compress"] and not (
+        backend == "pytorch-exportable" and model_format == "pt2"
+    ):
+        raise RuntimeError(
+            "Compressed pt2 models require the pytorch-exportable backend"
+        )
+    return backend
+
+
+def _model_name(index, model_format):
+    if model_format == "pt2":
+        return pt2_model_name_pattern % index
+    return pytorch_model_name_pattern % index
+
+
+def _compressed_model_name(index, model_format):
+    return "model.%03d.compressed.%s" % (index, model_format)
+
+
+def prepare_dp_models(models, config):
+    """Return frozen models, exporting checkpoints once when needed."""
+    backend = _model_backend(config)
+    prepared = []
+    output_dir = Path("prepared_models")
+    for idx, model in enumerate(models):
+        model = Path(model).resolve()
+        ext = model.suffix
+        if ext != ".pt":
+            if ext not in [".pb", ".pth", ".pt2"]:
+                raise RuntimeError(
+                    "Model file with extension '%s' is not supported" % ext
+                )
+            prepared.append(model)
+            continue
+        output_dir.mkdir(exist_ok=True)
+        frozen_model = output_dir / _model_name(idx, config["model_format"])
+        freeze_model(
+            model,
+            frozen_model,
+            config.get("model_frozen_head"),
+            backend,
+        )
+        if config["dp_compress"]:
+            compressed_model = output_dir / _compressed_model_name(
+                idx, config["model_format"]
+            )
+            compress_model(frozen_model, compressed_model, backend)
+            frozen_model = compressed_model
+        prepared.append(frozen_model)
+    return prepared
+
+
+def freeze_model(input_model, frozen_model, head=None, backend="pytorch"):
+    backend = _MODEL_BACKEND_ALIASES.get(backend, backend)
     freeze_args = "-o %s" % frozen_model
     if head is not None:
         freeze_args += " --head %s" % head
-    freeze_cmd = "dp --pt freeze -c %s %s" % (input_model, freeze_args)
+    if backend == "pytorch-exportable" and Path(frozen_model).suffix == ".pt2":
+        freeze_args += " --lower-kind graph"
+    freeze_cmd = "dp %s freeze -c %s %s" % (
+        _MODEL_BACKEND_FLAGS[backend],
+        input_model,
+        freeze_args,
+    )
     ret, out, err = run_command(freeze_cmd, shell=True)
     if ret != 0:
         logging.error(
@@ -385,6 +527,24 @@ def freeze_model(input_model, frozen_model, head=None):
             )
         )
         raise TransientError("freeze failed")
+
+
+def compress_model(input_model, output_model, backend="pytorch-exportable"):
+    backend = _MODEL_BACKEND_ALIASES.get(backend, backend)
+    compress_cmd = "dp %s compress -i %s -o %s" % (
+        _MODEL_BACKEND_FLAGS[backend],
+        input_model,
+        output_model,
+    )
+    ret, out, err = run_command(compress_cmd, shell=True)
+    if ret != 0:
+        logging.error(
+            "compress failed\ncommand was%s\nout msg%s\nerr msg%s\n",
+            compress_cmd,
+            out,
+            err,
+        )
+        raise TransientError("compress failed")
 
 
 def merge_pimd_files():
