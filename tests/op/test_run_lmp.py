@@ -298,8 +298,15 @@ class TestPrepareDPModels(unittest.TestCase):
         mocked_run.assert_has_calls(
             [
                 call(
-                    f"dp --pt freeze -c {model.resolve()} -o {Path('prepared_models') / f'model.{idx:03d}.pt2'}",
-                    shell=True,
+                    [
+                        "dp",
+                        "--pt",
+                        "freeze",
+                        "-c",
+                        str(model.resolve()),
+                        "-o",
+                        str(Path("prepared_models") / f"model.{idx:03d}.pt2"),
+                    ]
                 )
                 for idx, model in enumerate(self.models)
             ]
@@ -324,12 +331,28 @@ class TestPrepareDPModels(unittest.TestCase):
         mocked_run.assert_has_calls(
             [
                 call(
-                    f"dp --pt-expt freeze -c {self.models[0].resolve()} -o {Path('prepared_models/model.000.pt2')} --lower-kind graph",
-                    shell=True,
+                    [
+                        "dp",
+                        "--pt-expt",
+                        "freeze",
+                        "-c",
+                        str(self.models[0].resolve()),
+                        "-o",
+                        str(Path("prepared_models/model.000.pt2")),
+                        "--lower-kind",
+                        "graph",
+                    ]
                 ),
                 call(
-                    f"dp --pt-expt compress -i {Path('prepared_models/model.000.pt2')} -o {Path('prepared_models/model.000.compressed.pt2')}",
-                    shell=True,
+                    [
+                        "dp",
+                        "--pt-expt",
+                        "compress",
+                        "-i",
+                        str(Path("prepared_models/model.000.pt2")),
+                        "-o",
+                        str(Path("prepared_models/model.000.compressed.pt2")),
+                    ]
                 ),
             ]
         )

@@ -498,44 +498,42 @@ def prepare_dp_models(models, config):
 
 def freeze_model(input_model, frozen_model, head=None, backend="pytorch"):
     backend = _MODEL_BACKEND_ALIASES.get(backend, backend)
-    freeze_args = "-o %s" % frozen_model
-    if head is not None:
-        freeze_args += " --head %s" % head
-    if backend == "pytorch-exportable" and Path(frozen_model).suffix == ".pt2":
-        freeze_args += " --lower-kind graph"
-    freeze_cmd = "dp %s freeze -c %s %s" % (
+    freeze_cmd = [
+        "dp",
         _MODEL_BACKEND_FLAGS[backend],
-        input_model,
-        freeze_args,
-    )
-    ret, out, err = run_command(freeze_cmd, shell=True)
+        "freeze",
+        "-c",
+        str(input_model),
+        "-o",
+        str(frozen_model),
+    ]
+    if head is not None:
+        freeze_cmd.extend(["--head", str(head)])
+    if backend == "pytorch-exportable" and Path(frozen_model).suffix == ".pt2":
+        freeze_cmd.extend(["--lower-kind", "graph"])
+    ret, out, err = run_command(freeze_cmd)
     if ret != 0:
         logging.error(
-            "".join(
-                (
-                    "freeze failed\n",
-                    "command was",
-                    freeze_cmd,
-                    "out msg",
-                    out,
-                    "\n",
-                    "err msg",
-                    err,
-                    "\n",
-                )
-            )
+            "freeze failed\ncommand was %s\nout msg%s\nerr msg%s\n",
+            freeze_cmd,
+            out,
+            err,
         )
         raise TransientError("freeze failed")
 
 
 def compress_model(input_model, output_model, backend="pytorch-exportable"):
     backend = _MODEL_BACKEND_ALIASES.get(backend, backend)
-    compress_cmd = "dp %s compress -i %s -o %s" % (
+    compress_cmd = [
+        "dp",
         _MODEL_BACKEND_FLAGS[backend],
-        input_model,
-        output_model,
-    )
-    ret, out, err = run_command(compress_cmd, shell=True)
+        "compress",
+        "-i",
+        str(input_model),
+        "-o",
+        str(output_model),
+    ]
+    ret, out, err = run_command(compress_cmd)
     if ret != 0:
         logging.error(
             "compress failed\ncommand was%s\nout msg%s\nerr msg%s\n",

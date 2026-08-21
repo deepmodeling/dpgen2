@@ -460,6 +460,12 @@ class TestRunDPTrain(unittest.TestCase):
         mocked_run.assert_called_once_with(
             ["dp", "--pt-expt", "train", train_script_name]
         )
+        self.assertEqual(
+            out["log"].read_text(),
+            "#=================== train std out ===================\n"
+            "foo\n"
+            "#=================== train std err ===================\n",
+        )
 
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2(self, mocked_run):

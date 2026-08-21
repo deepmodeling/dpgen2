@@ -346,10 +346,10 @@ class RunDPTrain(OP):
                     )
                     raise FatalError("dp freeze failed")
                 model_file = "frozen_model.pb"
-            fplog.write("#=================== freeze std out ===================\n")
-            fplog.write(out)
-            fplog.write("#=================== freeze std err ===================\n")
-            fplog.write(err)
+                fplog.write("#=================== freeze std out ===================\n")
+                fplog.write(out)
+                fplog.write("#=================== freeze std err ===================\n")
+                fplog.write(err)
 
             clean_before_quit()
 
