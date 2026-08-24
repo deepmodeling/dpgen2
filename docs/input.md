@@ -117,9 +117,10 @@ DPA4C template. Conversely, DPA4 does not use the DPA4C paths
 `training.enable_compile` or `training.enable_tf32`. DPGEN2 validates these
 backend-specific placements before creating the workflow, but it does not inject
 or change performance and numerical-policy settings. Therefore setting only
-`train.config.impl` is not sufficient to enable compilation: the DeePMD template
-must contain `training.enable_compile: true` explicitly. Run a bounded smoke test
-and inspect the generated `task.*/input.json` before launching a long campaign.
+`train.config.impl` is not sufficient to enable compilation: a DPA4 template
+must contain `model.use_compile: true`, while a DPA4C template must contain
+`training.enable_compile: true`. Run a bounded smoke test and inspect the
+generated `task.*/input.json` before launching a long campaign.
 
 TensorFlow remains the default when `impl` is omitted.
 For PyTorch and PyTorch Exportable checkpoints, `model_devi_backend` must match

@@ -196,6 +196,28 @@ class TestSubmit(unittest.TestCase):
                 dpa4c,
             )
 
+    def test_validate_mixed_dpa4_and_dpa4c_branches(self):
+        with self.assertRaisesRegex(RuntimeError, "cannot mix DPA4 and DPA4C"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "model_dict": {
+                            "teacher": {"descriptor": {"type": "dpa4"}},
+                            "student": {"descriptor": {"type": "dpa4c"}},
+                        }
+                    },
+                    "training": {
+                        "enable_compile": True,
+                        "enable_tf32": True,
+                    },
+                },
+            )
+
     def test_expand_idx(self):
         ilist = ["1", "3-5", "10-20:2"]
         olist = expand_idx(ilist)

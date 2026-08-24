@@ -475,6 +475,7 @@ def _iter_model_sections(template_script: dict):
 
 
 def _model_family(template_script: dict) -> Optional[str]:
+    families = set()
     for _, model in _iter_model_sections(template_script):
         model_type = model.get("type")
         descriptor = model.get("descriptor", {})
@@ -488,10 +489,15 @@ def _model_family(template_script: dict) -> Optional[str]:
             else descriptor_type
         )
         if descriptor_type == "dpa4c":
-            return "dpa4c"
+            families.add("dpa4c")
         if model_type == "dpa4" or descriptor_type in {"dpa4", "sezm"}:
-            return "dpa4"
-    return None
+            families.add("dpa4")
+    if len(families) > 1:
+        raise RuntimeError(
+            "A training template cannot mix DPA4 and DPA4C branches because "
+            "they require different DeePMD backends"
+        )
+    return next(iter(families), None)
 
 
 def validate_dpa_training_template(
