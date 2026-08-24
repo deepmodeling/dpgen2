@@ -463,6 +463,82 @@ def get_systems_from_data(data, data_prefix=None):
     return data
 
 
+def _normalize_model_backend(backend: str) -> str:
+    return {"pt-expt": "pytorch-exportable"}.get(backend, backend)
+
+
+def _iter_model_sections(template_script: dict):
+    model = template_script.get("model", {})
+    yield "model", model
+    for name, branch in (model.get("model_dict") or {}).items():
+        yield f"model.model_dict.{name}", branch
+
+
+def _model_family(template_script: dict) -> Optional[str]:
+    for _, model in _iter_model_sections(template_script):
+        model_type = model.get("type")
+        descriptor = model.get("descriptor", {})
+        descriptor_type = descriptor.get("type") if isinstance(descriptor, dict) else None
+        model_type = model_type.lower() if isinstance(model_type, str) else model_type
+        descriptor_type = (
+            descriptor_type.lower()
+            if isinstance(descriptor_type, str)
+            else descriptor_type
+        )
+        if descriptor_type == "dpa4c":
+            return "dpa4c"
+        if model_type == "dpa4" or descriptor_type in {"dpa4", "sezm"}:
+            return "dpa4"
+    return None
+
+
+def validate_dpa_training_template(
+    train_backend: str,
+    explore_config: dict,
+    template_script: dict,
+) -> None:
+    """Validate DPA4/DPA4C backend and compile-option placement."""
+    family = _model_family(template_script)
+    if family is None:
+        return
+
+    train_backend = _normalize_model_backend(train_backend)
+    expected_backend = "pytorch" if family == "dpa4" else "pytorch-exportable"
+    if train_backend != expected_backend:
+        raise RuntimeError(
+            f"{family.upper()} training requires impl='{expected_backend}', "
+            f"not '{train_backend}'"
+        )
+
+    normalized_explore = RunLmp.normalize_config(explore_config)
+    if normalized_explore["model_format"] != "pt2":
+        raise RuntimeError(f"{family.upper()} LAMMPS exploration requires model_format='pt2'")
+
+    misplaced = []
+    if family == "dpa4c":
+        for scope, model in _iter_model_sections(template_script):
+            for key in ("use_compile", "enable_tf32"):
+                if key in model:
+                    misplaced.append(f"{scope}.{key}")
+        if misplaced:
+            raise RuntimeError(
+                "DPA4C uses training.enable_compile and training.enable_tf32; "
+                f"remove misplaced {', '.join(misplaced)}"
+            )
+    else:
+        training = template_script.get("training", {})
+        misplaced = [
+            f"training.{key}"
+            for key in ("enable_compile", "enable_tf32")
+            if key in training
+        ]
+        if misplaced:
+            raise RuntimeError(
+                "DPA4 uses model.use_compile and model.enable_tf32; "
+                f"remove misplaced {', '.join(misplaced)}"
+            )
+
+
 def workflow_concurrent_learning(
     config: Dict,
 ) -> Step:
@@ -473,8 +549,17 @@ def workflow_concurrent_learning(
     train_style = config["train"]["type"]
     explore_style = config["explore"]["type"]
     fp_style = config["fp"]["type"]
+    template_script_ = config["train"]["template_script"]
+    if isinstance(template_script_, list):
+        template_script = [json.loads(Path(ii).read_text()) for ii in template_script_]
+    else:
+        template_script = json.loads(Path(template_script_).read_text())
     if train_style in ["dp", "dp-dist"] and explore_style == "lmp":
-        validate_model_backend(train_config.get("impl", "tensorflow"), explore_config)
+        train_backend = train_config.get("impl", "tensorflow")
+        validate_model_backend(train_backend, explore_config)
+        templates = template_script if isinstance(template_script, list) else [template_script]
+        for template in templates:
+            validate_dpa_training_template(train_backend, explore_config, template)
     prep_train_config = config["step_configs"]["prep_train_config"]
     run_train_config = config["step_configs"]["run_train_config"]
     prep_explore_config = config["step_configs"]["prep_explore_config"]
@@ -496,12 +581,17 @@ def workflow_concurrent_learning(
                 "not match numb_models={numb_models}"
             )
     elif train_style == "dp-dist":
+        numb_models = config["train"]["numb_models"]
+        if "student_model_path" in config["train"] and numb_models != 1:
+            raise RuntimeError(
+                "student_model_path initializes one model; omit it for multiple "
+                "from-scratch students or set numb_models=1"
+            )
         init_models_paths = (
             [config["train"]["student_model_path"]]
             if "student_model_path" in config["train"]
             else None
         )
-        config["train"]["numb_models"] = 1
     else:
         raise RuntimeError(f"unknown params, train_style: {train_style}")
 
@@ -557,11 +647,6 @@ def workflow_concurrent_learning(
 
     type_map = config["inputs"]["type_map"]
     numb_models = config["train"]["numb_models"]
-    template_script_ = config["train"]["template_script"]
-    if isinstance(template_script_, list):
-        template_script = [json.loads(Path(ii).read_text()) for ii in template_script_]
-    else:
-        template_script = json.loads(Path(template_script_).read_text())
 
     if (
         "teacher_model_path" in explore_config

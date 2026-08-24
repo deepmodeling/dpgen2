@@ -23,6 +23,7 @@ from dpgen2.entrypoint.submit import (
     print_list_steps,
     submit_concurrent_learning,
     update_reuse_step_scheduler,
+    validate_dpa_training_template,
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,
@@ -106,6 +107,95 @@ class MockedStep:
 
 
 class TestSubmit(unittest.TestCase):
+    def test_validate_dpa4_training_template(self):
+        validate_dpa_training_template(
+            "pytorch",
+            {"model_devi_backend": "pytorch", "model_format": "pt2"},
+            {
+                "model": {
+                    "type": "dpa4",
+                    "descriptor": {"type": "dpa4"},
+                    "use_compile": True,
+                    "enable_tf32": True,
+                },
+                "training": {},
+            },
+        )
+        with self.assertRaisesRegex(RuntimeError, "model.use_compile"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                {
+                    "model": {"type": "dpa4", "descriptor": {"type": "dpa4"}},
+                    "training": {"enable_compile": True},
+                },
+            )
+
+    def test_validate_dpa4c_training_template(self):
+        validate_dpa_training_template(
+            "pytorch-exportable",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
+            {
+                "model": {"descriptor": {"type": "dpa4c"}},
+                "training": {"enable_compile": True, "enable_tf32": True},
+            },
+        )
+        with self.assertRaisesRegex(RuntimeError, "training.enable_compile"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "descriptor": {"type": "dpa4c"},
+                        "use_compile": True,
+                    },
+                    "training": {},
+                },
+            )
+
+        with self.assertRaisesRegex(RuntimeError, "training.enable_tf32"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "descriptor": {"type": "DPA4C"},
+                        "enable_tf32": True,
+                    },
+                    "training": {"enable_compile": True},
+                },
+            )
+
+    def test_validate_dpa_training_backend_and_format(self):
+        dpa4c = {
+            "model": {"descriptor": {"type": "dpa4c"}},
+            "training": {},
+        }
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                dpa4c,
+            )
+        with self.assertRaisesRegex(RuntimeError, "requires model_format='pt2'"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pth",
+                },
+                dpa4c,
+            )
+
     def test_expand_idx(self):
         ilist = ["1", "3-5", "10-20:2"]
         olist = expand_idx(ilist)

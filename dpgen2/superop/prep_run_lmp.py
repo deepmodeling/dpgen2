@@ -153,6 +153,10 @@ def _prep_run_lmp(
     run_executor = init_executor(run_config.pop("executor"))
     template_slice_config = run_config.pop("template_slice_config", {})
 
+    prepare_models_config = deepcopy(run_config)
+    prepare_models_config.pop("continue_on_num_success", None)
+    prepare_models_config.pop("continue_on_success_ratio", None)
+
     prep_lmp = Step(
         "prep-lmp",
         template=PythonOPTemplate(
@@ -187,7 +191,7 @@ def _prep_run_lmp(
         },
         key=step_keys["prepare-models"],
         executor=run_executor,
-        **run_config,
+        **prepare_models_config,
     )
     prep_run_steps.add(prepare_models)
 
