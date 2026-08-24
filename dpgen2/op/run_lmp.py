@@ -211,6 +211,8 @@ class RunLmp(OP):
                 random.shuffle(model_names)
 
             set_models(lmp_input_name, model_names)
+            if any(Path(name).suffix == ".pt2" for name in model_names):
+                ensure_pt2_atom_map(lmp_input_name)
 
             # run lmp
             command = " ".join([command, "-i", lmp_input_name, "-log", lmp_log_name])
@@ -394,6 +396,56 @@ def set_models(lmp_input_name: str, model_names: List[str]):
         f.write("".join(lmp_input_lines))
 
 
+def ensure_pt2_atom_map(lmp_input_name: str):
+    """Ensure a PT2 LAMMPS input enables the atom map before reading atoms.
+
+    Parameters
+    ----------
+    lmp_input_name : str
+        Path to the LAMMPS input file.
+
+    Raises
+    ------
+    RuntimeError
+        If an existing ``atom_modify map yes`` follows the first
+        ``read_data`` or ``read_restart`` command, or neither read command is
+        present.
+    """
+    with open(lmp_input_name, encoding="utf8") as f:
+        lmp_input_lines = f.readlines()
+
+    read_index = next(
+        (
+            index
+            for index, line in enumerate(lmp_input_lines)
+            if re.search(r"\bread_(?:data|restart)\b", line.partition("#")[0])
+        ),
+        None,
+    )
+    if read_index is None:
+        raise RuntimeError("PT2 LAMMPS inputs require read_data or read_restart")
+
+    atom_map_index = next(
+        (
+            index
+            for index, line in enumerate(lmp_input_lines)
+            if re.match(r"^\s*atom_modify\s+.*\bmap\s+yes\b", line.partition("#")[0])
+        ),
+        None,
+    )
+    if atom_map_index is not None:
+        if atom_map_index > read_index:
+            raise RuntimeError(
+                "PT2 LAMMPS inputs require 'atom_modify map yes' before "
+                "read_data or read_restart"
+            )
+        return
+
+    lmp_input_lines.insert(read_index, "atom_modify        map yes\n")
+    with open(lmp_input_name, "w", encoding="utf8") as f:
+        f.write("".join(lmp_input_lines))
+
+
 def find_only_one_key(lmp_lines, key, raise_not_found=True):
     found = []
     for idx in range(len(lmp_lines)):
@@ -451,6 +503,33 @@ def _model_backend(config):
             "Compressed pt2 models require the pytorch-exportable backend"
         )
     return backend
+
+
+def validate_model_backend(train_backend, config):
+    """Validate that a PyTorch checkpoint is frozen by its training backend.
+
+    Parameters
+    ----------
+    train_backend : str
+        DeePMD training backend.
+    config : dict
+        LAMMPS exploration configuration.
+
+    Raises
+    ------
+    RuntimeError
+        If PyTorch training and deployment backends differ.
+    """
+    train_backend = _MODEL_BACKEND_ALIASES.get(train_backend, train_backend)
+    if train_backend not in _MODEL_BACKEND_FLAGS:
+        return
+    model_backend = _model_backend(RunLmp.normalize_config(config))
+    if model_backend != train_backend:
+        raise RuntimeError(
+            f"The model-deviation backend '{model_backend}' cannot freeze a "
+            f"checkpoint trained by '{train_backend}'; use the same backend "
+            "for training and model deployment"
+        )
 
 
 def _model_name(index, model_format):

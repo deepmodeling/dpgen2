@@ -40,6 +40,7 @@ from dpgen2.op.run_lmp import (
     get_ele_temp,
     merge_pimd_files,
     set_models,
+    validate_model_backend,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -103,6 +104,40 @@ class TestRunLmp(unittest.TestCase):
             self.assertEqual(
                 (work_dir / (model_name_pattern % ii)).read_text(), f"model{ii}"
             )
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_pt2_enables_atom_map_before_read(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        (self.task_path / lmp_input_name).write_text(
+            "atom_style atomic\n"
+            'if "${restart} > 0" then "read_restart dpgen.restart.*" '
+            'else "read_data conf.lmp"\n'
+            "pair_style deepmd model.000.pb model.001.pb out_freq 10\n"
+        )
+        models = [self.model_path / f"model_{index}.pt2" for index in range(2)]
+        for model in models:
+            model.write_text("model")
+
+        def copy_link(source, target, target_is_directory=False):
+            shutil.copyfile(source, target)
+
+        with patch("os.symlink", side_effect=copy_link):
+            RunLmp().execute(
+                OPIO(
+                    {
+                        "config": {"command": "mylmp"},
+                        "task_name": self.task_name,
+                        "task_path": self.task_path,
+                        "models": models,
+                    }
+                )
+            )
+
+        lmp_input = (Path(self.task_name) / lmp_input_name).read_text()
+        atom_map = "atom_modify        map yes"
+        self.assertEqual(lmp_input.count(atom_map), 1)
+        self.assertLess(lmp_input.index(atom_map), lmp_input.index("read_restart"))
+        self.assertLess(lmp_input.index(atom_map), lmp_input.index("read_data"))
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_error(self, mocked_run):
@@ -355,6 +390,23 @@ class TestPrepareDPModels(unittest.TestCase):
                     ]
                 ),
             ]
+        )
+
+    def test_training_and_deployment_backends_must_match(self):
+        with self.assertRaisesRegex(RuntimeError, "cannot freeze a checkpoint"):
+            validate_model_backend(
+                "pytorch",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+            )
+        validate_model_backend(
+            "pt-expt",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
         )
 
 

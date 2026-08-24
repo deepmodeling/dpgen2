@@ -86,6 +86,11 @@ Compression is optional:
 ```
 
 TensorFlow remains the default when `impl` is omitted.
+For PyTorch and PyTorch Exportable checkpoints, `model_devi_backend` must match
+the training `impl`; checkpoints cannot be frozen across these backends. PT2
+export runs with `run_explore_config`, which must select hardware, the libtorch
+version, and other runtime libraries compatible with the LAMMPS exploration
+environment.
 
 
 ### Exploration

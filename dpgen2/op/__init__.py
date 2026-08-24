@@ -38,6 +38,7 @@ from .run_lmp import (
     PrepareDPModels,
     RunLmp,
     RunLmpHDF5,
+    validate_model_backend,
 )
 from .run_relax import (
     RunRelax,

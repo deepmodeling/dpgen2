@@ -107,6 +107,7 @@ from dpgen2.op import (
     RunRelax,
     RunRelaxHDF5,
     SelectConfs,
+    validate_model_backend,
 )
 from dpgen2.op.caly_evo_step_merge import (
     CalyEvoStepMerge,
@@ -472,6 +473,8 @@ def workflow_concurrent_learning(
     train_style = config["train"]["type"]
     explore_style = config["explore"]["type"]
     fp_style = config["fp"]["type"]
+    if train_style in ["dp", "dp-dist"] and explore_style == "lmp":
+        validate_model_backend(train_config["impl"], explore_config)
     prep_train_config = config["step_configs"]["prep_train_config"]
     run_train_config = config["step_configs"]["run_train_config"]
     prep_explore_config = config["step_configs"]["prep_explore_config"]
