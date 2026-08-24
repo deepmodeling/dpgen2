@@ -478,7 +478,9 @@ def _model_family(template_script: dict) -> Optional[str]:
     for _, model in _iter_model_sections(template_script):
         model_type = model.get("type")
         descriptor = model.get("descriptor", {})
-        descriptor_type = descriptor.get("type") if isinstance(descriptor, dict) else None
+        descriptor_type = (
+            descriptor.get("type") if isinstance(descriptor, dict) else None
+        )
         model_type = model_type.lower() if isinstance(model_type, str) else model_type
         descriptor_type = (
             descriptor_type.lower()
@@ -512,7 +514,9 @@ def validate_dpa_training_template(
 
     normalized_explore = RunLmp.normalize_config(explore_config)
     if normalized_explore["model_format"] != "pt2":
-        raise RuntimeError(f"{family.upper()} LAMMPS exploration requires model_format='pt2'")
+        raise RuntimeError(
+            f"{family.upper()} LAMMPS exploration requires model_format='pt2'"
+        )
 
     misplaced = []
     if family == "dpa4c":
@@ -557,7 +561,9 @@ def workflow_concurrent_learning(
     if train_style in ["dp", "dp-dist"] and explore_style == "lmp":
         train_backend = train_config.get("impl", "tensorflow")
         validate_model_backend(train_backend, explore_config)
-        templates = template_script if isinstance(template_script, list) else [template_script]
+        templates = (
+            template_script if isinstance(template_script, list) else [template_script]
+        )
         for template in templates:
             validate_dpa_training_template(train_backend, explore_config, template)
     prep_train_config = config["step_configs"]["prep_train_config"]
