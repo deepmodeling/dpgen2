@@ -111,7 +111,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
             templates.append(self.plm_template)
         conts = self.make_cont(templates, self.revisions)
         # Validate: check for unreplaced V_* variables in substituted templates
-        template_raw = "\n".join(self.lmp_template)
+        template_raw = "\n".join(lmp_template)
         if self.plm_set:
             template_raw += "\n" + "\n".join(self.plm_template)
         # Flatten all template variants (LAMMPS + PLUMED) for validation
