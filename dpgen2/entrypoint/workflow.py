@@ -28,7 +28,7 @@ def add_subparser_workflow_subcommand(subparsers, command: str):
         help=f"{command.capitalize()} a DPGEN2 workflow.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_cmd.add_argument("CONFIG", help="the config file in json format.")
+    parser_cmd.add_argument("CONFIG", help="the config file in JSON or YAML format.")
     parser_cmd.add_argument("ID", help="the ID of the workflow.")
 
 

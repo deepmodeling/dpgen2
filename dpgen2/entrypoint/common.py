@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import (
     Path,
@@ -10,6 +11,7 @@ from typing import (
 )
 
 import dflow
+import yaml
 
 from dpgen2.utils import (
     bohrium_config_from_dict,
@@ -21,6 +23,39 @@ from dpgen2.utils import (
     workflow_config_from_dict,
 )
 from dpgen2.utils.step_config import normalize as normalize_step_dict
+
+
+def load_config(path: Union[str, Path]) -> Dict:
+    r"""Load a DPGEN2 workflow configuration from JSON or YAML.
+
+    YAML is selected for ``.yaml`` and ``.yml`` files. Other suffixes retain
+    the existing strict JSON parser so malformed JSON continues to fail with
+    its familiar diagnostics.
+
+    Parameters
+    ----------
+    path : str or Path
+        Workflow configuration path.
+
+    Returns
+    -------
+    dict
+        Parsed workflow configuration.
+
+    Raises
+    ------
+    ValueError
+        If the document root is not a mapping.
+    """
+    config_path = Path(path)
+    content = config_path.read_text()
+    if config_path.suffix.lower() in {".yaml", ".yml"}:
+        config = yaml.safe_load(content)
+    else:
+        config = json.loads(content)
+    if not isinstance(config, dict):
+        raise ValueError(f"DPGEN2 configuration root must be a mapping: {config_path}")
+    return config
 
 
 def global_config_workflow(

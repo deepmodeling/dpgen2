@@ -36,6 +36,8 @@ INFO:root:steps iter-000001--prep-run-train----------------------- finished
 INFO:root:steps iter-000001--prep-run-explore--------------------- finished
 ...
 ```
+Workflow configuration files may use JSON (`.json`) or YAML (`.yaml`/`.yml`). YAML is useful when comments and unquoted keys make a long configuration easier to maintain.
+
 The artifacts can be downloaded on-the-fly with `-d` flag. Note that the existing files are automatically skipped if one sets `dflow_config["archive_mode"] = None`.
 
 
