@@ -4,7 +4,6 @@ import logging
 import os
 import random
 import re
-import shutil
 from pathlib import (
     Path,
 )
@@ -543,32 +542,9 @@ def _compressed_model_name(index, model_format):
     return "model.%03d.compressed.%s" % (index, model_format)
 
 
-def check_pt2_export_environment():
-    """Fail fast when AOTInductor cannot find a C++ compiler."""
-    configured = os.environ.get("CXX")
-    compiler = configured or shutil.which("g++") or shutil.which("c++")
-    if compiler is None or not Path(compiler).is_file():
-        raise FatalError(
-            "PT2 export requires a working C++ compiler on the model-deviation "
-            "resource. Install g++ or set CXX to an executable compiler path "
-            "in run_explore_config before submitting the workflow."
-        )
-    ret, out, err = run_command([str(compiler), "--version"])
-    if ret != 0:
-        raise FatalError(
-            "PT2 export cannot execute the configured C++ compiler "
-            f"'{compiler}'. Set CXX to a working compiler on the "
-            f"model-deviation resource. Output: {out}{err}"
-        )
-
-
 def prepare_dp_models(models, config):
     """Return frozen models, exporting checkpoints once when needed."""
     backend = _model_backend(config)
-    if config["model_format"] == "pt2" and any(
-        Path(model).suffix == ".pt" for model in models
-    ):
-        check_pt2_export_environment()
     prepared = []
     output_dir = Path("prepared_models")
     for idx, model in enumerate(models):
