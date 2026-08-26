@@ -129,6 +129,14 @@ export runs with `run_explore_config`, which must select hardware, the libtorch
 version, and other runtime libraries compatible with the LAMMPS exploration
 environment.
 
+PT2 export uses PyTorch AOTInductor and therefore also requires a working C++
+compiler on `run_explore_config`. Install `g++` or set `CXX` to an executable
+compiler path in that runtime. DPGEN2 checks this capability before freezing a
+checkpoint and reports a non-retryable configuration error when it is absent.
+For remote wrappers, run the same compiler preflight before long training jobs
+when training and export share one runtime, so a missing compiler cannot waste a
+completed training campaign.
+
 
 ### Exploration
 

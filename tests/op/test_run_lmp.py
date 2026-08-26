@@ -12,6 +12,7 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    FatalError,
     OPIOSign,
     TransientError,
 )
@@ -309,8 +310,9 @@ class TestPrepareDPModels(unittest.TestCase):
         shutil.rmtree(self.model_dir, ignore_errors=True)
         shutil.rmtree("prepared_models", ignore_errors=True)
 
+    @patch("dpgen2.op.run_lmp.check_pt2_export_environment")
     @patch("dpgen2.op.run_lmp.run_command")
-    def test_dpa4_pt2(self, mocked_run):
+    def test_dpa4_pt2(self, mocked_run, mocked_preflight):
         mocked_run.return_value = (0, "", "")
         models = PrepareDPModels().execute(
             OPIO(
@@ -346,9 +348,11 @@ class TestPrepareDPModels(unittest.TestCase):
                 for idx, model in enumerate(self.models)
             ]
         )
+        mocked_preflight.assert_called_once_with()
 
+    @patch("dpgen2.op.run_lmp.check_pt2_export_environment")
     @patch("dpgen2.op.run_lmp.run_command")
-    def test_dpa4c_compressed_pt2(self, mocked_run):
+    def test_dpa4c_compressed_pt2(self, mocked_run, mocked_preflight):
         mocked_run.return_value = (0, "", "")
         models = PrepareDPModels().execute(
             OPIO(
@@ -391,6 +395,39 @@ class TestPrepareDPModels(unittest.TestCase):
                 ),
             ]
         )
+        mocked_preflight.assert_called_once_with()
+
+    @patch.dict("os.environ", {}, clear=True)
+    @patch("dpgen2.op.run_lmp.shutil.which", return_value=None)
+    def test_pt2_export_requires_compiler(self, mocked_which):
+        with self.assertRaisesRegex(FatalError, "set CXX"):
+            PrepareDPModels().execute(
+                OPIO(
+                    {
+                        "config": {
+                            "model_devi_backend": "pytorch-exportable",
+                            "model_format": "pt2",
+                        },
+                        "models": self.models[:1],
+                    }
+                )
+            )
+        mocked_which.assert_has_calls([call("g++"), call("c++")])
+
+    @patch.dict("os.environ", {"CXX": "/missing/compiler"}, clear=True)
+    def test_pt2_export_rejects_missing_configured_compiler(self):
+        with self.assertRaisesRegex(FatalError, "set CXX"):
+            PrepareDPModels().execute(
+                OPIO(
+                    {
+                        "config": {
+                            "model_devi_backend": "pytorch-exportable",
+                            "model_format": "pt2",
+                        },
+                        "models": self.models[:1],
+                    }
+                )
+            )
 
     def test_training_and_deployment_backends_must_match(self):
         with self.assertRaisesRegex(RuntimeError, "cannot freeze a checkpoint"):
