@@ -37,8 +37,12 @@ from dpgen2.constants import (
 from dpgen2.op.run_lmp import (
     PrepareDPModels,
     RunLmp,
+    _model_backend,
+    compress_model,
+    ensure_pt2_atom_map,
     get_ele_temp,
     merge_pimd_files,
+    prepare_dp_models,
     set_models,
     validate_model_backend,
 )
@@ -534,3 +538,146 @@ ITEM: ATOMS id type x y z
         ]:
             if os.path.exists(f):
                 os.remove(f)
+
+
+class TestModelBackendValidation(unittest.TestCase):
+    def test_unsupported_backend(self):
+        with self.assertRaisesRegex(RuntimeError, "Unsupported model-deviation backend"):
+            _model_backend({"model_devi_backend": "unknown", "model_format": "pt2", "dp_compress": False})
+
+    def test_unsupported_format(self):
+        with self.assertRaisesRegex(RuntimeError, "Unsupported model format"):
+            _model_backend({"model_devi_backend": "pytorch", "model_format": "onnx", "dp_compress": False})
+
+    def test_pth_requires_pytorch(self):
+        with self.assertRaisesRegex(RuntimeError, "pth model format requires the pytorch backend"):
+            _model_backend({"model_devi_backend": "pytorch-exportable", "model_format": "pth", "dp_compress": False})
+
+    def test_compress_requires_pt_expt_pt2(self):
+        with self.assertRaisesRegex(RuntimeError, "pytorch-exportable backend"):
+            _model_backend({"model_devi_backend": "pytorch", "model_format": "pt2", "dp_compress": True})
+
+    def test_tensorflow_backend_skips_validation(self):
+        validate_model_backend("tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"})
+
+
+class TestEnsurePt2AtomMap(unittest.TestCase):
+    def test_existing_map_before_read_is_kept(self):
+        lines = "atom_modify map yes\nread_data conf.lmp\npair_style deepmd\n"
+        with open("_test_lmp.in", "w") as f:
+            f.write(lines)
+        ensure_pt2_atom_map("_test_lmp.in")
+        result = Path("_test_lmp.in").read_text()
+        self.assertEqual(result.count("atom_modify map yes"), 1)
+        os.remove("_test_lmp.in")
+
+    def test_map_inserted_before_read(self):
+        lines = "units metal\nread_data conf.lmp\npair_style deepmd\n"
+        with open("_test_lmp.in", "w") as f:
+            f.write(lines)
+        ensure_pt2_atom_map("_test_lmp.in")
+        result = Path("_test_lmp.in").read_text()
+        self.assertIn("map yes", result)
+        self.assertLess(result.index("map yes"), result.index("read_data"))
+        os.remove("_test_lmp.in")
+
+    def test_no_read_raises(self):
+        lines = "units metal\npair_style deepmd\n"
+        with open("_test_lmp.in", "w") as f:
+            f.write(lines)
+        with self.assertRaisesRegex(RuntimeError, "read_data or read_restart"):
+            ensure_pt2_atom_map("_test_lmp.in")
+        os.remove("_test_lmp.in")
+
+    def test_map_after_read_raises(self):
+        lines = "read_data conf.lmp\natom_modify map yes\n"
+        with open("_test_lmp.in", "w") as f:
+            f.write(lines)
+        with self.assertRaisesRegex(RuntimeError, "atom_modify map yes"):
+            ensure_pt2_atom_map("_test_lmp.in")
+        os.remove("_test_lmp.in")
+
+
+class TestCompressModelFailure(unittest.TestCase):
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_compress_failure_raises(self, mocked_run):
+        mocked_run.return_value = (1, "out", "compress error")
+        with self.assertRaises(TransientError):
+            compress_model("frozen.pt2", "compressed.pt2", "pytorch-exportable")
+
+
+class TestPrepareDPModelsPassthrough(unittest.TestCase):
+    def setUp(self):
+        self.model_dir = Path("_test_models")
+        self.model_dir.mkdir(exist_ok=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.model_dir, ignore_errors=True)
+        shutil.rmtree("prepared_models", ignore_errors=True)
+
+    def test_pth_passthrough(self):
+        model = self.model_dir / "model.000.pth"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pth"})
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_pt2_passthrough(self):
+        model = self.model_dir / "model.000.pt2"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pt2"})
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_unsupported_extension_raises(self):
+        model = self.model_dir / "model.onnx"
+        model.write_text("bad")
+        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pt2"})
+        with self.assertRaisesRegex(RuntimeError, "not supported"):
+            prepare_dp_models([model], config)
+
+
+class TestModelBackendValidation(unittest.TestCase):
+    def test_unsupported_backend(self):
+        with self.assertRaisesRegex(RuntimeError, "Unsupported model-deviation backend"):
+            _model_backend({"model_devi_backend": "bogus", "model_format": "pt2", "dp_compress": False})
+
+    def test_unsupported_format(self):
+        with self.assertRaisesRegex(RuntimeError, "Unsupported model format"):
+            _model_backend({"model_devi_backend": "pytorch", "model_format": "xyz", "dp_compress": False})
+
+    def test_pth_requires_pytorch(self):
+        with self.assertRaisesRegex(RuntimeError, "pth model format requires the pytorch"):
+            _model_backend({"model_devi_backend": "pytorch-exportable", "model_format": "pth", "dp_compress": False})
+
+    def test_compress_requires_exportable_pt2(self):
+        with self.assertRaisesRegex(RuntimeError, "Compressed pt2"):
+            _model_backend({"model_devi_backend": "pytorch", "model_format": "pt2", "dp_compress": True})
+
+    def test_validate_non_pytorch_backend_skips(self):
+        validate_model_backend("tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"})
+
+
+class TestEnsurePt2AtomMap(unittest.TestCase):
+    def test_map_already_present_before_read(self):
+        lines = "atom_modify map yes\nread_data conf.lmp\n"
+        Path("test_input.lammps").write_text(lines)
+        ensure_pt2_atom_map("test_input.lammps")
+        result = Path("test_input.lammps").read_text()
+        self.assertIn("atom_modify map yes", result)
+        self.assertEqual(result.count("atom_modify"), 1)
+        os.remove("test_input.lammps")
+
+    def test_no_read_command_raises(self):
+        Path("test_input.lammps").write_text("atom_modify map yes\npair_style deepmd\n")
+        with self.assertRaisesRegex(RuntimeError, "read_data or read_restart"):
+            ensure_pt2_atom_map("test_input.lammps")
+        os.remove("test_input.lammps")
+
+
+class TestCompressModelFailure(unittest.TestCase):
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_compress_failure_raises(self, mocked_run):
+        mocked_run.return_value = (1, "", "compress error")
+        with self.assertRaisesRegex(TransientError, "compress failed"):
+            compress_model("input.pt2", "output.pt2", "pytorch-exportable")
