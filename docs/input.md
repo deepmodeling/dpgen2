@@ -129,6 +129,11 @@ generation before submission. Set `strict_revisions` to `false` only when a
 template intentionally uses `V_*` as a native LAMMPS or PLUMED identifier; the
 unknown tokens are then preserved and reported as warnings.
 
+For a `"customized-lmp-template"` task group, `strict_revisions` defaults to
+`false` for backward compatibility because its shell commands may intentionally
+generate templates containing `V_*` tokens. Set it to `true` to apply the same
+strict validation to the generated templates.
+
 The {dargs:argument}`"type" : "lmp"<explore>` means that configurations are explored by LAMMPS DPMD runs.
 The {dargs:argument}`"config"<explore[lmp]/config>` key defines the lmp configs.
 The {dargs:argument}`"configurations"<explore[lmp]/configurations>` provides the initial configurations (coordinates of atoms and the simulation cell) of the DPMD simulations. It is a list. The elements of the list are `dict`s that defines how the configurations are generated
