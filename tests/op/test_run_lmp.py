@@ -542,23 +542,53 @@ ITEM: ATOMS id type x y z
 
 class TestModelBackendValidation(unittest.TestCase):
     def test_unsupported_backend(self):
-        with self.assertRaisesRegex(RuntimeError, "Unsupported model-deviation backend"):
-            _model_backend({"model_devi_backend": "unknown", "model_format": "pt2", "dp_compress": False})
+        with self.assertRaisesRegex(
+            RuntimeError, "Unsupported model-deviation backend"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "unknown",
+                    "model_format": "pt2",
+                    "dp_compress": False,
+                }
+            )
 
     def test_unsupported_format(self):
         with self.assertRaisesRegex(RuntimeError, "Unsupported model format"):
-            _model_backend({"model_devi_backend": "pytorch", "model_format": "onnx", "dp_compress": False})
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "onnx",
+                    "dp_compress": False,
+                }
+            )
 
     def test_pth_requires_pytorch(self):
-        with self.assertRaisesRegex(RuntimeError, "pth model format requires the pytorch backend"):
-            _model_backend({"model_devi_backend": "pytorch-exportable", "model_format": "pth", "dp_compress": False})
+        with self.assertRaisesRegex(
+            RuntimeError, "pth model format requires the pytorch backend"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pth",
+                    "dp_compress": False,
+                }
+            )
 
     def test_compress_requires_pt_expt_pt2(self):
         with self.assertRaisesRegex(RuntimeError, "pytorch-exportable backend"):
-            _model_backend({"model_devi_backend": "pytorch", "model_format": "pt2", "dp_compress": True})
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "pt2",
+                    "dp_compress": True,
+                }
+            )
 
     def test_tensorflow_backend_skips_validation(self):
-        validate_model_backend("tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"})
+        validate_model_backend(
+            "tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
 
 
 class TestEnsurePt2AtomMap(unittest.TestCase):
@@ -618,44 +648,80 @@ class TestPrepareDPModelsPassthrough(unittest.TestCase):
     def test_pth_passthrough(self):
         model = self.model_dir / "model.000.pth"
         model.write_text("frozen")
-        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pth"})
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "pytorch", "model_format": "pth"}
+        )
         result = prepare_dp_models([model], config)
         self.assertEqual(result, [model.resolve()])
 
     def test_pt2_passthrough(self):
         model = self.model_dir / "model.000.pt2"
         model.write_text("frozen")
-        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pt2"})
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
         result = prepare_dp_models([model], config)
         self.assertEqual(result, [model.resolve()])
 
     def test_unsupported_extension_raises(self):
         model = self.model_dir / "model.onnx"
         model.write_text("bad")
-        config = RunLmp.normalize_config({"model_devi_backend": "pytorch", "model_format": "pt2"})
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
         with self.assertRaisesRegex(RuntimeError, "not supported"):
             prepare_dp_models([model], config)
 
 
 class TestModelBackendValidation(unittest.TestCase):
     def test_unsupported_backend(self):
-        with self.assertRaisesRegex(RuntimeError, "Unsupported model-deviation backend"):
-            _model_backend({"model_devi_backend": "bogus", "model_format": "pt2", "dp_compress": False})
+        with self.assertRaisesRegex(
+            RuntimeError, "Unsupported model-deviation backend"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "bogus",
+                    "model_format": "pt2",
+                    "dp_compress": False,
+                }
+            )
 
     def test_unsupported_format(self):
         with self.assertRaisesRegex(RuntimeError, "Unsupported model format"):
-            _model_backend({"model_devi_backend": "pytorch", "model_format": "xyz", "dp_compress": False})
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "xyz",
+                    "dp_compress": False,
+                }
+            )
 
     def test_pth_requires_pytorch(self):
-        with self.assertRaisesRegex(RuntimeError, "pth model format requires the pytorch"):
-            _model_backend({"model_devi_backend": "pytorch-exportable", "model_format": "pth", "dp_compress": False})
+        with self.assertRaisesRegex(
+            RuntimeError, "pth model format requires the pytorch"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pth",
+                    "dp_compress": False,
+                }
+            )
 
     def test_compress_requires_exportable_pt2(self):
         with self.assertRaisesRegex(RuntimeError, "Compressed pt2"):
-            _model_backend({"model_devi_backend": "pytorch", "model_format": "pt2", "dp_compress": True})
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "pt2",
+                    "dp_compress": True,
+                }
+            )
 
     def test_validate_non_pytorch_backend_skips(self):
-        validate_model_backend("tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"})
+        validate_model_backend(
+            "tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
 
 
 class TestEnsurePt2AtomMap(unittest.TestCase):
