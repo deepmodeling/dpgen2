@@ -8,10 +8,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Set,
-    Tuple,
 )
 
 import numpy as np
@@ -47,6 +44,7 @@ from dpgen2.utils import (
     BinaryFileInput,
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -70,7 +68,7 @@ class RunLmp(OP):
                 "config": BigParameter(dict),
                 "task_name": BigParameter(str),
                 "task_path": Artifact(Path),
-                "models": Artifact(List[Path]),
+                "models": Artifact(DflowList[Path]),
             }
         )
 
@@ -83,7 +81,7 @@ class RunLmp(OP):
                 "model_devi": Artifact(Path),
                 "plm_output": Artifact(Path, optional=True),
                 "optional_output": Artifact(Path, optional=True),
-                "extra_outputs": Artifact(List[Path]),
+                "extra_outputs": Artifact(DflowList[Path]),
             }
         )
 
@@ -132,9 +130,9 @@ class RunLmp(OP):
         work_dir = Path(task_name)
 
         if teacher_model is not None:
-            assert (
-                len(model_files) == 1
-            ), "One model is enough in knowledge distillation"
+            assert len(model_files) == 1, (
+                "One model is enough in knowledge distillation"
+            )
             ext = os.path.splitext(teacher_model.file_name)[-1]
             teacher_model_file = "teacher_model" + ext
             teacher_model.save_as_file(teacher_model_file)
@@ -158,7 +156,7 @@ class RunLmp(OP):
                     freeze_model(mm, mname, config.get("model_frozen_head"))
                 else:
                     raise RuntimeError(
-                        "Model file with extension '%s' is not supported" % ext
+                        f"Model file with extension '{ext}' is not supported"
                     )
                 model_names.append(mname)
 
@@ -283,7 +281,7 @@ class RunLmp(OP):
 config_args = RunLmp.lmp_args
 
 
-def set_models(lmp_input_name: str, model_names: List[str]):
+def set_models(lmp_input_name: str, model_names: list[str]):
     with open(lmp_input_name, encoding="utf8") as f:
         lmp_input_lines = f.readlines()
 
@@ -306,7 +304,7 @@ def set_models(lmp_input_name: str, model_names: List[str]):
                 break
     if match_first == -1:
         raise RuntimeError(
-            f"cannot file model pattern {pattern} in line " f" {lmp_input_lines[idx]}"
+            f"cannot file model pattern {pattern} in line  {lmp_input_lines[idx]}"
         )
     if match_last == -1:
         raise RuntimeError(f"last matching index should not be -1, terribly wrong ")
@@ -331,10 +329,10 @@ def find_only_one_key(lmp_lines, key, raise_not_found=True):
         if len(words) >= nkey and words[:nkey] == key:
             found.append(idx)
     if len(found) > 1:
-        raise RuntimeError("found %d keywords %s" % (len(found), key))
+        raise RuntimeError(f"found {len(found)} keywords {key}")
     if len(found) == 0:
         if raise_not_found:
-            raise RuntimeError("failed to find keyword %s" % (key))
+            raise RuntimeError(f"failed to find keyword {key}")
         else:
             return None
     return found[0]
@@ -363,10 +361,10 @@ def get_ele_temp(lmp_log_name):
 
 
 def freeze_model(input_model, frozen_model, head=None):
-    freeze_args = "-o %s" % frozen_model
+    freeze_args = f"-o {frozen_model}"
     if head is not None:
-        freeze_args += " --head %s" % head
-    freeze_cmd = "dp --pt freeze -c %s %s" % (input_model, freeze_args)
+        freeze_args += f" --head {head}"
+    freeze_cmd = f"dp --pt freeze -c {input_model} {freeze_args}"
     ret, out, err = run_command(freeze_cmd, shell=True)
     if ret != 0:
         logging.error(
@@ -392,13 +390,13 @@ def merge_pimd_files():
     if len(traj_files) > 0:
         with open(lmp_traj_name, "w") as f:
             for traj_file in sorted(traj_files):
-                with open(traj_file, "r") as f2:
+                with open(traj_file) as f2:
                     f.write(f2.read())
     model_devi_files = glob.glob("model_devi.*.out")
     if len(model_devi_files) > 0:
         with open(lmp_model_devi_name, "w") as f:
             for model_devi_file in sorted(model_devi_files):
-                with open(model_devi_file, "r") as f2:
+                with open(model_devi_file) as f2:
                     f.write(f2.read())
 
 

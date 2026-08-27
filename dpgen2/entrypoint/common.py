@@ -3,8 +3,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
-    List,
     Optional,
     Union,
 )
@@ -38,7 +36,7 @@ def global_config_workflow(
         bohrium_config_from_dict(wf_config["bohrium_config"])
 
 
-def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
+def expand_sys_str(root_dir: Union[str, Path]) -> list[str]:
     root_dir = Path(root_dir)
     matches = [str(d) for d in root_dir.rglob("*") if (d / "type.raw").is_file()]
     if (root_dir / "type.raw").is_file():
@@ -46,7 +44,7 @@ def expand_sys_str(root_dir: Union[str, Path]) -> List[str]:
     return matches
 
 
-def expand_idx(in_list) -> List[int]:
+def expand_idx(in_list) -> list[int]:
     ret = []
     for ii in in_list:
         if isinstance(ii, int):
@@ -64,5 +62,5 @@ def expand_idx(in_list) -> List[int]:
                 ret += [int(range_str[0])]
             else:
                 raise RuntimeError("not expected range string", step_str[0])
-    ret = sorted(list(set(ret)))
+    ret = sorted(set(ret))
     return ret

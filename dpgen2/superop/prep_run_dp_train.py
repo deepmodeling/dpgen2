@@ -7,10 +7,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Set,
-    Type,
 )
 
 from dflow import (
@@ -58,13 +55,13 @@ class PrepRunDPTrain(Steps):
     def __init__(
         self,
         name: str,
-        prep_train_op: Type[OP],
-        run_train_op: Type[RunDPTrain],
+        prep_train_op: type[OP],
+        run_train_op: type[RunDPTrain],
         prep_config: Optional[dict] = None,
         run_config: Optional[dict] = None,
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
         valid_data: Optional[S3Artifact] = None,
-        optional_files: Optional[List[str]] = None,
+        optional_files: Optional[list[str]] = None,
     ):
         prep_config = normalize_step_dict({}) if prep_config is None else prep_config
         run_config = normalize_step_dict({}) if run_config is None else run_config
@@ -107,10 +104,12 @@ class PrepRunDPTrain(Steps):
         self._keys = ["prep-train", "run-train"]
         self.step_keys = {}
         ii = "prep-train"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-train"
         self.step_keys[ii] = "--".join(
-            ["%s" % self.inputs.parameters["block_id"], ii + "-{{item}}"]
+            ["{}".format(self.inputs.parameters["block_id"]), ii + "-{{item}}"]
         )
 
         self = _prep_run_dp_train(
@@ -149,13 +148,13 @@ class PrepRunDPTrain(Steps):
 def _prep_run_dp_train(
     train_steps,
     step_keys,
-    prep_train_op: Type[OP],
-    run_train_op: Type[RunDPTrain],
+    prep_train_op: type[OP],
+    run_train_op: type[RunDPTrain],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
     valid_data: Optional[S3Artifact] = None,
-    optional_files: Optional[List[str]] = None,
+    optional_files: Optional[list[str]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)

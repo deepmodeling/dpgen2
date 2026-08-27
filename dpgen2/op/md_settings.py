@@ -1,6 +1,5 @@
 import json
 from typing import (
-    List,
     Optional,
 )
 
@@ -12,8 +11,8 @@ class MDSettings:
         dt: float,
         nsteps: int,
         trj_freq: int,
-        temps: Optional[List[float]] = None,
-        press: Optional[List[float]] = None,
+        temps: Optional[list[float]] = None,
+        press: Optional[list[float]] = None,
         tau_t: float = 0.1,
         tau_p: float = 0.5,
         pka_e: Optional[float] = None,

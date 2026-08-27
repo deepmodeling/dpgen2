@@ -4,9 +4,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -53,9 +51,9 @@ class AlloyConfGenerator(ConfGenerator):
     def __init__(
         self,
         numb_confs,
-        lattice: Union[dpdata.System, Tuple[str, float]],
-        replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
-        concentration: Union[List[List[float]], List[float], None] = None,
+        lattice: Union[dpdata.System, tuple[str, float]],
+        replicate: Union[list[int], tuple[int, int, int], int, None] = None,
+        concentration: Union[list[list[float]], list[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
     ):
@@ -104,7 +102,7 @@ class AlloyConfGenerator(ConfGenerator):
         return f"Generate alloys with {make_link('a certain lattice or user proided structure', 'explore[lmp]/configurations[alloy]/lattice')}, the elements randomly occuping the lattice with {make_link('user provided probability', 'explore[lmp]/configurations[alloy]/concentration')} ."
 
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         from dpgen2.entrypoint.args import (
             make_link,
         )
@@ -162,9 +160,9 @@ class AlloyConf:
 
     def __init__(
         self,
-        lattice: Union[dpdata.System, Tuple[str, float]],
-        type_map: List[str],
-        replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
+        lattice: Union[dpdata.System, tuple[str, float]],
+        type_map: list[str],
+        replicate: Union[list[int], tuple[int, int, int], int, None] = None,
     ) -> None:
         # init sys
         if not isinstance(lattice, dpdata.System):
@@ -184,18 +182,18 @@ class AlloyConf:
         sys.data["atom_numbs"] = [0] * self.ntypes
         sys.data["atom_numbs"][0] = self.natoms
         sys.data["atom_types"] = np.array([0] * self.natoms, dtype=int)
-        self.type_population = [ii for ii in range(self.ntypes)]
+        self.type_population = list(range(self.ntypes))
         # record sys
         self.sys = sys
 
     def generate_file_content(
         self,
         numb_confs,
-        concentration: Union[List[List[float]], List[float], None] = None,
+        concentration: Union[list[list[float]], list[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
         fmt: str = "lammps/lmp",
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Parameters
         ----------
@@ -232,10 +230,10 @@ class AlloyConf:
     def generate_systems(
         self,
         numb_confs,
-        concentration: Union[List[List[float]], List[float], None] = None,
+        concentration: Union[list[list[float]], list[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
-    ) -> List[dpdata.System]:
+    ) -> list[dpdata.System]:
         """
         Parameters
         ----------
@@ -265,7 +263,7 @@ class AlloyConf:
 
     def _generate_one_sys(
         self,
-        concentration: Union[List[List[float]], List[float], None] = None,
+        concentration: Union[list[list[float]], list[float], None] = None,
         cell_pert_frac: float = 0.0,
         atom_pert_dist: float = 0.0,
     ) -> dpdata.System:
@@ -351,11 +349,11 @@ def gen_doc(*, make_anchor=True, make_link=True, **kwargs):
 
 
 def generate_alloy_conf_file_content(
-    lattice: Union[dpdata.System, Tuple[str, float]],
-    type_map: List[str],
+    lattice: Union[dpdata.System, tuple[str, float]],
+    type_map: list[str],
     numb_confs,
-    replicate: Union[List[int], Tuple[int, int, int], int, None] = None,
-    concentration: Union[List[List[float]], List[float], None] = None,
+    replicate: Union[list[int], tuple[int, int, int], int, None] = None,
+    concentration: Union[list[list[float]], list[float], None] = None,
     cell_pert_frac: float = 0.0,
     atom_pert_dist: float = 0.0,
     fmt: str = "lammps/lmp",

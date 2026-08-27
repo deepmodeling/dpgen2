@@ -1,8 +1,6 @@
 import logging
 import time
 from typing import (
-    Dict,
-    List,
     Optional,
 )
 
@@ -31,9 +29,9 @@ default_watching_keys = [
 
 def update_finished_steps(
     wf,
-    finished_keys: Optional[List[str]] = None,
+    finished_keys: Optional[list[str]] = None,
     download: Optional[bool] = False,
-    watching_keys: Optional[List[str]] = None,
+    watching_keys: Optional[list[str]] = None,
     prefix: Optional[str] = None,
     chk_pnt: bool = False,
 ):
@@ -58,7 +56,7 @@ def update_finished_steps(
 def watch(
     workflow_id,
     wf_config: Optional[dict] = None,
-    watching_keys: Optional[List] = default_watching_keys,
+    watching_keys: Optional[list] = default_watching_keys,
     frequency: float = 600.0,
     download: bool = False,
     prefix: Optional[str] = None,

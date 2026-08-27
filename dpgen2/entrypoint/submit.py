@@ -9,8 +9,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
-    List,
     Optional,
 )
 
@@ -159,9 +157,9 @@ def make_concurrent_learning_op(
     select_confs_config: dict = default_config,
     collect_data_config: dict = default_config,
     cl_step_config: dict = default_config,
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
     valid_data: Optional[S3Artifact] = None,
-    train_optional_files: Optional[List[str]] = None,
+    train_optional_files: Optional[list[str]] = None,
     explore_config: Optional[dict] = None,
 ):
     if train_style in ("dp", "dp-dist"):
@@ -463,7 +461,7 @@ def get_systems_from_data(data, data_prefix=None):
 
 
 def workflow_concurrent_learning(
-    config: Dict,
+    config: dict,
 ) -> Step:
     default_config = config["default_step_config"]
 
@@ -505,7 +503,7 @@ def workflow_concurrent_learning(
     if upload_python_packages is not None and isinstance(upload_python_packages, str):
         upload_python_packages = [upload_python_packages]
     if upload_python_packages is not None:
-        _upload_python_packages: List[os.PathLike] = [
+        _upload_python_packages: list[os.PathLike] = [
             Path(ii) for ii in upload_python_packages
         ]
         upload_python_packages = _upload_python_packages
@@ -564,9 +562,9 @@ def workflow_concurrent_learning(
         "teacher_model_path" in explore_config
         and explore_config["teacher_model_path"] is not None
     ):
-        assert os.path.exists(
-            explore_config["teacher_model_path"]
-        ), f"No such file: {explore_config['teacher_model_path']}"
+        assert os.path.exists(explore_config["teacher_model_path"]), (
+            f"No such file: {explore_config['teacher_model_path']}"
+        )
         explore_config["teacher_model_path"] = BinaryFileInput(
             explore_config["teacher_model_path"]
         )
@@ -579,12 +577,12 @@ def workflow_concurrent_learning(
     fp_config["run"] = config["fp"]["run_config"]
     fp_config["extra_output_files"] = config["fp"]["extra_output_files"]
     if fp_style == "deepmd":
-        assert (
-            "teacher_model_path" in fp_config["run"]
-        ), "Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
-        assert os.path.exists(
-            fp_config["run"]["teacher_model_path"]
-        ), f"No such file: {fp_config['run']['teacher_model_path']}"
+        assert "teacher_model_path" in fp_config["run"], (
+            "Cannot find 'teacher_model_path' in config['fp']['run_config'] when fp_style == 'deepmd'"
+        )
+        assert os.path.exists(fp_config["run"]["teacher_model_path"]), (
+            f"No such file: {fp_config['run']['teacher_model_path']}"
+        )
         fp_config["run"]["teacher_model_path"] = BinaryFileInput(
             fp_config["run"]["teacher_model_path"]
         )
@@ -670,13 +668,13 @@ def get_scheduler_ids(
         if get_subkey(ii.key, 1) == "scheduler":
             scheduler_ids.append(idx)
     scheduler_keys = [reuse_step[ii].key for ii in scheduler_ids]
-    assert (
-        sorted(scheduler_keys) == scheduler_keys
-    ), "The scheduler keys are not properly sorted"
+    assert sorted(scheduler_keys) == scheduler_keys, (
+        "The scheduler keys are not properly sorted"
+    )
 
     if len(scheduler_ids) == 0:
         logging.warning(
-            "No scheduler found in the workflow, " "does not do any replacement."
+            "No scheduler found in the workflow, does not do any replacement."
         )
     return scheduler_ids
 
@@ -735,7 +733,7 @@ def copy_scheduler_plans(
 
 def submit_concurrent_learning(
     wf_config,
-    reuse_step: Optional[List[ArgoStep]] = None,
+    reuse_step: Optional[list[ArgoStep]] = None,
     replace_scheduler: bool = False,
     no_submission: bool = False,
 ):
@@ -867,7 +865,6 @@ def resubmit_concurrent_learning(
             all_step_keys,
             ["run-train", "run-lmp", "run-fp", "diffcsp-gen", "run-relax"],
         )
-        print(prt_str)
 
     if reuse is None:
         return None

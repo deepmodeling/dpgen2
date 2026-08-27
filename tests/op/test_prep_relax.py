@@ -18,7 +18,7 @@ class TestPrepRelax(unittest.TestCase):
     def testPrepRelax(self):
         cifs = []
         for i in range(4):
-            p = Path("%i.cif" % i)
+            p = Path(f"{i:d}.cif")
             p.write_text("Mocked cif.")
             cifs.append(p)
         op_in = OPIO(
@@ -34,13 +34,13 @@ class TestPrepRelax(unittest.TestCase):
         self.assertEqual(op_out["ntasks"], 2)
         self.assertEqual(len(op_out["task_paths"]), 2)
         for i, task_path in enumerate(op_out["task_paths"]):
-            self.assertEqual(str(task_path), "task.%06d" % i)
+            self.assertEqual(str(task_path), f"task.{i:06d}")
             self.assertEqual(len(list(task_path.iterdir())), 2)
 
     def tearDown(self):
         for i in range(2):
-            if os.path.isdir("task.%06d" % i):
-                shutil.rmtree("task.%06d" % i)
+            if os.path.isdir(f"task.{i:06d}"):
+                shutil.rmtree(f"task.{i:06d}")
         for i in range(4):
-            if os.path.isfile("%s.cif" % i):
-                os.remove("%s.cif" % i)
+            if os.path.isfile(f"{i}.cif"):
+                os.remove(f"{i}.cif")

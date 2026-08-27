@@ -3,9 +3,11 @@ import os
 import shutil
 import textwrap
 import unittest
+from unittest import (
+    mock,
+)
 
 import dflow
-import mock
 from dflow import (
     Workflow,
 )

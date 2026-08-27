@@ -6,11 +6,6 @@ from abc import (
 from pathlib import (
     Path,
 )
-from typing import (
-    Dict,
-    List,
-    Tuple,
-)
 
 import dargs
 from dflow.python import (
@@ -26,6 +21,7 @@ from dflow.python import (
 from dpgen2.utils.chdir import (
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class RunFp(OP, ABC):
@@ -55,12 +51,12 @@ class RunFp(OP, ABC):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
-                "extra_outputs": Artifact(List[Path]),
+                "extra_outputs": Artifact(DflowList[Path]),
             }
         )
 
     @abstractmethod
-    def input_files(self) -> List[str]:
+    def input_files(self) -> list[str]:
         r"""The mandatory input files to run a FP task.
 
         Returns
@@ -72,7 +68,7 @@ class RunFp(OP, ABC):
         pass
 
     @abstractmethod
-    def optional_input_files(self) -> List[str]:
+    def optional_input_files(self) -> list[str]:
         r"""The optional input files to run a FP task.
 
         Returns
@@ -87,8 +83,8 @@ class RunFp(OP, ABC):
     def run_task(
         self,
         **kwargs,
-    ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+    ) -> tuple[str, str]:
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -107,7 +103,7 @@ class RunFp(OP, ABC):
 
     @staticmethod
     @abstractmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `run_task` method.
 
         Returns
@@ -118,7 +114,7 @@ class RunFp(OP, ABC):
         pass
 
     @classmethod
-    def normalize_config(cls, data: Dict = {}, strict: bool = True) -> Dict:
+    def normalize_config(cls, data: dict = {}, strict: bool = True) -> dict:
         r"""Normalized the argument.
 
         Parameters

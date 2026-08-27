@@ -1,9 +1,6 @@
 import copy
 import logging
 import random
-from typing import (
-    List,
-)
 
 import numpy as np
 
@@ -87,7 +84,7 @@ class CalyTaskGroup(ExplorationTaskGroup):
         pop_size: int = 30,
         max_step: int = 5,
         system_name: str = "CALYPSO",
-        numb_of_formula: List[int] = [1, 1],
+        numb_of_formula: list[int] = [1, 1],
         pressure: float = 0.001,
         fmax: float = 0.01,
         volume: float = 0,
@@ -103,26 +100,24 @@ class CalyTaskGroup(ExplorationTaskGroup):
         pick_step: int = 1,
         parallel: bool = False,
         split: bool = True,
-        spec_space_group: List[int] = [2, 230],
+        spec_space_group: list[int] = [2, 230],
         vsc: bool = True,
-        ctrl_range: List[List[int]] = [[1, 10]],
+        ctrl_range: list[list[int]] = [[1, 10]],
         max_numb_atoms: int = 100,
         opt_step: int = 1000,
     ):
-        """
-        Set calypso parameters
-        """
+        """Set calypso parameters."""
         self.numb_of_species = numb_of_species
         self.numb_of_atoms = numb_of_atoms
 
         if isinstance(name_of_atoms, list) and all(
-            [isinstance(i, list) for i in name_of_atoms]
+            isinstance(i, list) for i in name_of_atoms
         ):
             overlap = set(name_of_atoms[0])
             for temp in name_of_atoms[1:]:
                 overlap = overlap & set(temp)
 
-            if any(map(lambda s: (set(s) - overlap) == 0, name_of_atoms)):
+            if any((set(s) - overlap) == 0 for s in name_of_atoms):
                 raise ValueError(
                     f"Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
                 )

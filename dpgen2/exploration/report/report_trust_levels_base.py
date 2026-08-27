@@ -3,9 +3,7 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
 )
 
 import numpy as np
@@ -70,7 +68,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         self._candidate_ratio = None
 
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         doc_level_f_lo = "The lower trust level of force model deviation"
         doc_level_f_hi = "The higher trust level of force model deviation"
         doc_level_v_lo = "The lower trust level of virial model deviation"
@@ -171,10 +169,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         id_v_cand,
         id_v_fail,
     ):
-        """
-        Record one trajctory. inputs are the indexes of candidate, accurate and failed frames.
-
-        """
+        """Record one trajctory. inputs are the indexes of candidate, accurate and failed frames."""
         # check consistency
         novirial = id_v_cand is None
         if novirial:
@@ -190,9 +185,9 @@ class ExplorationReportTrustLevels(ExplorationReport):
         set_f_accu = set(id_f_accu)
         set_f_cand = set(id_f_cand)
         set_f_fail = set(id_f_fail)
-        set_v_accu = set([ii for ii in range(nframes)]) if novirial else set(id_v_accu)
-        set_v_cand = set([]) if novirial else set(id_v_cand)
-        set_v_fail = set([]) if novirial else set(id_v_fail)
+        set_v_accu = set(range(nframes)) if novirial else set(id_v_accu)
+        set_v_cand = set() if novirial else set(id_v_cand)
+        set_v_fail = set() if novirial else set(id_v_fail)
         # accu, cand, fail
         set_accu = set_f_accu & set_v_accu
         set_cand = (
@@ -211,7 +206,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
     @abstractmethod
     def converged(
         self,
-        reports: Optional[List[ExplorationReport]] = None,
+        reports: Optional[list[ExplorationReport]] = None,
     ) -> bool:
         pass
 
@@ -240,11 +235,11 @@ class ExplorationReportTrustLevels(ExplorationReport):
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         pass
 
     def print_header(self) -> str:
-        r"""Print the header of report"""
+        r"""Print the header of report."""
         return self.header_str
 
     def print(
@@ -253,7 +248,7 @@ class ExplorationReportTrustLevels(ExplorationReport):
         idx_in_stage: int,
         iter_idx: int,
     ) -> str:
-        r"""Print the report"""
+        r"""Print the report."""
         fmt_str = self.fmt_str
         fmt_flt = self.fmt_flt
         print_tuple = (

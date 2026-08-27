@@ -1,10 +1,9 @@
 """Prep and Run Gaussian tasks."""
+
 import logging
 from typing import (
     Any,
-    List,
     Optional,
-    Tuple,
 )
 
 import dpdata
@@ -38,7 +37,7 @@ gaussian_output_name = "task.log"
 
 class GaussianInputs:
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         r"""The arguments of the GaussianInputs class."""
         doc_keywords = "Gaussian keywords, e.g. force b3lyp/6-31g**. If a list, run multiple steps."
         doc_multiplicity = (
@@ -104,12 +103,11 @@ class PrepGaussian(PrepFp):
         inputs : GaussianInputs
             The GaussianInputs object handels all other input files of the task.
         """
-
         conf_frame.to("gaussian/gjf", gaussian_input_name, **inputs.data)
 
 
 class RunGaussian(RunFp):
-    def input_files(self) -> List[str]:
+    def input_files(self) -> list[str]:
         r"""The mandatory input files to run a Gaussian task.
 
         Returns
@@ -120,7 +118,7 @@ class RunGaussian(RunFp):
         """
         return [gaussian_input_name]
 
-    def optional_input_files(self) -> List[str]:
+    def optional_input_files(self) -> list[str]:
         r"""The optional input files to run a Gaussian task.
 
         Returns
@@ -136,8 +134,8 @@ class RunGaussian(RunFp):
         command: str,
         out: str,
         post_command: Optional[str] = None,
-    ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+    ) -> tuple[str, str]:
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -195,7 +193,7 @@ class RunGaussian(RunFp):
         return out_name, gaussian_output_name
 
     @staticmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `run_task` method.
 
         Returns
@@ -203,7 +201,6 @@ class RunGaussian(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_gaussian_cmd = "The command of Gaussian"
         doc_gaussian_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."
         doc_post_command = "The command after Gaussian"

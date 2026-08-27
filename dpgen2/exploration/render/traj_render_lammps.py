@@ -7,9 +7,7 @@ from pathlib import (
 )
 from typing import (
     TYPE_CHECKING,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -48,7 +46,7 @@ class TrajRenderLammps(TrajRender):
 
     def get_model_devi(
         self,
-        files: Union[List[Path], List[HDF5Dataset]],
+        files: Union[list[Path], list[HDF5Dataset]],
     ) -> DeviManager:
         ntraj = len(files)
 
@@ -78,7 +76,7 @@ class TrajRenderLammps(TrajRender):
     def get_ele_temp(self, optional_outputs):
         ele_temp = []
         for ii in range(len(optional_outputs)):
-            with open(optional_outputs[ii], "r") as f:
+            with open(optional_outputs[ii]) as f:
                 data = json.load(f)
             if self.use_ele_temp:
                 ele_temp.append(data["ele_temp"])
@@ -103,11 +101,11 @@ class TrajRenderLammps(TrajRender):
 
     def get_confs(
         self,
-        trajs: Union[List[Path], List[HDF5Dataset]],
-        id_selected: List[List[int]],
-        type_map: Optional[List[str]] = None,
+        trajs: Union[list[Path], list[HDF5Dataset]],
+        id_selected: list[list[int]],
+        type_map: Optional[list[str]] = None,
         conf_filters: Optional["ConfFilters"] = None,
-        optional_outputs: Optional[List[Path]] = None,
+        optional_outputs: Optional[list[Path]] = None,
     ) -> dpdata.MultiSystems:
         ntraj = len(trajs)
         ele_temp = None

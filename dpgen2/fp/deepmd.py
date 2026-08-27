@@ -1,13 +1,12 @@
 """Prep and Run Gaussian tasks."""
+
 import os
 from pathlib import (
     Path,
 )
 from typing import (
     Any,
-    List,
     Optional,
-    Tuple,
 )
 
 import dpdata
@@ -48,7 +47,7 @@ deepmd_temp_path = "one_frame_temp"
 
 class DeepmdInputs:
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         return []
 
     def __init__(self, **kwargs: Any):
@@ -74,7 +73,7 @@ class PrepDeepmd(PrepFp):
 
 
 class RunDeepmd(RunFp):
-    def input_files(self) -> List[str]:
+    def input_files(self) -> list[str]:
         r"""The mandatory input files to run a Deepmd task.
 
         Returns
@@ -85,7 +84,7 @@ class RunDeepmd(RunFp):
         """
         return [deepmd_input_path]
 
-    def optional_input_files(self) -> List[str]:
+    def optional_input_files(self) -> list[str]:
         r"""The optional input files to run a Deepmd task.
 
         Returns
@@ -101,8 +100,8 @@ class RunDeepmd(RunFp):
         teacher_model_path: BinaryFileInput,
         out: str,
         log: str,
-    ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+    ) -> tuple[str, str]:
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -197,7 +196,7 @@ class RunDeepmd(RunFp):
         ss.to("deepmd/npy", out_name)
 
     @staticmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `run_task` method.
 
         Returns
@@ -205,7 +204,6 @@ class RunDeepmd(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_deepmd_teacher_model = (
             "The path of teacher model, which can be loaded by deepmd.infer.DeepPot"
         )

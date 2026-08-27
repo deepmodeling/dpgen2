@@ -1,6 +1,5 @@
 import random
 from typing import (
-    List,
     Optional,
 )
 
@@ -31,12 +30,12 @@ def _sample_sphere():
 def make_lmp_input(
     conf_file: str,
     ensemble: str,
-    graphs: List[str],
+    graphs: list[str],
     nsteps: int,
     dt: float,
     neidelay: Optional[int],
     trj_freq: int,
-    mass_map: List[float],
+    mass_map: list[float],
     temp: float,
     tau_t: float = 0.1,
     pres: Optional[float] = None,
@@ -65,19 +64,19 @@ def make_lmp_input(
         )
     if "npt" in ensemble and pres is None:
         raise RuntimeError("the pressre should be provided for npt ensemble")
-    ret = "variable        NSTEPS          equal %d\n" % nsteps
-    ret += "variable        THERMO_FREQ     equal %d\n" % trj_freq
-    ret += "variable        DUMP_FREQ       equal %d\n" % trj_freq
-    ret += "variable        TEMP            equal %f\n" % temp
+    ret = f"variable        NSTEPS          equal {nsteps:d}\n"
+    ret += f"variable        THERMO_FREQ     equal {trj_freq:d}\n"
+    ret += f"variable        DUMP_FREQ       equal {trj_freq:d}\n"
+    ret += f"variable        TEMP            equal {temp:f}\n"
     if ele_temp_f is not None:
-        ret += "variable        ELE_TEMP        equal %f\n" % ele_temp_f
+        ret += f"variable        ELE_TEMP        equal {ele_temp_f:f}\n"
     if ele_temp_a is not None:
-        ret += "variable        ELE_TEMP        equal %f\n" % ele_temp_a
+        ret += f"variable        ELE_TEMP        equal {ele_temp_a:f}\n"
     if pres is not None:
-        ret += "variable        PRES            equal %f\n" % pres
-    ret += "variable        TAU_T           equal %f\n" % tau_t
+        ret += f"variable        PRES            equal {pres:f}\n"
+    ret += f"variable        TAU_T           equal {tau_t:f}\n"
     if pres is not None:
-        ret += "variable        TAU_P           equal %f\n" % tau_p
+        ret += f"variable        TAU_P           equal {tau_p:f}\n"
     ret += "\n"
     ret += "units           metal\n"
     if nopbc:
@@ -88,16 +87,13 @@ def make_lmp_input(
     ret += "\n"
     ret += "neighbor        1.0 bin\n"
     if neidelay is not None:
-        ret += "neigh_modify    delay %d\n" % neidelay
+        ret += f"neigh_modify    delay {neidelay:d}\n"
     ret += "\n"
     ret += "box          tilt large\n"
-    ret += (
-        'if "${restart} > 0" then "read_restart dpgen.restart.*" else "read_data %s"\n'
-        % conf_file
-    )
+    ret += f'if "${{restart}} > 0" then "read_restart dpgen.restart.*" else "read_data {conf_file}"\n'
     ret += "change_box   all triclinic\n"
     for jj in range(len(mass_map)):
-        ret += "mass            %d %f\n" % (jj + 1, mass_map[jj])
+        ret += f"mass            {jj + 1:d} {mass_map[jj]:f}\n"
     graph_list = ""
     for ii in graphs:
         graph_list += ii + " "
@@ -108,28 +104,21 @@ def make_lmp_input(
     )
     if Version(deepmd_version) < Version("1"):
         # 0.x
-        ret += "pair_style      deepmd %s ${THERMO_FREQ} %s\n" % (
-            graph_list,
-            model_devi_file_name,
-        )
+        ret += f"pair_style      deepmd {graph_list} ${{THERMO_FREQ}} {model_devi_file_name}\n"
     else:
         # 1.x
         keywords = ""
         if use_clusters:
             keywords += "atomic "
         if relative_f_epsilon is not None:
-            keywords += "relative %s " % relative_f_epsilon
+            keywords += f"relative {relative_f_epsilon} "
         if relative_v_epsilon is not None:
-            keywords += "relative_v %s " % relative_v_epsilon
+            keywords += f"relative_v {relative_v_epsilon} "
         if ele_temp_f is not None:
             keywords += "fparam ${ELE_TEMP}"
         if ele_temp_a is not None:
             keywords += "aparam ${ELE_TEMP}"
-        ret += "pair_style      deepmd %s out_freq ${THERMO_FREQ} out_file %s %s\n" % (
-            graph_list,
-            model_devi_file_name,
-            keywords,
-        )
+        ret += f"pair_style      deepmd {graph_list} out_freq ${{THERMO_FREQ}} out_file {model_devi_file_name} {keywords}\n"
     ret += "pair_coeff      * *\n"
     ret += "\n"
     ret += "thermo_style    custom step temp pe ke etotal press vol lx ly lz xy xz yz\n"
@@ -140,15 +129,13 @@ def make_lmp_input(
         lmp_traj_file_name = (
             lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
         )
-        ret += (
-            "dump            1 all custom ${DUMP_FREQ} %s id type x y z fx fy fz\n"
-            % lmp_traj_file_name
-        )
+        ret += f"dump            1 all custom ${{DUMP_FREQ}} {lmp_traj_file_name} id type x y z fx fy fz\n"
     ret += "restart         10000 dpgen.restart\n"
     ret += "\n"
     if pka_e is None:
-        ret += 'if "${restart} == 0" then "velocity        all create ${TEMP} %d"' % (
-            random.randrange(max_seed - 1) + 1
+        ret += (
+            'if "${restart} == 0" then "velocity        all create ${TEMP} '
+            f'{random.randrange(max_seed - 1) + 1:d}"'
         )
     else:
         sys = dpdata.System(conf_file, fmt="lammps/lmp")
@@ -162,21 +149,16 @@ def make_lmp_input(
             / (0.5 * pka_mass * 1e-3 / pc.Avogadro * (pc.angstrom / pc.pico) ** 2)
         )  # type: ignore
         pka_vn = np.sqrt(pka_vn)
-        print(pka_vn)
         pka_vec = _sample_sphere()
         pka_vec *= pka_vn
         ret += "group           first id 1\n"
-        ret += 'if "${restart} == 0" then "velocity        first set %f %f %f"\n' % (
-            pka_vec[0],
-            pka_vec[1],
-            pka_vec[2],
-        )
+        ret += f'if "${{restart}} == 0" then "velocity        first set {pka_vec[0]:f} {pka_vec[1]:f} {pka_vec[2]:f}"\n'
         ret += "fix	       2 all momentum 1 linear 1 1 1\n"
     ret += "\n"
     if ensemble.split("-")[0] == "npt":
         assert pres is not None
         if nopbc:
-            raise RuntimeError("ensemble %s is conflicting with nopbc" % ensemble)
+            raise RuntimeError(f"ensemble {ensemble} is conflicting with nopbc")
     if ensemble == "npt" or ensemble == "npt-i" or ensemble == "npt-iso":
         ret += "fix             1 all npt temp ${TEMP} ${TEMP} ${TAU_T} iso ${PRES} ${PRES} ${TAU_P}\n"
     elif ensemble == "npt-a" or ensemble == "npt-aniso":
@@ -193,6 +175,6 @@ def make_lmp_input(
         ret += "velocity        all zero linear\n"
         ret += "fix             fm all momentum 1 linear 1 1 1\n"
     ret += "\n"
-    ret += "timestep        %f\n" % dt
+    ret += f"timestep        {dt:f}\n"
     ret += "run             ${NSTEPS} upto\n"
     return ret

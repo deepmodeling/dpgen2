@@ -3,7 +3,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -18,6 +17,8 @@ from dflow.python import (
     BigParameter,
     OPIOSign,
 )
+
+from dpgen2.utils.dflow_types import DflowList
 
 try:
     from fpop.cp2k import (
@@ -48,8 +49,8 @@ class PrepFpOpCp2k(OP):
         return OPIOSign(
             {
                 "config": BigParameter(dict),
-                "type_map": List[str],
-                "confs": Artifact(List[Path]),
+                "type_map": list[str],
+                "confs": Artifact(DflowList[Path]),
             }
         )
 
@@ -57,8 +58,8 @@ class PrepFpOpCp2k(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": BigParameter(List[str]),
-                "task_paths": Artifact(List[Path]),
+                "task_names": BigParameter(list[str]),
+                "task_paths": Artifact(DflowList[Path]),
             }
         )
 
@@ -85,7 +86,7 @@ class PrepFpOpCp2k(OP):
                         s["atom_types"][i] = atom_names.index(s["atom_names"][t])  # type: ignore https://github.com/microsoft/pyright/issues/5620
                     s.data["atom_numbs"] = atom_numbs
                     s.data["atom_names"] = atom_names
-                    target = "output/%s" % system
+                    target = f"output/{system}"
                     s.to("deepmd/npy", target)
                     confs.append(Path(target))
                 else:
@@ -102,7 +103,7 @@ class PrepFpOpCp2k(OP):
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
 
-def get_run_type(lines: List[str]) -> Optional[str]:
+def get_run_type(lines: list[str]) -> Optional[str]:
     for line in lines:
         if "RUN_TYPE" in line:
             return line.split()[-1]
@@ -126,7 +127,7 @@ class RunFpOpCp2k(OP):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
-                "extra_outputs": Artifact(List[Path]),
+                "extra_outputs": Artifact(DflowList[Path]),
             }
         )
 
@@ -152,7 +153,7 @@ class RunFpOpCp2k(OP):
         file_path = os.path.join(str(workdir), "output.log")
 
         # convert the output to deepmd/npy format
-        with open(workdir / "input.inp", "r") as f:
+        with open(workdir / "input.inp") as f:
             lines = f.readlines()
 
         # 获取 RUN_TYPE

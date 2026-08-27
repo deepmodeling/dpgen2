@@ -19,7 +19,7 @@ from datetime import (
 # -- Project information -----------------------------------------------------
 
 project = "DPGEN2"
-copyright = "2022-%d, DeepModeling" % date.today().year
+copyright = f"2022-{date.today().year}, DeepModeling"
 author = "DeepModeling"
 
 

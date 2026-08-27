@@ -6,6 +6,10 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest.mock import (
+    call,
+    patch,
+)
 
 import dpdata
 import numpy as np
@@ -20,10 +24,6 @@ from dflow.python import (
 from fake_data_set import (
     fake_multi_sys,
     fake_system,
-)
-from mock import (
-    call,
-    patch,
 )
 
 # isort: off
@@ -76,7 +76,7 @@ class TestRunDPTrain(unittest.TestCase):
         ss_0.to_deepmd_npy("init/data-0")
         ss_1.to_deepmd_npy("init/data-1")
         self.init_data = [Path("init/data-0"), Path("init/data-1")]
-        self.init_data = sorted(list(self.init_data))
+        self.init_data = sorted(self.init_data)
 
         self.init_model = Path("bar.pb")
 
@@ -868,7 +868,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         ss_0.to_deepmd_npy("init/data-0")
         ss_1.to_deepmd_npy("init/data-1")
         self.init_data = [Path("init/data-0"), Path("init/data-1")]
-        self.init_data = sorted(list(self.init_data))
+        self.init_data = sorted(self.init_data)
 
         self.init_model = Path("bar.pb")
 

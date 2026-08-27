@@ -5,10 +5,6 @@ import re
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 import dpdata
 import numpy as np
@@ -64,7 +60,8 @@ def clean_lines(string_list, remove_empty_lines=True):
         remove_empty_lines: Set to True to skip lines which are empty after
             stripping.
 
-    Returns:
+    Returns
+    -------
         List of clean strings with no whitespaces.
     """
     for s in string_list:
@@ -134,7 +131,6 @@ class PrepVasp(PrepFp):
         vasp_inputs : VaspInputs
             The VaspInputs object handels all other input files of the task.
         """
-
         conf_frame.to("vasp/poscar", vasp_conf_name)
         incar = vasp_inputs.incar_template
         incar = self.set_ele_temp(conf_frame, incar)
@@ -147,7 +143,7 @@ class PrepVasp(PrepFp):
 
 
 class RunVasp(RunFp):
-    def input_files(self) -> List[str]:
+    def input_files(self) -> list[str]:
         r"""The mandatory input files to run a vasp task.
 
         Returns
@@ -158,7 +154,7 @@ class RunVasp(RunFp):
         """
         return [vasp_conf_name, vasp_input_name, vasp_pot_name, vasp_kp_name]
 
-    def optional_input_files(self) -> List[str]:
+    def optional_input_files(self) -> list[str]:
         r"""The optional input files to run a vasp task.
 
         Returns
@@ -171,7 +167,7 @@ class RunVasp(RunFp):
 
     def set_ele_temp(self, system):
         if os.path.exists("job.json"):
-            with open("job.json", "r") as f:
+            with open("job.json") as f:
                 data = json.load(f)
             if "use_ele_temp" in data and "ele_temp" in data:
                 if data["use_ele_temp"] == 1:
@@ -188,8 +184,8 @@ class RunVasp(RunFp):
         command: str,
         out: str,
         log: str,
-    ) -> Tuple[str, str]:
-        r"""Defines how one FP task runs
+    ) -> tuple[str, str]:
+        r"""Defines how one FP task runs.
 
         Parameters
         ----------
@@ -207,7 +203,6 @@ class RunVasp(RunFp):
         log_name: str
             The file name of the log.
         """
-
         log_name = log
         out_name = out
         # run vasp
@@ -235,7 +230,6 @@ class RunVasp(RunFp):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of `run_task` method.
         """
-
         doc_vasp_cmd = "The command of VASP"
         doc_vasp_log = "The log file name of VASP"
         doc_vasp_out = "The output dir name of labeled data. In `deepmd/npy` format provided by `dpdata`."

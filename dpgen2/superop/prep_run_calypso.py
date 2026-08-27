@@ -7,10 +7,7 @@ from pathlib import (
 )
 from typing import (
     Any,
-    Dict,
-    List,
     Optional,
-    Type,
     Union,
 )
 
@@ -53,14 +50,14 @@ class PrepRunCaly(Steps):
     def __init__(
         self,
         name: str,
-        prep_caly_input_op: Type[OP],
+        prep_caly_input_op: type[OP],
         caly_evo_step_op: Union[OPTemplate, OP],
-        prep_caly_model_devi_op: Type[OP],
-        run_caly_model_devi_op: Type[OP],
+        prep_caly_model_devi_op: type[OP],
+        run_caly_model_devi_op: type[OP],
         expl_mode: str = "default",
         prep_config: Optional[dict] = None,
         run_config: Optional[dict] = None,
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         prep_config = normalize_step_dict({}) if prep_config is None else prep_config
         run_config = normalize_step_dict({}) if run_config is None else run_config
@@ -102,13 +99,21 @@ class PrepRunCaly(Steps):
         ]
         self.step_keys = {}
         ii = "prep-caly-input"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "caly-evo-step-{{item}}"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "prep-caly-model-devi"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-caly-model-devi"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
 
         self = _prep_run_caly(
             self,
@@ -146,15 +151,15 @@ class PrepRunCaly(Steps):
 
 def _prep_run_caly(
     prep_run_caly_steps: Steps,
-    step_keys: Dict[str, Any],
-    prep_caly_input_op: Type[OP],
+    step_keys: dict[str, Any],
+    prep_caly_input_op: type[OP],
     caly_evo_step_op: Union[OPTemplate, OP],
-    prep_caly_model_devi_op: Type[OP],
-    run_caly_model_devi_op: Type[OP],
+    prep_caly_model_devi_op: type[OP],
+    run_caly_model_devi_op: type[OP],
     expl_mode: str = "default",
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
@@ -260,8 +265,9 @@ def _prep_run_caly(
         artifacts={
             "traj_results": caly_evo_step.outputs.artifacts["traj_results"],
         },
-        key="%s--prep-caly-model-devi"
-        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        key="{}--prep-caly-model-devi".format(
+            prep_run_caly_steps.inputs.parameters["block_id"]
+        ),
         executor=prep_executor,
     )
     prep_run_caly_steps.add(prep_caly_model_devi)
@@ -287,8 +293,9 @@ def _prep_run_caly(
             "traj_dirs": prep_caly_model_devi.outputs.artifacts["grouped_traj_list"],
             "models": prep_run_caly_steps.inputs.artifacts["models"],
         },
-        key="%s--run-caly-model-devi-{{item}}"
-        % (prep_run_caly_steps.inputs.parameters["block_id"],),
+        key="{}--run-caly-model-devi-{{{{item}}}}".format(
+            prep_run_caly_steps.inputs.parameters["block_id"]
+        ),
         executor=run_executor,
         **prep_config,
     )

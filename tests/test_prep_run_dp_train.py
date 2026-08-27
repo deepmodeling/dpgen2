@@ -6,10 +6,6 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
 import numpy as np
 from dflow import (
@@ -99,7 +95,7 @@ def _check_log(
             lines[1 + ii].split(" "),
             [
                 "data",
-                str(revised_fname(Path(path) / sorted(list(init_data))[ii])),
+                str(revised_fname(Path(path) / sorted(init_data)[ii])),
                 "OK",
             ],
         )
@@ -108,7 +104,7 @@ def _check_log(
             lines[3 + ii].split(" "),
             [
                 "data",
-                str(revised_fname(Path(path) / sorted(list(iter_data))[ii])),
+                str(revised_fname(Path(path) / sorted(iter_data)[ii])),
                 "OK",
             ],
         )

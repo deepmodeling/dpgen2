@@ -6,11 +6,6 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-    Tuple,
-)
 
 import jsonpickle
 import numpy as np

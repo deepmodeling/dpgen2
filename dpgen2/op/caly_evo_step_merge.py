@@ -5,10 +5,6 @@ import shutil
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 from dflow import (
     Step,
@@ -44,6 +40,7 @@ from dpgen2.utils import (
     BinaryFileInput,
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -70,7 +67,7 @@ class CalyEvoStepMerge(OP):
                 "caly_check_opt_file": Artifact(Path),
                 "results": Artifact(Path, optional=True),
                 "step": Artifact(Path, optional=True),
-                "opt_results_dir": Artifact(List[Path], optional=True),
+                "opt_results_dir": Artifact(DflowList[Path], optional=True),
                 "qhull_input": Artifact(Path, optional=True),
             }
         )
@@ -79,7 +76,7 @@ class CalyEvoStepMerge(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "traj_results": Artifact(List[Path]),
+                "traj_results": Artifact(DflowList[Path]),
             }
         )
 
@@ -117,9 +114,9 @@ class CalyEvoStepMerge(OP):
         output_sign = self.get_output_sign()
         for k in step.outputs.artifacts:
             path_list = download_artifact(step.outputs.artifacts[k])
-            if output_sign[k].type == List[Path]:
+            if output_sign[k].type == list[Path]:
                 if not isinstance(path_list, list) or any(
-                    [p is not None and not isinstance(p, str) for p in path_list]
+                    p is not None and not isinstance(p, str) for p in path_list
                 ):
                     path_list = list(flatten(path_list).values())
                 out[k] = [Path(p) for p in path_list]

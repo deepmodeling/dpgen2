@@ -5,10 +5,6 @@ import shutil
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 from dflow.python import (
     OP,
@@ -33,6 +29,7 @@ from dpgen2.utils import (
     BinaryFileInput,
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -49,7 +46,7 @@ class PrepCalyModelDevi(OP):
             {
                 "task_name": Parameter(str),
                 "config": BigParameter(dict),
-                "traj_results": Artifact(List[Path]),
+                "traj_results": Artifact(DflowList[Path]),
             }
         )
 
@@ -57,8 +54,8 @@ class PrepCalyModelDevi(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_name_list": Parameter(List[str]),
-                "grouped_traj_list": Artifact(List[Path]),
+                "task_name_list": Parameter(list[str]),
+                "grouped_traj_list": Artifact(DflowList[Path]),
             }
         )
 

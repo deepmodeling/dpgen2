@@ -7,9 +7,7 @@ from pathlib import (
 )
 from typing import (
     TYPE_CHECKING,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -33,7 +31,7 @@ class TrajRender(ABC):
     @abstractmethod
     def get_model_devi(
         self,
-        files: Union[List[Path], List[HDF5Dataset]],
+        files: Union[list[Path], list[HDF5Dataset]],
     ) -> DeviManager:
         r"""Get model deviations from recording files.
 
@@ -51,11 +49,11 @@ class TrajRender(ABC):
     @abstractmethod
     def get_confs(
         self,
-        traj: Union[List[Path], List[HDF5Dataset]],
-        id_selected: List[List[int]],
-        type_map: Optional[List[str]] = None,
+        traj: Union[list[Path], list[HDF5Dataset]],
+        id_selected: list[list[int]],
+        type_map: Optional[list[str]] = None,
         conf_filters: Optional["ConfFilters"] = None,
-        optional_outputs: Optional[List[Path]] = None,
+        optional_outputs: Optional[list[Path]] = None,
     ) -> dpdata.MultiSystems:
         r"""Get configurations from trajectory by selection.
 

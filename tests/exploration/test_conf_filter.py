@@ -1,13 +1,13 @@
 import os
 import unittest
+from unittest.mock import (
+    patch,
+)
 
 import dpdata
 import numpy as np
 from fake_data_set import (
     fake_system,
-)
-from mock import (
-    patch,
 )
 
 # isort: off

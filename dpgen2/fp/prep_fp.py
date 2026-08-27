@@ -7,8 +7,6 @@ from pathlib import (
 )
 from typing import (
     Any,
-    List,
-    Tuple,
 )
 
 import dpdata
@@ -27,6 +25,7 @@ from dpgen2.utils import (
     set_directory,
     setup_ele_temp,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class PrepFp(OP, ABC):
@@ -45,8 +44,8 @@ class PrepFp(OP, ABC):
         return OPIOSign(
             {
                 "config": BigParameter(dict),
-                "type_map": List[str],
-                "confs": Artifact(List[Path]),
+                "type_map": list[str],
+                "confs": Artifact(DflowList[Path]),
             }
         )
 
@@ -54,8 +53,8 @@ class PrepFp(OP, ABC):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": BigParameter(List[str]),
-                "task_paths": Artifact(List[Path]),
+                "task_names": BigParameter(list[str]),
+                "task_paths": Artifact(DflowList[Path]),
             }
         )
 
@@ -100,7 +99,6 @@ class PrepFp(OP, ABC):
             - `task_names`: (`List[str]`) The name of tasks. Will be used as the identities of the tasks. The names of different tasks are different.
             - `task_paths`: (`Artifact(List[Path])`) The parepared working paths of the tasks. Contains all input files needed to start the FP. The order fo the Paths should be consistent with `op["task_names"]`
         """
-
         inputs = ip["config"]["inputs"]
         confs = ip["confs"]
         type_map = ip["type_map"]
@@ -137,7 +135,7 @@ class PrepFp(OP, ABC):
         idx,
         inputs,
         conf_frame: dpdata.System,
-    ) -> Tuple[str, Path]:
+    ) -> tuple[str, Path]:
         task_name = fp_task_pattern % idx
         task_path = Path(task_name)
         with set_directory(task_path):

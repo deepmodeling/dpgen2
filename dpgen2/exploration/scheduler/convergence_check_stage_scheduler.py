@@ -2,9 +2,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -71,8 +69,8 @@ class ConvergenceCheckStageScheduler(StageScheduler):
     def plan_next_iteration(
         self,
         report: Optional[ExplorationReport] = None,
-        trajs: Optional[Union[List[Path], List[HDF5Dataset]]] = None,
-    ) -> Tuple[bool, Optional[BaseExplorationTaskGroup], Optional[ConfSelector]]:
+        trajs: Optional[Union[list[Path], list[HDF5Dataset]]] = None,
+    ) -> tuple[bool, Optional[BaseExplorationTaskGroup], Optional[ConfSelector]]:
         if self.complete():
             raise FatalError("Cannot plan because the stage has completed.")
         if report is None:

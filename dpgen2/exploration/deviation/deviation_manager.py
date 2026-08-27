@@ -3,7 +3,6 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -55,7 +54,7 @@ class DeviManager(ABC):
     def _add(self, name: str, deviation: np.ndarray) -> None:
         pass
 
-    def get(self, name: str) -> List[Optional[np.ndarray]]:
+    def get(self, name: str) -> list[Optional[np.ndarray]]:
         r"""Gat a model deviation from this manager.
 
         Parameters
@@ -71,7 +70,7 @@ class DeviManager(ABC):
         return self._get(name)
 
     @abstractmethod
-    def _get(self, name: str) -> List[Optional[np.ndarray]]:
+    def _get(self, name: str) -> list[Optional[np.ndarray]]:
         pass
 
     @abstractmethod
@@ -81,5 +80,5 @@ class DeviManager(ABC):
 
     @abstractmethod
     def _check_data(self) -> None:
-        r"""Check if data is valid"""
+        r"""Check if data is valid."""
         pass

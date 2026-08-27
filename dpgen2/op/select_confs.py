@@ -4,9 +4,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -26,6 +23,7 @@ from dpgen2.exploration.report import (
 from dpgen2.exploration.selector import (
     ConfSelector,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class SelectConfs(OP):
@@ -36,10 +34,10 @@ class SelectConfs(OP):
         return OPIOSign(
             {
                 "conf_selector": ConfSelector,
-                "type_map": List[str],
-                "trajs": Artifact(Union[List[Path], HDF5Datasets]),
-                "model_devis": Artifact(Union[List[Path], HDF5Datasets]),
-                "optional_outputs": Artifact(List[Path], optional=True),
+                "type_map": list[str],
+                "trajs": Artifact(Union[DflowList[Path], HDF5Datasets]),
+                "model_devis": Artifact(Union[DflowList[Path], HDF5Datasets]),
+                "optional_outputs": Artifact(DflowList[Path], optional=True),
             }
         )
 
@@ -48,7 +46,7 @@ class SelectConfs(OP):
         return OPIOSign(
             {
                 "report": BigParameter(ExplorationReport),
-                "confs": Artifact(List[Path]),
+                "confs": Artifact(DflowList[Path]),
             }
         )
 
@@ -77,7 +75,6 @@ class SelectConfs(OP):
             - `conf`: (`Artifact(List[Path])`) The selected configurations.
 
         """
-
         conf_selector = ip["conf_selector"]
         type_map = ip["type_map"]
 
@@ -111,11 +108,11 @@ class SelectConfs(OP):
         ntrajs = len(trajs)
         if ntrajs != len(model_devis):
             raise FatalError(
-                "length of trajs list is not equal to the " "model_devis list"
+                "length of trajs list is not equal to the model_devis list"
             )
         if optional_outputs and ntrajs != len(optional_outputs):
             raise FatalError(
-                "length of trajs list is not equal to the " "optional_output list"
+                "length of trajs list is not equal to the optional_output list"
             )
         rett = []
         retm = []

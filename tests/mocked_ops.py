@@ -18,9 +18,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
 )
 
 try:
@@ -366,9 +364,9 @@ class MockedRunLmp(RunLmp):
         task_id = int(ip["task_name"].split(".")[1])
         assert task_path.is_dir()
         assert ip["task_name"] in str(ip["task_path"])
-        assert (
-            len(models) == mocked_numb_models
-        ), f"{len(models)} == {mocked_numb_models}"
+        assert len(models) == mocked_numb_models, (
+            f"{len(models)} == {mocked_numb_models}"
+        )
         for ii in range(mocked_numb_models):
             assert ip["models"][ii].is_file()
             assert "model" in str(ip["models"][ii])
@@ -863,11 +861,11 @@ class MockedConfSelector(ConfSelector):
 
     def select(
         self,
-        trajs: List[Path],
-        model_devis: List[Path],
-        type_map: List[str] = None,
-        optional_outputs: Optional[List[Path]] = None,
-    ) -> Tuple[List[Path], ExplorationReport]:
+        trajs: list[Path],
+        model_devis: list[Path],
+        type_map: list[str] = None,
+        optional_outputs: Optional[list[Path]] = None,
+    ) -> tuple[list[Path], ExplorationReport]:
         confs = []
         if len(trajs) == mocked_numb_lmp_tasks:
             # get output from prep_run_lmp
@@ -988,7 +986,7 @@ class MockedCollRunCaly(CollRunCaly):
                 Path("step").write_text("2")
             else:
                 step_num = Path("step").read_text().strip()
-                Path("step").write_text(f"{int(step_num)+1}")
+                Path("step").write_text(f"{int(step_num) + 1}")
 
             if qhull_input is None:
                 Path("test_qconvex.in").write_text("")

@@ -5,8 +5,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
-    Tuple,
     Union,
 )
 
@@ -22,6 +20,7 @@ from dpgen2.constants import (
     train_script_name,
     train_task_pattern,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class PrepDPTrain(OP):
@@ -38,7 +37,7 @@ class PrepDPTrain(OP):
     def get_input_sign(cls):
         return OPIOSign(
             {
-                "template_script": BigParameter(Union[dict, List[dict]]),
+                "template_script": BigParameter(Union[dict, list[dict]]),
                 "numb_models": int,
             }
         )
@@ -47,8 +46,8 @@ class PrepDPTrain(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": BigParameter(List[str]),
-                "task_paths": Artifact(List[Path]),
+                "task_names": BigParameter(list[str]),
+                "task_paths": Artifact(DflowList[Path]),
             }
         )
 

@@ -6,10 +6,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Set,
-    Type,
 )
 
 from dflow import (
@@ -50,11 +47,11 @@ class PrepRunFp(Steps):
     def __init__(
         self,
         name: str,
-        prep_op: Type[OP],
-        run_op: Type[OP],
+        prep_op: type[OP],
+        run_op: type[OP],
         prep_config: Optional[dict] = None,
         run_config: Optional[dict] = None,
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         prep_config = normalize_step_dict({}) if prep_config is None else prep_config
         run_config = normalize_step_dict({}) if run_config is None else run_config
@@ -88,10 +85,12 @@ class PrepRunFp(Steps):
         self._keys = ["prep-fp", "run-fp"]
         self.step_keys = {}
         ii = "prep-fp"
-        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        self.step_keys[ii] = "--".join(
+            ["{}".format(self.inputs.parameters["block_id"]), ii]
+        )
         ii = "run-fp"
         self.step_keys[ii] = "--".join(
-            ["%s" % self.inputs.parameters["block_id"], ii + "-{{item}}"]
+            ["{}".format(self.inputs.parameters["block_id"]), ii + "-{{item}}"]
         )
 
         self = _prep_run_fp(
@@ -128,11 +127,11 @@ class PrepRunFp(Steps):
 def _prep_run_fp(
     prep_run_steps,
     step_keys,
-    prep_op: Type[OP],
-    run_op: Type[OP],
+    prep_op: type[OP],
+    run_op: type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)

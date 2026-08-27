@@ -5,6 +5,13 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest import (
+    mock,
+)
+from unittest.mock import (
+    call,
+    patch,
+)
 
 import dpdata
 import numpy as np
@@ -14,11 +21,6 @@ from dflow.python import (
     Artifact,
     OPIOSign,
     TransientError,
-)
-from mock import (
-    call,
-    mock,
-    patch,
 )
 
 # isort: off
@@ -249,7 +251,7 @@ run             3000 upto
         )
 
         # The number of models have to be 2 in knowledge distillation
-        self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
+        self.assertEqual(len(list(work_dir.glob("*.pb"))), 2)
 
 
 def swap_element(arg):
@@ -316,7 +318,7 @@ class TestGetEleTemp(unittest.TestCase):
 class TestMergePIMDFiles(unittest.TestCase):
     def test_merge_pimd_files(self):
         for i in range(1, 3):
-            with open("traj.%s.dump" % i, "w") as f:
+            with open(f"traj.{i}.dump", "w") as f:
                 f.write(
                     """ITEM: TIMESTEP
 0
@@ -345,7 +347,7 @@ ITEM: ATOMS id type x y z
 """
                 )
         for i in range(1, 3):
-            with open("model_devi.%s.out" % i, "w") as f:
+            with open(f"model_devi.{i}.out", "w") as f:
                 f.write(
                     """#       step         max_devi_v         min_devi_v         avg_devi_v         max_devi_f         min_devi_f         avg_devi_f
            0       9.023897e-17       3.548771e-17       5.237314e-17       8.196123e-16       1.225653e-16       3.941002e-16

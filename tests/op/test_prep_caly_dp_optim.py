@@ -4,6 +4,13 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest import (
+    mock,
+)
+from unittest.mock import (
+    call,
+    patch,
+)
 
 import numpy as np
 from dflow.python import (
@@ -12,11 +19,6 @@ from dflow.python import (
     Artifact,
     OPIOSign,
     TransientError,
-)
-from mock import (
-    call,
-    mock,
-    patch,
 )
 
 # isort: off
@@ -67,7 +69,7 @@ class TestPrepDPOptim(unittest.TestCase):
         self.template_slice_config = {"group_size": 3}
         self.group_size = self.template_slice_config["group_size"]
 
-        grouped_poscar_list = [i for i in range(0, nposcar, self.group_size)]
+        grouped_poscar_list = list(range(0, nposcar, self.group_size))
         self.ngrouped = len(grouped_poscar_list)
         self.ref_task_dirs = []
         for i in range(0, self.ngrouped):

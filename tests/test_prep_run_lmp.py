@@ -7,10 +7,6 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
 import jsonpickle
 import numpy as np
@@ -167,7 +163,7 @@ class TestMockedRunLmp(unittest.TestCase):
     def check_run_lmp_output(
         self,
         task_name: str,
-        models: List[Path],
+        models: list[Path],
     ):
         cwd = os.getcwd()
         os.chdir(task_name)
@@ -246,7 +242,7 @@ class TestPrepRunLmp(unittest.TestCase):
     def check_run_lmp_output(
         self,
         task_name: str,
-        models: List[Path],
+        models: list[Path],
     ):
         cwd = os.getcwd()
         os.chdir(task_name)

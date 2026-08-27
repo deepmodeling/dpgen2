@@ -3,9 +3,6 @@ import subprocess
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-)
 
 from dflow.python import (
     OP,
@@ -13,6 +10,8 @@ from dflow.python import (
     Artifact,
     OPIOSign,
 )
+
+from dpgen2.utils.dflow_types import DflowList
 
 
 def convert_pt_to_cif(input_file, output_dir):
@@ -55,7 +54,7 @@ def convert_pt_to_cif(input_file, output_dir):
             lattice, atom_type, frac_coord, coords_are_cartesian=False
         )
 
-        filename = "%s.cif" % i
+        filename = f"{i}.cif"
         file_path = os.path.join(output_dir, filename)
         structure.to(filename=file_path)
         now_atom += atom_num
@@ -75,7 +74,7 @@ class DiffCSPGen(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "cifs": Artifact(List[Path]),
+                "cifs": Artifact(DflowList[Path]),
             }
         )
 
@@ -88,12 +87,12 @@ class DiffCSPGen(OP):
         args = cmd.split()
         try:
             i = args.index("--model_path")
-        except ValueError:
-            raise RuntimeError("Path of DiffCSP model not provided.")
+        except ValueError as exc:
+            raise RuntimeError("Path of DiffCSP model not provided.") from exc
         model_path = args[i + 1]
         subprocess.run(cmd, shell=True, check=True)
         result_file = os.path.join(model_path, "eval_gen.pt")
-        task_dir = "diffcsp.%s" % ip["task_id"]
+        task_dir = f"diffcsp.{ip['task_id']}"
         convert_pt_to_cif(result_file, task_dir)
         return OPIO(
             {

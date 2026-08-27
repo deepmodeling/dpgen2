@@ -6,10 +6,6 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
 import jsonpickle
 import numpy as np
@@ -108,8 +104,8 @@ class TestMockedCollectData(unittest.TestCase):
 @unittest.skipIf(skip_ut_with_dflow, skip_ut_with_dflow_reason)
 class TestMockedCollectDataArgo(unittest.TestCase):
     def setUp(self):
-        self.iter_data = set(("foo/iter0", "bar/iter1"))
-        self.iter_data = set([Path(ii) for ii in self.iter_data])
+        self.iter_data = {"foo/iter0", "bar/iter1"}
+        self.iter_data = {Path(ii) for ii in self.iter_data}
         self.name = "outdata"
         self.labeled_data = ["d0", "d1"]
         self.labeled_data = [Path(ii) for ii in self.labeled_data]

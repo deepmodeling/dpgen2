@@ -3,7 +3,6 @@ import json
 import logging
 import textwrap
 from typing import (
-    List,
     Optional,
 )
 
@@ -287,13 +286,13 @@ def main_parser() -> argparse.ArgumentParser:
         "-v",
         "--version",
         action="version",
-        version="DPGEN v%s" % __version__,
+        version=f"DPGEN v{__version__}",
     )
 
     return parser
 
 
-def parse_args(args: Optional[List[str]] = None):
+def parse_args(args: Optional[list[str]] = None):
     """DPGEN2 commandline options argument parsing.
 
     Parameters
@@ -358,7 +357,7 @@ def main():
             config = json.load(fp)
         wfid = args.ID
         if args.list_supported is not None and args.list_supported:
-            print(print_op_download_setting())
+            pass
         elif args.keys is not None:
             download(
                 wfid,

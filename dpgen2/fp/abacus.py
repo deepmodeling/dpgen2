@@ -1,9 +1,6 @@
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-)
 
 import dpdata
 from dargs import (
@@ -16,6 +13,8 @@ from dflow.python import (
     BigParameter,
     OPIOSign,
 )
+
+from dpgen2.utils.dflow_types import DflowList
 
 try:
     from fpop.abacus import (
@@ -78,8 +77,8 @@ class PrepFpOpAbacus(OP):
         return OPIOSign(
             {
                 "config": BigParameter(dict),
-                "type_map": List[str],
-                "confs": Artifact(List[Path]),
+                "type_map": list[str],
+                "confs": Artifact(DflowList[Path]),
             }
         )
 
@@ -87,8 +86,8 @@ class PrepFpOpAbacus(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": BigParameter(List[str]),
-                "task_paths": Artifact(List[Path]),
+                "task_names": BigParameter(list[str]),
+                "task_paths": Artifact(DflowList[Path]),
             }
         )
 
@@ -115,7 +114,7 @@ class PrepFpOpAbacus(OP):
                         s["atom_types"][i] = atom_names.index(s["atom_names"][t])  # type: ignore https://github.com/microsoft/pyright/issues/5620
                     s.data["atom_numbs"] = atom_numbs
                     s.data["atom_names"] = atom_names
-                    target = "output/%s" % system
+                    target = f"output/{system}"
                     s.to("deepmd/npy", target)
                     confs.append(Path(target))
                 else:
@@ -132,12 +131,7 @@ class PrepFpOpAbacus(OP):
         return op.execute(op_in)  # type: ignore in the case of not importing fpop
 
 
-from typing import (
-    Tuple,
-)
-
-
-def get_suffix_calculation(INPUT: List[str]) -> Tuple[str, str]:
+def get_suffix_calculation(INPUT: list[str]) -> tuple[str, str]:
     suffix = "ABACUS"
     calculation = "scf"
     for iline in INPUT:
@@ -166,7 +160,7 @@ class RunFpOpAbacus(OP):
             {
                 "log": Artifact(Path),
                 "labeled_data": Artifact(Path),
-                "extra_outputs": Artifact(List[Path]),
+                "extra_outputs": Artifact(DflowList[Path]),
             }
         )
 
@@ -189,7 +183,7 @@ class RunFpOpAbacus(OP):
         workdir = op_out["backward_dir"].parent
 
         # convert the output to deepmd/npy format
-        with open("%s/INPUT" % workdir, "r") as f:
+        with open(f"{workdir}/INPUT") as f:
             INPUT = f.readlines()
         _, calculation = get_suffix_calculation(INPUT)
         if calculation == "scf":
@@ -199,7 +193,7 @@ class RunFpOpAbacus(OP):
         elif calculation in ["relax", "cell-relax"]:
             sys = dpdata.LabeledSystem(str(workdir), fmt="abacus/relax")
         else:
-            raise ValueError("Type of calculation %s not supported" % calculation)
+            raise ValueError(f"Type of calculation {calculation} not supported")
         out_name = fp_default_out_data_name
         sys.to("deepmd/npy", workdir / out_name)
 

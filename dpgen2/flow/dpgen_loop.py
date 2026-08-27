@@ -7,7 +7,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
     Union,
 )
@@ -61,6 +60,7 @@ from dpgen2.utils import (
     dump_object_to_file,
     load_object_from_file,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -93,7 +93,7 @@ class SchedulerWrapper(OP):
             {
                 "exploration_scheduler": BigParameter(ExplorationScheduler),
                 "exploration_report": BigParameter(ExplorationReport),
-                "trajs": Artifact(Union[List[Path], HDF5Datasets]),
+                "trajs": Artifact(Union[DflowList[Path], HDF5Datasets]),
             }
         )
 
@@ -169,7 +169,7 @@ class ConcurrentLearningLoop(Steps):
         name: str,
         block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         self._input_parameters = {
             "block_id": InputParameter(),
@@ -214,7 +214,7 @@ class ConcurrentLearningLoop(Steps):
         self.step_keys = {}
         for ii in self._my_keys:
             self.step_keys[ii] = "--".join(
-                ["%s" % self.inputs.parameters["block_id"], ii]
+                ["{}".format(self.inputs.parameters["block_id"]), ii]
             )
 
         self = _loop(
@@ -253,7 +253,7 @@ class ConcurrentLearning(Steps):
         name: str,
         block_op: ConcurrentLearningBlock,
         step_config: dict = normalize_step_dict({}),
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         self.loop = ConcurrentLearningLoop(
             name + "-loop",
@@ -347,7 +347,7 @@ def _loop(
     name: str,
     block_op: OPTemplate,
     step_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop("template_config")
@@ -449,7 +449,7 @@ def _loop(
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": block_step.outputs.artifacts["iter_data"],
         },
-        when="%s == false" % (scheduler_step.outputs.parameters["converged"]),
+        when="{} == false".format(scheduler_step.outputs.parameters["converged"]),
     )
     steps.add(next_step)
 
@@ -481,7 +481,7 @@ def _dpgen(
     loop_op,
     loop_key,
     step_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     step_config = deepcopy(step_config)
     step_template_config = step_config.pop("template_config")
@@ -553,7 +553,7 @@ def _dpgen(
             "init_data": steps.inputs.artifacts["init_data"],
             "iter_data": steps.inputs.artifacts["iter_data"],
         },
-        key="--".join(["%s" % id_step.outputs.parameters["block_id"], loop_key]),
+        key="--".join(["{}".format(id_step.outputs.parameters["block_id"]), loop_key]),
     )
     steps.add(loop_step)
 

@@ -6,7 +6,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
     Union,
 )
@@ -51,14 +50,14 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
     def set_lmp(
         self,
         numb_models: int,
-        custom_shell_commands: List[str],
+        custom_shell_commands: list[str],
         revisions: dict = {},
         traj_freq: int = 10,
         input_lmp_conf_name: str = lmp_conf_name,
         input_lmp_tmpl_name: str = lmp_input_name,
         input_plm_tmpl_name: Optional[str] = None,
-        input_extra_files: List[str] = [],
-        output_dir_pattern: Union[str, List[str]] = "*",
+        input_extra_files: list[str] = [],
+        output_dir_pattern: Union[str, list[str]] = "*",
         output_lmp_conf_name: str = lmp_conf_name,
         output_lmp_tmpl_name: str = lmp_input_name,
         output_plm_tmpl_name: Optional[str] = None,

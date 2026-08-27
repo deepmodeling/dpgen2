@@ -4,7 +4,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -36,8 +35,8 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         self,
         numb_models,
         mass_map,
-        temps: List[float],
-        press: Optional[List[float]] = None,
+        temps: list[float],
+        press: Optional[list[float]] = None,
         ens: str = "npt",
         dt: float = 0.001,
         nsteps: int = 1000,
@@ -53,11 +52,9 @@ class NPTTaskGroup(ConfSamplingTaskGroup):
         ele_temp_f: Optional[float] = None,
         ele_temp_a: Optional[float] = None,
         pimd_bead: Optional[str] = None,
-        input_extra_files: Optional[List[str]] = None,
+        input_extra_files: Optional[list[str]] = None,
     ):
-        """
-        Set MD parameters
-        """
+        """Set MD parameters."""
         self.graphs = [model_name_pattern % ii for ii in range(numb_models)]
         self.mass_map = mass_map
         self.temps = temps

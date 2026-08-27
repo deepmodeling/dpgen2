@@ -1,7 +1,5 @@
 import logging
 from typing import (
-    Dict,
-    List,
     Optional,
     Union,
 )
@@ -25,9 +23,9 @@ from dpgen2.utils.download_dpgen2_artifacts import (
 
 def download_by_def(
     workflow_id,
-    wf_config: Dict = {},
-    iterations: Optional[List[int]] = None,
-    step_defs: Optional[List[str]] = None,
+    wf_config: dict = {},
+    iterations: Optional[list[int]] = None,
+    step_defs: Optional[list[str]] = None,
     prefix: Optional[str] = None,
     chk_pnt: bool = False,
 ):
@@ -42,8 +40,8 @@ def download_by_def(
 
 def download(
     workflow_id,
-    wf_config: Optional[Dict] = {},
-    wf_keys: Optional[List] = None,
+    wf_config: Optional[dict] = {},
+    wf_keys: Optional[list] = None,
     prefix: Optional[str] = None,
     chk_pnt: bool = False,
 ):

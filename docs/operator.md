@@ -92,31 +92,34 @@ The `prep_train` prepares a list of paths, each of which contains all necessary 
 
 The `run_train` slices the list of paths, and assign each item in the list to a DeePMD-kit task. The task is executed by `run_train_op`. This is a very nice feature of `dflow`, because the developer only needs to implement how one DeePMD-kit task is executed, and then all the items in the task list will be executed [in parallel](https://github.com/dptech-corp/dflow/blob/master/README.md#315-produce-parallel-steps-using-loop). See the following code to see how it works
 ```python
-    run_train = Step(
-        'run-train',
-        template=PythonOPTemplate(
-            run_train_op,
-            image=run_train_image,
-            slices = Slices(
-                "int('{{item}}')",
-                input_parameter = ["task_name"],
-                input_artifact = ["task_path", "init_model"],
-                output_artifact = ["model", "lcurve", "log", "script"],
-            ),
+run_train = Step(
+    "run-train",
+    template=PythonOPTemplate(
+        run_train_op,
+        image=run_train_image,
+        slices=Slices(
+            "int('{{item}}')",
+            input_parameter=["task_name"],
+            input_artifact=["task_path", "init_model"],
+            output_artifact=["model", "lcurve", "log", "script"],
         ),
-        parameters={
-            "config" : train_steps.inputs.parameters["train_config"],
-            "task_name" : prep_train.outputs.parameters["task_names"],
-        },
-        artifacts={
-            'task_path' : prep_train.outputs.artifacts['task_paths'],
-            "init_model" : train_steps.inputs.artifacts['init_models'],
-            "init_data": train_steps.inputs.artifacts['init_data'],
-            "iter_data": train_steps.inputs.artifacts['iter_data'],
-        },
-        with_sequence=argo_sequence(argo_len(prep_train.outputs.parameters["task_names"]), format=train_index_pattern),
-        key = step_keys['run-train'],
-    )
+    ),
+    parameters={
+        "config": train_steps.inputs.parameters["train_config"],
+        "task_name": prep_train.outputs.parameters["task_names"],
+    },
+    artifacts={
+        "task_path": prep_train.outputs.artifacts["task_paths"],
+        "init_model": train_steps.inputs.artifacts["init_models"],
+        "init_data": train_steps.inputs.artifacts["init_data"],
+        "iter_data": train_steps.inputs.artifacts["iter_data"],
+    },
+    with_sequence=argo_sequence(
+        argo_len(prep_train.outputs.parameters["task_names"]),
+        format=train_index_pattern,
+    ),
+    key=step_keys["run-train"],
+)
 ```
 The input parameter `"task_names"` and artifacts `"task_paths"` and `"init_model"` are sliced and supplied to each DeePMD-kit task. The output artifacts of the tasks (`"model"`, `"lcurve"`, `"log"` and `"script"`) are stacked in the same order as the input lists. These lists are assigned as the outputs of `train_steps` by
 ```python
@@ -144,26 +147,32 @@ from dflow.python import (
     OPIOSign,
     Artifact,
 )
+
+
 class RunDPTrain(OP):
     @classmethod
     def get_input_sign(cls):
-        return OPIOSign({
-            "config" : dict,
-            "task_name" : str,
-            "task_path" : Artifact(Path),
-            "init_model" : Artifact(Path),
-            "init_data" : Artifact(List[Path]),
-            "iter_data" : Artifact(List[Path]),
-        })
+        return OPIOSign(
+            {
+                "config": dict,
+                "task_name": str,
+                "task_path": Artifact(Path),
+                "init_model": Artifact(Path),
+                "init_data": Artifact(List[Path]),
+                "iter_data": Artifact(List[Path]),
+            }
+        )
 
     @classmethod
     def get_output_sign(cls):
-        return OPIOSign({
-            "script" : Artifact(Path),
-            "model" : Artifact(Path),
-            "lcurve" : Artifact(Path),
-            "log" : Artifact(Path),
-        })
+        return OPIOSign(
+            {
+                "script": Artifact(Path),
+                "model": Artifact(Path),
+                "lcurve": Artifact(Path),
+                "log": Artifact(Path),
+            }
+        )
 ```
 
 All items not defined as `Artifact` are treated as parameters of the `OP`. The concept of parameter and artifact are explained in the [dflow document](https://github.com/dptech-corp/dflow/blob/master/README.md#Parametersandartifacts). To be short, the artifacts can be `pathlib.Path` or a list of `pathlib.Path`. The artifacts are passed by the file system. Other data structures are treated as parameters, they are passed as variables encoded in `str`. Therefore, a large amout of information should be stored in artifacts, otherwise they can be considered as parameters.
@@ -171,47 +180,51 @@ All items not defined as `Artifact` are treated as parameters of the `OP`. The c
 The operation of the `OP` is implemented in method `execute`, and are run in docker containers. Again taking the `execute` method of `RunDPTrain` as an example
 
 ```python
-    @OP.exec_sign_check
-    def execute(
-            self,
-            ip : OPIO,
-    ) -> OPIO:
-        ...
-        task_name = ip['task_name']
-        task_path = ip['task_path']
-        init_model = ip['init_model']
-        init_data = ip['init_data']
-        iter_data = ip['iter_data']
-        ...
-        work_dir = Path(task_name)
-        ...
-        # here copy all files in task_path to work_dir
-        ...
-        with set_directory(work_dir):
-            fplog = open('train.log', 'w')
-            def clean_before_quit():
-                fplog.close()
-            # train model
-            command = ['dp', 'train', train_script_name]
-            ret, out, err = run_command(command)
-            if ret != 0:
-                clean_before_quit()
-                raise FatalError('dp train failed')
-            fplog.write(out)
-            # freeze model
-            ret, out, err = run_command(['dp', 'freeze', '-o', 'frozen_model.pb'])
-            if ret != 0:
-                clean_before_quit()
-                raise FatalError('dp freeze failed')
-            fplog.write(out)
-            clean_before_quit()
+@OP.exec_sign_check
+def execute(
+    self,
+    ip: OPIO,
+) -> OPIO:
+    ...
+    task_name = ip["task_name"]
+    task_path = ip["task_path"]
+    init_model = ip["init_model"]
+    init_data = ip["init_data"]
+    iter_data = ip["iter_data"]
+    ...
+    work_dir = Path(task_name)
+    ...
+    # here copy all files in task_path to work_dir
+    ...
+    with set_directory(work_dir):
+        fplog = open("train.log", "w")
 
-        return OPIO({
-            "script" : work_dir / train_script_name,
-            "model" : work_dir / "frozen_model.pb",
-            "lcurve" : work_dir / "lcurve.out",
-            "log" : work_dir / "train.log",
-        })
+        def clean_before_quit():
+            fplog.close()
+
+        # train model
+        command = ["dp", "train", train_script_name]
+        ret, out, err = run_command(command)
+        if ret != 0:
+            clean_before_quit()
+            raise FatalError("dp train failed")
+        fplog.write(out)
+        # freeze model
+        ret, out, err = run_command(["dp", "freeze", "-o", "frozen_model.pb"])
+        if ret != 0:
+            clean_before_quit()
+            raise FatalError("dp freeze failed")
+        fplog.write(out)
+        clean_before_quit()
+
+    return OPIO(
+        {
+            "script": work_dir / train_script_name,
+            "model": work_dir / "frozen_model.pb",
+            "lcurve": work_dir / "lcurve.out",
+            "log": work_dir / "train.log",
+        }
+    )
 ```
 
 The inputs and outputs variables are recorded in data structure `dflow.python.OPIO`, which is initialized by a Python dict. The keys in the input/output `dict`, and the types of the input/output variables will be checked against their signatures by decorator `OP.exec_sign_check`. If any key or type does not match, an exception will be raised.

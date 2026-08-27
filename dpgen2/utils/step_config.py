@@ -18,7 +18,7 @@ from dpgen2.constants import (
 
 
 def dispatcher_args():
-    """free style dispatcher args"""
+    """Free style dispatcher args."""
     return []
 
 

@@ -9,10 +9,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -42,6 +39,7 @@ from dpgen2.constants import (
 from dpgen2.utils.chdir import (
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -62,8 +60,8 @@ def _make_train_command(
     if impl == "tensorflow" and os.path.isfile("checkpoint"):
         checkpoint = "model.ckpt"
     elif impl == "pytorch" and len(glob.glob("model.ckpt-[0-9]*.pt")) > 0:
-        checkpoint = "model.ckpt-%s.pt" % max(
-            [int(f[11:-3]) for f in glob.glob("model.ckpt-[0-9]*.pt")]
+        checkpoint = "model.ckpt-{}.pt".format(
+            max([int(f[11:-3]) for f in glob.glob("model.ckpt-[0-9]*.pt")])
         )
     else:
         checkpoint = None
@@ -130,9 +128,9 @@ class RunDPTrain(OP):
                 "task_path": Artifact(Path),
                 "init_model": Artifact(Path, optional=True),
                 "init_data": Artifact(NestedDict[Path]),
-                "iter_data": Artifact(List[Path]),
+                "iter_data": Artifact(DflowList[Path]),
                 "valid_data": Artifact(NestedDict[Path], optional=True),
-                "optional_files": Artifact(List[Path], optional=True),
+                "optional_files": Artifact(DflowList[Path], optional=True),
             }
         )
 
@@ -375,11 +373,11 @@ class RunDPTrain(OP):
     def write_data_to_input_script(
         idict: dict,
         config,
-        init_data: Union[List[Path], Dict[str, List[Path]]],
-        iter_data: List[Path],
+        init_data: Union[DflowList[Path], dict[str, list[Path]]],
+        iter_data: list[Path],
         auto_prob_str: str = "prob_sys_size",
         major_version: str = "1",
-        valid_data: Optional[Union[List[Path], Dict[str, List[Path]]]] = None,
+        valid_data: Optional[Union[DflowList[Path], dict[str, list[Path]]]] = None,
     ):
         odict = idict.copy()
         if config["multitask"]:
@@ -706,12 +704,12 @@ def _expand_all_multi_sys_to_sys(list_multi_sys):
     return all_sys_dirs
 
 
-def split_valid(systems: List[str], valid_ratio: float):
+def split_valid(systems: list[str], valid_ratio: float):
     train_systems = []
     valid_systems = []
     for system in systems:
         d = dpdata.MultiSystems()
-        mixed_type = len(glob.glob("%s/*/real_atom_types.npy" % system)) > 0
+        mixed_type = len(glob.glob(f"{system}/*/real_atom_types.npy")) > 0
         if mixed_type:
             d.load_systems_from_file(system, fmt="deepmd/npy/mixed")
         else:
@@ -735,11 +733,11 @@ def split_valid(systems: List[str], valid_ratio: float):
             target = "train_data/" + system
             if mixed_type:
                 # The multisystem is loaded from one dir, thus we can safely keep one dir
-                train_multi_systems.to_deepmd_npy_mixed("%s.tmp" % target)  # type: ignore
-                fs = os.listdir("%s.tmp" % target)
+                train_multi_systems.to_deepmd_npy_mixed(f"{target}.tmp")  # type: ignore
+                fs = os.listdir(f"{target}.tmp")
                 assert len(fs) == 1
-                os.rename(os.path.join("%s.tmp" % target, fs[0]), target)
-                os.rmdir("%s.tmp" % target)
+                os.rename(os.path.join(f"{target}.tmp", fs[0]), target)
+                os.rmdir(f"{target}.tmp")
             else:
                 train_multi_systems[0].to_deepmd_npy(target)  # type: ignore
             train_systems.append(os.path.abspath(target))
@@ -748,11 +746,11 @@ def split_valid(systems: List[str], valid_ratio: float):
             target = "valid_data/" + system
             if mixed_type:
                 # The multisystem is loaded from one dir, thus we can safely keep one dir
-                valid_multi_systems.to_deepmd_npy_mixed("%s.tmp" % target)  # type: ignore
-                fs = os.listdir("%s.tmp" % target)
+                valid_multi_systems.to_deepmd_npy_mixed(f"{target}.tmp")  # type: ignore
+                fs = os.listdir(f"{target}.tmp")
                 assert len(fs) == 1
-                os.rename(os.path.join("%s.tmp" % target, fs[0]), target)
-                os.rmdir("%s.tmp" % target)
+                os.rename(os.path.join(f"{target}.tmp", fs[0]), target)
+                os.rmdir(f"{target}.tmp")
             else:
                 valid_multi_systems[0].to_deepmd_npy(target)  # type: ignore
             valid_systems.append(os.path.abspath(target))

@@ -5,7 +5,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Union,
 )
 
@@ -22,6 +21,7 @@ from dflow.python import (
 from dpgen2.utils import (
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class RunCalyModelDevi(OP):
@@ -36,10 +36,10 @@ class RunCalyModelDevi(OP):
     def get_input_sign(cls):
         return OPIOSign(
             {
-                "type_map": Parameter(List[str]),
+                "type_map": Parameter(list[str]),
                 "task_name": Parameter(str),
-                "traj_dirs": Artifact(List[Path]),
-                "models": Artifact(List[Path]),
+                "traj_dirs": Artifact(DflowList[Path]),
+                "models": Artifact(DflowList[Path]),
             }
         )
 
@@ -48,8 +48,8 @@ class RunCalyModelDevi(OP):
         return OPIOSign(
             {
                 "task_name": Parameter(str),
-                "traj": Artifact(List[Path]),
-                "model_devi": Artifact(List[Path]),
+                "traj": Artifact(DflowList[Path]),
+                "model_devi": Artifact(DflowList[Path]),
             }
         )
 
@@ -128,9 +128,9 @@ class RunCalyModelDevi(OP):
 
                 traj_str = dump_str_dict[key]
                 model_devis = devis_dict[key]
-                assert len(traj_str) == len(
-                    model_devis
-                ), "The length of traj_str and model_devis should be same."
+                assert len(traj_str) == len(model_devis), (
+                    "The length of traj_str and model_devis should be same."
+                )
                 for idx in range(len(model_devis)):
                     traj_str[idx] = traj_str[idx] % idx
                     model_devis[idx][0] = idx
@@ -158,7 +158,7 @@ class RunCalyModelDevi(OP):
 
 
 def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
-    """down triangle cell can be obtained from
+    """Down triangle cell can be obtained from
     cell params: a, b, c, alpha, beta, gamma.
     cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
     lx, ly, lz = cell[0][0], cell[1][1], cell[2][2]
@@ -169,7 +169,7 @@ def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     ylo_bound = ylo + MIN(0.0,yz)
     yhi_bound = yhi + MAX(0.0,yz)
     zlo_bound = zlo
-    zhi_bound = zhi
+    zhi_bound = zhi.
 
     ref: https://docs.lammps.org/Howto_triclinic.html
     """
@@ -208,19 +208,19 @@ def atoms2lmpdump(atoms, struc_idx, type_map, ignore=False):
     zhi_bound = zhi
 
     dump_str += "ITEM: BOX BOUNDS xy xz yz pp pp pp\n"
-    dump_str += "%20.10f %20.10f %20.10f\n" % (xlo_bound, xhi_bound, xy)
-    dump_str += "%20.10f %20.10f %20.10f\n" % (ylo_bound, yhi_bound, xz)
-    dump_str += "%20.10f %20.10f %20.10f\n" % (zlo_bound, zhi_bound, yz)
+    dump_str += f"{xlo_bound:20.10f} {xhi_bound:20.10f} {xy:20.10f}\n"
+    dump_str += f"{ylo_bound:20.10f} {yhi_bound:20.10f} {xz:20.10f}\n"
+    dump_str += f"{zlo_bound:20.10f} {zhi_bound:20.10f} {yz:20.10f}\n"
     dump_str += "ITEM: ATOMS id type x y z fx fy fz\n"
     for idx, atom in enumerate(new_atoms):
         type_id = type_map.index(atom.symbol) + 1  # type: ignore
-        dump_str += "%5d %5d" % (idx + 1, type_id)
-        dump_str += "%20.10f %20.10f %20.10f" % (
-            atom.position[0],  # type: ignore
-            atom.position[1],  # type: ignore
-            atom.position[2],  # type: ignore
+        dump_str += f"{idx + 1:5d} {type_id:5d}"
+        dump_str += (
+            f"{atom.position[0]:20.10f} "  # type: ignore
+            f"{atom.position[1]:20.10f} "  # type: ignore
+            f"{atom.position[2]:20.10f}"  # type: ignore
         )
-        dump_str += "%20.10f %20.10f %20.10f\n" % (0, 0, 0)
+        dump_str += f"{0:20.10f} {0:20.10f} {0:20.10f}\n"
     # dump_str = dump_str.strip("\n")
     return dump_str
 
@@ -266,7 +266,7 @@ def parse_traj(traj_file):
         "H": 0.813,
     }
 
-    trajs: List[Atoms] = read(traj_file, index=":", format="traj")  # type: ignore
+    trajs: list[Atoms] = read(traj_file, index=":", format="traj")  # type: ignore
     dthresh = 0.72
     numb_traj = len(trajs)
     assert numb_traj >= 1, "traj file is broken."
@@ -279,7 +279,7 @@ def parse_traj(traj_file):
     dis_mtx[row, col] = np.nan
     is_reasonable = np.nanmin(dis_mtx) > dthresh
 
-    selected_traj: Union[List[Atoms], None] = None
+    selected_traj: Union[DflowList[Atoms], None] = None
     if is_reasonable:
         if len(trajs) >= 20:
             selected_traj = [trajs[iii] for iii in [4, 9, -10, -5, -1]]
@@ -326,14 +326,12 @@ def parse_traj(traj_file):
 
 def write_model_devi_out(devi: np.ndarray, fname: Union[str, Path], header: str = ""):
     assert devi.shape[1] == 8
-    header = "%s\n%10s" % (header, "step")
+    header = f"{header}\n{'step':>10}"
     for item in "vf":
-        header += "%19s%19s%19s" % (
-            f"max_devi_{item}",
-            f"min_devi_{item}",
-            f"avg_devi_{item}",
+        header += (
+            f"{'max_devi_' + item:>19}{'min_devi_' + item:>19}{'avg_devi_' + item:>19}"
         )
-        header += "%19s" % "devi_e"
+        header += f"{'devi_e':>19}"
     with open(fname, "ab") as fp:
         np.savetxt(
             fp,

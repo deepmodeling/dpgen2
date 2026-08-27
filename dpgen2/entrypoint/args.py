@@ -1,7 +1,4 @@
 import textwrap
-from typing import (
-    List,
-)
 
 import dargs
 from dargs import (
@@ -61,7 +58,7 @@ def dp_dist_train_args():
             doc=doc_config,
         ),
         Argument(
-            "template_script", [List[str], str], optional=False, doc=doc_template_script
+            "template_script", [list[str], str], optional=False, doc=doc_template_script
         ),
         Argument("student_model_path", str, optional=True, doc=dock_student_model_path),
         Argument(
@@ -100,11 +97,11 @@ def dp_train_args():
         ),
         Argument("numb_models", int, optional=True, default=4, doc=doc_numb_models),
         Argument(
-            "template_script", [List[str], str], optional=False, doc=doc_template_script
+            "template_script", [list[str], str], optional=False, doc=doc_template_script
         ),
         Argument(
             "init_models_paths",
-            List[str],
+            list[str],
             optional=True,
             default=None,
             doc=doc_init_models_paths,
@@ -186,7 +183,7 @@ def variant_filter():
                 kk,
                 dict,
                 conf_filter_styles[kk].args(),
-                doc="Configuration filter of type %s" % kk,
+                doc=f"Configuration filter of type {kk}",
             )
         )
     return Variant(
@@ -249,7 +246,7 @@ def lmp_args():
             doc=doc_configuration,
             alias=["configuration"],
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list[list[dict]], optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,
@@ -342,7 +339,7 @@ def caly_args():
             doc=doc_configuration,
             alias=["configuration"],
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list[list[dict]], optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,
@@ -432,7 +429,7 @@ def diffcsp_args():
             optional=False,
             doc=doc_convergence,
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list[list[dict]], optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,
@@ -545,8 +542,8 @@ def input_args():
     doc_multi_valid_data_uri = "The URI of validation data for multitask"
 
     return [
-        Argument("type_map", List[str], optional=False, doc=doc_type_map),
-        Argument("mass_map", List[float], optional=False, doc=doc_mass_map),
+        Argument("type_map", list[str], optional=False, doc=doc_type_map),
+        Argument("mass_map", list[float], optional=False, doc=doc_mass_map),
         Argument(
             "init_data_prefix",
             str,
@@ -560,7 +557,7 @@ def input_args():
         ),
         Argument(
             "init_data_sys",
-            [List[str], str],
+            [list[str], str],
             optional=True,
             default=None,
             doc=doc_init_sys,
@@ -609,7 +606,7 @@ def input_args():
         ),
         Argument(
             "valid_data_sys",
-            [List[str], str],
+            [list[str], str],
             optional=True,
             default=None,
             doc=doc_valid_sys,
@@ -840,7 +837,7 @@ def submit_args(default_step_config=normalize_step_dict({})):
             ),
             Argument(
                 "upload_python_packages",
-                [List[str], str],
+                [list[str], str],
                 optional=True,
                 default=None,
                 doc=doc_upload_python_packages,

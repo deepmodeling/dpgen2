@@ -7,10 +7,6 @@ import unittest
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-)
 
 import jsonpickle
 import numpy as np
@@ -45,15 +41,16 @@ try:
 except ModuleNotFoundError:
     # case of upload everything to argo, no context needed
     pass
+from unittest.mock import (
+    patch,
+)
+
 from context import (
     default_host,
     default_image,
     skip_ut_with_dflow,
     skip_ut_with_dflow_reason,
     upload_python_packages,
-)
-from mock import (
-    patch,
 )
 from mocked_ops import (
     MockedCollectData,

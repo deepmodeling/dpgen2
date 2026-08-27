@@ -3,9 +3,6 @@ import os
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-)
 
 from dargs import (
     Argument,
@@ -25,6 +22,7 @@ from dpgen2.constants import (
 from dpgen2.exploration.task import (
     DiffCSPTaskGroup,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 from .run_caly_model_devi import (
     atoms2lmpdump,
@@ -42,7 +40,7 @@ class RunRelax(OP):
                 "diffcsp_task_grp": BigParameter(DiffCSPTaskGroup),
                 "expl_config": dict,
                 "task_path": Artifact(Path),
-                "models": Artifact(List[Path]),
+                "models": Artifact(DflowList[Path]),
             }
         )
 
@@ -50,8 +48,8 @@ class RunRelax(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "trajs": Artifact(List[Path]),
-                "model_devis": Artifact(List[Path]),
+                "trajs": Artifact(DflowList[Path]),
+                "model_devis": Artifact(DflowList[Path]),
             }
         )
 
@@ -62,14 +60,14 @@ class RunRelax(OP):
     def write_model_devi(self, devi, model_devi_file):
         import numpy as np
 
-        header = "%10s%19s%19s%19s%19s%19s%19s" % (
-            "step",
-            "max_devi_v",
-            "min_devi_v",
-            "avg_devi_v",
-            "max_devi_f",
-            "min_devi_f",
-            "avg_devi_f",
+        header = (
+            f"{'step':>10}"
+            f"{'max_devi_v':>19}"
+            f"{'min_devi_v':>19}"
+            f"{'avg_devi_v':>19}"
+            f"{'max_devi_f':>19}"
+            f"{'min_devi_f':>19}"
+            f"{'avg_devi_f':>19}"
         )
         np.savetxt(
             model_devi_file,
@@ -193,14 +191,14 @@ class RunRelax(OP):
                 )
                 forces_list[j] = forces
                 virial_list[j] = virial / len(atype)
-            traj_file = ip["task_path"] / ("traj.%s.dump" % fname)
+            traj_file = ip["task_path"] / (f"traj.{fname}.dump")
             traj_file = self.write_traj(dump_str, traj_file)
             trajs.append(traj_file)
             devi = [np.array(step_list)]
             devi += list(calc_model_devi_v(np.array(virial_list)))
             devi += list(calc_model_devi_f(np.array(forces_list)))
             devi = np.vstack(devi).T
-            model_devi_file = ip["task_path"] / ("model_devi.%s.out" % fname)
+            model_devi_file = ip["task_path"] / (f"model_devi.{fname}.out")
             model_devi_file = self.write_model_devi(devi, model_devi_file)
             model_devis.append(model_devi_file)
         return OPIO(

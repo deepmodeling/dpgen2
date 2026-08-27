@@ -45,8 +45,9 @@ class TestFpOpCp2k(unittest.TestCase):
         fp_config = {
             "inputs": FpOpCp2kInputs(data_path / "input.inp"),
             "run": {
-                "command": "cp -r %s output.log && cat %s"
-                % (data_path / "output.log", data_path / "output.log"),
+                "command": "cp -r {} output.log && cat {}".format(
+                    data_path / "output.log", data_path / "output.log"
+                ),
             },
             "extra_output_files": [],
         }

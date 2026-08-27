@@ -3,10 +3,6 @@ import pickle
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 from dflow.python import (
     OP,
@@ -31,6 +27,7 @@ from dpgen2.exploration.task import (
 from dpgen2.utils import (
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 vsc_keys = {
     "VSC": "F",
@@ -319,10 +316,10 @@ class PrepCalyInput(OP):
         return OPIOSign(
             {
                 "ntasks": Parameter(int),
-                "task_names": BigParameter(List[str]),  # task dir names
-                "input_dat_files": Artifact(List[Path]),  # `input.dat`s
-                "caly_run_opt_files": Artifact(List[Path]),
-                "caly_check_opt_files": Artifact(List[Path]),
+                "task_names": BigParameter(list[str]),  # task dir names
+                "input_dat_files": Artifact(DflowList[Path]),  # `input.dat`s
+                "caly_run_opt_files": Artifact(DflowList[Path]),
+                "caly_check_opt_files": Artifact(DflowList[Path]),
             }
         )
 
@@ -349,7 +346,6 @@ class PrepCalyInput(OP):
             - `caly_run_opt_files`: (`Artifact(List[Path])`)
             - `caly_check_opt_files`: (`Artifact(List[Path])`)
         """
-
         cc = 0
         task_paths = []
         input_dat_files = []

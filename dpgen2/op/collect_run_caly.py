@@ -8,10 +8,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Set,
-    Tuple,
 )
 
 from dargs import (
@@ -38,6 +35,7 @@ from dpgen2.utils import (
     BinaryFileInput,
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -67,7 +65,7 @@ class CollRunCaly(OP):
                     type=Path, optional=True
                 ),  # dir named results for evo
                 "opt_results_dir": Artifact(
-                    type=List[Path], optional=True
+                    type=DflowList[Path], optional=True
                 ),  # dir contains POSCAR* CONTCAR* OUTCAR*
                 "qhull_input": Artifact(type=Path, optional=True),  # for vsc
             }
@@ -246,7 +244,7 @@ def prep_last_calypso_file(step, results, opt_results_dir, qhull_input, vsc):
 def get_value_from_inputdat(filename):
     max_step = 0
     vsc = False
-    with open(filename, "r") as f:
+    with open(filename) as f:
         lines = f.readlines()
         for line in lines:
             if "MaxStep" in line:

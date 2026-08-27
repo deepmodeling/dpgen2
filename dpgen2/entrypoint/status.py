@@ -1,6 +1,5 @@
 import logging
 from typing import (
-    Dict,
     Optional,
 )
 
@@ -20,7 +19,7 @@ from dpgen2.utils.dflow_query import (
 
 def status(
     workflow_id,
-    wf_config: Optional[Dict] = {},
+    wf_config: Optional[dict] = {},
 ):
     wf_config = normalize_args(wf_config)
 
@@ -34,6 +33,5 @@ def status(
 
     if scheduler is not None:
         ptr_str = scheduler.print_convergence()
-        print(ptr_str)
     else:
         logging.warn("no scheduler is finished")

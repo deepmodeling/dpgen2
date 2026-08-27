@@ -2,9 +2,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -33,10 +31,7 @@ from .stage_scheduler import (
 
 
 class ExplorationScheduler:
-    """
-    The exploration scheduler.
-
-    """
+    """The exploration scheduler."""
 
     def __init__(
         self,
@@ -91,17 +86,11 @@ class ExplorationScheduler:
         return tot_iter
 
     def complete(self):
-        """
-        Tell if all stages are converged.
-
-        """
+        """Tell if all stages are converged."""
         return self.complete_
 
     def force_stage_complete(self):
-        """
-        Force complete the current stage
-
-        """
+        """Force complete the current stage."""
         self.stage_schedulers[self.cur_stage].force_complete()
         self.cur_stage += 1
         if self.cur_stage < len(self.stage_schedulers):
@@ -114,8 +103,8 @@ class ExplorationScheduler:
     def plan_next_iteration(
         self,
         report: Optional[ExplorationReport] = None,
-        trajs: Optional[Union[List[Path], List[HDF5Dataset]]] = None,
-    ) -> Tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]]:
+        trajs: Optional[Union[list[Path], list[HDF5Dataset]]] = None,
+    ) -> tuple[bool, Optional[ExplorationTaskGroup], Optional[ConfSelector]]:
         """
         Make the plan for the next DPGEN iteration.
 
@@ -136,7 +125,6 @@ class ExplorationScheduler:
             The configuration selector for the next iteration. Should be `None` if converged.
 
         """
-
         try:
             stg_complete, expl_task_grp, conf_selector = self.stage_schedulers[
                 self.cur_stage
@@ -145,7 +133,7 @@ class ExplorationScheduler:
                 trajs,
             )
         except FatalError as e:
-            raise FatalError(f"stage {self.cur_stage}: " + str(e))
+            raise FatalError(f"stage {self.cur_stage}: {e}") from e
 
         if stg_complete:
             self.cur_stage += 1
@@ -164,10 +152,7 @@ class ExplorationScheduler:
             return stg_complete, expl_task_grp, conf_selector
 
     def get_stage_of_iterations(self):
-        """
-        Get the stage index and the index in the stage of iterations.
-
-        """
+        """Get the stage index and the index in the stage of iterations."""
         stages = self.stage_schedulers
         n_stage_iters = []
         for ii in range(self.get_stage() + 1):
@@ -196,7 +181,7 @@ class ExplorationScheduler:
 
     def get_convergence_ratio(self):
         """
-        Get the accurate, candidate and failed ratios of the iterations
+        Get the accurate, candidate and failed ratios of the iterations.
 
         Returns
         -------

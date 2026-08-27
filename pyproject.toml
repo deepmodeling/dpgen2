@@ -82,6 +82,33 @@ exclude = [
     "dpgen2/_version.py",
 ]
 
-[tool.isort]
-profile = "black"
-force_grid_wrap = 1
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    "D",
+    "UP",
+    "C4",
+    "TID251",
+    "TID253",
+    "T20",
+    "B904",
+    "N804",
+    "N805",
+    "I",
+]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D205",
+    "D401",
+    "D404",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

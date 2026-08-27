@@ -7,11 +7,7 @@ from pathlib import (
 )
 from typing import (
     Any,
-    Dict,
-    List,
     Optional,
-    Set,
-    Type,
     Union,
 )
 
@@ -90,12 +86,12 @@ class ConcurrentLearningBlock(Steps):
         name: str,
         prep_run_dp_train_op: PrepRunDPTrain,
         prep_run_explore_op: Union[PrepRunLmp, PrepRunCaly, PrepRunDiffCSP],
-        select_confs_op: Type[OP],
+        select_confs_op: type[OP],
         prep_run_fp_op: PrepRunFp,
-        collect_data_op: Type[OP],
+        collect_data_op: type[OP],
         select_confs_config: dict = normalize_step_dict({}),
         collect_data_config: dict = normalize_step_dict({}),
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         self._input_parameters = {
             "block_id": InputParameter(),
@@ -148,7 +144,7 @@ class ConcurrentLearningBlock(Steps):
         self.step_keys = {}
         for ii in self._my_keys:
             self.step_keys[ii] = "--".join(
-                ["%s" % self.inputs.parameters["block_id"], ii]
+                ["{}".format(self.inputs.parameters["block_id"]), ii]
             )
 
         self = _block_cl(
@@ -188,16 +184,16 @@ class ConcurrentLearningBlock(Steps):
 
 def _block_cl(
     block_steps: Steps,
-    step_keys: Dict[str, Any],
+    step_keys: dict[str, Any],
     name: str,
     prep_run_dp_train_op: OPTemplate,
     prep_run_explore_op: OPTemplate,
-    select_confs_op: Type[OP],
+    select_confs_op: type[OP],
     prep_run_fp_op: OPTemplate,
-    collect_data_op: Type[OP],
+    collect_data_op: type[OP],
     select_confs_config: dict = normalize_step_dict({}),
     collect_data_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     select_confs_config = deepcopy(select_confs_config)
     collect_data_config = deepcopy(collect_data_config)
@@ -228,7 +224,7 @@ def _block_cl(
             "iter_data": block_steps.inputs.artifacts["iter_data"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-train"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-train"]
         ),
     )
     block_steps.add(prep_run_dp_train)
@@ -246,7 +242,7 @@ def _block_cl(
             "models": prep_run_dp_train.outputs.artifacts["models"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-explore"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-explore"]
         ),
     )
     block_steps.add(prep_run_explore)
@@ -288,7 +284,7 @@ def _block_cl(
             "confs": select_confs.outputs.artifacts["confs"],
         },
         key="--".join(
-            ["%s" % block_steps.inputs.parameters["block_id"], "prep-run-fp"]
+            ["{}".format(block_steps.inputs.parameters["block_id"]), "prep-run-fp"]
         ),
     )
     block_steps.add(prep_run_fp)

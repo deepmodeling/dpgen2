@@ -1,6 +1,5 @@
 import random
 from typing import (
-    List,
     Optional,
 )
 
@@ -239,14 +238,14 @@ if __name__ == "__main__":
 
 def make_calypso_input(
     numb_of_species: int,
-    name_of_atoms: List[str],
+    name_of_atoms: list[str],
     atomic_number,
-    numb_of_atoms: List[int],
+    numb_of_atoms: list[int],
     distance_of_ions,
     pop_size: int = 30,
     max_step: int = 5,
     system_name: str = "CALYPSO",
-    numb_of_formula: List[int] = [1, 1],
+    numb_of_formula: list[int] = [1, 1],
     pressure: float = 0.001,  # KBar
     fmax: float = 0.01,
     volume: float = 0,
@@ -262,9 +261,9 @@ def make_calypso_input(
     pick_step: int = 1,
     parallel: bool = False,
     split: bool = True,
-    spec_space_group: List[int] = [2, 230],
+    spec_space_group: list[int] = [2, 230],
     vsc: bool = False,
-    ctrl_range: List[List[int]] = [[1, 10]],
+    ctrl_range: list[list[int]] = [[1, 10]],
     max_numb_atoms: int = 100,
     **kwargs,
 ):

@@ -7,10 +7,7 @@ from pathlib import (
 )
 from typing import (
     Any,
-    Dict,
-    List,
     Optional,
-    Type,
     Union,
 )
 
@@ -50,12 +47,12 @@ class PrepRunDiffCSP(Steps):
     def __init__(
         self,
         name: str,
-        diffcsp_gen_op: Type[OP],
-        prep_relax_op: Type[OP],
-        run_relax_op: Type[OP],
+        diffcsp_gen_op: type[OP],
+        prep_relax_op: type[OP],
+        run_relax_op: type[OP],
         prep_config: Optional[dict] = None,
         run_config: Optional[dict] = None,
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         prep_config = normalize_step_dict({}) if prep_config is None else prep_config
         run_config = normalize_step_dict({}) if run_config is None else run_config
@@ -120,12 +117,12 @@ class PrepRunDiffCSP(Steps):
 
 def _prep_run_diffcsp(
     prep_run_diffcsp_steps: Steps,
-    diffcsp_gen_op: Type[OP],
-    prep_relax_op: Type[OP],
-    run_relax_op: Type[OP],
+    diffcsp_gen_op: type[OP],
+    prep_relax_op: type[OP],
+    run_relax_op: type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
@@ -157,7 +154,7 @@ def _prep_run_diffcsp(
             "task_id": "{{item}}",
             "config": expl_config,
         },
-        key="%s--diffcsp-gen-{{item}}" % block_id,
+        key=f"{block_id}--diffcsp-gen-{{{{item}}}}",
         executor=prep_executor,
         with_sequence=argo_sequence(expl_config["gen_tasks"], format="%06d"),  # type: ignore
     )
@@ -176,7 +173,7 @@ def _prep_run_diffcsp(
         artifacts={
             "cifs": diffcsp_gen.outputs.artifacts["cifs"],
         },
-        key="%s--prep-relax" % block_id,
+        key=f"{block_id}--prep-relax",
         executor=prep_executor,
     )
     prep_run_diffcsp_steps.add(prep_relax)
@@ -202,7 +199,7 @@ def _prep_run_diffcsp(
             "models": models,
             "task_path": prep_relax.outputs.artifacts["task_paths"],
         },
-        key="%s--run-relax-{{item}}" % block_id,
+        key=f"{block_id}--run-relax-{{{{item}}}}",
         executor=run_executor,
         with_sequence=argo_sequence(
             prep_relax.outputs.parameters["ntasks"], format="%06d"

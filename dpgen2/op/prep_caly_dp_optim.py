@@ -5,10 +5,6 @@ import shutil
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 from dflow.python import (
     OP,
@@ -33,6 +29,7 @@ from dpgen2.utils import (
     BinaryFileInput,
     set_directory,
 )
+from dpgen2.utils.dflow_types import DflowList
 from dpgen2.utils.run_command import (
     run_command,
 )
@@ -69,8 +66,8 @@ class PrepCalyDPOptim(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "task_names": Parameter(List[str]),
-                "task_dirs": Artifact(List[Path]),
+                "task_names": Parameter(list[str]),
+                "task_dirs": Artifact(DflowList[Path]),
                 "caly_run_opt_file": Artifact(Path),  # from prep_caly_input
                 "caly_check_opt_file": Artifact(Path),  # from prep_caly_input
             }

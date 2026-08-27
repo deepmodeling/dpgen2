@@ -4,7 +4,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -48,7 +47,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         traj_freq: int = 10,
         extra_pair_style_args: str = "",
         pimd_bead: Optional[str] = None,
-        input_extra_files: Optional[List[str]] = None,
+        input_extra_files: Optional[list[str]] = None,
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
@@ -161,9 +160,9 @@ def find_only_one_key(lmp_lines, key):
         if len(words) >= nkey and words[:nkey] == key:
             found.append(idx)
     if len(found) > 1:
-        raise RuntimeError("found %d keywords %s" % (len(found), key))
+        raise RuntimeError(f"found {len(found)} keywords {key}")
     if len(found) == 0:
-        raise RuntimeError("failed to find keyword %s" % (key))
+        raise RuntimeError(f"failed to find keyword {key}")
     return found[0]
 
 
@@ -184,11 +183,9 @@ def revise_lmp_input_model(
         if pimd_bead is not None
         else lmp_model_devi_name
     )
-    lmp_lines[idx] = "pair_style      deepmd %s out_freq %d out_file %s%s" % (
-        graph_list,
-        trj_freq,
-        model_devi_file_name,
-        extra_pair_style_args,
+    lmp_lines[idx] = (
+        f"pair_style      deepmd {graph_list} out_freq {trj_freq:d} "
+        f"out_file {model_devi_file_name}{extra_pair_style_args}"
     )
     return lmp_lines
 
@@ -198,17 +195,16 @@ def revise_lmp_input_dump(lmp_lines, trj_freq, pimd_bead=None):
     lmp_traj_file_name = (
         lmp_pimd_traj_name % pimd_bead if pimd_bead is not None else lmp_traj_name
     )
-    lmp_lines[
-        idx
-    ] = f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    lmp_lines[idx] = (
+        f"dump            dpgen_dump all custom {trj_freq} {lmp_traj_file_name} id type x y z"
+    )
     return lmp_lines
 
 
 def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
     idx = find_only_one_key(lmp_lines, ["fix", "dpgen_plm"])
-    lmp_lines[idx] = "fix             dpgen_plm all plumed plumedfile %s outfile %s" % (
-        in_plm,
-        out_plm,
+    lmp_lines[idx] = (
+        f"fix             dpgen_plm all plumed plumedfile {in_plm} outfile {out_plm}"
     )
     return lmp_lines
 

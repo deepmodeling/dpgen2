@@ -6,8 +6,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
-    Tuple,
     Union,
 )
 
@@ -28,14 +26,12 @@ from dpgen2.exploration.task import (
 
 
 class StageScheduler(ABC):
-    """
-    The scheduler for an exploration stage.
-    """
+    """The scheduler for an exploration stage."""
 
     @abstractmethod
     def converged(self) -> bool:
         """
-        Tell if the stage is converged
+        Tell if the stage is converged.
 
         Returns
         -------
@@ -47,7 +43,7 @@ class StageScheduler(ABC):
     @abstractmethod
     def complete(self) -> bool:
         """
-        Tell if the stage is complete
+        Tell if the stage is complete.
 
         Returns
         -------
@@ -58,16 +54,13 @@ class StageScheduler(ABC):
 
     @abstractmethod
     def force_complete(self):
-        """
-        For complete the stage
-
-        """
+        """For complete the stage."""
         pass
 
     @abstractmethod
     def next_iteration(self) -> int:
         """
-        Return the index of the next iteration
+        Return the index of the next iteration.
 
         Returns
         -------
@@ -77,9 +70,9 @@ class StageScheduler(ABC):
         pass
 
     @abstractmethod
-    def get_reports(self) -> List[ExplorationReport]:
+    def get_reports(self) -> list[ExplorationReport]:
         """
-        Return all exploration reports
+        Return all exploration reports.
 
         Returns
         -------
@@ -92,8 +85,8 @@ class StageScheduler(ABC):
     def plan_next_iteration(
         self,
         report: ExplorationReport,
-        trajs: Union[List[Path], List[HDF5Dataset]],
-    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector]:
+        trajs: Union[list[Path], list[HDF5Dataset]],
+    ) -> tuple[bool, ExplorationTaskGroup, ConfSelector]:
         """
         Make the plan for the next iteration of the stage.
 

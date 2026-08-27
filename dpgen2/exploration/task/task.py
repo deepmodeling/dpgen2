@@ -2,11 +2,6 @@ import os
 from collections.abc import (
     Sequence,
 )
-from typing import (
-    Dict,
-    List,
-    Tuple,
-)
 
 
 class ExplorationTask:
@@ -17,7 +12,7 @@ class ExplorationTask:
     >>> # this example dumps all files needed by the task.
     >>> files = exploration_task.files()
     ... for file_name, file_content in files.items():
-    ...     with open(file_name, 'w') as fp:
+    ...     with open(file_name, "w") as fp:
     ...         fp.write(file_content)
 
     """
@@ -32,7 +27,7 @@ class ExplorationTask:
         fname: str,
         fcont: str,
     ):
-        """Add file to the task
+        """Add file to the task.
 
         Parameters
         ----------
@@ -45,7 +40,7 @@ class ExplorationTask:
         self._files[fname] = fcont
         return self
 
-    def files(self) -> Dict:
+    def files(self) -> dict:
         """Get all files for the task.
 
         Returns

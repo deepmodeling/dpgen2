@@ -5,9 +5,6 @@ from concurrent.futures import (
 from copy import (
     deepcopy,
 )
-from typing import (
-    List,
-)
 
 import dargs
 import dpdata
@@ -204,7 +201,6 @@ class DistanceConfFilter(ConfFilter):
         for a in A:
             for b in B:
                 if a < b:
-                    print(f"Lattice length {a:.3f} is less than safe distance {b:.3f} ")
                     return False
 
         num_atoms = len(coords)
@@ -225,7 +221,7 @@ class DistanceConfFilter(ConfFilter):
 
     def batched_check(
         self,
-        frames: List[dpdata.System],
+        frames: list[dpdata.System],
     ):
         if self.max_workers == 1:
             return list(map(self.check, frames))
@@ -234,7 +230,7 @@ class DistanceConfFilter(ConfFilter):
                 return list(executor.map(self.check, frames))
 
     @staticmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `ConfFilter`.
 
         Returns
@@ -242,7 +238,6 @@ class DistanceConfFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_max_workers = (
             "The maximum number of processes used to filter configurations, "
             + "None represents as many as the processors of the machine, and 1 for serial"
@@ -311,7 +306,7 @@ class BoxSkewnessConfFilter(ConfFilter):
 
     def batched_check(
         self,
-        frames: List[dpdata.System],
+        frames: list[dpdata.System],
     ):
         if self.max_workers == 1:
             return list(map(self.check, frames))
@@ -320,7 +315,7 @@ class BoxSkewnessConfFilter(ConfFilter):
                 return list(executor.map(self.check, frames))
 
     @staticmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `ConfFilter`.
 
         Returns
@@ -328,7 +323,6 @@ class BoxSkewnessConfFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_max_workers = (
             "The maximum number of processes used to filter configurations, "
             + "None represents as many as the processors of the machine, and 1 for serial"
@@ -383,13 +377,13 @@ class BoxLengthFilter(ConfFilter):
         c = cell[2][2]  # type: ignore
 
         if check_multiples(a, b, c, self.length_ratio):
-            logging.warning("One side is %s larger than another" % self.length_ratio)
+            logging.warning(f"One side is {self.length_ratio} larger than another")
             return False
         return True
 
     def batched_check(
         self,
-        frames: List[dpdata.System],
+        frames: list[dpdata.System],
     ):
         if self.max_workers == 1:
             return list(map(self.check, frames))
@@ -398,7 +392,7 @@ class BoxLengthFilter(ConfFilter):
                 return list(executor.map(self.check, frames))
 
     @staticmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         r"""The argument definition of the `ConfFilter`.
 
         Returns
@@ -406,7 +400,6 @@ class BoxLengthFilter(ConfFilter):
         arguments: List[dargs.Argument]
             List of dargs.Argument defines the arguments of the `ConfFilter`.
         """
-
         doc_max_workers = (
             "The maximum number of processes used to filter configurations, "
             + "None represents as many as the processors of the machine, and 1 for serial"

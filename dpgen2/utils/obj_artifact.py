@@ -8,10 +8,7 @@ def dump_object_to_file(
     obj,
     fname,
 ):
-    """
-    pickle dump object to a file
-
-    """
+    """Pickle dump object to a file."""
     with open(fname, "wb") as fp:
         pickle.dump(obj, fp)
     return Path(fname)
@@ -20,10 +17,7 @@ def dump_object_to_file(
 def load_object_from_file(
     fname,
 ):
-    """
-    pickle load object from a file
-
-    """
+    """Pickle load object from a file."""
     with open(fname, "rb") as fp:
         obj = pickle.load(fp)
     return obj

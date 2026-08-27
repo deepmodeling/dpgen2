@@ -4,6 +4,13 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest import (
+    mock,
+)
+from unittest.mock import (
+    call,
+    patch,
+)
 
 import dpdata
 import numpy as np
@@ -17,11 +24,6 @@ from dflow.python import (
 from fake_data_set import (
     fake_multi_sys,
     fake_system,
-)
-from mock import (
-    call,
-    mock,
-    patch,
 )
 
 # isort: off

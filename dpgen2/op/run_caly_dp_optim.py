@@ -5,10 +5,6 @@ import shutil
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Tuple,
-)
 
 from dflow.python import (
     OP,

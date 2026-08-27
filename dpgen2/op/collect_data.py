@@ -3,11 +3,6 @@ import os
 from pathlib import (
     Path,
 )
-from typing import (
-    List,
-    Set,
-    Tuple,
-)
 
 import dpdata
 from dflow.python import (
@@ -22,6 +17,7 @@ from dflow.python import (
 from dpgen2.utils import (
     setup_ele_temp,
 )
+from dpgen2.utils.dflow_types import DflowList
 
 
 class CollectData(OP):
@@ -44,13 +40,13 @@ class CollectData(OP):
         return OPIOSign(
             {
                 "name": str,
-                "type_map": List[str],
+                "type_map": list[str],
                 "optional_parameter": Parameter(
                     dict,
                     default=CollectData.default_optional_parameter,
                 ),
-                "labeled_data": Artifact(List[Path]),
-                "iter_data": Artifact(List[Path]),
+                "labeled_data": Artifact(DflowList[Path]),
+                "iter_data": Artifact(DflowList[Path]),
             }
         )
 
@@ -58,7 +54,7 @@ class CollectData(OP):
     def get_output_sign(cls):
         return OPIOSign(
             {
-                "iter_data": Artifact(List[Path]),
+                "iter_data": Artifact(DflowList[Path]),
             }
         )
 

@@ -2,8 +2,6 @@ from collections import (
     defaultdict,
 )
 from typing import (
-    Dict,
-    List,
     Optional,
 )
 
@@ -33,9 +31,9 @@ class DeviManagerStd(DeviManager):
         self._data = defaultdict(list)
 
     def _add(self, name: str, deviation: np.ndarray) -> None:
-        assert isinstance(
-            deviation, np.ndarray
-        ), f"Error: deviation(type: {type(deviation)}) is not a np.ndarray"
+        assert isinstance(deviation, np.ndarray), (
+            f"Error: deviation(type: {type(deviation)}) is not a np.ndarray"
+        )
         assert len(deviation.shape) == 1, (
             f"Error: deviation(shape: {deviation.shape}) is not a "
             + f"one-dimensional array"
@@ -44,7 +42,7 @@ class DeviManagerStd(DeviManager):
         self._data[name].append(deviation)
         self.ntraj = max(self.ntraj, len(self._data[name]))
 
-    def _get(self, name: str) -> List[Optional[np.ndarray]]:
+    def _get(self, name: str) -> list[Optional[np.ndarray]]:
         if self.ntraj == 0:
             return []
         elif len(self._data[name]) == 0:
@@ -57,7 +55,7 @@ class DeviManagerStd(DeviManager):
         return None
 
     def _check_data(self) -> None:
-        r"""Check if data is valid"""
+        r"""Check if data is valid."""
         model_devi_names = (
             DeviManager.MAX_DEVI_V,
             DeviManager.MIN_DEVI_V,
@@ -86,9 +84,9 @@ class DeviManagerStd(DeviManager):
                 frames.pop(name)
 
         # check if "max_devi_f" exists
-        assert (
-            len(self._data[DeviManager.MAX_DEVI_F]) == self.ntraj
-        ), f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}"
+        assert len(self._data[DeviManager.MAX_DEVI_F]) == self.ntraj, (
+            f"Error: cannot find model deviation {DeviManager.MAX_DEVI_F}"
+        )
 
         # check if the length of the arrays corresponding to the same
         # trajectory has the same number of frames

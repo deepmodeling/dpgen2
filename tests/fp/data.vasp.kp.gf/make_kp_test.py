@@ -22,5 +22,5 @@ def make_one(out_dir):
 
 ntest = 30
 for ii in range(ntest):
-    out_dir = "test.%03d" % ii
+    out_dir = f"test.{ii:03d}"
     make_one(out_dir)

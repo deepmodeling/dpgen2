@@ -6,10 +6,6 @@ from abc import (
 from pathlib import (
     Path,
 )
-from typing import (
-    Dict,
-    List,
-)
 
 import dargs
 import dpdata
@@ -40,8 +36,8 @@ class ConfGenerator(ABC):
         self,
         type_map,
         fmt="lammps/lmp",
-    ) -> List[str]:
-        r"""Get the file content of configurations
+    ) -> list[str]:
+        r"""Get the file content of configurations.
 
         Parameters
         ----------
@@ -67,15 +63,15 @@ class ConfGenerator(ABC):
 
     @staticmethod
     @abstractmethod
-    def args() -> List[dargs.Argument]:
+    def args() -> list[dargs.Argument]:
         pass
 
     @classmethod
     def normalize_config(
         cls,
-        data: Dict = {},
+        data: dict = {},
         strict: bool = True,
-    ) -> Dict:
+    ) -> dict:
         r"""Normalized the argument.
 
         Parameters

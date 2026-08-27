@@ -1,8 +1,6 @@
 import random
 from typing import (
-    List,
     Optional,
-    Tuple,
 )
 
 import numpy as np
@@ -27,7 +25,7 @@ from .report_trust_levels_base import (
 class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
     def converged(
         self,
-        reports: Optional[List[ExplorationReport]] = None,
+        reports: Optional[list[ExplorationReport]] = None,
     ) -> bool:
         r"""Check if the exploration is converged.
 
@@ -49,7 +47,7 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
         self,
         max_nframes: Optional[int] = None,
         clear: bool = True,
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         ntraj = len(self.traj_nframes)
         id_cand = self._get_candidates(max_nframes)
         id_cand_list = [[] for ii in range(ntraj)]
@@ -63,7 +61,7 @@ class ExplorationReportTrustLevelsMax(ExplorationReportTrustLevels):
     def _get_candidates(
         self,
         max_nframes: Optional[int] = None,
-    ) -> List[Tuple[int, int]]:
+    ) -> list[tuple[int, int]]:
         """
         Get candidates. If number of candidates is larger than `max_nframes`,
         then select `max_nframes` frames with the largest `max_devi_f` from

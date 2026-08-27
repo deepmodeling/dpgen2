@@ -6,9 +6,6 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from typing import (
-    List,
-)
 
 import dpdata
 import numpy as np
@@ -37,8 +34,8 @@ class ConfFilter(ABC):
 
     def batched_check(
         self,
-        frames: List[dpdata.System],
-    ) -> List[bool]:
+        frames: list[dpdata.System],
+    ) -> list[bool]:
         """Check if a list of configurations are valid.
 
         Parameters

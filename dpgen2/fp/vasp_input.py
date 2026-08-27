@@ -2,11 +2,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    Dict,
-    List,
     Optional,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -22,9 +18,9 @@ from dargs import (
 class VaspInputs:
     def __init__(
         self,
-        kspacing: Union[float, List[float]],
+        kspacing: Union[float, list[float]],
         incar: str,
-        pp_files: Dict[str, str],
+        pp_files: dict[str, str],
         kgamma: bool = True,
     ):
         """
@@ -66,7 +62,7 @@ class VaspInputs:
 
     def potcars_from_file(
         self,
-        dict_fnames: Dict[str, str],
+        dict_fnames: dict[str, str],
     ):
         self._potcars = {}
         for kk, vv in dict_fnames.items():
@@ -127,7 +123,7 @@ def _make_vasp_kp_gamma(kpoints):
     ret += "Automatic mesh\n"
     ret += "0\n"
     ret += "Gamma\n"
-    ret += "%d %d %d\n" % (kpoints[0], kpoints[1], kpoints[2])
+    ret += f"{kpoints[0]:d} {kpoints[1]:d} {kpoints[2]:d}\n"
     ret += "0  0  0\n"
     return ret
 
@@ -137,7 +133,7 @@ def _make_vasp_kp_mp(kpoints):
     ret += "K-Points\n"
     ret += "0\n"
     ret += "Monkhorst Pack\n"
-    ret += "%d %d %d\n" % (kpoints[0], kpoints[1], kpoints[2])
+    ret += f"{kpoints[0]:d} {kpoints[1]:d} {kpoints[2]:d}\n"
     ret += "0  0  0\n"
     return ret
 

@@ -40,8 +40,6 @@ from .setup_ele_temp import (
 from .step_config import gen_doc as gen_doc_step_dict
 from .step_config import (
     init_executor,
-)
-from .step_config import normalize as normalize_step_dict
-from .step_config import (
     step_conf_args,
 )
+from .step_config import normalize as normalize_step_dict

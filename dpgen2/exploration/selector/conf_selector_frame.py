@@ -6,9 +6,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -34,7 +32,8 @@ from . import (
 class ConfSelectorFrames(ConfSelector):
     """Select frames from trajectories as confs.
 
-    Parameters:
+    Parameters
+    ----------
     trust_level: TrustLevel
         The trust level
     conf_filter: ConfFilters
@@ -56,12 +55,12 @@ class ConfSelectorFrames(ConfSelector):
 
     def select(
         self,
-        trajs: Union[List[Path], List[HDF5Dataset]],
-        model_devis: Union[List[Path], List[HDF5Dataset]],
-        type_map: Optional[List[str]] = None,
-        optional_outputs: Optional[List[Path]] = None,
-    ) -> Tuple[List[Path], ExplorationReport]:
-        """Select configurations
+        trajs: Union[list[Path], list[HDF5Dataset]],
+        model_devis: Union[list[Path], list[HDF5Dataset]],
+        type_map: Optional[list[str]] = None,
+        optional_outputs: Optional[list[Path]] = None,
+    ) -> tuple[list[Path], ExplorationReport]:
+        """Select configurations.
 
         Parameters
         ----------

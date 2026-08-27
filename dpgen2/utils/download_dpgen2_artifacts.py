@@ -4,7 +4,6 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
 )
 
@@ -102,17 +101,16 @@ def download_dpgen2_artifacts(
     chk_pnt: bool = False,
 ):
     """
-    download the artifacts of a step.
+    Download the artifacts of a step.
     the key should be of format 'iter-xxxxxx--subkey-of-step-xxxxxx'
     the input and output artifacts will be downloaded to
     prefix/iter-xxxxxx/key-of-step/inputs/ and
-    prefix/iter-xxxxxx/key-of-step/outputs/
+    prefix/iter-xxxxxx/key-of-step/outputs/.
 
     the downloaded input and output artifacts of steps are defined by
     `op_download_setting`
 
     """
-
     iteration = get_iteration(key)
     subkey = get_subkey(key)
     mypath = Path(iteration)
@@ -158,8 +156,8 @@ def download_dpgen2_artifacts(
 
 def download_dpgen2_artifacts_by_def(
     wf: Workflow,
-    iterations: Optional[List[int]] = None,
-    step_defs: Optional[List[str]] = None,
+    iterations: Optional[list[int]] = None,
+    step_defs: Optional[list[str]] = None,
     prefix: Optional[str] = None,
     chk_pnt: bool = False,
 ):
@@ -273,7 +271,7 @@ def _get_all_iterations(step_keys):
         if ii.startswith("iter-"):
             ii = int(ii.split("-")[1])
             ret.append(ii)
-    ret = sorted(list(set(ret)))
+    ret = sorted(set(ret))
     return ret
 
 
@@ -283,7 +281,7 @@ def _get_all_queried_steps(wf_step_keys, dld_items):
         ret.append(ii.split(global_step_def_split)[0])
     ret = set(ret)
     ret = ret.intersection(set(wf_step_keys))
-    return sorted(list(ret))
+    return sorted(ret)
 
 
 def _get_dld_items(

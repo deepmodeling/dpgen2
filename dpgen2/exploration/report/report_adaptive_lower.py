@@ -1,9 +1,7 @@
 import random
 import sys
 from typing import (
-    List,
     Optional,
-    Tuple,
 )
 
 import numpy as np
@@ -154,7 +152,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         return f"The method of adaptive adjust the lower trust levels. In each step of iterations, a number (set by {numb_candi_s}) or a ratio (set by {rate_candi_s}) of configurations with a model deviation lower than the higher trust level ({level_f_hi_link}, {level_v_hi_link}) are treated as candidates. The lowest model deviation of the candidates are treated as the lower trust level. If the lower trust level does not change significant (controlled by {conv_tolerance_link}) in {n_checked_steps_link}, the stage is treated as converged. "
 
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         doc_level_f_hi = "The higher trust level of force model deviation"
         doc_numb_candi_f = "The number of force frames that has a model deviation lower than `level_f_hi` treated as candidate."
         doc_rate_candi_f = "The ratio of force frames that has a model deviation lower than `level_f_hi` treated as candidate."
@@ -375,7 +373,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         max_nframes: Optional[int] = None,
         clear: bool = True,
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         ntraj = self.ntraj
         id_cand = self._get_candidates(max_nframes)
         id_cand_list = [[] for ii in range(ntraj)]
@@ -389,7 +387,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
     def _get_candidates(
         self,
         max_nframes: Optional[int] = None,
-    ) -> List[Tuple[int, int]]:
+    ) -> list[tuple[int, int]]:
         if self.candi_sel_prob == "uniform":
             return self._get_candidates_uniform(max_nframes)
         elif self.candi_sel_prob == "inv_pop_f":
@@ -400,7 +398,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
     def _get_candidates_uniform(
         self,
         max_nframes: Optional[int] = None,
-    ) -> List[Tuple[int, int]]:
+    ) -> list[tuple[int, int]]:
         """
         Get candidates. If number of candidates is larger than `max_nframes`,
         then randomly pick `max_nframes` frames from the candidates.
@@ -426,7 +424,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
     def _get_candidates_inv_pop_f(
         self,
         max_nframes: Optional[int] = None,
-    ) -> List[Tuple[int, int]]:
+    ) -> list[tuple[int, int]]:
         """
         Get candidates. If number of candidates is larger than `max_nframes`,
         then randomly pick `max_nframes` frames from the candidates.
@@ -459,7 +457,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
 
     def _choice_prob_inv_pop_f(
         self,
-        candi: List,
+        candi: list,
     ):
         """Compute the probability of candi frames according to the inverse
         population in the model deviation statistics.
@@ -492,9 +490,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self,
         devi_f: float,
     ) -> int:
-        """
-        return the index in histogram given a force  model deviation.
-        """
+        """Return the index in histogram given a force  model deviation."""
         dh = (self.level_f_hi - self.level_f_lo) / self.nhist
         hist_idx = int((devi_f - self.level_f_lo) / dh)
         if hist_idx < 0:
@@ -504,7 +500,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         return hist_idx
 
     def print_header(self) -> str:
-        r"""Print the header of report"""
+        r"""Print the header of report."""
         return self.header_str
 
     def print(
@@ -513,7 +509,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         idx_in_stage: int,
         iter_idx: int,
     ) -> str:
-        r"""Print the report"""
+        r"""Print the report."""
         fmt_str = self.fmt_str
         fmt_flt = self.fmt_flt
         print_tuple = (

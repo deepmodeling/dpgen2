@@ -4,9 +4,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -24,7 +22,7 @@ from .conf_generator import (
 class FileConfGenerator(ConfGenerator):
     def __init__(
         self,
-        files: Union[str, List[str]],
+        files: Union[str, list[str]],
         fmt: str = "auto",
         prefix: Optional[str] = None,
         remove_pbc: Optional[bool] = False,
@@ -86,7 +84,7 @@ class FileConfGenerator(ConfGenerator):
         return "Generate alloys from user provided file(s). The file(s) are assume to be load by `dpdata`."
 
     @staticmethod
-    def args() -> List[Argument]:
+    def args() -> list[Argument]:
         doc_files = "The paths to the configuration files. widecards are supported."
         doc_prefix = "The prefix of file paths."
         doc_fmt = "The format (dpdata accepted formats) of the files."

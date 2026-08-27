@@ -8,10 +8,12 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest import (
+    mock,
+)
 
 import dflow
 import dpdata
-import mock
 import numpy as np
 
 # isort: off

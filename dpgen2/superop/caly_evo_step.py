@@ -6,10 +6,7 @@ from pathlib import (
     Path,
 )
 from typing import (
-    List,
     Optional,
-    Set,
-    Type,
 )
 
 from dflow import (
@@ -51,13 +48,13 @@ class CalyEvoStep(Steps):
     def __init__(
         self,
         name: str,
-        collect_run_caly: Type[OP],
-        prep_dp_optim: Type[OP],
-        run_dp_optim: Type[OP],
+        collect_run_caly: type[OP],
+        prep_dp_optim: type[OP],
+        run_dp_optim: type[OP],
         expl_mode: str = "default",
         prep_config: dict = normalize_step_dict({}),
         run_config: dict = normalize_step_dict({}),
-        upload_python_packages: Optional[List[os.PathLike]] = None,
+        upload_python_packages: Optional[list[os.PathLike]] = None,
     ):
         self.expl_mode = expl_mode
         self._input_parameters = {
@@ -132,12 +129,12 @@ class CalyEvoStep(Steps):
 def _caly_evo_step(
     caly_evo_step_steps,
     step_keys,
-    collect_run_calypso_op: Type[OP],
-    prep_dp_optim_op: Type[OP],
-    run_dp_optim_op: Type[OP],
+    collect_run_calypso_op: type[OP],
+    prep_dp_optim_op: type[OP],
+    run_dp_optim_op: type[OP],
     prep_config: dict = normalize_step_dict({}),
     run_config: dict = normalize_step_dict({}),
-    upload_python_packages: Optional[List[os.PathLike]] = None,
+    upload_python_packages: Optional[list[os.PathLike]] = None,
 ):
     prep_config = deepcopy(prep_config)
     run_config = deepcopy(run_config)
@@ -181,8 +178,7 @@ def _caly_evo_step(
             "opt_results_dir": caly_evo_step_steps.inputs.artifacts["opt_results_dir"],
             "qhull_input": caly_evo_step_steps.inputs.artifacts["qhull_input"],
         },
-        key="%s--collect-run-calypso-%s-%s"
-        % (
+        key="{}--collect-run-calypso-{}-{}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -215,8 +211,7 @@ def _caly_evo_step(
                 "caly_check_opt_file"
             ],
         },
-        key="%s--prep-dp-optim-%s-%s"
-        % (
+        key="{}--prep-dp-optim-{}-{}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -248,8 +243,7 @@ def _caly_evo_step(
         artifacts={
             "task_dir": prep_dp_optim.outputs.artifacts["task_dirs"],
         },
-        key="%s--run-dp-optim-%s-%s-{{item}}"
-        % (
+        key="{}--run-dp-optim-{}-{}-{{{{item}}}}".format(
             caly_evo_step_steps.inputs.parameters["block_id"],
             caly_evo_step_steps.inputs.parameters["iter_num"],
             caly_evo_step_steps.inputs.parameters["cnt_num"],
@@ -284,7 +278,7 @@ def _caly_evo_step(
                 "caly_check_opt_file"
             ],
         },
-        when="%s == false" % (collect_run_calypso.outputs.parameters["finished"]),
+        when="{} == false".format(collect_run_calypso.outputs.parameters["finished"]),
     )
     caly_evo_step_steps.add(next_step)
 

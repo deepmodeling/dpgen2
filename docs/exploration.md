@@ -26,11 +26,11 @@ class StageScheduler(ABC):
 
     @abstractmethod
     def plan_next_iteration(
-            self,
-            hist_reports : List[ExplorationReport],
-            report : ExplorationReport,
-            confs : List[Path],
-    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector] :
+        self,
+        hist_reports: List[ExplorationReport],
+        report: ExplorationReport,
+        confs: List[Path],
+    ) -> Tuple[bool, ExplorationTaskGroup, ConfSelector]:
         """
         Make the plan for the next iteration of the stage.
 
@@ -66,7 +66,7 @@ One may check more details on the [exploratin task group](#exploration-task-grou
 
 DPGEN2 defines a python class `ExplorationTask` to manage all necessry files needed to run a exploration task. It can be used as the example provided in the doc string.
 ```python
-class ExplorationTask():
+class ExplorationTask:
     """Define the files needed by an exploration task.
 
     Examples
@@ -74,7 +74,7 @@ class ExplorationTask():
     >>> # this example dumps all files needed by the task.
     >>> files = exploration_task.files()
     ... for file_name, file_content in files.items():
-    ...     with open(file_name, 'w') as fp:
+    ...     with open(file_name, "w") as fp:
     ...         fp.write(file_content)
 
     """
@@ -94,8 +94,8 @@ class ExplorationTaskGroup(Sequence):
         ...
 
     def add_group(
-            self,
-            group : 'ExplorationTaskGroup',
+        self,
+        group: "ExplorationTaskGroup",
     ):
         """Add another group to the group."""
         ...
@@ -167,7 +167,9 @@ Then we define the exploration arguments schema in the dpgen2 input configuratio
 
 ```python
 def xxx_task_group_args():
-    doc_xxx_task_grp = "XXX exploration tasks. dpgen2 will generate the XXX input script"
+    doc_xxx_task_grp = (
+        "XXX exploration tasks. dpgen2 will generate the XXX input script"
+    )
     return Argument(
         "task_group",
         dict,
@@ -177,11 +179,13 @@ def xxx_task_group_args():
         doc=doc_xxx_task_grp,
     )
 
+
 def xxx_normalize(config):
     args = xxx_task_group_args()
     config = args.normalize_value(config, trim_pattern="_*")
     args.check_value(config, strict=False)
     return config
+
 
 def make_xxx_task_group_from_config(config):
     config = xxx_normalize(config)
@@ -196,6 +200,7 @@ def xxx_args():
     return [
         # Argument(...),
     ]
+
 
 def variant_explore():
     # ...

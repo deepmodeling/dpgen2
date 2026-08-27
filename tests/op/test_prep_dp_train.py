@@ -4,6 +4,9 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest import (
+    mock,
+)
 
 import numpy as np
 from dflow.python import (
@@ -11,9 +14,6 @@ from dflow.python import (
     OPIO,
     Artifact,
     OPIOSign,
-)
-from mock import (
-    mock,
 )
 
 # isort: off
