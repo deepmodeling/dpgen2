@@ -41,7 +41,11 @@ class PrepRelax(OP):
         ncifs = len(ip["cifs"])
         config = ip["expl_config"]
         group_size = config["relax_group_size"]
-        ntasks = int(ncifs / group_size)
+        if group_size <= 0:
+            raise ValueError("relax_group_size must be greater than zero")
+        # Ceiling division keeps a final partial group instead of silently
+        # dropping CIFs when their count is not divisible by group_size.
+        ntasks = (ncifs + group_size - 1) // group_size
         task_paths = []
         for i in range(ntasks):
             task_dir = Path("task.%06d" % i)
