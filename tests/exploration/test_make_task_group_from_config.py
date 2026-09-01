@@ -65,6 +65,16 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
         self.assertTrue(isinstance(tgroup, LmpTemplateTaskGroup))
         self.assertFalse(tgroup.strict_revisions)
 
+    def test_template_strict_revisions(self):
+        strict_config = {
+            **self.config_template,
+            "strict_revisions": True,
+        }
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, strict_config
+        )
+        self.assertTrue(tgroup.strict_revisions)
+
 
 class TestMakeCalyTaskGroupFromConfig(unittest.TestCase):
     def setUp(self):
