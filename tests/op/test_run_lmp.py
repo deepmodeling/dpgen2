@@ -629,20 +629,56 @@ class TestModelBackendValidation(unittest.TestCase):
 
 
 class TestEnsurePt2AtomMap(unittest.TestCase):
+    def setUp(self):
+        self.input_path = Path("test_input.lammps")
+
+    def tearDown(self):
+        self.input_path.unlink(missing_ok=True)
+
+    def transform(self, lines):
+        self.input_path.write_text(lines)
+        ensure_pt2_atom_map(str(self.input_path))
+        return self.input_path.read_text()
+
     def test_map_already_present_before_read(self):
-        lines = "atom_modify map yes\nread_data conf.lmp\n"
-        Path("test_input.lammps").write_text(lines)
-        ensure_pt2_atom_map("test_input.lammps")
-        result = Path("test_input.lammps").read_text()
+        result = self.transform("atom_modify map yes\nread_data conf.lmp\n")
         self.assertIn("atom_modify map yes", result)
         self.assertEqual(result.count("atom_modify"), 1)
-        os.remove("test_input.lammps")
+
+    def test_map_inserted_before_continued_command(self):
+        lines = (
+            'if "${restart} > 0" then &\n'
+            '    "read_restart dpgen.restart.*" &\n'
+            "else &\n"
+            '    "read_data conf.lmp"\n'
+        )
+        result = self.transform(lines)
+        self.assertTrue(result.startswith("atom_modify        map yes\nif "))
+
+    def test_map_reinserted_after_clear(self):
+        result = self.transform("read_data first.lmp\nclear\nread_data second.lmp\n")
+        self.assertEqual(result.count("atom_modify        map yes"), 2)
+        self.assertIn("clear\natom_modify        map yes\nread_data second.lmp", result)
+
+    def test_map_inserted_before_create_box(self):
+        result = self.transform("region box block 0 1 0 1 0 1\ncreate_box 1 box\n")
+        self.assertLess(result.index("atom_modify"), result.index("create_box"))
+
+    def test_explicit_map_styles_are_preserved(self):
+        for map_style in ("array", "hash"):
+            with self.subTest(map_style=map_style):
+                lines = f"atom_modify map {map_style}\nread_data conf.lmp\n"
+                self.assertEqual(self.transform(lines), lines)
+
+    def test_map_after_read_raises(self):
+        self.input_path.write_text("read_data conf.lmp\natom_modify map yes\n")
+        with self.assertRaisesRegex(RuntimeError, "atom_modify map before"):
+            ensure_pt2_atom_map(str(self.input_path))
 
     def test_no_read_command_raises(self):
-        Path("test_input.lammps").write_text("atom_modify map yes\npair_style deepmd\n")
-        with self.assertRaisesRegex(RuntimeError, "read_data or read_restart"):
-            ensure_pt2_atom_map("test_input.lammps")
-        os.remove("test_input.lammps")
+        self.input_path.write_text("atom_modify map yes\npair_style deepmd\n")
+        with self.assertRaisesRegex(RuntimeError, "create_box, read_data"):
+            ensure_pt2_atom_map(str(self.input_path))
 
 
 class TestCompressModelFailure(unittest.TestCase):

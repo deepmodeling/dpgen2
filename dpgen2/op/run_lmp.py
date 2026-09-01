@@ -397,7 +397,7 @@ def set_models(lmp_input_name: str, model_names: List[str]):
 
 
 def ensure_pt2_atom_map(lmp_input_name: str):
-    """Ensure a PT2 LAMMPS input enables the atom map before reading atoms.
+    """Ensure a PT2 LAMMPS input enables the atom map before creating a box.
 
     Parameters
     ----------
@@ -407,41 +407,66 @@ def ensure_pt2_atom_map(lmp_input_name: str):
     Raises
     ------
     RuntimeError
-        If an existing ``atom_modify map yes`` follows the first
-        ``read_data`` or ``read_restart`` command, or neither read command is
-        present.
+        If an existing atom-map command follows the first box-creation command
+        in a clear-delimited section, or no box-creation command is present.
     """
     with open(lmp_input_name, encoding="utf8") as f:
         lmp_input_lines = f.readlines()
 
-    read_index = next(
-        (
-            index
-            for index, line in enumerate(lmp_input_lines)
-            if re.search(r"\bread_(?:data|restart)\b", line.partition("#")[0])
-        ),
-        None,
-    )
-    if read_index is None:
-        raise RuntimeError("PT2 LAMMPS inputs require read_data or read_restart")
+    commands = []
+    command_start = 0
+    command_parts = []
+    for index, line in enumerate(lmp_input_lines):
+        code = line.partition("#")[0].rstrip()
+        command_parts.append(code[:-1] if code.endswith("&") else code)
+        if code.endswith("&"):
+            continue
+        commands.append((command_start, " ".join(command_parts)))
+        command_start = index + 1
+        command_parts = []
+    if command_parts:
+        commands.append((command_start, " ".join(command_parts)))
 
-    atom_map_index = next(
-        (
-            index
-            for index, line in enumerate(lmp_input_lines)
-            if re.match(r"^\s*atom_modify\s+.*\bmap\s+yes\b", line.partition("#")[0])
-        ),
-        None,
-    )
-    if atom_map_index is not None:
-        if atom_map_index > read_index:
+    sections = [[]]
+    for command in commands:
+        if re.match(r"^\s*clear(?:\s|$)", command[1]):
+            sections.append([])
+        else:
+            sections[-1].append(command)
+
+    insert_indices = []
+    found_box_command = False
+    for section in sections:
+        boundary_positions = [
+            position
+            for position, (_, command) in enumerate(section)
+            if re.search(r"\b(?:create_box|read_data|read_restart)\b", command)
+        ]
+        if not boundary_positions:
+            continue
+        found_box_command = True
+        first_boundary = boundary_positions[0]
+        map_positions = [
+            position
+            for position, (_, command) in enumerate(section)
+            if re.match(r"^\s*atom_modify\b.*\bmap\s+(?:yes|array|hash)\b", command)
+        ]
+        if any(position < first_boundary for position in map_positions):
+            continue
+        if map_positions:
             raise RuntimeError(
-                "PT2 LAMMPS inputs require 'atom_modify map yes' before "
-                "read_data or read_restart"
+                "PT2 LAMMPS inputs require atom_modify map before "
+                "create_box, read_data, or read_restart"
             )
-        return
+        insert_indices.append(section[first_boundary][0])
 
-    lmp_input_lines.insert(read_index, "atom_modify        map yes\n")
+    if not found_box_command:
+        raise RuntimeError(
+            "PT2 LAMMPS inputs require create_box, read_data, or read_restart"
+        )
+
+    for index in reversed(insert_indices):
+        lmp_input_lines.insert(index, "atom_modify        map yes\n")
     with open(lmp_input_name, "w", encoding="utf8") as f:
         f.write("".join(lmp_input_lines))
 
