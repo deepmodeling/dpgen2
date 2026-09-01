@@ -218,6 +218,45 @@ class TestSubmit(unittest.TestCase):
                 },
             )
 
+    def test_validate_shared_dpa4c_descriptor(self):
+        template = {
+            "model": {
+                "shared_dict": {"shared_desc": {"type": "dpa4c"}},
+                "model_dict": {"student": {"descriptor": "shared_desc"}},
+            },
+            "training": {},
+        }
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                template,
+            )
+
+    def test_validate_dpa4c_model_type(self):
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                {"model": {"type": "dpa4c"}, "training": {}},
+            )
+
+    def test_dpa4c_descriptor_takes_precedence_within_section(self):
+        validate_dpa_training_template(
+            "pytorch-exportable",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
+            {
+                "model": {
+                    "type": "dpa4",
+                    "descriptor": {"type": "dpa4c"},
+                },
+                "training": {},
+            },
+        )
+
     def test_expand_idx(self):
         ilist = ["1", "3-5", "10-20:2"]
         olist = expand_idx(ilist)

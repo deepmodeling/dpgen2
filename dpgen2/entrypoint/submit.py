@@ -475,10 +475,13 @@ def _iter_model_sections(template_script: dict):
 
 
 def _model_family(template_script: dict) -> Optional[str]:
+    shared_dict = template_script.get("model", {}).get("shared_dict", {})
     families = set()
     for _, model in _iter_model_sections(template_script):
         model_type = model.get("type")
         descriptor = model.get("descriptor", {})
+        if isinstance(descriptor, str):
+            descriptor = shared_dict.get(descriptor, {})
         descriptor_type = (
             descriptor.get("type") if isinstance(descriptor, dict) else None
         )
@@ -488,10 +491,13 @@ def _model_family(template_script: dict) -> Optional[str]:
             if isinstance(descriptor_type, str)
             else descriptor_type
         )
-        if descriptor_type == "dpa4c":
-            families.add("dpa4c")
-        if model_type == "dpa4" or descriptor_type in {"dpa4", "sezm"}:
-            families.add("dpa4")
+        family = None
+        if model_type == "dpa4c" or descriptor_type == "dpa4c":
+            family = "dpa4c"
+        elif model_type == "dpa4" or descriptor_type in {"dpa4", "sezm"}:
+            family = "dpa4"
+        if family is not None:
+            families.add(family)
     if len(families) > 1:
         raise RuntimeError(
             "A training template cannot mix DPA4 and DPA4C branches because "
