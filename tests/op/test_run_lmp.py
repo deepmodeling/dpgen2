@@ -294,9 +294,11 @@ run             3000 upto
         # The number of models have to be 2 in knowledge distillation
         self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
 
+    @patch("dpgen2.op.run_lmp.random.shuffle")
     @patch("dpgen2.op.run_lmp.run_command")
-    def test_multiple_students_with_teacher(self, mocked_run):
+    def test_multiple_students_with_teacher(self, mocked_run, mocked_shuffle):
         mocked_run.return_value = (0, "foo\n", "")
+        mocked_shuffle.side_effect = lambda models: models.reverse()
         second_model = self.model_path / "model_1.pb"
         second_model.write_text("model1")
 
@@ -305,6 +307,7 @@ run             3000 upto
                 {
                     "config": {
                         "command": "mylmp",
+                        "shuffle_models": True,
                         "teacher_model_path": self.teacher_model,
                     },
                     "task_name": self.task_name,
@@ -317,7 +320,7 @@ run             3000 upto
         work_dir = Path(self.task_name)
         lmp_input = (work_dir / lmp_input_name).read_text()
         self.assertIn(
-            "pair_style deepmd model.000.pb model.001.pb model.002.pb", lmp_input
+            "pair_style deepmd model.000.pb model.002.pb model.001.pb", lmp_input
         )
         self.assertEqual((work_dir / "model.000.pb").read_text(), "teacher model")
         self.assertEqual((work_dir / "model.001.pb").read_text(), "model0")

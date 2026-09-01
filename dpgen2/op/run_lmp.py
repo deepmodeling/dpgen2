@@ -205,7 +205,12 @@ class RunLmp(OP):
                 model_names.append(mname)
 
             if shuffle_models:
-                random.shuffle(model_names)
+                if teacher_model is None:
+                    random.shuffle(model_names)
+                else:
+                    student_model_names = model_names[1:]
+                    random.shuffle(student_model_names)
+                    model_names[1:] = student_model_names
 
             set_models(lmp_input_name, model_names)
             if any(Path(name).suffix == ".pt2" for name in model_names):
