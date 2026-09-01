@@ -37,7 +37,7 @@ class TestPrepRunLmpConfig(unittest.TestCase):
         )
         run_lmp = next(step for step in steps.steps if step.name == "run-lmp")
 
-        self.assertIsNone(prepare_models.continue_on_failed)
+        self.assertFalse(prepare_models.continue_on_failed)
         self.assertIsNone(prepare_models.continue_on_num_success)
         self.assertIsNone(prepare_models.continue_on_success_ratio)
         self.assertEqual(run_lmp.continue_on_num_success, 1)
