@@ -292,6 +292,35 @@ run             3000 upto
         # The number of models have to be 2 in knowledge distillation
         self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
 
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_multiple_students_with_teacher(self, mocked_run):
+        mocked_run.return_value = (0, "foo\n", "")
+        second_model = self.model_path / "model_1.pb"
+        second_model.write_text("model1")
+
+        RunLmp().execute(
+            OPIO(
+                {
+                    "config": {
+                        "command": "mylmp",
+                        "teacher_model_path": self.teacher_model,
+                    },
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": [*self.models, second_model],
+                }
+            )
+        )
+
+        work_dir = Path(self.task_name)
+        lmp_input = (work_dir / lmp_input_name).read_text()
+        self.assertIn(
+            "pair_style deepmd model.000.pb model.001.pb model.002.pb", lmp_input
+        )
+        self.assertEqual((work_dir / "model.000.pb").read_text(), "teacher model")
+        self.assertEqual((work_dir / "model.001.pb").read_text(), "model0")
+        self.assertEqual((work_dir / "model.002.pb").read_text(), "model1")
+
 
 def swap_element(arg):
     bk = arg.copy()

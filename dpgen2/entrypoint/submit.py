@@ -600,15 +600,17 @@ def workflow_concurrent_learning(
             )
     elif train_style == "dp-dist":
         numb_models = config["train"]["numb_models"]
-        if "student_model_path" in config["train"] and numb_models != 1:
+        student_model_path = config["train"].get("student_model_path")
+        student_model_uri = config["train"].get("student_model_uri")
+        if numb_models != 1 and (
+            student_model_path is not None or student_model_uri is not None
+        ):
             raise RuntimeError(
-                "student_model_path initializes one model; omit it for multiple "
-                "from-scratch students or set numb_models=1"
+                "student_model_path or student_model_uri initializes one model; "
+                "omit it for multiple from-scratch students or set numb_models=1"
             )
         init_models_paths = (
-            [config["train"]["student_model_path"]]
-            if "student_model_path" in config["train"]
-            else None
+            [student_model_path] if student_model_path is not None else None
         )
     else:
         raise RuntimeError(f"unknown params, train_style: {train_style}")

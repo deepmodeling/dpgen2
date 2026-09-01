@@ -590,6 +590,27 @@ class TestSubmitCmdDist(unittest.TestCase):
         remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
 
+    def test_multiple_students_from_scratch(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        wf_config["train"].pop("student_model_path")
+        remove_executor_if_debug(wf_config)
+        submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_multiple_students_reject_single_path(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        with self.assertRaisesRegex(RuntimeError, "student_model_path or"):
+            submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_multiple_students_reject_single_uri(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        wf_config["train"].pop("student_model_path")
+        wf_config["train"]["student_model_uri"] = "s3://student/model"
+        with self.assertRaisesRegex(RuntimeError, "student_model_path or"):
+            submit_concurrent_learning(wf_config, no_submission=True)
+
 
 class TestSubmitCmdFinetune(unittest.TestCase):
     def setUp(self):

@@ -161,9 +161,6 @@ class RunLmp(OP):
         work_dir = Path(task_name)
 
         if teacher_model is not None:
-            assert (
-                len(model_files) == 1
-            ), "One model is enough in knowledge distillation"
             ext = os.path.splitext(teacher_model.file_name)[-1]
             teacher_model_file = "teacher_model" + ext
             teacher_model.save_as_file(teacher_model_file)
