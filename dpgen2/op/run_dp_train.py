@@ -206,6 +206,18 @@ class RunDPTrain(OP):
             iter_data_new_exp = train_systems
             valid_data = append_valid_data(config, valid_data, valid_systems)
         iter_data_exp = iter_data_old_exp + iter_data_new_exp
+        if isinstance(init_data, dict):
+            if config["multitask"]:
+                has_init_training_data = len(init_data.get(config["head"], [])) > 0
+            else:
+                has_init_training_data = any(
+                    len(systems) > 0 for systems in init_data.values()
+                )
+        else:
+            has_init_training_data = len(init_data) > 0
+        # Initial data is expanded when the workflow is submitted, while a
+        # non-empty iteration artifact list may expand to zero systems here.
+        training_systems_empty = not has_init_training_data and len(iter_data_exp) == 0
         work_dir = Path(task_name)
         init_model_with_finetune = config["init_model_with_finetune"]
 
@@ -231,7 +243,7 @@ class RunDPTrain(OP):
             old_ratio = config["init_model_old_ratio"]
             if config["multitask"]:
                 head = config["head"]
-                len_init = len(init_data[head])
+                len_init = len(init_data.get(head, []))
             else:
                 len_init = len(init_data)
             numb_old = len_init + len(iter_data_old_exp)
@@ -269,7 +281,12 @@ class RunDPTrain(OP):
         )
 
         if RunDPTrain.skip_training(
-            work_dir, train_dict, init_model, iter_data, finetune_mode
+            work_dir,
+            train_dict,
+            init_model,
+            iter_data,
+            finetune_mode,
+            training_systems_empty=training_systems_empty,
         ):
             return OPIO(
                 {
@@ -462,18 +479,26 @@ class RunDPTrain(OP):
         init_model,
         iter_data,
         finetune_mode,
+        training_systems_empty=False,
     ):
         # do not skip if we do finetuning
         if finetune_mode is not None and finetune_mode == "finetune":
             return False
-        # we have init model and no iter data, skip training
-        if (init_model is not None) and (iter_data is None or len(iter_data) == 0):
+        # Reuse the supplied model when there is no new iteration data or when
+        # all configured inputs expand to zero actual training systems.
+        no_iter_data = iter_data is None or len(iter_data) == 0
+        if (init_model is not None) and (no_iter_data or training_systems_empty):
             with set_directory(work_dir):
                 with open(train_script_name, "w") as fp:
                     json.dump(train_dict, fp, indent=4)
+                reason = (
+                    "no expanded training systems"
+                    if training_systems_empty
+                    else "no iteration training data"
+                )
                 Path("train.log").write_text(
                     f"We have init model {init_model} and "
-                    f"no iteration training data. "
+                    f"{reason}. "
                     f"The training is skipped.\n"
                 )
                 Path("lcurve.out").touch()
