@@ -359,7 +359,7 @@ class TestLmpTemplateTaskGroup(unittest.TestCase):
         )
 
         self.assertEqual(task_group.traj_freq, self.traj_freq)
-        self.assertTrue(task_group.strict_revisions)
+        self.assertFalse(task_group.strict_revisions)
 
     def test_lmp_plm(self):
         task_group = LmpTemplateTaskGroup()
@@ -492,6 +492,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.lmp_template_fname,
             revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
             traj_freq=self.traj_freq,
+            strict_revisions=True,
         )
         with self.assertRaises(FatalError) as ctx:
             task_group.make_task()
@@ -519,6 +520,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.lmp_template_fname,
             revisions={},
             traj_freq=self.traj_freq,
+            strict_revisions=True,
         )
 
         with self.assertRaisesRegex(FatalError, "V_NSTEPS"):
@@ -607,7 +609,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
         self.assertEqual(len(task_group), 1)
 
     def test_v_prefixed_lammps_identifier_is_reserved_in_strict_mode(self):
-        """Strict validation treats standalone V_* tokens as DPGEN revisions."""
+        """Native V_* identifiers warn by default and fail in strict mode."""
         template = textwrap.dedent(
             f"""
             variable        NSTEPS          equal V_NSTEPS
@@ -628,6 +630,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.lmp_template_fname,
             revisions={"V_NSTEPS": [1000]},
             traj_freq=self.traj_freq,
+            strict_revisions=True,
         )
         with self.assertRaisesRegex(FatalError, "V_MAX"):
             task_group.make_task()
@@ -636,11 +639,11 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.numb_models,
             self.lmp_template_fname,
             revisions={"V_NSTEPS": [1000]},
-            strict_revisions=False,
             traj_freq=self.traj_freq,
         )
         with self.assertWarnsRegex(UserWarning, "V_MAX"):
             task_group.make_task()
+        self.assertFalse(task_group.strict_revisions)
         self.assertEqual(len(task_group), 1)
 
     def test_plumed_template_undefined_variable_raises(self):
@@ -676,6 +679,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
                 # V_DIST0 is used in PLUMED template but NOT defined here
                 revisions={"V_NSTEPS": [1000], "V_TEMP": [300]},
                 traj_freq=self.traj_freq,
+                strict_revisions=True,
             )
             with self.assertRaises(FatalError) as ctx:
                 task_group.make_task()
@@ -730,6 +734,7 @@ class TestRevisionVariablePrecheck(unittest.TestCase):
             self.lmp_template_fname,
             revisions={"V_TEMP": [300]},
             traj_freq=self.traj_freq,
+            strict_revisions=True,
         )
         with self.assertRaisesRegex(FatalError, "V_TEMPERATURE"):
             task_group.make_task()

@@ -63,6 +63,7 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
             self.numb_models, self.mass_map, self.config_template
         )
         self.assertTrue(isinstance(tgroup, LmpTemplateTaskGroup))
+        self.assertFalse(tgroup.strict_revisions)
 
 
 class TestMakeCalyTaskGroupFromConfig(unittest.TestCase):

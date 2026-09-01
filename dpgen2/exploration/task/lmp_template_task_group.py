@@ -56,7 +56,7 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         extra_pair_style_args: str = "",
         pimd_bead: Optional[str] = None,
         input_extra_files: Optional[List[str]] = None,
-        strict_revisions: bool = True,
+        strict_revisions: bool = False,
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions

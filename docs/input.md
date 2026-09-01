@@ -124,15 +124,15 @@ This section defines how the configuration space is explored.
 
 For an `"lmp-template"` task group, `revisions` keys are replaced as complete
 tokens in both LAMMPS and PLUMED templates. By default, `strict_revisions` is
-`true`: any standalone `V_*` token not listed in `revisions` stops task
-generation before submission. Set `strict_revisions` to `false` only when a
-template intentionally uses `V_*` as a native LAMMPS or PLUMED identifier; the
-unknown tokens are then preserved and reported as warnings.
+`false`: standalone `V_*` tokens not listed in `revisions` are preserved and
+reported as warnings because they may be native LAMMPS or PLUMED identifiers.
+Set `strict_revisions` to `true` to stop task generation when such tokens are
+found.
 
 For a `"customized-lmp-template"` task group, `strict_revisions` defaults to
-`false` for backward compatibility because its shell commands may intentionally
-generate templates containing `V_*` tokens. Set it to `true` to apply the same
-strict validation to the generated templates.
+`false` for the same compatibility reason: its shell commands may intentionally
+generate templates containing `V_*` tokens. Set it to `true` to apply strict
+validation to the generated templates.
 
 The {dargs:argument}`"type" : "lmp"<explore>` means that configurations are explored by LAMMPS DPMD runs.
 The {dargs:argument}`"config"<explore[lmp]/config>` key defines the lmp configs.
