@@ -154,6 +154,7 @@ def _prep_run_lmp(
     template_slice_config = run_config.pop("template_slice_config", {})
 
     prepare_models_config = deepcopy(run_config)
+    prepare_models_config.pop("continue_on_failed", None)
     prepare_models_config.pop("continue_on_num_success", None)
     prepare_models_config.pop("continue_on_success_ratio", None)
 

@@ -20,6 +20,7 @@ class TestPrepRunLmpConfig(unittest.TestCase):
     def test_non_sliced_model_preparation_ignores_slice_success_controls(self):
         config = normalize_step_dict(
             {
+                "continue_on_failed": True,
                 "continue_on_num_success": 1,
                 "continue_on_success_ratio": 0.5,
             }
@@ -36,10 +37,12 @@ class TestPrepRunLmpConfig(unittest.TestCase):
         )
         run_lmp = next(step for step in steps.steps if step.name == "run-lmp")
 
+        self.assertIsNone(prepare_models.continue_on_failed)
         self.assertIsNone(prepare_models.continue_on_num_success)
         self.assertIsNone(prepare_models.continue_on_success_ratio)
         self.assertEqual(run_lmp.continue_on_num_success, 1)
         self.assertEqual(run_lmp.continue_on_success_ratio, 0.5)
+        self.assertTrue(run_lmp.continue_on_failed)
 
 
 if __name__ == "__main__":
