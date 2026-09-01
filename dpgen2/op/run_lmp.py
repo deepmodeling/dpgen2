@@ -620,7 +620,7 @@ def freeze_model(input_model, frozen_model, head=None, backend="pytorch"):
             out,
             err,
         )
-        raise TransientError("freeze failed")
+        raise FatalError("freeze failed")
 
 
 def compress_model(input_model, output_model, backend="pytorch-exportable"):
@@ -642,7 +642,7 @@ def compress_model(input_model, output_model, backend="pytorch-exportable"):
             out,
             err,
         )
-        raise TransientError("compress failed")
+        raise FatalError("compress failed")
 
 
 def merge_pimd_files():

@@ -12,6 +12,7 @@ from dflow.python import (
     OP,
     OPIO,
     Artifact,
+    FatalError,
     OPIOSign,
     TransientError,
 )
@@ -40,6 +41,7 @@ from dpgen2.op.run_lmp import (
     _model_backend,
     compress_model,
     ensure_pt2_atom_map,
+    freeze_model,
     get_ele_temp,
     merge_pimd_files,
     prepare_dp_models,
@@ -717,9 +719,15 @@ class TestEnsurePt2AtomMap(unittest.TestCase):
             ensure_pt2_atom_map(str(self.input_path))
 
 
-class TestCompressModelFailure(unittest.TestCase):
+class TestModelExportFailure(unittest.TestCase):
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_freeze_failure_raises(self, mocked_run):
+        mocked_run.return_value = (1, "", "freeze error")
+        with self.assertRaisesRegex(FatalError, "freeze failed"):
+            freeze_model("input.pt", "output.pth", "pytorch")
+
     @patch("dpgen2.op.run_lmp.run_command")
     def test_compress_failure_raises(self, mocked_run):
         mocked_run.return_value = (1, "", "compress error")
-        with self.assertRaisesRegex(TransientError, "compress failed"):
+        with self.assertRaisesRegex(FatalError, "compress failed"):
             compress_model("input.pt2", "output.pt2", "pytorch-exportable")
