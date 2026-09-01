@@ -91,13 +91,13 @@ class SelectConfs(OP):
             trajs, model_devis, optional_outputs
         )
 
-        select_kwargs = {
-            "type_map": type_map,
-            "optional_outputs": optional_outputs,
-        }
-        if plm_outputs is not None:
-            select_kwargs["plm_outputs"] = plm_outputs
-        confs, report = conf_selector.select(trajs, model_devis, **select_kwargs)
+        confs, report = conf_selector.select(
+            trajs,
+            model_devis,
+            type_map=type_map,
+            optional_outputs=optional_outputs,
+            plm_outputs=plm_outputs,
+        )
 
         return OPIO(
             {

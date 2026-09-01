@@ -8,6 +8,9 @@ import numpy as np
 from dargs import (
     Argument,
 )
+from dargs.dargs import (
+    ArgumentKeyError,
+)
 from dflow.python import (
     FatalError,
 )
@@ -15,6 +18,11 @@ from dflow.python import (
 from dpgen2.exploration.selector import (
     PlumedCVFilter,
 )
+
+
+def make_filter(**kwargs):
+    kwargs.setdefault("time_alignment", {"start": 0.0, "step": 1.0})
+    return PlumedCVFilter(**kwargs)
 
 
 class TestPlumedCVFilter(unittest.TestCase):
@@ -28,6 +36,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                     "field": "distance",
                     "n_bins": 8,
                 },
+                "time_alignment": {"start": 0.0, "step": 1.0},
             }
         )
         schema.check_value(config, strict=True)
@@ -57,7 +66,23 @@ class TestPlumedCVFilter(unittest.TestCase):
         )
         schema.check_value(grid_config, strict=True)
         self.assertEqual(grid_config["sampling"]["min_frame_gap"], 5)
-        self.assertEqual(grid_config["time_alignment"]["atol"], 1e-8)
+        self.assertEqual(grid_config["time_alignment"]["atol"], 1e-6)
+
+    def test_time_alignment_is_required(self):
+        schema = Argument("cv_filter", dict, PlumedCVFilter.args())
+        config = schema.normalize_value({"regions": [{"cv": [0.0, 1.0]}]})
+        with self.assertRaisesRegex(ArgumentKeyError, "time_alignment"):
+            schema.check_value(config, strict=True)
+
+        with self.assertRaisesRegex(ValueError, "time_alignment is required"):
+            PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}])
+
+    def test_spread_cells_preserves_deterministic_coverage_order(self):
+        cells = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 2)]
+        self.assertEqual(
+            PlumedCVFilter._spread_cells(cells, 5, (3, 3)),
+            [(0, 0), (2, 2), (1, 1), (0, 1), (1, 0)],
+        )
 
     def test_union_of_regions(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -65,7 +90,7 @@ class TestPlumedCVFilter(unittest.TestCase):
             output.write_text(
                 "#! FIELDS time d1 d2\n" "0.0 0.5 2.0\n" "1.0 0.5 4.0\n" "2.0 2.5 9.0\n"
             )
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"d1": [0.0, 1.0], "d2": [1.0, 3.0]}, {"d1": [2.0, 3.0]}]
             )
             self.assertEqual(cv_filter.get_selected_ids([output], [3]), [[0, 2]])
@@ -76,14 +101,14 @@ class TestPlumedCVFilter(unittest.TestCase):
             output.write_text(
                 "#! FIELDS time second_cv first_cv\n" "0.0 9.0 0.5\n" "1.0 0.5 9.0\n"
             )
-            cv_filter = PlumedCVFilter(regions=[{"first_cv": [0.0, 1.0]}])
+            cv_filter = make_filter(regions=[{"first_cv": [0.0, 1.0]}])
             self.assertEqual(cv_filter.get_selected_ids([output], [2]), [[0]])
 
     def test_intervals_are_lower_inclusive_and_upper_exclusive(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "COLVAR"
             output.write_text("#! FIELDS time cv\n0.0 1.0\n1.0 2.0\n2.0 3.0\n")
-            cv_filter = PlumedCVFilter(regions=[{"cv": [1.0, 3.0]}])
+            cv_filter = make_filter(regions=[{"cv": [1.0, 3.0]}])
             self.assertEqual(cv_filter.get_selected_ids([output], [3]), [[0, 1]])
 
     def test_random_sampling_is_reproducible(self):
@@ -97,10 +122,10 @@ class TestPlumedCVFilter(unittest.TestCase):
                 "regions": [{"cv": [0.25, 0.75]}],
                 "sampling": {"mode": "random", "seed": 17},
             }
-            selected = PlumedCVFilter(**kwargs).select_candidate_ids(
+            selected = make_filter(**kwargs).select_candidate_ids(
                 [output], [20], [list(range(20))], 5
             )
-            repeated = PlumedCVFilter(**kwargs).select_candidate_ids(
+            repeated = make_filter(**kwargs).select_candidate_ids(
                 [output], [20], [list(range(20))], 5
             )
             self.assertEqual(selected, repeated)
@@ -116,7 +141,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                 + "".join(f"{ii}.0 {value}\n" for ii, value in enumerate(values))
             )
             deviations = np.arange(len(values), dtype=float)
-            cv_filter = PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}])
+            cv_filter = make_filter(regions=[{"cv": [0.0, 1.0]}])
             self.assertEqual(cv_filter.sampling["mode"], "uniform")
             self.assertEqual(cv_filter.sampling["grid"], {"cv": 10})
             self.assertEqual(cv_filter.sampling["within_bin"], "max_deviation")
@@ -135,7 +160,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                 "2.0 0.1 0.9\n"
                 "3.0 0.9 0.9\n"
             )
-            cv_filter = PlumedCVFilter(regions=[{"cv1": [0.0, 1.0], "cv2": [0.0, 1.0]}])
+            cv_filter = make_filter(regions=[{"cv1": [0.0, 1.0], "cv2": [0.0, 1.0]}])
             self.assertEqual(cv_filter.sampling["mode"], "grid")
             self.assertEqual(cv_filter.sampling["grid"], {"cv1": 10, "cv2": 10})
             selected = cv_filter.select_candidate_ids(
@@ -154,7 +179,7 @@ class TestPlumedCVFilter(unittest.TestCase):
             deviations = np.arange(len(values), dtype=float)
             deviations[0] = 100.0
             deviations[1] = 200.0
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"cv": [0.0, 1.0]}],
                 sampling={
                     "mode": "uniform",
@@ -186,10 +211,10 @@ class TestPlumedCVFilter(unittest.TestCase):
                     "seed": 29,
                 },
             }
-            selected = PlumedCVFilter(**kwargs).select_candidate_ids(
+            selected = make_filter(**kwargs).select_candidate_ids(
                 [output], [20], [list(range(20))], 5
             )
-            repeated = PlumedCVFilter(**kwargs).select_candidate_ids(
+            repeated = make_filter(**kwargs).select_candidate_ids(
                 [output], [20], [list(range(20))], 5
             )
             self.assertEqual(selected, repeated)
@@ -206,7 +231,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                 "3.0 2.9 0.5\n"
                 "4.0 0.5 1.5\n"
             )
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[
                     {"cv": [0.0, 1.0], "gate": [0.0, 1.0]},
                     {"cv": [2.0, 3.0], "gate": [0.0, 1.0]},
@@ -231,7 +256,7 @@ class TestPlumedCVFilter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "COLVAR"
             output.write_text("#! FIELDS time cv\n0.0 0.05\n1.0 0.45\n2.0 0.95\n")
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"cv": [0.0, 1.0]}],
                 sampling={"mode": "uniform", "field": "cv", "n_bins": 10},
             )
@@ -244,7 +269,7 @@ class TestPlumedCVFilter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "COLVAR"
             output.write_text("#! FIELDS time cv\n0.0 0.5\n1.0 2.5\n2.0 4.5\n")
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"cv": [0.0, 1.0]}, {"cv": [2.0, 3.0]}, {"cv": [4.0, 5.0]}],
                 sampling={"mode": "uniform", "field": "cv", "n_bins": 4},
             )
@@ -266,7 +291,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                 "0.05 0.75 1.25\n"
             )
             deviations = np.asarray([1.0, 9.0, 8.0, 7.0, 6.0, 100.0])
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[
                     {
                         "name": "ion_pair",
@@ -302,7 +327,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                 "#! FIELDS time cv\n" + "".join(f"{ii}.0 0.5\n" for ii in range(10))
             )
             deviations = np.arange(10, 0, -1, dtype=float)
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"cv": [0.0, 1.0]}],
                 sampling={
                     "mode": "uniform",
@@ -329,7 +354,7 @@ class TestPlumedCVFilter(unittest.TestCase):
                     for ii, value in enumerate([0.1, 0.3, 0.6, 0.9, 2.1, 2.3, 2.6, 2.9])
                 )
             )
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[
                     {"name": "low", "conditions": {"cv": [0.0, 1.0]}},
                     {
@@ -351,11 +376,22 @@ class TestPlumedCVFilter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             output = Path(tmpdir) / "COLVAR"
             output.write_text("#! FIELDS time cv\n0.000 0.5\n0.010 0.5\n0.021 0.5\n")
-            cv_filter = PlumedCVFilter(
+            cv_filter = make_filter(
                 regions=[{"cv": [0.0, 1.0]}],
                 time_alignment={"start": 0.0, "step": 0.01, "atol": 1e-8},
             )
             with self.assertRaises(FatalError):
+                cv_filter.get_selected_ids([output], [3])
+
+    def test_equal_row_count_with_phase_offset_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "COLVAR"
+            output.write_text("#! FIELDS time cv\n10.0 0.5\n20.0 0.5\n30.0 0.5\n")
+            cv_filter = make_filter(
+                regions=[{"cv": [0.0, 1.0]}],
+                time_alignment={"start": 0.0, "step": 10.0},
+            )
+            with self.assertRaisesRegex(FatalError, "configured frame times"):
                 cv_filter.get_selected_ids([output], [3])
 
     def test_alignment_fails_closed(self):
@@ -363,7 +399,7 @@ class TestPlumedCVFilter(unittest.TestCase):
             output = Path(tmpdir) / "COLVAR"
             output.write_text("#! FIELDS time cv\n0.0 0.5\n")
             with self.assertRaises(FatalError):
-                PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
+                make_filter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
                     [output], [2]
                 )
 
@@ -377,7 +413,7 @@ class TestPlumedCVFilter(unittest.TestCase):
         ]
         for regions in invalid_regions:
             with self.subTest(regions=regions), self.assertRaises(ValueError):
-                PlumedCVFilter(regions=regions)
+                make_filter(regions=regions)
 
         invalid_sampling = [
             {"mode": "weighted"},
@@ -393,10 +429,10 @@ class TestPlumedCVFilter(unittest.TestCase):
         ]
         for sampling in invalid_sampling:
             with self.subTest(sampling=sampling), self.assertRaises(ValueError):
-                PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}], sampling=sampling)
+                make_filter(regions=[{"cv": [0.0, 1.0]}], sampling=sampling)
 
         with self.assertRaises(ValueError):
-            PlumedCVFilter(regions=[{"cv1": [0.0, 1.0]}, {"cv2": [0.0, 1.0]}])
+            make_filter(regions=[{"cv1": [0.0, 1.0]}, {"cv2": [0.0, 1.0]}])
 
         for time_alignment in [
             {},
@@ -407,7 +443,7 @@ class TestPlumedCVFilter(unittest.TestCase):
             with self.subTest(time_alignment=time_alignment), self.assertRaises(
                 ValueError
             ):
-                PlumedCVFilter(
+                make_filter(
                     regions=[{"cv": [0.0, 1.0]}],
                     time_alignment=time_alignment,
                 )
@@ -422,13 +458,13 @@ class TestPlumedCVFilter(unittest.TestCase):
         ]
         with tempfile.TemporaryDirectory() as tmpdir:
             with self.assertRaises(FatalError):
-                PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
+                make_filter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
                     [Path(tmpdir) / "missing"], [1]
                 )
             for index, content in enumerate(invalid_outputs):
                 output = Path(tmpdir) / f"COLVAR.{index}"
                 output.write_text(content)
                 with self.subTest(content=content), self.assertRaises(FatalError):
-                    PlumedCVFilter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
+                    make_filter(regions=[{"cv": [0.0, 1.0]}]).get_selected_ids(
                         [output], [1]
                     )

@@ -124,6 +124,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 skip_exists=True,
             ),
             mock.call(
+                "arti-plm_output",
+                path=Path("iter-000001/prep-run-explore/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
                 "arti-extra_outputs",
                 path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
@@ -259,6 +264,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
                 skip_exists=True,
             ),
             mock.call(
+                "arti-plm_output",
+                path=Path("iter-000001/prep-run-explore/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
                 "arti-extra_outputs",
                 path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
@@ -322,6 +332,11 @@ class TestDownloadDpgen2Artifact(unittest.TestCase):
             ),
             mock.call(
                 "arti-model_devis",
+                path=Path("iter-000001/prep-run-explore/outputs"),
+                skip_exists=True,
+            ),
+            mock.call(
+                "arti-plm_output",
                 path=Path("iter-000001/prep-run-explore/outputs"),
                 skip_exists=True,
             ),

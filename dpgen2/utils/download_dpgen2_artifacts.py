@@ -64,6 +64,7 @@ op_download_setting = {
     .add_output("logs")
     .add_output("trajs")
     .add_output("model_devis")
+    .add_output("plm_output")
     .add_output("extra_outputs"),
     "prep-run-fp": DownloadDefinition()
     .add_input("confs")

@@ -18,6 +18,8 @@ from dflow.python import (
     FatalError,
 )
 
+PlumedOutputs = List[Tuple[List[str], np.ndarray]]
+
 
 class PlumedCVFilter:
     """Select frames in a union of PLUMED CV regions.
@@ -48,13 +50,54 @@ class PlumedCVFilter:
                 "sampling",
                 dict,
                 [
-                    Argument("mode", str, optional=False),
-                    Argument("field", str, optional=True, default=None),
-                    Argument("n_bins", int, optional=True, default=10),
-                    Argument("grid", dict, optional=True, default=None),
-                    Argument("within_bin", str, optional=True, default="random"),
-                    Argument("seed", int, optional=True, default=0),
-                    Argument("min_frame_gap", int, optional=True, default=0),
+                    Argument(
+                        "mode",
+                        str,
+                        optional=False,
+                        doc="Selection mode: random, uniform, grid, or report.",
+                    ),
+                    Argument(
+                        "field",
+                        str,
+                        optional=True,
+                        default=None,
+                        doc="CV field covered by one-dimensional uniform sampling.",
+                    ),
+                    Argument(
+                        "n_bins",
+                        int,
+                        optional=True,
+                        default=10,
+                        doc="Number of equal-width bins for uniform sampling.",
+                    ),
+                    Argument(
+                        "grid",
+                        dict,
+                        optional=True,
+                        default=None,
+                        doc="Two CV field-to-bin-count mappings for grid sampling.",
+                    ),
+                    Argument(
+                        "within_bin",
+                        str,
+                        optional=True,
+                        default="random",
+                        doc="Frame policy within a bin: random or max_deviation.",
+                    ),
+                    Argument(
+                        "seed",
+                        int,
+                        optional=True,
+                        default=0,
+                        doc="Non-negative random seed used by sampling.",
+                    ),
+                    Argument(
+                        "min_frame_gap",
+                        int,
+                        optional=True,
+                        default=0,
+                        doc="Minimum frame-index separation within a trajectory.",
+                    ),
                 ],
                 optional=True,
                 default=None,
@@ -68,13 +111,29 @@ class PlumedCVFilter:
                 "time_alignment",
                 dict,
                 [
-                    Argument("start", float, optional=True, default=0.0),
-                    Argument("step", float, optional=False),
-                    Argument("atol", float, optional=True, default=1e-8),
+                    Argument(
+                        "start",
+                        float,
+                        optional=True,
+                        default=0.0,
+                        doc="Expected PLUMED time of trajectory frame zero.",
+                    ),
+                    Argument(
+                        "step",
+                        float,
+                        optional=False,
+                        doc="Expected PLUMED time interval between trajectory frames.",
+                    ),
+                    Argument(
+                        "atol",
+                        float,
+                        optional=True,
+                        default=1e-6,
+                        doc="Absolute tolerance for PLUMED time alignment.",
+                    ),
                 ],
-                optional=True,
-                default=None,
-                doc="Optional expected PLUMED time = start + frame * step.",
+                optional=False,
+                doc="Required expected PLUMED time = start + frame * step.",
             ),
         ]
 
@@ -232,9 +291,9 @@ class PlumedCVFilter:
         return normalized
 
     @staticmethod
-    def _normalize_time_alignment(time_alignment: Optional[Dict]):
+    def _normalize_time_alignment(time_alignment: Optional[Dict]) -> Dict:
         if time_alignment is None:
-            return None
+            raise ValueError("PLUMED CV time_alignment is required")
         if not isinstance(time_alignment, dict):
             raise ValueError("PLUMED CV time_alignment must be a dict")
         unknown = set(time_alignment) - {"start", "step", "atol"}
@@ -243,7 +302,7 @@ class PlumedCVFilter:
         try:
             start = float(time_alignment.get("start", 0.0))
             step = float(time_alignment["step"])
-            atol = float(time_alignment.get("atol", 1e-8))
+            atol = float(time_alignment.get("atol", 1e-6))
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError("invalid PLUMED CV time_alignment") from exc
         if not np.all(np.isfinite([start, step, atol])) or step <= 0 or atol < 0:
@@ -254,13 +313,22 @@ class PlumedCVFilter:
         self,
         files: List[Path],
         nframes: List[int],
+        loaded_outputs: Optional[PlumedOutputs] = None,
     ) -> List[List[int]]:
-        outputs = self._load_outputs(files, nframes)
+        outputs = (
+            self.load_outputs(files, nframes)
+            if loaded_outputs is None
+            else loaded_outputs
+        )
         selected = []
         for fields, values in outputs:
             masks = self._region_masks(fields, values)
             selected.append(np.flatnonzero(np.logical_or.reduce(masks)).tolist())
         return selected
+
+    def load_outputs(self, files: List[Path], nframes: List[int]) -> PlumedOutputs:
+        """Parse and validate PLUMED outputs once for a selection pass."""
+        return self._load_outputs(files, nframes)
 
     def select_candidate_ids(
         self,
@@ -292,7 +360,7 @@ class PlumedCVFilter:
         if max_nframes is not None and max_nframes < 0:
             raise ValueError("max_nframes must be non-negative")
 
-        outputs = self._load_outputs(files, nframes)
+        outputs = self.load_outputs(files, nframes)
         masks_by_traj = [
             self._region_masks(fields, values) for fields, values in outputs
         ]
@@ -344,9 +412,14 @@ class PlumedCVFilter:
         candidate_ids: List[List[int]],
         selected_ids: List[List[int]],
         max_devi_f: Optional[List[np.ndarray]] = None,
+        loaded_outputs: Optional[PlumedOutputs] = None,
     ):
         """Audit filtering followed by the report's existing sampling policy."""
-        outputs = self._load_outputs(files, nframes)
+        outputs = (
+            self.load_outputs(files, nframes)
+            if loaded_outputs is None
+            else loaded_outputs
+        )
         masks_by_traj = [
             self._region_masks(fields, values) for fields, values in outputs
         ]
@@ -590,24 +663,26 @@ class PlumedCVFilter:
                     ),
                 )
             ]
+
+        def squared_distance(left_cell, right_cell):
+            return sum(
+                ((left - right) / max(size - 1, 1)) ** 2
+                for left, right, size in zip(left_cell, right_cell, grid_sizes)
+            )
+
         chosen = [cells[0]]
+        chosen_set = {cells[0]}
+        nearest = {cell: squared_distance(cell, cells[0]) for cell in cells[1:]}
         while len(chosen) < total:
-            best = None
-            best_distance = -1.0
-            for cell in cells:
-                if cell in chosen:
-                    continue
-                distance = min(
-                    sum(
-                        ((left - right) / max(size - 1, 1)) ** 2
-                        for left, right, size in zip(cell, other, grid_sizes)
-                    )
-                    for other in chosen
-                )
-                if distance > best_distance:
-                    best = cell
-                    best_distance = distance
+            best = max(
+                (cell for cell in cells if cell not in chosen_set),
+                key=lambda cell: nearest[cell],
+            )
             chosen.append(best)
+            chosen_set.add(best)
+            for cell in cells:
+                if cell not in chosen_set:
+                    nearest[cell] = min(nearest[cell], squared_distance(cell, best))
         return chosen
 
     def _cell_key(self, region_idx, fields, row):
@@ -772,7 +847,7 @@ class PlumedCVFilter:
             json.dump(summary, handle, indent=2, sort_keys=True)
             handle.write("\n")
 
-    def _load_outputs(self, files: List[Path], nframes: List[int]):
+    def _load_outputs(self, files: List[Path], nframes: List[int]) -> PlumedOutputs:
         if len(files) != len(nframes):
             raise FatalError("PLUMED outputs and trajectories have different lengths")
         outputs = []
@@ -783,21 +858,20 @@ class PlumedCVFilter:
                     f"PLUMED output {file} has {len(values)} rows, expected "
                     f"{expected_nframes}; PRINT STRIDE must match the trajectory stride"
                 )
-            if self.time_alignment is not None:
-                time = values[:, fields.index("time")]
-                expected_time = (
-                    self.time_alignment["start"]
-                    + np.arange(expected_nframes) * self.time_alignment["step"]
+            time = values[:, fields.index("time")]
+            expected_time = (
+                self.time_alignment["start"]
+                + np.arange(expected_nframes) * self.time_alignment["step"]
+            )
+            if not np.allclose(
+                time,
+                expected_time,
+                rtol=0.0,
+                atol=self.time_alignment["atol"],
+            ):
+                raise FatalError(
+                    f"PLUMED time in {file} does not match configured frame times"
                 )
-                if not np.allclose(
-                    time,
-                    expected_time,
-                    rtol=0.0,
-                    atol=self.time_alignment["atol"],
-                ):
-                    raise FatalError(
-                        f"PLUMED time in {file} does not match configured frame times"
-                    )
             outputs.append((fields, values))
         return outputs
 

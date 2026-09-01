@@ -8,6 +8,9 @@ from pathlib import (
 
 import dpdata
 import numpy as np
+from dargs.dargs import (
+    ArgumentError,
+)
 from dflow.python import (
     OP,
     OPIO,
@@ -69,32 +72,50 @@ class TestRunLmp(unittest.TestCase):
             shutil.rmtree(self.task_name)
 
     def test_plm_output_file_config(self):
+        self.assertEqual(RunLmp.normalize_config({})["plm_output_file"], "COLVAR")
         config = RunLmp.normalize_config({"plm_output_file": "COLVAR"})
         self.assertEqual(config["plm_output_file"], "COLVAR")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentError):
             RunLmp.normalize_config({"plm_output_file": "outputs/COLVAR"})
         for invalid_name in ["", ".", ".."]:
-            with self.subTest(invalid_name=invalid_name), self.assertRaises(ValueError):
+            with self.subTest(invalid_name=invalid_name), self.assertRaises(
+                ArgumentError
+            ):
                 RunLmp.normalize_config({"plm_output_file": invalid_name})
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_plm_output_file_invalid_config_is_fatal(self, mocked_run):
+        with self.assertRaisesRegex(FatalError, "invalid LAMMPS configuration"):
+            RunLmp().execute(
+                OPIO(
+                    {
+                        "config": {"plm_output_file": "outputs/COLVAR"},
+                        "task_name": self.task_name,
+                        "task_path": self.task_path,
+                        "models": self.models,
+                    }
+                )
+            )
+        mocked_run.assert_not_called()
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_plm_output_file_collection(self, mocked_run):
         def run_with_plumed_output(*args, **kwargs):
-            Path("COLVAR").write_text("#! FIELDS time cv\n0.0 0.5\n")
+            Path("PLUMED_OUT").write_text("#! FIELDS time cv\n0.0 0.5\n")
             return 0, "", ""
 
         mocked_run.side_effect = run_with_plumed_output
         out = RunLmp().execute(
             OPIO(
                 {
-                    "config": {"plm_output_file": "COLVAR"},
+                    "config": {"plm_output_file": "PLUMED_OUT"},
                     "task_name": self.task_name,
                     "task_path": self.task_path,
                     "models": self.models,
                 }
             )
         )
-        self.assertEqual(out["plm_output"], Path(self.task_name) / "COLVAR")
+        self.assertEqual(out["plm_output"], Path(self.task_name) / "PLUMED_OUT")
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_plm_output_file_rejects_staged_input(self, mocked_run):
@@ -114,10 +135,15 @@ class TestRunLmp(unittest.TestCase):
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_plm_output_file_does_not_reuse_stale_output(self, mocked_run):
-        mocked_run.return_value = (0, "", "")
         Path(self.task_name).mkdir()
         stale_output = Path(self.task_name) / "COLVAR"
         stale_output.write_text("stale output")
+
+        def run_without_stale_output(*args, **kwargs):
+            self.assertFalse(Path("COLVAR").exists())
+            return 0, "", ""
+
+        mocked_run.side_effect = run_without_stale_output
 
         out = RunLmp().execute(
             OPIO(
@@ -132,6 +158,24 @@ class TestRunLmp(unittest.TestCase):
 
         self.assertIsNone(out["plm_output"])
         self.assertFalse(stale_output.exists())
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_plm_output_file_rejects_generated_name(self, mocked_run):
+        for output_name in ["output.plumed", model_name_pattern % 0, lmp_log_name]:
+            with self.subTest(output_name=output_name), self.assertRaisesRegex(
+                FatalError, "collides with a generated"
+            ):
+                RunLmp().execute(
+                    OPIO(
+                        {
+                            "config": {"plm_output_file": output_name},
+                            "task_name": self.task_name,
+                            "task_path": self.task_path,
+                            "models": self.models,
+                        }
+                    )
+                )
+        mocked_run.assert_not_called()
 
     @patch("dpgen2.op.run_lmp.run_command")
     def test_success(self, mocked_run):

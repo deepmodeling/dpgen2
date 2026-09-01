@@ -867,6 +867,7 @@ class MockedConfSelector(ConfSelector):
         model_devis: List[Path],
         type_map: List[str] = None,
         optional_outputs: Optional[List[Path]] = None,
+        plm_outputs: Optional[List[Path]] = None,
     ) -> Tuple[List[Path], ExplorationReport]:
         confs = []
         if len(trajs) == mocked_numb_lmp_tasks:

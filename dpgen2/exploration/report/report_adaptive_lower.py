@@ -279,6 +279,9 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
         self.accur = self.accur - self.candi
         self.model_devi = model_devi
         self._no_candidate = len(self.candi) == 0
+        self._update_ratios()
+
+    def _update_ratios(self) -> None:
         self._failed_ratio = float(len(self.failed)) / float(self.nframes)
         self._accurate_ratio = float(len(self.accur)) / float(self.nframes)
         self._candidate_ratio = float(len(self.candi)) / float(self.nframes)
@@ -383,7 +386,7 @@ class ExplorationReportAdaptiveLower(ExplorationReport):
             for frame_idx in frame_ids
         }
         self.candi &= allowed
-        self._no_candidate = len(self.candi) == 0
+        self._update_ratios()
 
     def get_candidate_ids(
         self,

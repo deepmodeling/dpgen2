@@ -219,8 +219,8 @@ def lmp_args():
         "combined by OR. Field names are exact PLUMED FIELDS labels and are "
         "matched independently of column order. By default, one or two common "
         "CVs are covered uniformly. Sampling also supports explicit random, "
-        "uniform, grid, or report modes, with optional frame spacing and time "
-        "alignment."
+        "uniform, grid, or report modes, with optional frame spacing. Explicit "
+        "time alignment is required to bind COLVAR rows to trajectory frames."
     )
 
     return [

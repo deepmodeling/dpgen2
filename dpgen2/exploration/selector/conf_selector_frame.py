@@ -111,20 +111,30 @@ class ConfSelectorFrames(ConfSelector):
         cv_audit = None
         plumed_cv_filter = self.plumed_cv_filter
         plm_files = None
+        loaded_plm_outputs = None
         md_f = None
         candidate_ids = None
         if plumed_cv_filter is not None:
-            if plm_outputs is None or any(output is None for output in plm_outputs):
+            if (
+                plm_outputs is None
+                or len(plm_outputs) != ntraj
+                or any(output is None for output in plm_outputs)
+            ):
                 raise FatalError(
                     "PLUMED CV filtering requires one output per trajectory"
                 )
-            plm_files = [output for output in plm_outputs if output is not None]
+            plm_files = cast(List[Path], list(plm_outputs))
             md_f = cast(List[np.ndarray], md_model_devi.get(DeviManager.MAX_DEVI_F))
             candidate_ids = self.report.get_candidate_ids(None, clear=False)
             if plumed_cv_filter.sampling is None:
+                loaded_plm_outputs = plumed_cv_filter.load_outputs(
+                    plm_files,
+                    [len(values) for values in md_f],
+                )
                 allowed_ids = plumed_cv_filter.get_selected_ids(
                     plm_files,
                     [len(values) for values in md_f],
+                    loaded_outputs=loaded_plm_outputs,
                 )
                 self.report.restrict_candidate_ids(allowed_ids)
             else:
@@ -154,6 +164,7 @@ class ConfSelectorFrames(ConfSelector):
                 candidate_ids,
                 id_cand_list,
                 md_f,
+                loaded_outputs=loaded_plm_outputs,
             )
 
         ms = self.traj_render.get_confs(

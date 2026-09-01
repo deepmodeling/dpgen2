@@ -147,7 +147,8 @@ coverage or an explicitly configured selection policy:
             {"d": [0.08, 0.12]},
             {"v": [1.8, 2.2]}
         ],
-        "sampling": {"mode": "report"}
+        "sampling": {"mode": "report"},
+        "time_alignment": {"start": 0.0, "step": 0.01}
     }
 }
 ```
@@ -163,6 +164,11 @@ d: DISTANCE ATOMS=1,2
 v: VORONOI_COORDINATION ...
 PRINT ARG=d,v STRIDE=10 FILE=COLVAR
 ```
+
+`plm_output_file` defaults to `COLVAR`; set it explicitly when `PRINT FILE`
+uses another name. `time_alignment` is required because equal row counts alone
+cannot detect a phase offset between the trajectory and COLVAR. Set `start` and
+`step` to the times of trajectory frame 0 and one frame interval, respectively.
 
 The condition keys are exact labels from `#! FIELDS`; DPGEN2 has no reserved
 CV names such as `iondistance` or `ionization`. Labels are matched by name, not
@@ -180,7 +186,8 @@ uniformly across 10 equal-width bins by default:
             "name": "target_window",
             "conditions": {"reaction_coordinate": [0.2, 2.0]}
         }
-    ]
+    ],
+    "time_alignment": {"start": 0.0, "step": 0.01}
 }
 ```
 
@@ -199,7 +206,8 @@ ORed:
             "name": "segment_2",
             "conditions": {"reaction_coordinate": [3.0, 4.0]}
         }
-    ]
+    ],
+    "time_alignment": {"start": 0.0, "step": 0.01}
 }
 ```
 
@@ -237,7 +245,8 @@ these defaults:
         "n_bins": 10,
         "within_bin": "max_deviation",
         "seed": 20260815
-    }
+    },
+    "time_alignment": {"start": 0.0, "step": 0.01}
 }
 ```
 
@@ -286,7 +295,7 @@ names and weights:
     "time_alignment": {
         "start": 0.0,
         "step": 0.01,
-        "atol": 1e-8
+        "atol": 1e-6
     }
 }
 ```
@@ -297,8 +306,9 @@ covers separated non-empty cells before adding extra frames, and then uses
 `within_bin` inside each cell. `min_frame_gap` is a minimum frame-index
 separation within each trajectory. A spacing constraint may leave the result
 underfilled; DPGEN2 reports this instead of silently relaxing the constraint.
-`time_alignment` additionally verifies `time = start + frame * step` with the
-configured absolute tolerance.
+`time_alignment` verifies `time = start + frame * step` with an absolute
+tolerance of `1e-6` by default. Increase `atol` explicitly when a coarse PLUMED
+`FMT` rounds time more strongly.
 
 When a CV filter is active, the selected DeepMD data directory contains
 `cv_selection.csv` and `cv_selection_summary.json`. They record trajectory and

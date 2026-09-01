@@ -225,6 +225,20 @@ class TestTrajsExplorationReport(unittest.TestCase):
         ter.restrict_candidate_ids([[0, 1]])
         self.assertEqual(ter.get_candidate_ids(1), [[1]])
 
+    def test_empty_cv_filter_preserves_trust_candidate_state(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(DeviManager.MAX_DEVI_F, np.array([0.40, 0.20]))
+        report = ExplorationReportTrustLevelsMax(0.3, 0.6)
+        report.record(model_devi)
+
+        self.assertFalse(report.no_candidate())
+        report.restrict_candidate_ids([[]])
+
+        self.assertFalse(report.no_candidate())
+        self.assertEqual(report.candidate_ratio(), 0.0)
+        self.assertEqual(report.accurate_ratio(), 0.5)
+        self.assertEqual(report.failed_ratio(), 0.0)
+
     def test_random_selection_convergence(self):
         # case 1
         model_devi = DeviManagerStd()
