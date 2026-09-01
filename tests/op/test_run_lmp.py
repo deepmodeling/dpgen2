@@ -553,7 +553,7 @@ class TestPrepareDPModelsPassthrough(unittest.TestCase):
         model = self.model_dir / "model.000.pth"
         model.write_text("frozen")
         config = RunLmp.normalize_config(
-            {"model_devi_backend": "pytorch", "model_format": "pth"}
+            {"model_devi_backend": "tensorflow", "model_format": "pth"}
         )
         result = prepare_dp_models([model], config)
         self.assertEqual(result, [model.resolve()])
@@ -562,8 +562,15 @@ class TestPrepareDPModelsPassthrough(unittest.TestCase):
         model = self.model_dir / "model.000.pt2"
         model.write_text("frozen")
         config = RunLmp.normalize_config(
-            {"model_devi_backend": "pytorch", "model_format": "pt2"}
+            {"model_devi_backend": "tensorflow", "model_format": "pt2"}
         )
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_pb_passthrough(self):
+        model = self.model_dir / "graph.000.pb"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config({"model_devi_backend": "tensorflow"})
         result = prepare_dp_models([model], config)
         self.assertEqual(result, [model.resolve()])
 

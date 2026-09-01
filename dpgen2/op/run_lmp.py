@@ -569,7 +569,6 @@ def _compressed_model_name(index, model_format):
 
 def prepare_dp_models(models, config):
     """Return frozen models, exporting checkpoints once when needed."""
-    backend = _model_backend(config)
     prepared = []
     output_dir = Path("prepared_models")
     for idx, model in enumerate(models):
@@ -582,6 +581,7 @@ def prepare_dp_models(models, config):
                 )
             prepared.append(model)
             continue
+        backend = _model_backend(config)
         output_dir.mkdir(exist_ok=True)
         frozen_model = output_dir / _model_name(idx, config["model_format"])
         freeze_model(
