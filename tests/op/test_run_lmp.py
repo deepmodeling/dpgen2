@@ -35,6 +35,7 @@ from dpgen2.constants import (
 )
 from dpgen2.op.run_lmp import (
     RunLmp,
+    RunLmpHDF5,
     get_ele_temp,
     merge_pimd_files,
     set_models,
@@ -148,6 +149,31 @@ class TestRunLmp(unittest.TestCase):
             (work_dir / "foo.txt").read_text().strip(),
             "Hello -i in.lammps -log log.lammps",
         )
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_hdf5_outputs_dataset_values(self, mocked_run):
+        """Return serializable data instead of filesystem paths for HDF5."""
+
+        def write_outputs(*args, **kwargs):
+            Path(lmp_traj_name).write_text("trajectory data")
+            np.savetxt(lmp_model_devi_name, np.arange(7).reshape(1, 7))
+            return 0, "foo\n", ""
+
+        mocked_run.side_effect = write_outputs
+
+        out = RunLmpHDF5().execute(
+            OPIO(
+                {
+                    "config": {"command": "mylmp"},
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": self.models,
+                }
+            )
+        )
+
+        self.assertEqual(out["traj"], "trajectory data")
+        np.testing.assert_array_equal(out["model_devi"], np.arange(7))
 
 
 class TestRunLmpDist(unittest.TestCase):

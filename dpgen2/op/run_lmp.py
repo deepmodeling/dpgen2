@@ -202,7 +202,7 @@ class RunLmp(OP):
 
         ret_dict = {
             "log": work_dir / lmp_log_name,
-            "traj": work_dir / lmp_traj_name,
+            "traj": self.get_traj(work_dir / lmp_traj_name),
             "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (
@@ -222,6 +222,10 @@ class RunLmp(OP):
 
     def get_model_devi(self, model_devi_file):
         return model_devi_file
+
+    def get_traj(self, traj_file):
+        """Return the filesystem trajectory used by the standard backend."""
+        return traj_file
 
     @staticmethod
     def lmp_args():
@@ -412,3 +416,7 @@ class RunLmpHDF5(RunLmp):
 
     def get_model_devi(self, model_devi_file):
         return np.loadtxt(model_devi_file)
+
+    def get_traj(self, traj_file):
+        """Return trajectory text for serialization into an HDF5 dataset."""
+        return traj_file.read_text()
