@@ -33,6 +33,8 @@ from dpgen2.exploration.task.calypso import (
 
 class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
     def setUp(self):
+        self.extra_file = Path("SiC_ZBL.txt")
+        self.extra_file.write_text("ZBL table content\n")
         self.config_npt = {
             "type": "lmp-md",
             "Ts": [100],
@@ -51,12 +53,29 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.config_template["lmp_template_fname"])
+        self.extra_file.unlink()
 
     def test_npt(self):
         tgroup = make_lmp_task_group_from_config(
             self.numb_models, self.mass_map, self.config_npt
         )
         self.assertTrue(isinstance(tgroup, NPTTaskGroup))
+
+    def test_npt_copies_input_extra_files_to_each_task(self):
+        config = {
+            **self.config_npt,
+            "input_extra_files": [str(self.extra_file)],
+        }
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, config
+        )
+        tgroup.set_conf(["LAMMPS configuration"])
+        tgroup.make_task()
+
+        self.assertEqual(
+            tgroup[0].files()[self.extra_file.name],
+            "ZBL table content\n",
+        )
 
     def test_template(self):
         tgroup = make_lmp_task_group_from_config(

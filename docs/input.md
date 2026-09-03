@@ -99,6 +99,7 @@ This section defines how the configuration space is explored.
 		    "_comment" : "stage 0, task group 0",
 		    "type" : "lmp-md",
 		    "ensemble": "nvt", "nsteps":  50, "temps": [50, 100], "trj_freq": 10,
+		    "input_extra_files": ["assets/dp/SiC_ZBL.txt"],
 		    "conf_idx": [0], "n_sample" : 3
 		},
 		{
@@ -130,6 +131,8 @@ The {dargs:argument}`"configurations"<explore[lmp]/configurations>` provides the
 The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See {ref}`the full documentation of the task group<task_group_sec>` for writting task groups.
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
+
+The {dargs:argument}`"input_extra_files"<task_group[lmp-md]/input_extra_files>` list copies each named file into every exploration task directory. The file is available there by its basename. For example, a DP-ZBL model using `use_srtab` should list its ZBL table here and reference `SiC_ZBL.txt` from the model configuration.
 
 
 ### FP
