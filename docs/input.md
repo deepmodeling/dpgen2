@@ -131,6 +131,10 @@ The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stag
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
+Set `explore.config.use_hdf5` to `true` to store LAMMPS trajectories and model deviations as dflow HDF5 dataset artifacts. LAMMPS still writes the standard text `traj.dump` and `model_devi.out` files inside each task; DPGEN2 serializes their data at the artifact boundary and reads it back transparently during selection. This avoids depending on the optional LAMMPS H5MD package and preserves the frame/model-deviation alignment expected by DPGEN2.
+
+This option is not the native LAMMPS `dump h5md` format. A custom H5MD dump cannot replace `traj.dump` in the built-in selector because its schema differs from the `lammps/dump` text consumed by dpdata. Use `extra_output_files` if a native H5MD file is needed as an additional output for another analysis tool.
+
 
 ### FP
 

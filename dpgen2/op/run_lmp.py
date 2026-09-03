@@ -230,7 +230,11 @@ class RunLmp(OP):
         doc_shuffle_models = "Randomly pick a model from the group of models to drive theexploration MD simulation"
         doc_head = "Select a head from multitask"
         doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
-        doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+        doc_use_hdf5 = (
+            "Store the standard LAMMPS dump trajectory and model-deviation "
+            "values in dflow HDF5 dataset artifacts. This does not enable "
+            "LAMMPS's native dump h5md command."
+        )
         doc_extra_output_files = "Extra output file names, support wildcards"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),

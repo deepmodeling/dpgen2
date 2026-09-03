@@ -359,7 +359,10 @@ def run_diffcsp_args():
     doc_gen_tasks = "Number of DiffCSP generation tasks"
     doc_gen_command = "Command for DiffCSP generation"
     doc_relax_group_size = "Group size for relaxation"
-    doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+    doc_use_hdf5 = (
+        "Store trajectories and model deviations as dflow HDF5 dataset "
+        "artifacts; this is independent of LAMMPS dump h5md."
+    )
     return [
         Argument(
             "gen_tasks",

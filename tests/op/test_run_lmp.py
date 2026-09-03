@@ -67,6 +67,11 @@ class TestRunLmp(unittest.TestCase):
         if Path(self.task_name).is_dir():
             shutil.rmtree(self.task_name)
 
+    def test_hdf5_storage_option_is_normalized(self):
+        config = RunLmp.normalize_config({"use_hdf5": True})
+
+        self.assertTrue(config["use_hdf5"])
+
     @patch("dpgen2.op.run_lmp.run_command")
     def test_success(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", "")]
