@@ -10,6 +10,17 @@ dpgen2 submit input.json
 where `input.json` is the input script. A guide of writing the script is found [here](inputscript).
 When a workflow is submitted, a ID (WFID) of the workflow will be printed for later reference.
 
+### Run locally without Bohrium or Kubernetes
+
+dflow debug mode executes workflow steps on the local machine. Enable it before submitting:
+
+```bash
+export DFLOW_MODE=debug
+dpgen2 submit input.json
+```
+
+In this mode, omit `bohrium_config` or set it to `null`; no username, password, or project ID is required. `dflow_config` and `dflow_s3_config` may also be omitted unless a local customization needs them. Commands referenced by the step configurations must be installed and runnable on the local machine. The legacy `DFLOW_DEBUG=1` environment variable remains supported.
+
 ## Check the convergence of a workflow
 The convergence of stages of the workflow can be checked by the `status` command. It prints the indexes of the finished stages, iterations, and the accurate, candidate and failed ratio of explored configurations of each iteration.
 ```bash

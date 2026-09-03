@@ -29,7 +29,9 @@ def global_config_workflow(
     # dflow_config, dflow_s3_config
     workflow_config_from_dict(wf_config)
 
-    if os.getenv("DFLOW_DEBUG"):
+    # dflow documents DFLOW_MODE=debug, while older DPGEN2 examples use
+    # DFLOW_DEBUG. Accept both before touching any remote-platform credentials.
+    if os.getenv("DFLOW_DEBUG") or os.getenv("DFLOW_MODE", "").lower() == "debug":
         dflow.config["mode"] = "debug"
         return None
 

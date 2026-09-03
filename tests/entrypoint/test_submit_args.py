@@ -11,12 +11,16 @@ from pathlib import (
 
 import dpdata
 import numpy as np
+from dargs import (
+    Argument,
+)
 
 # isort: off
 from .context import (
     dpgen2,
 )
 from dpgen2.entrypoint.args import (
+    caly_args,
     normalize,
 )
 from dpgen2.op import (
@@ -154,6 +158,16 @@ class TestArgs(unittest.TestCase):
                 "storage_client": "dflow.plugins.bohrium.TiefblueClient",
             },
         )
+
+    def test_calypso_default_config_matches_schema(self):
+        """Keep an omitted CALYPSO config free of LAMMPS-only defaults."""
+        config_arg = next(arg for arg in caly_args() if arg.name == "config")
+        schema = Argument("calypso", dict, [config_arg])
+
+        normalized = schema.normalize_value({})
+
+        schema.check_value(normalized, strict=True)
+        self.assertEqual(normalized["config"], {})
 
 
 old_str = textwrap.dedent(
