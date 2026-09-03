@@ -183,8 +183,10 @@ class RunDPTrain(OP):
         mixed_type = ip["optional_parameter"]["mixed_type"]
         finetune_mode = ip["optional_parameter"]["finetune_mode"]
         config = ip["config"] if ip["config"] is not None else {}
-        impl = ip["config"].get("impl", "tensorflow")
-        dp_command = ip["config"].get("command", "dp").split()
+        # Read all optional values from the normalized fallback so config=None
+        # follows the same default path as an empty configuration.
+        impl = config.get("impl", "tensorflow")
+        dp_command = config.get("command", "dp").split()
         assert impl in ["tensorflow", "pytorch"]
         if impl == "pytorch":
             dp_command.append("--pt")

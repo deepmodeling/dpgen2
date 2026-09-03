@@ -590,6 +590,38 @@ class TestRunDPTrain(unittest.TestCase):
             self.assertDictEqual(jdata, self.expected_odict_v2)
 
     @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_none_config(self, mocked_run):
+        """Apply default training options when the configuration is None."""
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
+
+        task_path = Path(self.task_path)
+        task_path.mkdir(exist_ok=True)
+        with open(task_path / train_script_name, "w") as fp:
+            json.dump(self.idict_v2, fp, indent=4)
+
+        out = RunDPTrain().execute(
+            OPIO(
+                {
+                    "config": None,
+                    "task_name": self.task_name,
+                    "task_path": task_path,
+                    "init_model": self.init_model,
+                    "init_data": self.init_data,
+                    "iter_data": self.iter_data,
+                }
+            )
+        )
+
+        mocked_run.assert_has_calls(
+            [
+                call(["dp", "train", train_script_name]),
+                call(["dp", "freeze", "-o", "frozen_model.pb"]),
+            ]
+        )
+        with open(out["script"]) as fp:
+            self.assertDictEqual(json.load(fp), self.expected_odict_v2)
+
+    @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2_init_model(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 
