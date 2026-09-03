@@ -59,6 +59,20 @@ The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
 
+#### Final training after convergence
+
+Each DPGEN2 training iteration uses the initial dataset together with the labeled data accumulated from earlier iterations. The final converged committee is therefore useful for convergence checks and may be suitable for production after independent validation, but convergence only measures the configured exploration criterion. It does not guarantee that the active-learning training length, validation split, or committee model chosen for deployment is optimal for a production calculation.
+
+For a production model, the recommended conservative workflow is:
+
+1. collect the initial data and every successful `collect-data/output/iter_data` artifact;
+2. verify that labels use compatible electronic-structure settings, units, type maps, and periodic-boundary conventions;
+3. create representative training and held-out validation splits from the complete dataset;
+4. run a final training schedule chosen for that dataset and model architecture;
+5. validate energies, forces, virials, and molecular-dynamics stability under all intended production conditions.
+
+Use `dpgen2 download CONFIG WFID --step-definitions collect-data/output/iter_data` to retrieve the iteration datasets. A universal final step count is not prescribed: monitor validation metrics and learning curves instead of assuming that a larger fixed number is always better. Directly deploying the converged model is a reasonable shortcut only when it passes the same held-out and target-condition validation; multi-temperature or otherwise broad configuration spaces generally benefit from the explicit final training pass.
+
 
 ### Exploration
 
