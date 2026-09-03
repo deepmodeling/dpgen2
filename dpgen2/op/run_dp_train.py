@@ -544,7 +544,11 @@ class RunDPTrain(OP):
     @staticmethod
     def training_args():
         doc_command = "The command for DP, 'dp' for default"
-        doc_impl = "The implementation/backend of DP. It can be 'tensorflow' or 'pytorch'. 'tensorflow' for default."
+        doc_impl = (
+            "The DeePMD-kit training backend: 'tensorflow' or 'pytorch'. "
+            "Backend-specific post-processing commands and capabilities, such "
+            "as model compression, depend on the installed DeePMD-kit version."
+        )
         doc_init_model_policy = "The policy of init-model training. It can be\n\n\
     - 'no': No init-model training. Traing from scratch.\n\n\
     - 'yes': Do init-model training.\n\n\

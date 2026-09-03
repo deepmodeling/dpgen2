@@ -59,6 +59,12 @@ The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
 
+#### DeePMD backend and model compression
+
+The training `config.impl` value selects the DeePMD-kit backend used by DPGEN2. Checkpoint, frozen-model, and compression formats are backend-specific: a PyTorch `.pt`/`.pth` file is not a TensorFlow GraphDef, so running `dp compress` without the PyTorch backend flag on that file produces a protobuf parsing error.
+
+Compression support also depends on the installed DeePMD-kit version. DeePMD-kit 3.0.0b3 supports compression only for the TensorFlow backend; its `dp --pt` command has no `compress` subcommand. In that environment, deploy the uncompressed PyTorch frozen model or train/freeze a compatible TensorFlow model. For another version, verify support with that installation's `dp --pt --help` before attempting compression and use only the syntax and model formats documented for that backend. DPGEN2 cannot add a compression capability that the selected DeePMD-kit runtime does not provide.
+
 
 ### Exploration
 
