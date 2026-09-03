@@ -298,36 +298,99 @@ def get_conf_filters(config):
     return conf_filters
 
 
-def make_naive_exploration_scheduler_without_conf(config, explore_style):
-    model_devi_jobs = config["explore"]["stages"]
-    fp_task_max = config["fp"]["task_max"]
-    max_numb_iter = config["explore"]["max_numb_iter"]
-    fatal_at_max = config["explore"]["fatal_at_max"]
-    convergence = config["explore"]["convergence"]
-    output_nopbc = config["explore"]["output_nopbc"]
-    conf_filters = get_conf_filters(config["explore"]["filters"])
-    scheduler = ExplorationScheduler()
-    # report
+def _normalize_exploration_stage(stage_config, explore_config, fp_task_max):
+    """Resolve task groups and effective controls for one exploration stage.
+
+    Legacy configurations represent a stage directly as a list of task-group
+    dictionaries. Metadata-bearing stage dictionaries keep that list under
+    ``task_groups`` and override only the controls that need to differ from the
+    global exploration and FP defaults.
+    """
+    if isinstance(stage_config, list):
+        task_groups = stage_config
+        stage_options = {}
+    elif isinstance(stage_config, dict) and "task_groups" in stage_config:
+        stage_options = deepcopy(stage_config)
+        task_groups = stage_options.pop("task_groups")
+    elif isinstance(stage_config, dict):
+        # Keep accepting a single task-group dictionary as one legacy stage.
+        task_groups = [stage_config]
+        stage_options = {}
+    else:
+        raise TypeError("each exploration stage must be a list or dictionary")
+
+    if isinstance(task_groups, dict):
+        task_groups = [task_groups]
+    if not isinstance(task_groups, list) or not all(
+        isinstance(task_group, dict) for task_group in task_groups
+    ):
+        raise TypeError("stage task_groups must be a list of dictionaries")
+
+    convergence = deepcopy(
+        stage_options.get("convergence", explore_config["convergence"])
+    )
+    max_numb_iter = stage_options.get("max_numb_iter", explore_config["max_numb_iter"])
+    fatal_at_max = stage_options.get("fatal_at_max", explore_config["fatal_at_max"])
+    stage_task_max = stage_options.get("task_max", fp_task_max)
+    if not isinstance(convergence, dict):
+        raise TypeError("stage convergence must be a dictionary")
+    if max_numb_iter is not None and not isinstance(max_numb_iter, int):
+        raise TypeError("stage max_numb_iter must be an integer or null")
+    if not isinstance(fatal_at_max, bool):
+        raise TypeError("stage fatal_at_max must be a boolean")
+    if stage_task_max is not None and not isinstance(stage_task_max, int):
+        raise TypeError("stage task_max must be an integer or null")
+    return task_groups, convergence, max_numb_iter, fatal_at_max, stage_task_max
+
+
+def _make_stage_selector(
+    convergence,
+    render,
+    fp_task_max,
+    conf_filters,
+):
+    """Build an independent report and selector for an exploration stage."""
     conv_style = convergence.pop("type")
     report = conv_styles[conv_style](**convergence)
-    # trajectory render, the format of the output trajs are assumed to be lammps/dump
-    render = TrajRenderLammps(nopbc=output_nopbc)
-    # selector
-    selector = ConfSelectorFrames(
+    return ConfSelectorFrames(
         render,
         report,
         fp_task_max,
         conf_filters,
     )
 
-    for job_ in model_devi_jobs:
-        if not isinstance(job_, list):
-            job = [job_]
-        else:
-            job = job_
+
+def make_naive_exploration_scheduler_without_conf(config, explore_style):
+    model_devi_jobs = config["explore"]["stages"]
+    fp_task_max = config["fp"]["task_max"]
+    output_nopbc = config["explore"]["output_nopbc"]
+    conf_filters = get_conf_filters(config["explore"]["filters"])
+    scheduler = ExplorationScheduler()
+    # trajectory render, the format of the output trajs are assumed to be lammps/dump
+    render = TrajRenderLammps(nopbc=output_nopbc)
+
+    for stage_config in model_devi_jobs:
+        (
+            job,
+            convergence,
+            max_numb_iter,
+            fatal_at_max,
+            stage_task_max,
+        ) = _normalize_exploration_stage(
+            stage_config,
+            config["explore"],
+            fp_task_max,
+        )
+        selector = _make_stage_selector(
+            convergence,
+            render,
+            stage_task_max,
+            conf_filters,
+        )
         # stage
         stage = ExplorationStage()
         for jj in job:
+            jj = deepcopy(jj)
             if "calypso" in explore_style:
                 jconf = caly_normalize(jj)
                 # make task group
@@ -361,39 +424,41 @@ def make_lmp_naive_exploration_scheduler(config):
     type_map = config["inputs"]["type_map"]
     numb_models = config["train"]["numb_models"]
     fp_task_max = config["fp"]["task_max"]
-    max_numb_iter = config["explore"]["max_numb_iter"]
-    fatal_at_max = config["explore"]["fatal_at_max"]
-    convergence = config["explore"]["convergence"]
     output_nopbc = config["explore"]["output_nopbc"]
     conf_filters = get_conf_filters(config["explore"]["filters"])
     use_ele_temp = config["inputs"]["use_ele_temp"]
     scheduler = ExplorationScheduler()
-    # report
-    conv_style = convergence.pop("type")
-    report = conv_styles[conv_style](**convergence)
     render = TrajRenderLammps(nopbc=output_nopbc, use_ele_temp=use_ele_temp)
-    # selector
-    selector = ConfSelectorFrames(
-        render,
-        report,
-        fp_task_max,
-        conf_filters,
-    )
 
     sys_configs_lmp = []
     for sys_config in sys_configs:
+        sys_config = deepcopy(sys_config)
         conf_style = sys_config.pop("type")
         generator = conf_styles[conf_style](**sys_config)
         sys_configs_lmp.append(generator.get_file_content(type_map))
 
-    for job_ in model_devi_jobs:
-        if not isinstance(job_, list):
-            job = [job_]
-        else:
-            job = job_
+    for stage_config in model_devi_jobs:
+        (
+            job,
+            convergence,
+            max_numb_iter,
+            fatal_at_max,
+            stage_task_max,
+        ) = _normalize_exploration_stage(
+            stage_config,
+            config["explore"],
+            fp_task_max,
+        )
+        selector = _make_stage_selector(
+            convergence,
+            render,
+            stage_task_max,
+            conf_filters,
+        )
         # stage
         stage = ExplorationStage()
         for jj in job:
+            jj = deepcopy(jj)
             jconf = normalize_lmp_task_group_config(jj)
             n_sample = jconf.pop("n_sample")
             ##  ignore the expansion of sys_idx

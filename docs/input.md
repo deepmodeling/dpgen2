@@ -127,7 +127,39 @@ The {dargs:argument}`"configurations"<explore[lmp]/configurations>` provides the
 - Automatic alloy configuration generator. See {ref}`the detailed doc<explore[lmp]/configurations[alloy]>` for the allowed keys.
 - Configurations load from files. See {ref}`the detailed doc<explore[lmp]/configurations[file]>` for the allowed keys.
 
-The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stages. It is of type `list[list[dict]]`. The outer `list` enumerate the exploration stages, the inner list enumerate the task groups of the stage. Each `dict` defines a stage. See {ref}`the full documentation of the task group<task_group_sec>` for writting task groups.
+The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stages. The legacy form is `list[list[dict]]`: the outer list enumerates stages and each inner list contains that stage's task groups. See {ref}`the full documentation of the task group<task_group_sec>` for writing task groups.
+
+When different stages need different convergence or labeling limits, a stage may instead be a dictionary with a required `task_groups` list and optional `convergence`, `max_numb_iter`, `fatal_at_max`, and `task_max` overrides. Missing overrides inherit the global values from `explore` and `fp`:
+
+```json
+"stages": [
+    {
+        "task_groups": [
+            {
+                "type": "lmp-md",
+                "ensemble": "nvt",
+                "nsteps": 50,
+                "temps": [50],
+                "trj_freq": 10,
+                "conf_idx": [0],
+                "n_sample": 3
+            }
+        ],
+        "convergence": {
+            "type": "adaptive-lower",
+            "rate_candi_f": 0.15,
+            "level_f_hi": 5.0,
+            "n_checked_steps": 3,
+            "conv_tolerance": 0.005
+        },
+        "max_numb_iter": 2,
+        "fatal_at_max": false,
+        "task_max": 4000
+    }
+]
+```
+
+Training loss endpoints can also be specialized without changing the template script. `train.config.finetune_end_pref_e/f/v` apply to the initial finetuning run, while `train.config.init_model_end_pref_e/f/v` apply to subsequent init-model training. An unset value keeps the corresponding `limit_pref_e/f/v` from the template.
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 

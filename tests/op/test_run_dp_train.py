@@ -3,6 +3,9 @@ import json
 import os
 import shutil
 import unittest
+from copy import (
+    deepcopy,
+)
 from pathlib import (
     Path,
 )
@@ -254,6 +257,12 @@ class TestRunDPTrain(unittest.TestCase):
         self.assertAlmostEqual(config["init_model_start_pref_e"], 0.1)
         self.assertAlmostEqual(config["init_model_start_pref_f"], 100)
         self.assertAlmostEqual(config["init_model_start_pref_v"], 0.0)
+        self.assertIsNone(config["init_model_end_pref_e"])
+        self.assertIsNone(config["init_model_end_pref_f"])
+        self.assertIsNone(config["init_model_end_pref_v"])
+        self.assertIsNone(config["finetune_end_pref_e"])
+        self.assertIsNone(config["finetune_end_pref_f"])
+        self.assertIsNone(config["finetune_end_pref_v"])
 
     def test_get_size_of_all_mult_sys(self):
         cc = _get_data_size_of_all_mult_sys(self.iter_data)
@@ -482,6 +491,41 @@ class TestRunDPTrain(unittest.TestCase):
             odict, config, False, major_version="2"
         )
         self.assertDictEqual(odict, self.expected_odict_v2)
+
+    def test_stage_specific_end_preferences(self):
+        config = self.config.copy()
+        config.update(
+            {
+                "init_model_end_pref_e": 0.2,
+                "init_model_end_pref_f": 2.0,
+                "init_model_end_pref_v": 0.02,
+                "finetune_end_pref_e": 0.3,
+                "finetune_end_pref_f": 3.0,
+                "finetune_end_pref_v": 0.03,
+            }
+        )
+
+        init_model_dict = RunDPTrain.write_other_to_input_script(
+            deepcopy(self.idict_v2),
+            config,
+            True,
+            major_version="2",
+            finetune_mode="no",
+        )
+        self.assertAlmostEqual(init_model_dict["loss"]["limit_pref_e"], 0.2)
+        self.assertAlmostEqual(init_model_dict["loss"]["limit_pref_f"], 2.0)
+        self.assertAlmostEqual(init_model_dict["loss"]["limit_pref_v"], 0.02)
+
+        finetune_dict = RunDPTrain.write_other_to_input_script(
+            deepcopy(self.idict_v2),
+            config,
+            False,
+            major_version="2",
+            finetune_mode="finetune",
+        )
+        self.assertAlmostEqual(finetune_dict["loss"]["limit_pref_e"], 0.3)
+        self.assertAlmostEqual(finetune_dict["loss"]["limit_pref_f"], 3.0)
+        self.assertAlmostEqual(finetune_dict["loss"]["limit_pref_v"], 0.03)
 
     @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v1(self, mocked_run):

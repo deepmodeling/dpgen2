@@ -277,7 +277,11 @@ class RunDPTrain(OP):
             valid_data,
         )
         train_dict = RunDPTrain.write_other_to_input_script(
-            train_dict, config, do_init_model, major_version
+            train_dict,
+            config,
+            do_init_model,
+            major_version,
+            finetune_mode,
         )
 
         if RunDPTrain.skip_training(
@@ -447,21 +451,21 @@ class RunDPTrain(OP):
         config,
         do_init_model,
         major_version: str = "1",
+        finetune_mode: str = "no",
     ):
         odict = idict.copy()
         odict["training"]["disp_file"] = "lcurve.out"
+        loss_sections = (
+            [value for value in odict["loss_dict"].values() if isinstance(value, dict)]
+            if "loss_dict" in odict
+            else [odict["loss"]]
+        )
         if do_init_model:
             odict["learning_rate"]["start_lr"] = config["init_model_start_lr"]
-            if "loss_dict" in odict:
-                for v in odict["loss_dict"].values():
-                    if isinstance(v, dict):
-                        v["start_pref_e"] = config["init_model_start_pref_e"]
-                        v["start_pref_f"] = config["init_model_start_pref_f"]
-                        v["start_pref_v"] = config["init_model_start_pref_v"]
-            else:
-                odict["loss"]["start_pref_e"] = config["init_model_start_pref_e"]
-                odict["loss"]["start_pref_f"] = config["init_model_start_pref_f"]
-                odict["loss"]["start_pref_v"] = config["init_model_start_pref_v"]
+            for loss in loss_sections:
+                loss["start_pref_e"] = config["init_model_start_pref_e"]
+                loss["start_pref_f"] = config["init_model_start_pref_f"]
+                loss["start_pref_v"] = config["init_model_start_pref_v"]
             if major_version == "1":
                 odict["training"]["stop_batch"] = config["init_model_numb_steps"]
             elif major_version == "2":
@@ -470,6 +474,16 @@ class RunDPTrain(OP):
                 raise RuntimeError(
                     "unsupported DeePMD-kit major version", major_version
                 )
+
+        # Finetuning and later init-model training can need different terminal
+        # loss weights. Unset values deliberately preserve the template script.
+        end_pref_prefix = "finetune" if finetune_mode == "finetune" else "init_model"
+        if finetune_mode == "finetune" or do_init_model:
+            for loss in loss_sections:
+                for component in ("e", "f", "v"):
+                    value = config[f"{end_pref_prefix}_end_pref_{component}"]
+                    if value is not None:
+                        loss[f"limit_pref_{component}"] = value
         return odict
 
     @staticmethod
@@ -561,6 +575,30 @@ class RunDPTrain(OP):
         doc_init_model_start_pref_v = (
             "The start virial prefactor in loss when init-model"
         )
+        doc_init_model_end_pref_e = (
+            "The ending energy prefactor in loss for init-model training. "
+            "Keep the template value when unset."
+        )
+        doc_init_model_end_pref_f = (
+            "The ending force prefactor in loss for init-model training. "
+            "Keep the template value when unset."
+        )
+        doc_init_model_end_pref_v = (
+            "The ending virial prefactor in loss for init-model training. "
+            "Keep the template value when unset."
+        )
+        doc_finetune_end_pref_e = (
+            "The ending energy prefactor in loss for the initial finetuning. "
+            "Keep the template value when unset."
+        )
+        doc_finetune_end_pref_f = (
+            "The ending force prefactor in loss for the initial finetuning. "
+            "Keep the template value when unset."
+        )
+        doc_finetune_end_pref_v = (
+            "The ending virial prefactor in loss for the initial finetuning. "
+            "Keep the template value when unset."
+        )
         doc_finetune_args = "Extra arguments for finetuning"
         doc_multitask = "Do multitask training"
         doc_head = "Head to use in the multitask training"
@@ -634,6 +672,48 @@ class RunDPTrain(OP):
                 optional=True,
                 default=0.0,
                 doc=doc_init_model_start_pref_v,
+            ),
+            Argument(
+                "init_model_end_pref_e",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_init_model_end_pref_e,
+            ),
+            Argument(
+                "init_model_end_pref_f",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_init_model_end_pref_f,
+            ),
+            Argument(
+                "init_model_end_pref_v",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_init_model_end_pref_v,
+            ),
+            Argument(
+                "finetune_end_pref_e",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_finetune_end_pref_e,
+            ),
+            Argument(
+                "finetune_end_pref_f",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_finetune_end_pref_f,
+            ),
+            Argument(
+                "finetune_end_pref_v",
+                float,
+                optional=True,
+                default=None,
+                doc=doc_finetune_end_pref_v,
             ),
             Argument(
                 "init_model_with_finetune",

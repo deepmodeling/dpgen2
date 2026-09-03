@@ -206,9 +206,10 @@ def lmp_args():
     doc_convergence = "The method of convergence check."
     doc_configuration = "A list of initial configurations."
     doc_stages = (
-        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
-        "The outer list provides the enumeration of the exploration stages. "
-        "Then each stage is defined by a list of exploration task groups. "
+        "The definition of exploration stages. A legacy stage is a list of "
+        "exploration task groups. A stage dictionary stores those groups under "
+        "`task_groups` and may override `convergence`, `max_numb_iter`, "
+        "`fatal_at_max`, and `task_max` for that stage. "
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
@@ -249,7 +250,7 @@ def lmp_args():
             doc=doc_configuration,
             alias=["configuration"],
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list, optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,
@@ -299,9 +300,10 @@ def caly_args():
     doc_convergence = "The method of convergence check."
     doc_configuration = "A list of initial configurations."
     doc_stages = (
-        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
-        "The outer list provides the enumeration of the exploration stages. "
-        "Then each stage is defined by a list of exploration task groups. "
+        "The definition of exploration stages. A legacy stage is a list of "
+        "exploration task groups. A stage dictionary stores those groups under "
+        "`task_groups` and may override `convergence`, `max_numb_iter`, "
+        "`fatal_at_max`, and `task_max` for that stage. "
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
@@ -342,7 +344,7 @@ def caly_args():
             doc=doc_configuration,
             alias=["configuration"],
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list, optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,
@@ -400,9 +402,10 @@ def diffcsp_args():
     doc_output_nopbc = "Remove pbc of the output configurations"
     doc_convergence = "The method of convergence check."
     doc_stages = (
-        "The definition of exploration stages of type `List[List[ExplorationTaskGroup]`. "
-        "The outer list provides the enumeration of the exploration stages. "
-        "Then each stage is defined by a list of exploration task groups. "
+        "The definition of exploration stages. A legacy stage is a list of "
+        "exploration task groups. A stage dictionary stores those groups under "
+        "`task_groups` and may override `convergence`, `max_numb_iter`, "
+        "`fatal_at_max`, and `task_max` for that stage. "
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
@@ -432,7 +435,7 @@ def diffcsp_args():
             optional=False,
             doc=doc_convergence,
         ),
-        Argument("stages", List[List[dict]], optional=False, doc=doc_stages),
+        Argument("stages", list, optional=False, doc=doc_stages),
         Argument(
             "filters",
             list,

@@ -5,6 +5,9 @@ import shutil
 import tempfile
 import textwrap
 import unittest
+from copy import (
+    deepcopy,
+)
 from pathlib import (
     Path,
 )
@@ -20,6 +23,7 @@ from dpgen2.entrypoint.submit import (
     copy_scheduler_plans,
     expand_idx,
     get_resubmit_keys,
+    make_lmp_naive_exploration_scheduler,
     print_list_steps,
     submit_concurrent_learning,
     update_reuse_step_scheduler,
@@ -379,6 +383,48 @@ class TestSubmitCmdStd(unittest.TestCase):
         wf_config = json.loads(input_std)
         remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_stage_specific_controls(self):
+        from dpgen2.entrypoint.args import (
+            normalize,
+        )
+
+        wf_config = normalize(json.loads(input_std))
+        task_groups = wf_config["explore"]["stages"][0]
+        wf_config["explore"]["stages"] = [
+            {
+                "task_groups": deepcopy(task_groups),
+                "convergence": {
+                    "type": "fixed-levels",
+                    "level_f_lo": 0.1,
+                    "level_f_hi": 0.2,
+                    "conv_accuracy": 0.8,
+                },
+                "max_numb_iter": 2,
+                "fatal_at_max": True,
+                "task_max": 7,
+            },
+            {
+                "task_groups": [deepcopy(task_groups[0])],
+                "max_numb_iter": 9,
+                "fatal_at_max": False,
+            },
+        ]
+
+        scheduler = make_lmp_naive_exploration_scheduler(wf_config)
+        first, second = scheduler.stage_schedulers
+        self.assertEqual(first.max_numb_iter, 2)
+        self.assertTrue(first.fatal_at_max)
+        self.assertEqual(first.selector.max_numb_sel, 7)
+        self.assertAlmostEqual(first.selector.report.level_f_lo, 0.1)
+        self.assertAlmostEqual(first.selector.report.level_f_hi, 0.2)
+        self.assertEqual(second.max_numb_iter, 9)
+        self.assertFalse(second.fatal_at_max)
+        self.assertEqual(second.selector.max_numb_sel, wf_config["fp"]["task_max"])
+        self.assertAlmostEqual(second.selector.report.level_f_lo, 0.05)
+        self.assertAlmostEqual(second.selector.report.level_f_hi, 0.5)
+        self.assertIsNot(first.selector, second.selector)
+        self.assertIsNot(first.selector.report, second.selector.report)
 
 
 def remove_executor_if_debug(conf):
