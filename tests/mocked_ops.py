@@ -889,7 +889,29 @@ class MockedConfSelector(ConfSelector):
             fname.write_text("conf of conf.1")
             confs.append(fname)
         report = MockedExplorationReport(conv_accuracy=self.conv_accuracy)
-        return confs, report
+        return confs, [], report
+
+
+class MockedAsyncConfSelector(ConfSelector):
+    def __init__(
+        self,
+        conv_accuracy: float = 0.9,
+    ):
+        self.conv_accuracy = conv_accuracy
+
+    def select(
+        self,
+        trajs: List[Path],
+        model_devis: List[Path],
+        type_map: List[str] = None,
+        optional_outputs: Optional[List[Path]] = None,
+    ) -> Tuple[List[Path], ExplorationReport]:
+        fname = Path("confs")
+        fname.write_text("conf of confs")
+        fname = Path("async_confs")
+        fname.write_text("conf of async_confs")
+        report = MockedExplorationReport(conv_accuracy=self.conv_accuracy)
+        return [Path("confs")], [Path("async_confs")], report
 
 
 class MockedSelectConfs(SelectConfs):
@@ -901,7 +923,7 @@ class MockedSelectConfs(SelectConfs):
         conf_selector = ip["conf_selector"]
         trajs = ip["trajs"]
         model_devis = ip["model_devis"]
-        confs, report = conf_selector.select(trajs, model_devis)
+        confs, async_confs, report = conf_selector.select(trajs, model_devis)
 
         # get lmp output. check if all trajs and model devis are files
         if len(trajs) == mocked_numb_lmp_tasks:
@@ -913,6 +935,7 @@ class MockedSelectConfs(SelectConfs):
             {
                 "report": report,
                 "confs": confs,
+                "async_confs": async_confs,
             }
         )
 

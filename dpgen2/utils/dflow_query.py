@@ -38,6 +38,7 @@ def matched_step_key(
                 re.match(f"iter-[0-9]*--{jj}-[0-9]*", kk)
                 or re.match(f"iter-[0-9]*--{jj}", kk)
                 or re.match(f"init--{jj}", kk)
+                or re.match(f"iter-[0-9]*-async--{jj}", kk)
             ):
                 ret.append(kk)
                 continue

@@ -49,6 +49,7 @@ class SelectConfs(OP):
             {
                 "report": BigParameter(ExplorationReport),
                 "confs": Artifact(List[Path]),
+                "async_confs": Artifact(List[Path]),
             }
         )
 
@@ -88,7 +89,7 @@ class SelectConfs(OP):
             trajs, model_devis, optional_outputs
         )
 
-        confs, report = conf_selector.select(
+        confs, async_confs, report = conf_selector.select(
             trajs,
             model_devis,
             type_map=type_map,
@@ -99,6 +100,7 @@ class SelectConfs(OP):
             {
                 "report": report,
                 "confs": confs,
+                "async_confs": async_confs,
             }
         )
 
