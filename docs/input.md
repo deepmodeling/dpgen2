@@ -131,6 +131,21 @@ The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stag
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
+To adapt the lower force trust level automatically, use the `adaptive-lower` convergence report:
+
+```json
+"convergence": {
+    "type": "adaptive-lower",
+    "level_f_hi": 0.5,
+    "numb_candi_f": 200,
+    "rate_candi_f": 0.01,
+    "n_checked_steps": 3,
+    "conv_tolerance": 0.005
+}
+```
+
+For each iteration, DPGEN2 sorts all force model deviations not exceeding `level_f_hi`. It marks the highest-deviation `max(numb_candi_f, rate_candi_f * nframes)` configurations as candidates and records the candidate cutoff as `level_f_lo`. The stage converges when the lower trust level changes by less than `conv_tolerance` across the last `n_checked_steps`. Virial thresholds can be adapted independently with the corresponding `_v` options.
+
 
 ### FP
 

@@ -4,6 +4,9 @@ import unittest
 from collections import (
     Counter,
 )
+from types import (
+    SimpleNamespace,
+)
 
 import mock
 import numpy as np
@@ -27,6 +30,32 @@ from dpgen2.exploration.report import (
 
 
 class TestTrajsExplorationReport(unittest.TestCase):
+    def test_adaptive_cutoff_and_convergence(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.10, 0.20, 0.30, 0.40, 0.90]),
+        )
+        report = ExplorationReportAdaptiveLower(
+            level_f_hi=0.80,
+            numb_candi_f=2,
+            rate_candi_f=0.0,
+            n_checked_steps=3,
+            conv_tolerance=0.05,
+        )
+
+        report.record(model_devi)
+
+        self.assertEqual(report.candi, {(0, 2), (0, 3)})
+        self.assertEqual(report.accur, {(0, 0), (0, 1)})
+        self.assertEqual(report.failed, [(0, 4)])
+        self.assertAlmostEqual(report.level_f_lo, 0.30)
+        history = [
+            SimpleNamespace(level_f_lo=0.36),
+            SimpleNamespace(level_f_lo=0.34),
+        ]
+        self.assertTrue(report.converged(history))
+
     def test_fv(self):
         model_devi = DeviManagerStd()
         model_devi.add(
