@@ -133,6 +133,11 @@ def lmp_template_task_group_args():
     doc_lmp_template_fname = "The file name of lammps input template"
     doc_plm_template_fname = "The file name of plumed input template"
     doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
+    doc_strict_revisions = (
+        "Whether undefined V_* revision tokens fail task generation. "
+        "Defaults to false so templates using V_* as native LAMMPS or PLUMED "
+        "identifiers are warned about and preserved."
+    )
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
     doc_extra_pair_style_args = "The extra arguments for pair_style"
     doc_pimd_bead = "Bead index for PIMD, None for non-PIMD"
@@ -165,6 +170,13 @@ def lmp_template_task_group_args():
             alias=["plm_template", "plm"],
         ),
         Argument("revisions", dict, optional=True, default={}, doc=doc_revisions),
+        Argument(
+            "strict_revisions",
+            bool,
+            optional=True,
+            default=False,
+            doc=doc_strict_revisions,
+        ),
         Argument(
             "traj_freq",
             int,
@@ -201,6 +213,11 @@ def customized_lmp_template_task_group_args():
     doc_input_lmp_tmpl_name = "The file name of lammps input template"
     doc_input_plm_tmpl_name = "The file name of plumed input template"
     doc_revisions = "The revisions. Should be a dict providing the key - list of desired values pair. Key is the word to be replaced in the templates, and it may appear in both the lammps and plumed input templates. All values in the value list will be enmerated."
+    doc_strict_revisions = (
+        "Whether undefined V_* revision tokens fail task generation. "
+        "Defaults to false for customized templates so generated V_* tokens "
+        "are warned about and preserved."
+    )
     doc_traj_freq = "The frequency of dumping configurations and thermodynamic states"
     doc_custom_shell_commands = (
         "Customized shell commands to be run for each configuration. "
@@ -237,6 +254,13 @@ def customized_lmp_template_task_group_args():
             "custom_shell_commands", list, optional=False, doc=doc_custom_shell_commands
         ),
         Argument("revisions", dict, optional=True, default={}, doc=doc_revisions),
+        Argument(
+            "strict_revisions",
+            bool,
+            optional=True,
+            default=False,
+            doc=doc_strict_revisions,
+        ),
         Argument(
             "traj_freq",
             int,

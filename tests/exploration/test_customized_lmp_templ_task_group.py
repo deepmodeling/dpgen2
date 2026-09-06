@@ -12,6 +12,9 @@ from typing import (
 )
 
 import numpy as np
+from dflow.python import (
+    FatalError,
+)
 
 try:
     from exploration.context import (
@@ -259,3 +262,47 @@ class TestLmpTemplateTaskGroupLmp(unittest.TestCase):
             * len(self.lmp_rev_mat["V_TEMP"])
             * 2,
         )
+
+    def test_empty_revisions_default_to_non_strict(self):
+        task_group = CustomizedLmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            custom_shell_commands=self.shell_cmd,
+            revisions=self.rev_empty,
+            traj_freq=self.traj_freq,
+            input_lmp_conf_name="foo.lmp",
+            input_lmp_tmpl_name=self.lmp_template_fname,
+            input_plm_tmpl_name=None,
+            input_extra_files=[self.py_script],
+            output_dir_pattern="task_*",
+            output_lmp_conf_name="bar.lmp",
+            output_lmp_tmpl_name="lmp.template",
+        )
+
+        with self.assertWarnsRegex(UserWarning, "V_NSTEPS"):
+            task_group.make_task()
+
+        self.assertFalse(task_group.strict_revisions)
+        self.assertEqual(len(task_group), len(self.confs) * 2)
+
+    def test_empty_revisions_can_opt_into_strict_mode(self):
+        task_group = CustomizedLmpTemplateTaskGroup()
+        task_group.set_conf(self.confs)
+        task_group.set_lmp(
+            self.numb_models,
+            custom_shell_commands=self.shell_cmd,
+            revisions=self.rev_empty,
+            traj_freq=self.traj_freq,
+            input_lmp_conf_name="foo.lmp",
+            input_lmp_tmpl_name=self.lmp_template_fname,
+            input_plm_tmpl_name=None,
+            input_extra_files=[self.py_script],
+            output_dir_pattern="task_*",
+            output_lmp_conf_name="bar.lmp",
+            output_lmp_tmpl_name="lmp.template",
+            strict_revisions=True,
+        )
+
+        with self.assertRaisesRegex(FatalError, "V_NSTEPS"):
+            task_group.make_task()

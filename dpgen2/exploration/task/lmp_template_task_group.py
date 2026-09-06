@@ -1,11 +1,18 @@
 import itertools
 import random
+import re
+import warnings
 from pathlib import (
     Path,
 )
 from typing import (
     List,
     Optional,
+    Set,
+)
+
+from dflow.python import (
+    FatalError,
 )
 
 from dpgen2.constants import (
@@ -49,9 +56,11 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         extra_pair_style_args: str = "",
         pimd_bead: Optional[str] = None,
         input_extra_files: Optional[List[str]] = None,
+        strict_revisions: bool = False,
     ) -> None:
         self.lmp_template = Path(lmp_template_fname).read_text().split("\n")
         self.revisions = revisions
+        self.strict_revisions = strict_revisions
         self.traj_freq = traj_freq
         self.extra_pair_style_args = extra_pair_style_args
         self.pimd_bead = pimd_bead
@@ -101,6 +110,21 @@ class LmpTemplateTaskGroup(ConfSamplingTaskGroup):
         if self.plm_set:
             templates.append(self.plm_template)
         conts = self.make_cont(templates, self.revisions)
+        # Validate: check for unreplaced V_* variables in substituted templates
+        template_raw = "\n".join(lmp_template)
+        if self.plm_set:
+            template_raw += "\n" + "\n".join(self.plm_template)
+        # Flatten all template variants (LAMMPS + PLUMED) for validation
+        all_conts = [c for c_list in conts for c in c_list]
+        try:
+            check_revisions_completeness(
+                all_conts,
+                list(self.revisions.keys()),
+                template_raw=template_raw,
+                strict=self.strict_revisions,
+            )
+        except ValueError as exc:
+            raise FatalError(str(exc)) from exc
         nconts = len(conts[0])
         for cc, ii in itertools.product(confs, range(nconts)):  # type: ignore
             if not self.plm_set:
@@ -214,7 +238,167 @@ def revise_lmp_input_plm(lmp_lines, in_plm, out_plm="output.plumed"):
 
 
 def revise_by_keys(lmp_lines, keys, values):
+    """Replace complete revision tokens without matching identifier prefixes."""
     for kk, vv in zip(keys, values):  # type: ignore
+        replacement = str(vv)
+        pattern = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(kk)}(?![A-Za-z0-9_])")
         for ii in range(len(lmp_lines)):
-            lmp_lines[ii] = lmp_lines[ii].replace(kk, str(vv))
+            lmp_lines[ii] = pattern.sub(lambda _match: replacement, lmp_lines[ii])
     return lmp_lines
+
+
+# DPGEN and DPGEN2 templates conventionally use standalone V_* tokens for
+# revisions. Native LAMMPS or PLUMED identifiers may use the same spelling;
+# strict_revisions controls whether unexpected tokens are errors or warnings.
+_REVISION_VARIABLE_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_])V_[A-Z][A-Z0-9_]*(?![A-Za-z0-9_])"
+)
+
+
+def _strip_lammps_comments(content: str) -> str:
+    """Remove unquoted LAMMPS comments while preserving quoted hash characters.
+
+    This prevents V_* patterns in comments (e.g., "# set V_PRESS later")
+    from being flagged as unreplaced variables without hiding executable
+    placeholders inside single- or double-quoted strings.
+    """
+    stripped: List[str] = []
+    for line in content.split("\n"):
+        quote: Optional[str] = None
+        escaped = False
+        kept: List[str] = []
+        for char in line:
+            if escaped:
+                kept.append(char)
+                escaped = False
+            elif char == "\\" and quote is not None:
+                kept.append(char)
+                escaped = True
+            elif char in ("'", '"'):
+                if quote == char:
+                    quote = None
+                elif quote is None:
+                    quote = char
+                kept.append(char)
+            elif char == "#" and quote is None:
+                break
+            else:
+                kept.append(char)
+        stripped.append("".join(kept))
+    return "\n".join(stripped)
+
+
+def find_unreplaced_variables(content: str) -> Set[str]:
+    """Scan text for standalone V_* tokens that may be unreplaced revisions.
+
+    Strips LAMMPS comments before scanning to avoid false positives from
+    commented-out variable references.
+
+    Parameters
+    ----------
+    content : str
+        The LAMMPS input content after revision substitution.
+
+    Returns
+    -------
+    Set[str]
+        Set of variable names (e.g. {"V_PRESS", "V_UNDEFINED"}) still present.
+    """
+    stripped = _strip_lammps_comments(content)
+    return set(_REVISION_VARIABLE_PATTERN.findall(stripped))
+
+
+def report_undefined_revision_variables(
+    variables: Set[str],
+    revision_keys: List[str],
+    strict: bool,
+) -> None:
+    """Raise for undefined tokens in strict mode, otherwise emit a warning."""
+    if not variables:
+        return
+    message = (
+        f"LAMMPS template contains undefined revision variable(s): "
+        f"{sorted(variables)}. Defined revisions: {sorted(revision_keys)}. "
+        f"Please add missing variables to 'revisions' in your exploration config, "
+        f"or remove them from the template."
+    )
+    if strict:
+        raise ValueError(message)
+    warnings.warn(
+        message + " Continuing because strict revision validation is disabled.",
+        stacklevel=3,
+    )
+
+
+def check_revisions_completeness(
+    templates_content: List[str],
+    revision_keys: List[str],
+    template_raw: str = "",
+    strict: bool = True,
+) -> None:
+    """Validate that all V_* placeholders in the template have been substituted.
+
+    This function performs three checks:
+    1. **Raw-template definition check**: Compare complete placeholder tokens with
+       the revision keys before applying substitutions.
+    2. **Post-substitution residual check**: After applying revisions, scan the output
+       for any remaining V_* variables that were not replaced. This catches typos in
+       template variables or missing keys in revisions.
+    3. **Unused key warning**: If a revision key is defined but never appears in the
+       raw template, emit a warning (possible typo in the key name).
+
+    Parameters
+    ----------
+    templates_content : List[str]
+        List of template strings after revision substitution (one per revision combo).
+    revision_keys : List[str]
+        The keys defined in the revisions dict.
+    template_raw : str
+        The raw template content before substitution (for unused key detection).
+    strict : bool
+        If true, undefined V_* tokens are errors. If false, warn and continue
+        so templates may use V_* as native LAMMPS or PLUMED identifiers.
+
+    Raises
+    ------
+    ValueError
+        If undefined V_* tokens are found and strict is true.
+
+    Warns
+    -----
+    UserWarning
+        If undefined V_* tokens are found and strict is false, or if a
+        revision key is unused.
+    """
+    revision_key_set = set(revision_keys)
+
+    # Check 1: Compare raw tokens before substitution so a shorter defined key
+    # cannot erase the prefix of a longer undefined placeholder.
+    raw_variables = find_unreplaced_variables(template_raw) if template_raw else set()
+    undefined_raw = raw_variables - revision_key_set
+    report_undefined_revision_variables(
+        undefined_raw,
+        revision_keys,
+        strict=strict,
+    )
+
+    # Check 2: Residual unreplaced variables
+    all_unreplaced: Set[str] = set()
+    for content in templates_content:
+        all_unreplaced.update(find_unreplaced_variables(content))
+
+    report_undefined_revision_variables(
+        all_unreplaced - undefined_raw,
+        revision_keys,
+        strict=strict,
+    )
+
+    # Check 3: Unused revision keys (warning only)
+    if template_raw and revision_keys:
+        for key in revision_keys:
+            if key not in raw_variables:
+                warnings.warn(
+                    f"Revision key '{key}' is defined but does not appear in the "
+                    f"LAMMPS/PLUMED template. Possible typo?",
+                    stacklevel=3,
+                )

@@ -62,6 +62,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
         output_lmp_conf_name: str = lmp_conf_name,
         output_lmp_tmpl_name: str = lmp_input_name,
         output_plm_tmpl_name: Optional[str] = None,
+        strict_revisions: bool = False,
     ) -> None:
         r"""Set lammps task.
 
@@ -99,11 +100,14 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
             Generated lmp input file name.
         output_plm_tmpl_name : str
             Generated plm input file name.
+        strict_revisions : bool
+            Whether undefined V_* revision tokens fail task generation.
 
         """
         self.numb_models = numb_models
         self.lmp_template = Path(input_lmp_tmpl_name).read_text().split("\n")
         self.revisions = revisions
+        self.strict_revisions = strict_revisions
         self.traj_freq = traj_freq
         self.has_plm = input_plm_tmpl_name is not None
         self.do_custom = (
@@ -218,6 +222,7 @@ class CustomizedLmpTemplateTaskGroup(ConfSamplingTaskGroup):
                             self.output_plm_tmpl_name if self.has_plm else None,
                             revisions=self.revisions,
                             traj_freq=self.traj_freq,
+                            strict_revisions=self.strict_revisions,
                         )
                         conf_fc = Path(self.output_lmp_conf_name).read_text()
                         lmp_tgroup.set_conf(
