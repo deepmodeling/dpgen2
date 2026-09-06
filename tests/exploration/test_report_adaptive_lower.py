@@ -27,6 +27,42 @@ from dpgen2.exploration.report import (
 
 
 class TestTrajsExplorationReport(unittest.TestCase):
+    def test_candidate_filter(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.10, 0.20, 0.30]),
+        )
+        report = ExplorationReportAdaptiveLower(
+            level_f_hi=1.0,
+            numb_candi_f=2,
+            rate_candi_f=0.0,
+        )
+        report.record(model_devi)
+        report.restrict_candidate_ids([[0, 1]])
+        self.assertEqual(report.get_candidate_ids(), [[1]])
+
+    def test_empty_cv_filter_preserves_trust_candidate_state(self):
+        model_devi = DeviManagerStd()
+        model_devi.add(
+            DeviManager.MAX_DEVI_F,
+            np.array([0.10, 0.20, 0.30]),
+        )
+        report = ExplorationReportAdaptiveLower(
+            level_f_hi=1.0,
+            numb_candi_f=2,
+            rate_candi_f=0.0,
+        )
+        report.record(model_devi)
+
+        self.assertFalse(report.no_candidate())
+        report.restrict_candidate_ids([[]])
+
+        self.assertFalse(report.no_candidate())
+        self.assertEqual(report.candidate_ratio(), 0.0)
+        self.assertEqual(report.accurate_ratio(), 1.0 / 3.0)
+        self.assertEqual(report.failed_ratio(), 0.0)
+
     def test_fv(self):
         model_devi = DeviManagerStd()
         model_devi.add(

@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 import shutil
 import textwrap
@@ -5,9 +7,15 @@ import unittest
 from pathlib import (
     Path,
 )
+from unittest.mock import (
+    patch,
+)
 
 import dpdata
 import numpy as np
+from dflow.python import (
+    FatalError,
+)
 
 # isort: off
 from .context import (
@@ -17,10 +25,12 @@ from dpgen2.exploration.render import (
     TrajRenderLammps,
 )
 from dpgen2.exploration.report import (
+    ExplorationReportTrustLevelsMax,
     ExplorationReportTrustLevelsRandom,
 )
 from dpgen2.exploration.selector import (
     ConfSelectorFrames,
+    PlumedCVFilter,
 )
 
 # isort: on
@@ -85,12 +95,104 @@ class TestConfSelectorFrames(unittest.TestCase):
         self.type_map = ["O", "H"]
 
     def tearDown(self):
-        for ii in ["foo.dump", "bar.dump", "foo.md", "bar.md"]:
+        for ii in ["foo.dump", "bar.dump", "foo.md", "bar.md", "foo.cv", "bar.cv"]:
             if Path(ii).is_file():
                 os.remove(ii)
         for ii in ["confs"]:
             if Path(ii).is_dir():
                 shutil.rmtree(ii)
+
+    def test_plumed_filter_precedes_max_selection(self):
+        plm_outputs = [Path("foo.cv"), Path("bar.cv")]
+        for output in plm_outputs:
+            output.write_text("#! FIELDS time cv\n0.0 0.5\n1.0 0.5\n2.0 1.5\n")
+        cv_filter = PlumedCVFilter(
+            regions=[{"cv": [0.0, 1.0]}],
+            sampling={"mode": "report"},
+            time_alignment={"start": 0.0, "step": 1.0},
+        )
+        conf_selector = ConfSelectorFrames(
+            TrajRenderLammps(),
+            ExplorationReportTrustLevelsMax(0.1, 0.5),
+            max_numb_sel=1,
+            plumed_cv_filter=cv_filter,
+        )
+        with patch.object(
+            cv_filter, "_load_outputs", wraps=cv_filter._load_outputs
+        ) as mocked_load:
+            confs, _ = conf_selector.select(
+                self.trajs,
+                self.model_devis,
+                self.type_map,
+                plm_outputs=plm_outputs,
+            )
+        mocked_load.assert_called_once()
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(ms[0].get_nframes(), 1)
+        self.assertAlmostEqual(ms[0]["coords"][0][0][1], 3.87, places=2)
+
+    def test_plumed_filter_requires_one_output_per_trajectory(self):
+        conf_selector = ConfSelectorFrames(
+            TrajRenderLammps(),
+            ExplorationReportTrustLevelsMax(0.1, 0.5),
+            plumed_cv_filter=PlumedCVFilter(
+                regions=[{"cv": [0.0, 1.0]}],
+                time_alignment={"start": 0.0, "step": 1.0},
+            ),
+        )
+        with self.assertRaisesRegex(FatalError, "one output per trajectory"):
+            conf_selector.select(
+                self.trajs,
+                self.model_devis,
+                self.type_map,
+                plm_outputs=[Path("foo.cv")],
+            )
+
+    def test_plumed_uniform_sampling_is_final_selection(self):
+        plm_outputs = [Path("foo.cv"), Path("bar.cv")]
+        for output in plm_outputs:
+            output.write_text("#! FIELDS time cv\n0.0 0.05\n1.0 0.45\n2.0 0.95\n")
+        conf_selector = ConfSelectorFrames(
+            TrajRenderLammps(),
+            ExplorationReportTrustLevelsMax(0.1, 0.5),
+            max_numb_sel=2,
+            plumed_cv_filter=PlumedCVFilter(
+                regions=[{"cv": [0.0, 1.0]}],
+                sampling={
+                    "mode": "uniform",
+                    "field": "cv",
+                    "n_bins": 10,
+                    "within_bin": "max_deviation",
+                },
+                time_alignment={"start": 0.0, "step": 1.0},
+            ),
+        )
+        confs, _ = conf_selector.select(
+            self.trajs,
+            self.model_devis,
+            self.type_map,
+            plm_outputs=plm_outputs,
+        )
+        ms = dpdata.MultiSystems(type_map=self.type_map)
+        ms.from_deepmd_npy(confs[0], labeled=False)
+        self.assertEqual(ms[0].get_nframes(), 2)
+        self.assertAlmostEqual(ms[0]["coords"][0][0][1], 2.87, places=2)
+        self.assertAlmostEqual(ms[0]["coords"][1][0][1], 4.87, places=2)
+        audit_csv = Path("confs/cv_selection.csv")
+        audit_json = Path("confs/cv_selection_summary.json")
+        self.assertTrue(audit_csv.is_file())
+        self.assertTrue(audit_json.is_file())
+        with audit_csv.open(newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        summary = json.loads(audit_json.read_text())
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({int(row["frame_idx"]) for row in rows}, {0, 2})
+        self.assertTrue(all(row["max_devi_f"] for row in rows))
+        self.assertTrue(all(row["cv_cv"] for row in rows))
+        self.assertEqual(summary["trust_candidates"], 6)
+        self.assertEqual(summary["cv_eligible_candidates"], 6)
+        self.assertEqual(summary["selected"], 2)
 
     def test_f_0(self):
         report = ExplorationReportTrustLevelsRandom(0.1, 0.5, conv_accuracy=0.9)

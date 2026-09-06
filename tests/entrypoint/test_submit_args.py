@@ -11,6 +11,9 @@ from pathlib import (
 
 import dpdata
 import numpy as np
+from dargs.dargs import (
+    ArgumentError,
+)
 
 # isort: off
 from .context import (
@@ -154,6 +157,12 @@ class TestArgs(unittest.TestCase):
                 "storage_client": "dflow.plugins.bohrium.TiefblueClient",
             },
         )
+
+    def test_plm_output_file_path_is_rejected_at_submit(self):
+        data = json.loads(new_str)
+        data["explore"]["config"]["plm_output_file"] = "outputs/COLVAR"
+        with self.assertRaisesRegex(ArgumentError, "must be a file name"):
+            normalize(data)
 
 
 old_str = textwrap.dedent(

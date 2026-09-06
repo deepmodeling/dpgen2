@@ -145,6 +145,190 @@ The {dargs:argument}`"stages"<explore[lmp]/stages>` defines the exploration stag
 
 The {dargs:argument}`"n_sample"<task_group[lmp-md]/n_sample>` tells the number of confgiruations randomly sampled from the set picked by {dargs:argument}`"conf_idx"<task_group[lmp-md]/conf_idx>` from {dargs:argument}`"configurations"<explore[lmp]/configurations>` for each exploration task. All configurations has the equal possibility to be sampled. The default value of `"n_sample"` is `null`, in this case all picked configurations are sampled. In the example, we have 3 samples for stage 0 task group 0 and 2 thermodynamic states (NVT, T=50 and 100K), then the task group has 3x2=6 NVT DPMD tasks.
 
+#### PLUMED CV candidate filtering
+
+LAMMPS exploration candidates can be restricted to a union of named PLUMED CV
+regions after the model-deviation trust window and before final CV-space
+coverage or an explicitly configured selection policy:
+
+```json
+"explore": {
+    "config": {
+        "plm_output_file": "COLVAR"
+    },
+    "cv_filter": {
+        "regions": [
+            {"d": [0.08, 0.12]},
+            {"v": [1.8, 2.2]}
+        ],
+        "sampling": {"mode": "report"},
+        "time_alignment": {"start": 0.0, "step": 0.01}
+    }
+}
+```
+
+Each region is a mapping from a field in the PLUMED `#! FIELDS` header to a
+lower-inclusive, upper-exclusive interval. Conditions within a region are
+combined by AND and regions are combined by OR. The PLUMED input must write the
+selected fields with the same stride as `trj_freq`, for example:
+
+```plumed
+LOAD FILE=/absolute/path/ReactiveVoronoi.so
+d: DISTANCE ATOMS=1,2
+v: VORONOI_COORDINATION ...
+PRINT ARG=d,v STRIDE=10 FILE=COLVAR
+```
+
+`plm_output_file` defaults to `COLVAR`; set it explicitly when `PRINT FILE`
+uses another name. `time_alignment` is required because equal row counts alone
+cannot detect a phase offset between the trajectory and COLVAR. Set `start` and
+`step` to the times of trajectory frame 0 and one frame interval, respectively.
+
+The condition keys are exact labels from `#! FIELDS`; DPGEN2 has no reserved
+CV names such as `iondistance` or `ionization`. Labels are matched by name, not
+by their column position, so reordering `PRINT ARG=d,v` to `PRINT ARG=v,d`
+does not change a correctly named filter. Semantic PLUMED labels are therefore
+safer than numeric column references.
+
+For a single CV, keep only that condition. Omitting `sampling` then selects
+uniformly across 10 equal-width bins by default:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "target_window",
+            "conditions": {"reaction_coordinate": [0.2, 2.0]}
+        }
+    ],
+    "time_alignment": {"start": 0.0, "step": 0.01}
+}
+```
+
+Represent disjoint intervals as separate named regions. For example,
+`[0.2, 2.0)` and `[3.0, 4.0)` of the same CV are a union because regions are
+ORed:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "segment_1",
+            "conditions": {"reaction_coordinate": [0.2, 2.0]}
+        },
+        {
+            "name": "segment_2",
+            "conditions": {"reaction_coordinate": [3.0, 4.0]}
+        }
+    ],
+    "time_alignment": {"start": 0.0, "step": 0.01}
+}
+```
+
+To apply another CV as an AND constraint, repeat it inside each segment's
+`conditions`. Keeping segments as regions also gives every interval its own
+name, population, selected count, and audit provenance.
+
+`LOAD` is only needed for CVs that are not built into the active PLUMED. Build
+such a plugin with that same PLUMED installation (for example, `plumed mklib
+ReactiveVoronoi.cpp`); shared libraries from a different compiler or PLUMED
+build may be ABI-incompatible.
+
+The region bounds use the units written to `COLVAR` (PLUMED's default length
+unit is nm). The filter fails if the file, field, finite values, strictly
+increasing `time`, or row-to-trajectory alignment is invalid. Model-deviation
+trust levels are applied first, followed by the CV regions and then the existing
+candidate limit and selection policy.
+
+By default, DPGEN2 prevents candidates from clustering where the trajectory
+spends most of its time. If all regions share one CV field, it uses 10
+equal-width bins along that CV. If they share two CV fields, it uses a 10 by 10
+grid. In both cases it covers separated non-empty bins or cells and selects the
+largest force model deviation within each one. An explicit policy can override
+these defaults:
+
+```json
+"cv_filter": {
+    "regions": [
+        {"d": [0.08, 0.12]},
+        {"d": [0.16, 0.24], "v": [1.8, 2.2]}
+    ],
+    "sampling": {
+        "mode": "uniform",
+        "field": "d",
+        "n_bins": 10,
+        "within_bin": "max_deviation",
+        "seed": 20260815
+    },
+    "time_alignment": {"start": 0.0, "step": 0.01}
+}
+```
+
+`uniform` divides the configured interval for `field` in each region into
+equal-width bins. Regions receive a balanced share of the FP task limit and
+the selected non-empty bins span the available interval. `within_bin` is
+either `random` or `max_deviation`; `seed` makes random choices reproducible.
+Every region must bound the primary `field`; its other CVs remain AND
+constraints. Use `{"mode": "random", "seed": 20260815}` for reproducible
+candidate-frame random selection after the CV filter; this follows the
+trajectory's CV density and can therefore cluster in a highly populated CV
+region. Use `{"mode": "report"}` to retain the
+convergence report's original random or maximum-deviation selection. If regions
+do not share exactly one or two CV fields, sampling must be specified because
+DPGEN2 cannot infer an unambiguous coverage space.
+
+For two-CV coverage and auditable reaction windows, regions may also have
+names and weights:
+
+```json
+"cv_filter": {
+    "regions": [
+        {
+            "name": "incipient_contact",
+            "conditions": {
+                "iondistance": [0.2, 2.0],
+                "ionization": [0.2, 2.0]
+            }
+        },
+        {
+            "name": "separated",
+            "conditions": {
+                "iondistance": [2.0, 10.0],
+                "ionization": [0.2, 2.0]
+            },
+            "weight": 1.0
+        }
+    ],
+    "sampling": {
+        "mode": "grid",
+        "grid": {"iondistance": 8, "ionization": 4},
+        "within_bin": "max_deviation",
+        "seed": 20260815,
+        "min_frame_gap": 5
+    },
+    "time_alignment": {
+        "start": 0.0,
+        "step": 0.01,
+        "atol": 1e-6
+    }
+}
+```
+
+`grid` currently requires exactly two CV fields, both bounded by every region.
+It allocates the candidate limit across regions (using `weight` when supplied),
+covers separated non-empty cells before adding extra frames, and then uses
+`within_bin` inside each cell. `min_frame_gap` is a minimum frame-index
+separation within each trajectory. A spacing constraint may leave the result
+underfilled; DPGEN2 reports this instead of silently relaxing the constraint.
+`time_alignment` verifies `time = start + frame * step` with an absolute
+tolerance of `1e-6` by default. Increase `atol` explicitly when a coarse PLUMED
+`FMT` rounds time more strongly.
+
+When a CV filter is active, the selected DeepMD data directory contains
+`cv_selection.csv` and `cv_selection_summary.json`. They record trajectory and
+frame IDs, time, maximum force model deviation, CV values, matching regions,
+grid cells, population counts, spacing rejections, and any underfilled quota.
+
 
 ### FP
 

@@ -21,6 +21,9 @@ from dargs import (
     Variant,
     dargs,
 )
+from dargs.dargs import (
+    ArgumentError,
+)
 from dflow.python import (
     OP,
     OPIO,
@@ -118,16 +121,25 @@ class RunLmp(OP):
             On the failure of LAMMPS execution. Handle different failure cases? e.g. loss atoms.
         """
         config = ip["config"] if ip["config"] is not None else {}
-        config = RunLmp.normalize_config(config)
+        try:
+            config = RunLmp.normalize_config(config)
+        except ArgumentError as exc:
+            raise FatalError(f"invalid LAMMPS configuration: {exc}") from exc
         command = config["command"]
         teacher_model: Optional[BinaryFileInput] = config["teacher_model_path"]
         shuffle_models: Optional[bool] = config["shuffle_models"]
+        plm_output_file = config["plm_output_file"]
         task_name = ip["task_name"]
         task_path = ip["task_path"]
         models = ip["models"]
         # input_files = [lmp_conf_name, lmp_input_name]
         # input_files = [(Path(task_path) / ii).resolve() for ii in input_files]
         input_files = [ii.resolve() for ii in Path(task_path).iterdir()]
+        if plm_output_file in {ii.name for ii in input_files}:
+            raise FatalError(
+                f"PLUMED output file {plm_output_file!r} collides with a staged "
+                "LAMMPS input file"
+            )
         model_files = [Path(ii).resolve() for ii in models]
         work_dir = Path(task_name)
 
@@ -140,7 +152,33 @@ class RunLmp(OP):
             teacher_model.save_as_file(teacher_model_file)
             model_files = [Path(teacher_model_file).resolve()] + model_files
 
+        generated_names = {
+            lmp_log_name,
+            lmp_model_devi_name,
+            lmp_traj_name,
+            plm_output_name,
+            "job.json",
+        }
+        for idx in range(len(model_files)):
+            generated_names.add(model_name_pattern % idx)
+            generated_names.add(pytorch_model_name_pattern % idx)
+        if plm_output_file in generated_names:
+            raise FatalError(
+                f"PLUMED output file {plm_output_file!r} collides with a generated "
+                "LAMMPS, PLUMED, or model file"
+            )
+
         with set_directory(work_dir):
+            # Remove a pre-existing output before creating any task links. This
+            # prevents stale CV data from surviving a retried task.
+            plm_output_path = Path(plm_output_file)
+            if plm_output_path.is_file() or plm_output_path.is_symlink():
+                plm_output_path.unlink()
+            elif plm_output_path.exists():
+                raise FatalError(
+                    f"PLUMED output path {plm_output_file!r} is not a file"
+                )
+
             # link input files
             for ii in input_files:
                 iname = ii.name
@@ -206,8 +244,8 @@ class RunLmp(OP):
             "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (
-            {"plm_output": work_dir / plm_output_name}
-            if (work_dir / plm_output_name).is_file()
+            {"plm_output": work_dir / plm_output_file}
+            if (work_dir / plm_output_file).is_file()
             else {}
         )
         ret_dict.update(plm_output)
@@ -231,6 +269,10 @@ class RunLmp(OP):
         doc_head = "Select a head from multitask"
         doc_use_ele_temp = "Whether to use electronic temperature, 0 for no, 1 for frame temperature, and 2 for atomic temperature"
         doc_use_hdf5 = "Use HDF5 to store trajs and model_devis"
+        doc_plm_output_file = (
+            "PLUMED CV output artifact to collect. It must match the FILE used "
+            "by PLUMED PRINT and defaults to COLVAR."
+        )
         doc_extra_output_files = "Extra output file names, support wildcards"
         return [
             Argument("command", str, optional=True, default="lmp", doc=doc_lmp_cmd),
@@ -261,6 +303,16 @@ class RunLmp(OP):
                 optional=True,
                 default=False,
                 doc=doc_use_hdf5,
+            ),
+            Argument(
+                "plm_output_file",
+                str,
+                optional=True,
+                default="COLVAR",
+                extra_check=lambda value: value not in {"", ".", ".."}
+                and Path(value).name == value,
+                extra_check_errmsg="must be a file name, not a path",
+                doc=doc_plm_output_file,
             ),
             Argument(
                 "extra_output_files",

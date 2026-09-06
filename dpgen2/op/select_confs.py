@@ -40,6 +40,7 @@ class SelectConfs(OP):
                 "trajs": Artifact(Union[List[Path], HDF5Datasets]),
                 "model_devis": Artifact(Union[List[Path], HDF5Datasets]),
                 "optional_outputs": Artifact(List[Path], optional=True),
+                "plm_outputs": Artifact(List[Path], optional=True),
             }
         )
 
@@ -84,6 +85,8 @@ class SelectConfs(OP):
         trajs = ip["trajs"]
         model_devis = ip["model_devis"]
         optional_outputs = ip["optional_outputs"]
+        plm_outputs = ip["plm_outputs"]
+        plm_outputs = SelectConfs.validate_plm_outputs(trajs, model_devis, plm_outputs)
         trajs, model_devis, optional_outputs = SelectConfs.validate_trajs(
             trajs, model_devis, optional_outputs
         )
@@ -93,6 +96,7 @@ class SelectConfs(OP):
             model_devis,
             type_map=type_map,
             optional_outputs=optional_outputs,
+            plm_outputs=plm_outputs,
         )
 
         return OPIO(
@@ -144,3 +148,20 @@ class SelectConfs(OP):
             else:
                 raise FatalError(f"trajs frame is {tt} while model_devis frame is {mm}")
         return rett, retm, reto
+
+    @staticmethod
+    def validate_plm_outputs(trajs, model_devis, plm_outputs=None):
+        if plm_outputs is None:
+            return None
+        if len(trajs) != len(plm_outputs):
+            raise FatalError("length of trajs list is not equal to the plm_output list")
+        ret = []
+        for traj, model_devi, plm_output in zip(trajs, model_devis, plm_outputs):
+            if traj is None and model_devi is None:
+                if plm_output is not None:
+                    raise FatalError(
+                        f"trajs frame is {traj} while plm_outputs frame is {plm_output}"
+                    )
+            elif traj is not None and model_devi is not None:
+                ret.append(plm_output)
+        return ret

@@ -269,6 +269,9 @@ def _block_cl(
             "optional_outputs": prep_run_explore.outputs.artifacts["optional_outputs"]
             if "optional_outputs" in prep_run_explore.outputs.artifacts
             else None,
+            "plm_outputs": prep_run_explore.outputs.artifacts["plm_output"]
+            if "plm_output" in prep_run_explore.outputs.artifacts
+            else None,
         },
         key=step_keys["select-confs"],
         executor=select_confs_executor,

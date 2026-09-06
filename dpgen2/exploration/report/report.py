@@ -65,10 +65,18 @@ class ExplorationReport(ABC):
         r"""If no candidate configuration is found"""
         pass
 
+    def restrict_candidate_ids(
+        self,
+        allowed_ids: List[List[int]],
+    ) -> None:
+        r"""Restrict model-deviation candidates before sampling."""
+        raise NotImplementedError
+
     @abstractmethod
     def get_candidate_ids(
         self,
         max_nframes: Optional[int] = None,
+        clear: bool = True,
     ) -> List[List[int]]:
         r"""Get indexes of candidate configurations
 
@@ -76,6 +84,8 @@ class ExplorationReport(ABC):
         ----------
         max_nframes
             The maximal number of frames of candidates.
+        clear
+            Clear frame-level report data after selection.
 
         Returns
         -------

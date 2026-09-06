@@ -13,6 +13,9 @@ from .distance_conf_filter import (
     BoxSkewnessConfFilter,
     DistanceConfFilter,
 )
+from .plumed_cv_filter import (
+    PlumedCVFilter,
+)
 
 conf_filter_styles = {
     "distance": DistanceConfFilter,

@@ -20,6 +20,7 @@ from dpgen2.exploration.report import (
     conv_styles,
 )
 from dpgen2.exploration.selector import (
+    PlumedCVFilter,
     conf_filter_styles,
 )
 from dpgen2.fp import (
@@ -212,6 +213,15 @@ def lmp_args():
         "Each task group is described in :ref:`the task group definition<task_group_sec>` "
     )
     doc_filters = "A list of configuration filters"
+    doc_cv_filter = (
+        "Optional PLUMED CV candidate filter. A region may be a field-to-"
+        "[lower, upper] mapping or a named conditions mapping; regions are "
+        "combined by OR. Field names are exact PLUMED FIELDS labels and are "
+        "matched independently of column order. By default, one or two common "
+        "CVs are covered uniformly. Sampling also supports explicit random, "
+        "uniform, grid, or report modes, with optional frame spacing. Explicit "
+        "time alignment is required to bind COLVAR rows to trajectory frames."
+    )
 
     return [
         Argument(
@@ -258,6 +268,14 @@ def lmp_args():
             optional=True,
             default=[],
             doc=doc_filters,
+        ),
+        Argument(
+            "cv_filter",
+            dict,
+            PlumedCVFilter.args(),
+            optional=True,
+            default=None,
+            doc=doc_cv_filter,
         ),
     ]
 

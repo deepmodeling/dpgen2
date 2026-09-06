@@ -138,14 +138,18 @@ class ExplorationReportTrustLevels(ExplorationReport):
         assert len(self.traj_fail) == ntraj
         self.model_devi = model_devi
         self._no_candidate = sum([len(ii) for ii in self.traj_cand]) == 0
+        self._update_ratios()
+
+    def _update_ratios(self) -> None:
+        nframes = float(sum(self.traj_nframes))
         self._failed_ratio = float(sum([len(ii) for ii in self.traj_fail])) / float(
-            sum(self.traj_nframes)
+            nframes
         )
         self._accurate_ratio = float(sum([len(ii) for ii in self.traj_accu])) / float(
-            sum(self.traj_nframes)
+            nframes
         )
         self._candidate_ratio = float(sum([len(ii) for ii in self.traj_cand])) / float(
-            sum(self.traj_nframes)
+            nframes
         )
 
     def _get_indexes(
@@ -235,6 +239,18 @@ class ExplorationReportTrustLevels(ExplorationReport):
 
     def no_candidate(self) -> bool:
         return self._no_candidate
+
+    def restrict_candidate_ids(
+        self,
+        allowed_ids: List[List[int]],
+    ) -> None:
+        if len(allowed_ids) != len(self.traj_cand):
+            raise FatalError("candidate filter and trajectories have different lengths")
+        self.traj_cand = [
+            candidates & set(allowed)
+            for candidates, allowed in zip(self.traj_cand, allowed_ids)
+        ]
+        self._update_ratios()
 
     @abstractmethod
     def get_candidate_ids(
