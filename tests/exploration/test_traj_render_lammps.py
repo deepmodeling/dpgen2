@@ -1,6 +1,9 @@
 import json
 import os
 import unittest
+from pathlib import (
+    Path,
+)
 
 import dpdata
 import numpy as np
@@ -15,6 +18,16 @@ from dpgen2.exploration.render import TrajRenderLammps
 
 
 class TestTrajRenderLammps(unittest.TestCase):
+    def test_rejects_non_finite_model_deviation(self):
+        model_devi = Path("model_devi.out")
+        model_devi.write_text("0 0.1 0.0 0.0 0.2 0.0 0.0\n1 0.2 0.0 0.0 nan 0.0 0.0\n")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"Non-finite model-deviation value.*row 2 \(max_devi_f\)",
+        ):
+            TrajRenderLammps().get_model_devi([model_devi])
+
     def test_use_ele_temp_1(self):
         with open("job.json", "w") as f:
             json.dump({"ele_temp": 6.6}, f)
@@ -58,5 +71,6 @@ class TestTrajRenderLammps(unittest.TestCase):
         np.testing.assert_array_almost_equal(system.data["aparam"], np.array([[[6.6]]]))
 
     def tearDown(self):
-        if os.path.exists("job.json"):
-            os.remove("job.json")
+        for filename in ("job.json", "model_devi.out"):
+            if os.path.exists(filename):
+                os.remove(filename)

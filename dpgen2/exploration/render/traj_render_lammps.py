@@ -68,6 +68,28 @@ class TrajRenderLammps(TrajRender):
         ):  # In case model-devi.out is 1-dimensional
             dd = dd.reshape((1, len(dd)))  # type: ignore
 
+        # A NaN or infinity would otherwise reach the report and scheduler, where
+        # comparisons silently produce invalid trust levels. Fail at the artifact
+        # boundary so users can inspect the corresponding LAMMPS task directly.
+        deviation_names = (
+            DeviManager.MAX_DEVI_V,
+            DeviManager.MIN_DEVI_V,
+            DeviManager.AVG_DEVI_V,
+            DeviManager.MAX_DEVI_F,
+            DeviManager.MIN_DEVI_F,
+            DeviManager.AVG_DEVI_F,
+        )
+        invalid = np.argwhere(~np.isfinite(dd[:, 1:7]))
+        if invalid.size:
+            locations = ", ".join(
+                f"row {row + 1} ({deviation_names[column]})" for row, column in invalid
+            )
+            raise ValueError(
+                f"Non-finite model-deviation value in {fname}: {locations}. "
+                "Inspect the LAMMPS/DeePMD task output before scheduling the "
+                "next exploration iteration."
+            )
+
         model_devi.add(DeviManager.MAX_DEVI_V, dd[:, 1])  # type: ignore
         model_devi.add(DeviManager.MIN_DEVI_V, dd[:, 2])  # type: ignore
         model_devi.add(DeviManager.AVG_DEVI_V, dd[:, 3])  # type: ignore
