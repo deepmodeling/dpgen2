@@ -56,6 +56,26 @@ template_script_hybrid = {
     },
 }
 
+template_script_nvnmd_v0 = {
+    "nvnmd": {"version": 0, "seed": 1},
+    "training": {
+        "systems": [],
+        "stop_batch": 2000,
+        "batch_size": "auto",
+        "seed": 1,
+    },
+}
+
+template_script_nvnmd_v1 = {
+    "nvnmd": {"version": 1, "seed": 1},
+    "training": {
+        "systems": [],
+        "stop_batch": 2000,
+        "batch_size": "auto",
+        "seed": 1,
+    },
+}
+
 
 class faked_rg:
     faked_random = -1
@@ -161,6 +181,48 @@ class TestPrepDPTrain(unittest.TestCase):
             self.assertEqual(jdata["model"]["fitting_net"]["seed"], 4 * ii + 1)
             self.assertEqual(jdata["training"]["seed"], 4 * ii + 2)
 
+    def test_template_nvnmd_v1(self):
+        ip = OPIO(
+            {
+                "template_script": template_script_nvnmd_v1,
+                "numb_models": self.numb_models,
+            }
+        )
+
+        faked_rg.faked_random = -1
+        with mock.patch("random.randrange", faked_rg.randrange):
+            op = self.ptrain.execute(ip)
+
+        self._check_output_dir_and_file_exist(op, self.numb_models)
+
+        for ii in range(self.numb_models):
+            with open(Path(train_task_pattern % ii) / train_script_name) as fp:
+                jdata = json.load(fp)
+                self.assertEqual(jdata["nvnmd"]["version"], 1)
+                self.assertEqual(jdata["nvnmd"]["seed"], 2 * ii + 0)
+                self.assertEqual(jdata["training"]["seed"], 2 * ii + 1)
+
+    def test_template_nvnmd_v0(self):
+        ip = OPIO(
+            {
+                "template_script": template_script_nvnmd_v0,
+                "numb_models": self.numb_models,
+            }
+        )
+
+        faked_rg.faked_random = -1
+        with mock.patch("random.randrange", faked_rg.randrange):
+            op = self.ptrain.execute(ip)
+
+        self._check_output_dir_and_file_exist(op, self.numb_models)
+
+        for ii in range(self.numb_models):
+            with open(Path(train_task_pattern % ii) / train_script_name) as fp:
+                jdata = json.load(fp)
+                self.assertEqual(jdata["nvnmd"]["version"], 0)
+                self.assertEqual(jdata["nvnmd"]["seed"], 2 * ii + 0)
+                self.assertEqual(jdata["training"]["seed"], 2 * ii + 1)
+
     def test_template_raise_wrong_list_length(self):
         ip = OPIO(
             {
@@ -168,6 +230,8 @@ class TestPrepDPTrain(unittest.TestCase):
                     template_script_hybrid,
                     template_script_hybrid,
                     template_script_se_e2_a,
+                    template_script_nvnmd_v1,
+                    template_script_nvnmd_v0,
                 ],
                 "numb_models": self.numb_models,
             }

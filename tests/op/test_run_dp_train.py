@@ -131,6 +131,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "auto_prob": "prob_sys_size",
                 },
                 "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
             },
             "learning_rate": {
                 "start_lr": 1.0,
@@ -157,6 +158,7 @@ class TestRunDPTrain(unittest.TestCase):
                     "auto_prob": "prob_sys_size; 0:4:0.9; 4:7:0.1",
                 },
                 "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
                 "numb_steps": 400000,
             },
             "learning_rate": {
@@ -196,6 +198,7 @@ class TestRunDPTrain(unittest.TestCase):
                 "batch_size": "auto",
                 "auto_prob_style": "prob_sys_size",
                 "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
             },
             "learning_rate": {
                 "start_lr": 1.0,
@@ -220,6 +223,7 @@ class TestRunDPTrain(unittest.TestCase):
                 "batch_size": "auto",
                 "auto_prob_style": "prob_sys_size; 0:4:0.9; 4:7:0.1",
                 "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
                 "stop_batch": 400000,
             },
             "learning_rate": {
@@ -912,6 +916,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
                     "auto_prob": "prob_sys_size",
                 },
                 "disp_file": "lcurve.out",
+                "save_ckpt": "model.ckpt",
             },
             "learning_rate": {
                 "start_lr": 1.0,
