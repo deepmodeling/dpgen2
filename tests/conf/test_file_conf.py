@@ -105,6 +105,29 @@ ofc2 = (
     + "Atoms # atomic\n\n     1      2    0.0000000000    0.0000000000    0.0000000000\n"
 )
 
+abacus_stru = """ATOMIC_SPECIES
+Si 28.085 Si.upf
+
+NUMERICAL_ORBITAL
+Si.orb
+
+LATTICE_CONSTANT
+1.0
+
+LATTICE_VECTORS
+10.0 0.0 0.0
+0.0 10.0 0.0
+0.0 0.0 10.0
+
+ATOMIC_POSITIONS
+Cartesian
+
+Si
+0.0
+1
+1.0 2.0 3.0 1 1 1 mag 0.0
+"""
+
 
 class TestFileConfGenerator(unittest.TestCase):
     def setUp(self):
@@ -205,6 +228,20 @@ class TestFileConfGenerator(unittest.TestCase):
 
 
 class TestFileConfGeneratorContent(unittest.TestCase):
+    def test_abacus_spin_metadata_is_not_written_to_atomic_lammps_data(self):
+        stru = Path("STRU")
+        stru.write_text(abacus_stru)
+        self.addCleanup(stru.unlink, missing_ok=True)
+
+        content = FileConfGenerator(str(stru), fmt="abacus/stru").get_file_content(
+            type_map=["Si"]
+        )[0]
+        atom_section = content.split("Atoms # atomic", maxsplit=1)[1]
+        atom_line = next(line for line in atom_section.splitlines() if line.strip())
+
+        # Atomic style accepts only ID, type, and xyz coordinates.
+        self.assertEqual(len(atom_line.split()), 5)
+
     def test_list_1(self):
         f0 = Path("f0.POSCAR")
         f1 = Path("f1.POSCAR")

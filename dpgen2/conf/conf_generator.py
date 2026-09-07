@@ -59,9 +59,17 @@ class ConfGenerator(ABC):
         for ii in range(len(ms)):
             ss = ms[ii]
             for jj in range(ss.get_nframes()):
+                frame = ss[jj]
+                if fmt in {"lmp", "lammps/lmp"}:
+                    # Exploration inputs always declare ``atom_style atomic``.
+                    # dpdata serializes ABACUS magnetic moments as four extra
+                    # atom columns, which belong to LAMMPS's spin atom style and
+                    # make the resulting atomic-style data file unreadable.
+                    # Remove them only from this per-frame export copy.
+                    frame.data.pop("spins", None)
                 with tempfile.NamedTemporaryFile() as ft:
                     tf = Path(ft.name)
-                    ss[jj].to(fmt, tf)
+                    frame.to(fmt, tf)
                     ret.append(tf.read_text())
         return ret
 
