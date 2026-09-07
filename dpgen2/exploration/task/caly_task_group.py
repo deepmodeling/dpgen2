@@ -144,12 +144,19 @@ class CalyTaskGroup(ExplorationTaskGroup):
             self.atomic_number = [atomic_symbols.index(i) for i in self.name_of_atoms]
         else:
             self.name_of_atoms = name_of_atoms
-            self.atomic_number = atomic_number
+            self.atomic_number = (
+                [atomic_number_map[name] for name in self.name_of_atoms]
+                if atomic_number is None
+                else atomic_number
+            )
 
-        if isinstance(distance_of_ions, dict):
+        if distance_of_ions is None or isinstance(distance_of_ions, dict):
+            # Generate a complete distance matrix from the maintained
+            # covalent-radius table when the optional matrix is omitted.
             updated_table = copy.deepcopy(covalent_radii)
-            for key, value in distance_of_ions.items():
-                updated_table[atomic_number_map[key]] = value
+            if isinstance(distance_of_ions, dict):
+                for key, value in distance_of_ions.items():
+                    updated_table[atomic_number_map[key]] = value
 
             temp_distance_mtx = np.zeros((numb_of_species, numb_of_species))
             for i in range(numb_of_species):

@@ -137,3 +137,18 @@ MaxNumAtom = 100
     def test_caly_task_group(self):
         tgroup = make_calypso_task_group_from_config(self.config)
         self.assertTrue(isinstance(tgroup, CalyTaskGroup))
+
+    def test_infers_optional_atomic_numbers_and_distances(self):
+        """Generate CALYPSO-required values when optional fields are absent."""
+        config = {
+            "name_of_atoms": ["Li", "La"],
+            "numb_of_atoms": [10, 10],
+            "numb_of_species": 2,
+        }
+
+        task_group = make_calypso_task_group_from_config(config)
+
+        self.assertEqual(task_group.atomic_number, [3, 57])
+        self.assertEqual(task_group.distance_of_ions.shape, (2, 2))
+        self.assertTrue(np.all(task_group.distance_of_ions > 0))
+        self.assertEqual(len(task_group.make_task()), 1)
