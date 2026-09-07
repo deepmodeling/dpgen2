@@ -137,3 +137,15 @@ MaxNumAtom = 100
     def test_caly_task_group(self):
         tgroup = make_calypso_task_group_from_config(self.config)
         self.assertTrue(isinstance(tgroup, CalyTaskGroup))
+
+    def test_rejects_impossible_random_atom_choices(self):
+        """Fail before random selection when unique choices are impossible."""
+        config = {
+            "name_of_atoms": [["Li"], ["Li"]],
+            "numb_of_atoms": [10, 10],
+            "numb_of_species": 2,
+            "distance_of_ions": [[1.0, 1.0], [1.0, 1.0]],
+        }
+
+        with self.assertRaisesRegex(ValueError, "intersection"):
+            make_calypso_task_group_from_config(config)

@@ -122,7 +122,7 @@ class CalyTaskGroup(ExplorationTaskGroup):
             for temp in name_of_atoms[1:]:
                 overlap = overlap & set(temp)
 
-            if any(map(lambda s: (set(s) - overlap) == 0, name_of_atoms)):
+            if any(not (set(atom_choices) - overlap) for atom_choices in name_of_atoms):
                 raise ValueError(
                     f"Any sub-list should not equal with intersection, e.g. [[A,B,C], [B,C], [C]] is not allowed."
                 )
