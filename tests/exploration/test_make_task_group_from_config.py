@@ -58,6 +58,21 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
         )
         self.assertTrue(isinstance(tgroup, NPTTaskGroup))
 
+    def test_npt_preserves_explicit_conf_idx(self):
+        """Keep caller configuration indices intact during normalization."""
+        config = {
+            "type": "lmp-md",
+            "Ts": [100],
+            "conf_idx": [2],
+        }
+
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, config
+        )
+
+        self.assertTrue(isinstance(tgroup, NPTTaskGroup))
+        self.assertEqual(config["conf_idx"], [2])
+
     def test_template(self):
         tgroup = make_lmp_task_group_from_config(
             self.numb_models, self.mass_map, self.config_template

@@ -659,7 +659,8 @@ def make_lmp_task_group_from_config(
 ):
     # Work around the required conf_idx.
     # May not be a good design!!!
-    config["conf_idx"] = [] if "conf_idx" not in config else None
+    config = config.copy()
+    config.setdefault("conf_idx", [])
     config = lmp_normalize(config)
     config = config_strip_confidx(config)
     if config["type"] == "lmp-md":
