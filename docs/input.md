@@ -59,6 +59,76 @@ The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
 
+For DPA4, use the regular PyTorch training backend and deploy `.pt2` models in
+LAMMPS exploration:
+
+```json
+"train": {"type": "dp", "config": {"impl": "pytorch"}},
+"explore": {
+    "type": "lmp",
+    "config": {"model_devi_backend": "pytorch", "model_format": "pt2"}
+}
+```
+
+Put DPA4 training acceleration controls in the DeePMD training template under
+`model`, not in the DPGEN2 workflow file:
+
+```json
+"model": {
+	"type": "dpa4",
+	"use_compile": true,
+	"enable_tf32": true
+}
+```
+
+For DPA4C, both training and deployment use the PyTorch Exportable backend.
+Compression is optional:
+
+```json
+"train": {"type": "dp", "config": {"impl": "pytorch-exportable"}},
+"explore": {
+    "type": "lmp",
+    "config": {
+        "model_devi_backend": "pytorch-exportable",
+        "model_format": "pt2",
+        "dp_compress": true
+    }
+}
+```
+
+Put DPA4C training acceleration controls in the DeePMD training template file
+referenced by `train.template_script`, under `training`:
+
+```json
+"model": {"descriptor": {"type": "dpa4c"}},
+"training": {
+	"training_data": {
+		"systems": [],
+		"batch_size": "auto:512"
+	},
+	"numb_steps": 1000000,
+	"enable_compile": true,
+	"enable_tf32": true
+}
+```
+
+Do not copy the DPA4 paths `model.use_compile` or `model.enable_tf32` into a
+DPA4C template. Conversely, DPA4 does not use the DPA4C paths
+`training.enable_compile` or `training.enable_tf32`. DPGEN2 validates these
+backend-specific placements before creating the workflow, but it does not inject
+or change performance and numerical-policy settings. Therefore setting only
+`train.config.impl` is not sufficient to enable compilation: a DPA4 template
+must contain `model.use_compile: true`, while a DPA4C template must contain
+`training.enable_compile: true`. Run a bounded smoke test and inspect the
+generated `task.*/input.json` before launching a long campaign.
+
+TensorFlow remains the default when `impl` is omitted.
+For PyTorch and PyTorch Exportable checkpoints, `model_devi_backend` must match
+the training `impl`; checkpoints cannot be frozen across these backends. PT2
+export runs with `run_explore_config`, which must select hardware, the libtorch
+version, and other runtime libraries compatible with the LAMMPS exploration
+environment.
+
 
 ### Exploration
 

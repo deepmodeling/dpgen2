@@ -129,6 +129,7 @@ class TestArgs(unittest.TestCase):
         # self.assertEqual(old_data['default_training_param'], new_data['train']['template_script'])
         self.assertEqual(new_data["train"]["template_script"], "dp_input_template")
         self.assertEqual(RunDPTrain.normalize_config({}), new_data["train"]["config"])
+        self.assertEqual(new_data["train"]["config"]["impl"], "tensorflow")
         self.assertEqual(
             RunLmp.normalize_config(old_data.get("lmp_config", {})),
             new_data["explore"]["config"],

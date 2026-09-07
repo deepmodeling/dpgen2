@@ -537,6 +537,39 @@ class TestRunDPTrain(unittest.TestCase):
             self.assertDictEqual(jdata, self.expected_odict_v1)
 
     @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_pytorch_exportable(self, mocked_run):
+        mocked_run.return_value = (0, "foo\n", "")
+        config = self.config.copy()
+        config.update({"impl": "pt-expt", "init_model_policy": "no"})
+        Path(self.task_path).mkdir(exist_ok=True)
+        with open(Path(self.task_path) / train_script_name, "w") as fp:
+            json.dump(self.idict_v2, fp, indent=4)
+
+        out = RunDPTrain().execute(
+            OPIO(
+                {
+                    "config": config,
+                    "task_name": self.task_name,
+                    "task_path": Path(self.task_path),
+                    "init_model": Path(self.init_model),
+                    "init_data": [Path(ii) for ii in self.init_data],
+                    "iter_data": [Path(ii) for ii in self.iter_data],
+                }
+            )
+        )
+
+        self.assertEqual(out["model"], Path(self.task_name) / "model.ckpt.pt")
+        mocked_run.assert_called_once_with(
+            ["dp", "--pt-expt", "train", train_script_name]
+        )
+        self.assertEqual(
+            out["log"].read_text(),
+            "#=================== train std out ===================\n"
+            "foo\n"
+            "#=================== train std err ===================\n",
+        )
+
+    @patch("dpgen2.op.run_dp_train.run_command")
     def test_exec_v2(self, mocked_run):
         mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
 

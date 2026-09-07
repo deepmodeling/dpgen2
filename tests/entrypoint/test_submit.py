@@ -23,6 +23,7 @@ from dpgen2.entrypoint.submit import (
     print_list_steps,
     submit_concurrent_learning,
     update_reuse_step_scheduler,
+    validate_dpa_training_template,
 )
 from dpgen2.exploration.render import (
     TrajRenderLammps,
@@ -106,6 +107,156 @@ class MockedStep:
 
 
 class TestSubmit(unittest.TestCase):
+    def test_validate_dpa4_training_template(self):
+        validate_dpa_training_template(
+            "pytorch",
+            {"model_devi_backend": "pytorch", "model_format": "pt2"},
+            {
+                "model": {
+                    "type": "dpa4",
+                    "descriptor": {"type": "dpa4"},
+                    "use_compile": True,
+                    "enable_tf32": True,
+                },
+                "training": {},
+            },
+        )
+        with self.assertRaisesRegex(RuntimeError, "model.use_compile"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                {
+                    "model": {"type": "dpa4", "descriptor": {"type": "dpa4"}},
+                    "training": {"enable_compile": True},
+                },
+            )
+
+    def test_validate_dpa4c_training_template(self):
+        validate_dpa_training_template(
+            "pytorch-exportable",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
+            {
+                "model": {"descriptor": {"type": "dpa4c"}},
+                "training": {"enable_compile": True, "enable_tf32": True},
+            },
+        )
+        with self.assertRaisesRegex(RuntimeError, "training.enable_compile"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "descriptor": {"type": "dpa4c"},
+                        "use_compile": True,
+                    },
+                    "training": {},
+                },
+            )
+
+        with self.assertRaisesRegex(RuntimeError, "training.enable_tf32"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "descriptor": {"type": "DPA4C"},
+                        "enable_tf32": True,
+                    },
+                    "training": {"enable_compile": True},
+                },
+            )
+
+    def test_validate_dpa_training_backend_and_format(self):
+        dpa4c = {
+            "model": {"descriptor": {"type": "dpa4c"}},
+            "training": {},
+        }
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                dpa4c,
+            )
+        with self.assertRaisesRegex(RuntimeError, "requires model_format='pt2'"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pth",
+                },
+                dpa4c,
+            )
+
+    def test_validate_mixed_dpa4_and_dpa4c_branches(self):
+        with self.assertRaisesRegex(RuntimeError, "cannot mix DPA4 and DPA4C"):
+            validate_dpa_training_template(
+                "pytorch-exportable",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+                {
+                    "model": {
+                        "model_dict": {
+                            "teacher": {"descriptor": {"type": "dpa4"}},
+                            "student": {"descriptor": {"type": "dpa4c"}},
+                        }
+                    },
+                    "training": {
+                        "enable_compile": True,
+                        "enable_tf32": True,
+                    },
+                },
+            )
+
+    def test_validate_shared_dpa4c_descriptor(self):
+        template = {
+            "model": {
+                "shared_dict": {"shared_desc": {"type": "dpa4c"}},
+                "model_dict": {"student": {"descriptor": "shared_desc"}},
+            },
+            "training": {},
+        }
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                template,
+            )
+
+    def test_validate_dpa4c_model_type(self):
+        with self.assertRaisesRegex(RuntimeError, "requires impl='pytorch-exportable'"):
+            validate_dpa_training_template(
+                "pytorch",
+                {"model_devi_backend": "pytorch", "model_format": "pt2"},
+                {"model": {"type": "dpa4c"}, "training": {}},
+            )
+
+    def test_dpa4c_descriptor_takes_precedence_within_section(self):
+        validate_dpa_training_template(
+            "pytorch-exportable",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
+            {
+                "model": {
+                    "type": "dpa4",
+                    "descriptor": {"type": "dpa4c"},
+                },
+                "training": {},
+            },
+        )
+
     def test_expand_idx(self):
         ilist = ["1", "3-5", "10-20:2"]
         olist = expand_idx(ilist)
@@ -438,6 +589,27 @@ class TestSubmitCmdDist(unittest.TestCase):
         wf_config = json.loads(input_dist)
         remove_executor_if_debug(wf_config)
         submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_multiple_students_from_scratch(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        wf_config["train"].pop("student_model_path")
+        remove_executor_if_debug(wf_config)
+        submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_multiple_students_reject_single_path(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        with self.assertRaisesRegex(RuntimeError, "student_model_path or"):
+            submit_concurrent_learning(wf_config, no_submission=True)
+
+    def test_multiple_students_reject_single_uri(self):
+        wf_config = json.loads(input_dist)
+        wf_config["train"]["numb_models"] = 2
+        wf_config["train"].pop("student_model_path")
+        wf_config["train"]["student_model_uri"] = "s3://student/model"
+        with self.assertRaisesRegex(RuntimeError, "student_model_path or"):
+            submit_concurrent_learning(wf_config, no_submission=True)
 
 
 class TestSubmitCmdFinetune(unittest.TestCase):

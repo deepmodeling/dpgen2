@@ -36,12 +36,20 @@ from dpgen2.constants import (
     lmp_model_devi_name,
     lmp_traj_name,
     model_name_pattern,
+    pt2_model_name_pattern,
 )
 from dpgen2.op.run_lmp import (
+    PrepareDPModels,
     RunLmp,
+    _model_backend,
+    compress_model,
+    ensure_pt2_atom_map,
+    freeze_model,
     get_ele_temp,
     merge_pimd_files,
+    prepare_dp_models,
     set_models,
+    validate_model_backend,
 )
 from dpgen2.utils import (
     BinaryFileInput,
@@ -213,6 +221,40 @@ class TestRunLmp(unittest.TestCase):
             )
 
     @patch("dpgen2.op.run_lmp.run_command")
+    def test_pt2_enables_atom_map_before_read(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        (self.task_path / lmp_input_name).write_text(
+            "atom_style atomic\n"
+            'if "${restart} > 0" then "read_restart dpgen.restart.*" '
+            'else "read_data conf.lmp"\n'
+            "pair_style deepmd model.000.pb model.001.pb out_freq 10\n"
+        )
+        models = [self.model_path / f"model_{index}.pt2" for index in range(2)]
+        for model in models:
+            model.write_text("model")
+
+        def copy_link(source, target, target_is_directory=False):
+            shutil.copyfile(source, target)
+
+        with patch("os.symlink", side_effect=copy_link):
+            RunLmp().execute(
+                OPIO(
+                    {
+                        "config": {"command": "mylmp"},
+                        "task_name": self.task_name,
+                        "task_path": self.task_path,
+                        "models": models,
+                    }
+                )
+            )
+
+        lmp_input = (Path(self.task_name) / lmp_input_name).read_text()
+        atom_map = "atom_modify        map yes"
+        self.assertEqual(lmp_input.count(atom_map), 1)
+        self.assertLess(lmp_input.index(atom_map), lmp_input.index("read_restart"))
+        self.assertLess(lmp_input.index(atom_map), lmp_input.index("read_data"))
+
+    @patch("dpgen2.op.run_lmp.run_command")
     def test_error(self, mocked_run):
         mocked_run.side_effect = [(1, "foo\n", "")]
         op = RunLmp()
@@ -361,11 +403,158 @@ run             3000 upto
         # The number of models have to be 2 in knowledge distillation
         self.assertEqual(len(list((work_dir.glob("*.pb")))), 2)
 
+    @patch("dpgen2.op.run_lmp.random.shuffle")
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_multiple_students_with_teacher(self, mocked_run, mocked_shuffle):
+        mocked_run.return_value = (0, "foo\n", "")
+        mocked_shuffle.side_effect = lambda models: models.reverse()
+        second_model = self.model_path / "model_1.pb"
+        second_model.write_text("model1")
+
+        RunLmp().execute(
+            OPIO(
+                {
+                    "config": {
+                        "command": "mylmp",
+                        "shuffle_models": True,
+                        "teacher_model_path": self.teacher_model,
+                    },
+                    "task_name": self.task_name,
+                    "task_path": self.task_path,
+                    "models": [*self.models, second_model],
+                }
+            )
+        )
+
+        work_dir = Path(self.task_name)
+        lmp_input = (work_dir / lmp_input_name).read_text()
+        self.assertIn(
+            "pair_style deepmd model.000.pb model.002.pb model.001.pb", lmp_input
+        )
+        self.assertEqual((work_dir / "model.000.pb").read_text(), "teacher model")
+        self.assertEqual((work_dir / "model.001.pb").read_text(), "model0")
+        self.assertEqual((work_dir / "model.002.pb").read_text(), "model1")
+
 
 def swap_element(arg):
     bk = arg.copy()
     arg[1] = bk[0]
     arg[0] = bk[1]
+
+
+class TestPrepareDPModels(unittest.TestCase):
+    def setUp(self):
+        self.model_dir = Path("checkpoint_models")
+        self.model_dir.mkdir()
+        self.models = []
+        for idx in range(2):
+            model = self.model_dir / f"model.{idx}.pt"
+            model.write_text("checkpoint")
+            self.models.append(model)
+
+    def tearDown(self):
+        shutil.rmtree(self.model_dir, ignore_errors=True)
+        shutil.rmtree("prepared_models", ignore_errors=True)
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_dpa4_pt2(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        models = PrepareDPModels().execute(
+            OPIO(
+                {
+                    "config": {
+                        "model_devi_backend": "pytorch",
+                        "model_format": "pt2",
+                    },
+                    "models": self.models,
+                }
+            )
+        )["models"]
+        self.assertEqual(
+            models,
+            [
+                Path("prepared_models/model.000.pt2"),
+                Path("prepared_models/model.001.pt2"),
+            ],
+        )
+        mocked_run.assert_has_calls(
+            [
+                call(
+                    [
+                        "dp",
+                        "--pt",
+                        "freeze",
+                        "-c",
+                        str(model.resolve()),
+                        "-o",
+                        str(Path("prepared_models") / f"model.{idx:03d}.pt2"),
+                    ]
+                )
+                for idx, model in enumerate(self.models)
+            ]
+        )
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_dpa4c_compressed_pt2(self, mocked_run):
+        mocked_run.return_value = (0, "", "")
+        models = PrepareDPModels().execute(
+            OPIO(
+                {
+                    "config": {
+                        "model_devi_backend": "pt-expt",
+                        "model_format": "pt2",
+                        "dp_compress": True,
+                    },
+                    "models": self.models[:1],
+                }
+            )
+        )["models"]
+        self.assertEqual(models, [Path("prepared_models/model.000.compressed.pt2")])
+        mocked_run.assert_has_calls(
+            [
+                call(
+                    [
+                        "dp",
+                        "--pt-expt",
+                        "freeze",
+                        "-c",
+                        str(self.models[0].resolve()),
+                        "-o",
+                        str(Path("prepared_models/model.000.pt2")),
+                        "--lower-kind",
+                        "graph",
+                    ]
+                ),
+                call(
+                    [
+                        "dp",
+                        "--pt-expt",
+                        "compress",
+                        "-i",
+                        str(Path("prepared_models/model.000.pt2")),
+                        "-o",
+                        str(Path("prepared_models/model.000.compressed.pt2")),
+                    ]
+                ),
+            ]
+        )
+
+    def test_training_and_deployment_backends_must_match(self):
+        with self.assertRaisesRegex(RuntimeError, "cannot freeze a checkpoint"):
+            validate_model_backend(
+                "pytorch",
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pt2",
+                },
+            )
+        validate_model_backend(
+            "pt-expt",
+            {
+                "model_devi_backend": "pytorch-exportable",
+                "model_format": "pt2",
+            },
+        )
 
 
 class TestSetModels(unittest.TestCase):
@@ -383,6 +572,16 @@ class TestSetModels(unittest.TestCase):
         input_name.write_text(lmp_config)
         set_models(input_name, self.model_names)
         self.assertEqual(input_name.read_text(), expected_output)
+
+    def test_pt2(self):
+        lmp_config = "pair_style deepmd model.000.pb model.001.pb out_freq 10\n"
+        expected_output = "pair_style deepmd model.000.pt2 model.001.pt2 out_freq 10\n"
+        self.input_name.write_text(lmp_config)
+        set_models(
+            self.input_name,
+            [pt2_model_name_pattern % 0, pt2_model_name_pattern % 1],
+        )
+        self.assertEqual(self.input_name.read_text(), expected_output)
 
     def test_failed(self):
         lmp_config = "pair_style      deepmd model.000.pb model.001.pb out_freq 10 out_file model_devi.out model.002.pb\n"
@@ -482,3 +681,165 @@ ITEM: ATOMS id type x y z
         ]:
             if os.path.exists(f):
                 os.remove(f)
+
+
+class TestPrepareDPModelsPassthrough(unittest.TestCase):
+    def setUp(self):
+        self.model_dir = Path("_test_models")
+        self.model_dir.mkdir(exist_ok=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.model_dir, ignore_errors=True)
+        shutil.rmtree("prepared_models", ignore_errors=True)
+
+    def test_pth_passthrough(self):
+        model = self.model_dir / "model.000.pth"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "tensorflow", "model_format": "pth"}
+        )
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_pt2_passthrough(self):
+        model = self.model_dir / "model.000.pt2"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "tensorflow", "model_format": "pt2"}
+        )
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_pb_passthrough(self):
+        model = self.model_dir / "graph.000.pb"
+        model.write_text("frozen")
+        config = RunLmp.normalize_config({"model_devi_backend": "tensorflow"})
+        result = prepare_dp_models([model], config)
+        self.assertEqual(result, [model.resolve()])
+
+    def test_unsupported_extension_raises(self):
+        model = self.model_dir / "model.onnx"
+        model.write_text("bad")
+        config = RunLmp.normalize_config(
+            {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
+        with self.assertRaisesRegex(RuntimeError, "not supported"):
+            prepare_dp_models([model], config)
+
+
+class TestModelBackendValidation(unittest.TestCase):
+    def test_unsupported_backend(self):
+        with self.assertRaisesRegex(
+            RuntimeError, "Unsupported model-deviation backend"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "bogus",
+                    "model_format": "pt2",
+                    "dp_compress": False,
+                }
+            )
+
+    def test_unsupported_format(self):
+        with self.assertRaisesRegex(RuntimeError, "Unsupported model format"):
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "xyz",
+                    "dp_compress": False,
+                }
+            )
+
+    def test_pth_requires_pytorch(self):
+        with self.assertRaisesRegex(
+            RuntimeError, "pth model format requires the pytorch"
+        ):
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch-exportable",
+                    "model_format": "pth",
+                    "dp_compress": False,
+                }
+            )
+
+    def test_compress_requires_exportable_pt2(self):
+        with self.assertRaisesRegex(RuntimeError, "Compressed pt2"):
+            _model_backend(
+                {
+                    "model_devi_backend": "pytorch",
+                    "model_format": "pt2",
+                    "dp_compress": True,
+                }
+            )
+
+    def test_validate_non_pytorch_backend_skips(self):
+        validate_model_backend(
+            "tensorflow", {"model_devi_backend": "pytorch", "model_format": "pt2"}
+        )
+
+
+class TestEnsurePt2AtomMap(unittest.TestCase):
+    def setUp(self):
+        self.input_path = Path("test_input.lammps")
+
+    def tearDown(self):
+        self.input_path.unlink(missing_ok=True)
+
+    def transform(self, lines):
+        self.input_path.write_text(lines)
+        ensure_pt2_atom_map(str(self.input_path))
+        return self.input_path.read_text()
+
+    def test_map_already_present_before_read(self):
+        result = self.transform("atom_modify map yes\nread_data conf.lmp\n")
+        self.assertIn("atom_modify map yes", result)
+        self.assertEqual(result.count("atom_modify"), 1)
+
+    def test_map_inserted_before_continued_command(self):
+        lines = (
+            'if "${restart} > 0" then &\n'
+            '    "read_restart dpgen.restart.*" &\n'
+            "else &\n"
+            '    "read_data conf.lmp"\n'
+        )
+        result = self.transform(lines)
+        self.assertTrue(result.startswith("atom_modify        map yes\nif "))
+
+    def test_map_reinserted_after_clear(self):
+        result = self.transform("read_data first.lmp\nclear\nread_data second.lmp\n")
+        self.assertEqual(result.count("atom_modify        map yes"), 2)
+        self.assertIn("clear\natom_modify        map yes\nread_data second.lmp", result)
+
+    def test_map_inserted_before_create_box(self):
+        result = self.transform("region box block 0 1 0 1 0 1\ncreate_box 1 box\n")
+        self.assertLess(result.index("atom_modify"), result.index("create_box"))
+
+    def test_explicit_map_styles_are_preserved(self):
+        for map_style in ("array", "hash"):
+            with self.subTest(map_style=map_style):
+                lines = f"atom_modify map {map_style}\nread_data conf.lmp\n"
+                self.assertEqual(self.transform(lines), lines)
+
+    def test_map_after_read_raises(self):
+        self.input_path.write_text("read_data conf.lmp\natom_modify map yes\n")
+        with self.assertRaisesRegex(RuntimeError, "atom_modify map before"):
+            ensure_pt2_atom_map(str(self.input_path))
+
+    def test_no_read_command_raises(self):
+        self.input_path.write_text("atom_modify map yes\npair_style deepmd\n")
+        with self.assertRaisesRegex(RuntimeError, "create_box, read_data"):
+            ensure_pt2_atom_map(str(self.input_path))
+
+
+class TestModelExportFailure(unittest.TestCase):
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_freeze_failure_raises(self, mocked_run):
+        mocked_run.return_value = (1, "", "freeze error")
+        with self.assertRaisesRegex(FatalError, "freeze failed"):
+            freeze_model("input.pt", "output.pth", "pytorch")
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_compress_failure_raises(self, mocked_run):
+        mocked_run.return_value = (1, "", "compress error")
+        with self.assertRaisesRegex(FatalError, "compress failed"):
+            compress_model("input.pt2", "output.pt2", "pytorch-exportable")

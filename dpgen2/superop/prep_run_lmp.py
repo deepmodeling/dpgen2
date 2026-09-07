@@ -40,6 +40,9 @@ from dflow.python import (
 from dpgen2.constants import (
     lmp_index_pattern,
 )
+from dpgen2.op.run_lmp import (
+    PrepareDPModels,
+)
 from dpgen2.utils.step_config import (
     init_executor,
 )
@@ -91,9 +94,11 @@ class PrepRunLmp(Steps):
             ),
         )
 
-        self._keys = ["prep-lmp", "run-lmp"]
+        self._keys = ["prep-lmp", "prepare-models", "run-lmp"]
         self.step_keys = {}
         ii = "prep-lmp"
+        self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
+        ii = "prepare-models"
         self.step_keys[ii] = "--".join(["%s" % self.inputs.parameters["block_id"], ii])
         ii = "run-lmp"
         self.step_keys[ii] = "--".join(
@@ -148,6 +153,11 @@ def _prep_run_lmp(
     run_executor = init_executor(run_config.pop("executor"))
     template_slice_config = run_config.pop("template_slice_config", {})
 
+    prepare_models_config = deepcopy(run_config)
+    prepare_models_config.pop("continue_on_failed", None)
+    prepare_models_config.pop("continue_on_num_success", None)
+    prepare_models_config.pop("continue_on_success_ratio", None)
+
     prep_lmp = Step(
         "prep-lmp",
         template=PythonOPTemplate(
@@ -165,6 +175,26 @@ def _prep_run_lmp(
         **prep_config,
     )
     prep_run_steps.add(prep_lmp)
+
+    prepare_models = Step(
+        "prepare-models",
+        template=PythonOPTemplate(
+            PrepareDPModels,
+            output_artifact_archive={"models": None},
+            python_packages=upload_python_packages,
+            **run_template_config,
+        ),
+        parameters={
+            "config": prep_run_steps.inputs.parameters["explore_config"],
+        },
+        artifacts={
+            "models": prep_run_steps.inputs.artifacts["models"],
+        },
+        key=step_keys["prepare-models"],
+        executor=run_executor,
+        **prepare_models_config,
+    )
+    prep_run_steps.add(prepare_models)
 
     run_lmp = Step(
         "run-lmp",
@@ -193,7 +223,7 @@ def _prep_run_lmp(
         },
         artifacts={
             "task_path": prep_lmp.outputs.artifacts["task_paths"],
-            "models": prep_run_steps.inputs.artifacts["models"],
+            "models": prepare_models.outputs.artifacts["models"],
         },
         with_sequence=argo_sequence(
             argo_len(prep_lmp.outputs.parameters["task_names"]),
