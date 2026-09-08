@@ -73,3 +73,17 @@ If a workflow stopped abnormally, one may submit a new workflow with some steps 
 dpgen2 resubmit input.json WFID --reuse 0-41
 ```
 The steps of workflow WDID 0-41 (0<=id<41, note that 41 is not included) will be reused in the new workflow. The indexes of the steps are printed by `dpgen2 showkey`. In the example, all the steps before the `iter-000001--run-fp-000000` will be used in the new workflow.
+
+## Troubleshoot an `optional_parameter` KeyError
+
+`optional_parameter` is an internal parameter passed between DPGEN2 workflow operators; it is not a field users should add to the input file. A runtime `KeyError: optional_parameter` normally means the code that submitted the workflow and the DPGEN2 package inside the runtime image define different operator signatures.
+
+Use the same DPGEN2 release in both environments. During local development, the most reliable option is to upload the exact checkout used for submission:
+
+```json
+{
+  "upload_python_packages": ["/absolute/path/to/dpgen2"]
+}
+```
+
+The path must be visible on the submission machine and should contain the `dpgen2` package. For production images, install the same pinned DPGEN2 version instead. Resubmit the workflow after aligning the versions because already generated operator scripts retain the old signature.

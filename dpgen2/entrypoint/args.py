@@ -830,7 +830,11 @@ def dpgen_step_config_args(default_config):
 def submit_args(default_step_config=normalize_step_dict({})):
     doc_bohrium_config = "Configurations for the Bohrium platform."
     doc_step_configs = "Configurations for executing dflow steps"
-    doc_upload_python_packages = "Upload python package, for debug purpose"
+    doc_upload_python_packages = (
+        "Local Python package directories uploaded with every dflow Python "
+        "operator. Use this to keep the runtime DPGEN2 code identical to the "
+        "submission environment when the remote image contains another version."
+    )
     doc_inputs = "The input parameter and artifacts for dpgen2"
     doc_train = "The configuration for training"
     doc_explore = "The configuration for exploration"
