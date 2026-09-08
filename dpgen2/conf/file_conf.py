@@ -79,6 +79,12 @@ class FileConfGenerator(ConfGenerator):
         assert "deepmd/npy/mixed" == self.fmt
         ms = dpdata.MultiSystems(type_map=type_map)
         ms.from_deepmd_npy_mixed(self.files[0], fmt="deepmd/npy/mixed", labeled=False)  # type: ignore
+        if self.remove_pbc:
+            # Keep mixed-format configurations consistent with the standard
+            # file path: every reconstructed chemical system must receive the
+            # requested non-periodic cell transformation.
+            for system in ms.systems.values():
+                system.remove_pbc()
         return ms
 
     @staticmethod

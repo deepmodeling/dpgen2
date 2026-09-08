@@ -203,6 +203,22 @@ class TestFileConfGenerator(unittest.TestCase):
             np.testing.assert_almost_equal(ms[1][tt], ms1[1][tt])
         shutil.rmtree("test_mixed")
 
+    def test_deepmd_mixed_remove_pbc(self):
+        type_map = ["Cu", "Al", "Mg"]
+        ms = dpdata.MultiSystems(type_map=type_map)
+        ms.append(dpdata.System(Path(self.prefix) / "poscar.foo.0", fmt="vasp/poscar"))
+        ms.to("deepmd/npy/mixed", "test_mixed_remove_pbc")
+        self.addCleanup(shutil.rmtree, "test_mixed_remove_pbc", ignore_errors=True)
+
+        loaded = FileConfGenerator(
+            "test_mixed_remove_pbc",
+            fmt="deepmd/npy/mixed",
+            remove_pbc=True,
+        ).generate(type_map)
+
+        np.testing.assert_allclose(loaded[0]["cells"][0], np.eye(3) * 18.0)
+        np.testing.assert_allclose(loaded[0]["coords"][0, 0], np.full(3, 9.0))
+
 
 class TestFileConfGeneratorContent(unittest.TestCase):
     def test_list_1(self):
