@@ -666,8 +666,14 @@ def input_args():
 
 
 def dflow_conf_args():
-    doc_dflow_config = "The configuration passed to dflow"
-    doc_dflow_s3_config = "The S3 configuration passed to dflow"
+    doc_dflow_config = (
+        "The configuration passed to dflow. It may be null when the workflow "
+        "orchestrator runs locally in debug mode."
+    )
+    doc_dflow_s3_config = (
+        "The S3 configuration passed to dflow. It may be null for local debug "
+        "mode when artifacts remain on the submission host."
+    )
 
     return [
         Argument(

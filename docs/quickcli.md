@@ -10,6 +10,19 @@ dpgen2 submit input.json
 where `input.json` is the input script. A guide of writing the script is found [here](inputscript).
 When a workflow is submitted, a ID (WFID) of the workflow will be printed for later reference.
 
+### Run the orchestrator locally and tasks on Slurm
+
+DPGEN2 can run dflow locally while dispatching computational steps to a Slurm cluster over SSH. Start the local orchestrator with:
+
+```bash
+export DFLOW_DEBUG=1
+dpgen2 submit examples/water/input_dpgen_slurm.json
+```
+
+For this arrangement, set `bohrium_config`, `dflow_config`, and `dflow_s3_config` to `null` or omit them. Configure a `dispatcher` executor under each computational `step_configs` entry instead. Important fields include the SSH `host`, `username`, `private_key_file`, and `remote_root`, plus `machine_dict.batch_type: Slurm` and the queue/resources in `resources_dict`.
+
+The maintained `examples/water/input_dpgen_slurm.json` shows separate GPU training/exploration and CPU labeling resources. Commands, modules, container images, remote paths, and queue names remain site-specific. The submission host must be able to reach the Slurm login node and retain local dflow artifacts for the lifetime of the workflow.
+
 ## Check the convergence of a workflow
 The convergence of stages of the workflow can be checked by the `status` command. It prints the indexes of the finished stages, iterations, and the accurate, candidate and failed ratio of explored configurations of each iteration.
 ```bash

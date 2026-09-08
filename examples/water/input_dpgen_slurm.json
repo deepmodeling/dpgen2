@@ -1,11 +1,6 @@
 {
     "name": "water-dpgen",
-    "bohrium_config": {
-        "username": "",
-        "password": "",
-        "project_id": 1,
-        "_comment": "all"
-    },
+    "bohrium_config": null,
     "default_step_config": {
         "template_config": {
             "image": "",

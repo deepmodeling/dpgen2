@@ -23,6 +23,7 @@ input_files = (
     p_examples / "chno" / "input.json",
     p_examples / "water" / "input_dpgen_abacus.json",
     p_examples / "water" / "input_dpgen_cp2k.json",
+    p_examples / "water" / "input_dpgen_slurm.json",
     p_examples / "diffcsp" / "dpgen.json",
 )
 
