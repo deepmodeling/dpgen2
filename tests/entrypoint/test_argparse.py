@@ -75,6 +75,37 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(parsed.keys, ["foo", "bar", "tar"])
         self.assertEqual(parsed.prefix, "myprefix")
 
+    def test_download_by_definition(self):
+        parsed = self.parser.parse_args(
+            [
+                "download",
+                "input.json",
+                "workflow-id",
+                "--iterations",
+                "0-2",
+                "4",
+                "--step-definitions",
+                "prep-run-train/output/models",
+                "prep-run-explore/output/trajs",
+                "prep-run-fp/output/labeled_data",
+                "--prefix",
+                "results",
+                "--no-check-point",
+            ]
+        )
+
+        self.assertEqual(parsed.iterations, ["0-2", "4"])
+        self.assertEqual(
+            parsed.step_definitions,
+            [
+                "prep-run-train/output/models",
+                "prep-run-explore/output/trajs",
+                "prep-run-fp/output/labeled_data",
+            ],
+        )
+        self.assertEqual(parsed.prefix, "results")
+        self.assertFalse(parsed.no_check_point)
+
     def test_resubmit(self):
         parsed = self.parser.parse_args(
             [
