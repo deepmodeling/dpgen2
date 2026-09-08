@@ -978,7 +978,8 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         )
         self.assertDictEqual(odict, self.expected_odict_v2)
 
-    def test_exec_v2_empty_list(self):
+    @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_empty_list(self, mocked_run):
         config = self.config.copy()
         config["init_model_policy"] = "no"
 
@@ -1022,6 +1023,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
             jdata = json.load(fp)
             self.assertDictEqual(jdata, self.expected_odict_v2)
         self.assertEqual(Path(out["model"]).read_text(), "this is init model")
+        mocked_run.assert_not_called()
 
         os.remove(self.init_model)
 

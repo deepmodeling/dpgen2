@@ -52,12 +52,19 @@ This section defines how a model is trained.
 	"numb_models" : 4,
 	"config" : {},
 	"template_script" : "/path/to/the/template/input.json",
+	"init_models_paths" : [
+		"/path/to/model.000.pb",
+		"/path/to/model.001.pb",
+		"/path/to/model.002.pb",
+		"/path/to/model.003.pb"
+	],
 	"_comment" : "all"
 }
 ```
 The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i.e. calling [DeePMD-kit](https://github.com/deepmodeling/deepmd-kit) to train DP models.
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
+When {dargs:argument}`"init_models_paths" <train[dp]/init_models_paths>` supplies one model per committee member and those models were already trained on the initial dataset, DPGEN2 automatically skips the iteration-zero training command. It records the generated training script and a skip message, then passes the supplied models directly to exploration. Training resumes after labeling produces iteration data. Finetuning requested with `"do_finetune": true` is never skipped.
 
 For DPA4, use the regular PyTorch training backend and deploy `.pt2` models in
 LAMMPS exploration:

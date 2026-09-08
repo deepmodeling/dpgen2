@@ -88,7 +88,11 @@ def dp_train_args():
     doc_numb_models = "Number of models trained for evaluating the model deviation"
     doc_config = "Configuration of training"
     doc_template_script = "File names of the template training script. It can be a `List[str]`, the length of which is the same as `numb_models`. Each template script in the list is used to train a model. Can be a `str`, the models share the same template training script. "
-    doc_init_models_paths = "the paths to initial models"
+    doc_init_models_paths = (
+        "Paths to initial models. When these models already represent the "
+        "initial dataset, DPGEN2 reuses them and skips training in iteration "
+        "zero because no iteration-generated data exists yet."
+    )
     doc_init_models_uri = "The URI of initial models"
     doc_optional_files = "Optional files for training"
 
