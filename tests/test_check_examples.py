@@ -34,3 +34,15 @@ class TestExamples(unittest.TestCase):
                 with open(fn) as f:
                     jdata = json.load(f)
                 normalize(jdata)
+
+                template_scripts = jdata["train"]["template_script"]
+                if isinstance(template_scripts, str):
+                    template_scripts = [template_scripts]
+                for template_script in template_scripts:
+                    template_path = fn.parent / template_script
+                    self.assertTrue(
+                        template_path.is_file(),
+                        f"Missing training template referenced by {fn}: {template_path}",
+                    )
+                    with open(template_path) as f:
+                        json.load(f)

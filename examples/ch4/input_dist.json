@@ -129,7 +129,7 @@
             "init_model_start_pref_f": 100,
             "_comment": "all"
         },
-        "template_script": "train.json",
+        "template_script": "../train.json",
         "_comment": "all"
     },
     "fp" : {
