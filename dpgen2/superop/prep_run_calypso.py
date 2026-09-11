@@ -290,7 +290,7 @@ def _prep_run_caly(
         key="%s--run-caly-model-devi-{{item}}"
         % (prep_run_caly_steps.inputs.parameters["block_id"],),
         executor=run_executor,
-        **prep_config,
+        **run_config,
     )
     prep_run_caly_steps.add(run_caly_model_devi)
 
