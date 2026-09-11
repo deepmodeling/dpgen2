@@ -58,8 +58,11 @@ docs = [
      "dargs>=0.4.1",
 ]
 test = [
-     'fakegaussian>=0.0.3',
+    'coverage',
     'dpgui',
+    'fakegaussian>=0.0.3',
+    'mock',
+    'pytest',
 ]
 gui = [
     'dpgui',
