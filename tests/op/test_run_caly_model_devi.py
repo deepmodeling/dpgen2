@@ -271,6 +271,51 @@ ITEM: ATOMS id type x y z fx fy fz
         atoms_list_10 = parse_traj(self.traj_file_10)
         self.assertTrue(atoms_list_10 is None), self.atoms_abnormal
 
+    def test_parse_traj_supports_elements_outside_legacy_table(self):
+        """Use the shared safe-distance table for elements such as oxygen."""
+        oxygen_traj = self.work_dir / "oxygen.traj"
+        oxygen = Atoms(
+            symbols=["O", "O"],
+            scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+            cell=np.eye(3) * 10,
+        )
+        write(oxygen_traj, oxygen, format="traj")
+
+        selected = parse_traj(oxygen_traj)
+
+        self.assertIsNotNone(selected)
+        self.assertEqual(len(selected), 1)
+
+    def test_parse_traj_applies_shared_nitrogen_safe_distance(self):
+        """Keep and reject nitrogen frames on opposite sides of the limit."""
+        # The shared table gives an N-N threshold of 1.1638 Angstrom. These
+        # distances also distinguish it from the previous ASE fallback
+        # threshold of 1.1833 Angstrom.
+        accepted_traj = self.work_dir / "nitrogen-accepted.traj"
+        accepted = Atoms(
+            symbols=["N", "N"],
+            positions=[[0, 0, 0], [0, 0, 1.17]],
+            cell=np.eye(3) * 12,
+            pbc=True,
+        )
+        write(accepted_traj, accepted, format="traj")
+
+        selected = parse_traj(accepted_traj)
+
+        self.assertIsNotNone(selected)
+        self.assertEqual(len(selected), 1)
+
+        rejected_traj = self.work_dir / "nitrogen-rejected.traj"
+        rejected = accepted.copy()
+        rejected.positions[1, 2] = 1.15
+        write(rejected_traj, rejected, format="traj")
+
+        with self.assertLogs(level="WARNING") as captured:
+            selected = parse_traj(rejected_traj)
+
+        self.assertEqual(selected, [])
+        self.assertIn("All frames in CALYPSO trajectory", captured.output[0])
+
     def test_01_atoms2lmpdump(self):
         dump_str = atoms2lmpdump(self.atoms_normal_2, 1, self.type_map)
         self.assertEqual(dump_str, self.ref_dump_str)
