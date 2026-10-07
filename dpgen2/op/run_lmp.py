@@ -141,8 +141,8 @@ class RunLmp(OP):
         Any
             Output dict with components:
             - `log`: (`Artifact(Path)`) The log file of LAMMPS.
-            - `traj`: (`Artifact(Path)`) The output trajectory.
-            - `model_devi`: (`Artifact(Path)`) The model deviation. The order of recorded model deviations should be consistent with the order of frames in `traj`.
+            - `traj`: (`Artifact(Path)` or `Artifact(HDF5Datasets)`) The output trajectory. The HDF5 backend returns a one-element list containing the trajectory path for dflow serialization.
+            - `model_devi`: (`Artifact(Path)` or `Artifact(HDF5Datasets)`) The model deviation. The HDF5 backend returns a one-element list containing the numeric array. The order of recorded model deviations should be consistent with the order of frames in `traj`.
 
         Raises
         ------
@@ -289,7 +289,7 @@ class RunLmp(OP):
 
         ret_dict = {
             "log": work_dir / lmp_log_name,
-            "traj": work_dir / lmp_traj_name,
+            "traj": self.get_traj(work_dir / lmp_traj_name),
             "model_devi": self.get_model_devi(work_dir / lmp_model_devi_name),
         }
         plm_output = (
@@ -309,6 +309,10 @@ class RunLmp(OP):
 
     def get_model_devi(self, model_devi_file):
         return model_devi_file
+
+    def get_traj(self, traj_file):
+        """Return the filesystem trajectory used by the standard backend."""
+        return traj_file
 
     @staticmethod
     def lmp_args():
@@ -726,4 +730,9 @@ class RunLmpHDF5(RunLmp):
         return output_sign
 
     def get_model_devi(self, model_devi_file):
-        return np.loadtxt(model_devi_file)
+        """Return a list so dflow serializes the model-deviation dataset."""
+        return [np.loadtxt(model_devi_file)]
+
+    def get_traj(self, traj_file):
+        """Return a list of paths for dflow's HDF5 file serialization."""
+        return [traj_file]

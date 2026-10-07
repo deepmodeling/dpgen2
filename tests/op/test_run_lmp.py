@@ -5,8 +5,12 @@ import unittest
 from pathlib import (
     Path,
 )
+from tempfile import (
+    TemporaryDirectory,
+)
 
 import dpdata
+import h5py
 import numpy as np
 from dargs.dargs import (
     ArgumentError,
@@ -16,8 +20,13 @@ from dflow.python import (
     OPIO,
     Artifact,
     FatalError,
+    HDF5Datasets,
     OPIOSign,
     TransientError,
+)
+from dflow.python.utils import (
+    handle_input_artifact,
+    handle_output_artifact,
 )
 from mock import (
     call,
@@ -38,9 +47,16 @@ from dpgen2.constants import (
     model_name_pattern,
     pt2_model_name_pattern,
 )
+from dpgen2.exploration.render import (
+    TrajRenderLammps,
+)
+from dpgen2.exploration.deviation import (
+    DeviManager,
+)
 from dpgen2.op.run_lmp import (
     PrepareDPModels,
     RunLmp,
+    RunLmpHDF5,
     _model_backend,
     compress_model,
     ensure_pt2_atom_map,
@@ -300,6 +316,133 @@ class TestRunLmp(unittest.TestCase):
             (work_dir / "foo.txt").read_text().strip(),
             "Hello -i in.lammps -log log.lammps",
         )
+
+
+class TestRunLmpHDF5(unittest.TestCase):
+    trajectory = """ITEM: TIMESTEP
+0
+ITEM: NUMBER OF ATOMS
+1
+ITEM: BOX BOUNDS pp pp pp
+0 10
+0 10
+0 10
+ITEM: ATOMS id type x y z
+1 1 1 2 3
+"""
+
+    def setUp(self):
+        directory = TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.task_path = self.root / "input"
+        self.task_path.mkdir()
+        (self.task_path / lmp_conf_name).write_text("foo")
+        (self.task_path / lmp_input_name).write_text("bar")
+        self.model = self.root / "model.pb"
+        self.model.write_text("model")
+        # dflow may write output path-list parameters alongside the artifacts.
+        (self.root / "outputs/parameters").mkdir(parents=True)
+
+    def run_task(self, task_name):
+        return RunLmpHDF5().execute(
+            OPIO(
+                {
+                    "config": {"command": "mylmp"},
+                    "task_name": str(self.root / task_name),
+                    "task_path": self.task_path,
+                    "models": [self.model],
+                }
+            )
+        )
+
+    def read_artifact(self, name):
+        datasets = handle_input_artifact(
+            name,
+            Artifact(HDF5Datasets),
+            path=str(self.root / "outputs/artifacts" / name),
+        )
+        for dataset in datasets:
+            self.addCleanup(dataset.file.close)
+        return datasets
+
+    @patch("dpgen2.op.run_lmp.run_command")
+    def test_round_trip_two_tasks(self, mocked_run):
+        """Exercise real dflow serialization and downstream rendering."""
+        expected_deviations = [np.arange(7), np.arange(7) + 10]
+
+        def write_outputs(*args, **kwargs):
+            task_index = int(Path.cwd().name[-1])
+            Path(lmp_traj_name).write_text(self.trajectory)
+            np.savetxt(lmp_model_devi_name, expected_deviations[task_index][None, :])
+            return 0, "foo\n", ""
+
+        mocked_run.side_effect = write_outputs
+        output_sign = RunLmpHDF5.get_output_sign()
+        # Write in reverse order to exercise dflow's task-slice ordering too.
+        for index in (1, 0):
+            out = self.run_task(f"task_{index}")
+            for name in ("traj", "model_devi"):
+                handle_output_artifact(
+                    name,
+                    out[name],
+                    output_sign[name],
+                    slices=index,
+                    data_root=str(self.root),
+                )
+        for name in ("traj", "model_devi"):
+            files = list((self.root / "outputs/artifacts" / name).glob("*.h5"))
+            self.assertEqual(len(files), 2)
+            for filename in files:
+                with h5py.File(filename, "r") as h5:
+                    self.assertEqual(list(h5.keys()), ["0"])
+                    if name == "traj":
+                        self.assertEqual(h5["0"].attrs["type"], "file")
+                        self.assertEqual(h5["0"].attrs["dtype"], "utf-8")
+                        self.assertTrue(h5["0"].attrs["path"].endswith(lmp_traj_name))
+
+        trajs = self.read_artifact("traj")
+        model_devis = self.read_artifact("model_devi")
+        self.assertEqual(len(trajs), 2)
+        self.assertEqual(len(model_devis), 2)
+        for index in range(2):
+            self.assertEqual(trajs[index].get_data(), self.trajectory)
+            np.testing.assert_array_equal(
+                model_devis[index].get_data(), expected_deviations[index]
+            )
+        renderer = TrajRenderLammps()
+        deviations = renderer.get_model_devi(model_devis)
+        self.assertEqual(deviations.ntraj, 2)
+        np.testing.assert_array_equal(
+            deviations.get(DeviManager.MAX_DEVI_F), [[4], [14]]
+        )
+        confs = renderer.get_confs(trajs, [[0], [0]], type_map=["H"])
+        self.assertEqual(confs.get_nframes(), 2)
+
+    def test_preserves_binary_and_missing_file_handling(self):
+        """Leave file decoding and absent-file guards to dflow."""
+        path = self.root / lmp_traj_name
+        for content in (None, b"\xff\xfe\x00"):
+            with self.subTest(content=content):
+                if content is not None:
+                    path.write_bytes(content)
+                out = RunLmpHDF5().get_traj(path)
+                self.assertEqual(out, [path])
+                name = "missing" if content is None else "binary"
+                handle_output_artifact(
+                    name,
+                    out,
+                    Artifact(HDF5Datasets),
+                    slices=0,
+                    data_root=str(self.root),
+                )
+                datasets = self.read_artifact(name)
+                if content is None:
+                    self.assertEqual(len(datasets), 0)
+                else:
+                    self.assertEqual(len(datasets), 1)
+                    self.assertEqual(datasets[0].get_data(), content)
+                    self.assertEqual(datasets[0].dataset.attrs["dtype"], "binary")
 
 
 class TestRunLmpDist(unittest.TestCase):
