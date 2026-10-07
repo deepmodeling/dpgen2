@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import textwrap
 from typing import (
@@ -16,6 +15,7 @@ from dpgen2.utils.download_dpgen2_artifacts import (
 
 from .common import (
     expand_idx,
+    load_config,
 )
 from .download import (
     download,
@@ -75,7 +75,7 @@ def main_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_run.add_argument(
-        "CONFIG", help="the config file in json format defining the workflow."
+        "CONFIG", help="the workflow config file in JSON or YAML format."
     )
 
     ##########################################
@@ -86,7 +86,7 @@ def main_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_resubmit.add_argument(
-        "CONFIG", help="the config file in json format defining the workflow."
+        "CONFIG", help="the workflow config file in JSON or YAML format."
     )
     parser_resubmit.add_argument("ID", help="the ID of the existing workflow.")
     parser_resubmit.add_argument(
@@ -123,7 +123,9 @@ def main_parser() -> argparse.ArgumentParser:
         help="Print the keys of the successful DPGEN2 steps",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_showkey.add_argument("CONFIG", help="the config file in json format.")
+    parser_showkey.add_argument(
+        "CONFIG", help="the config file in JSON or YAML format."
+    )
     parser_showkey.add_argument("ID", help="the ID of the existing workflow.")
 
     ##########################################
@@ -133,7 +135,7 @@ def main_parser() -> argparse.ArgumentParser:
         help="Print the status (stage, iteration, convergence) of the  DPGEN2 workflow",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_status.add_argument("CONFIG", help="the config file in json format.")
+    parser_status.add_argument("CONFIG", help="the config file in JSON or YAML format.")
     parser_status.add_argument("ID", help="the ID of the existing workflow.")
 
     ##########################################
@@ -162,7 +164,9 @@ def main_parser() -> argparse.ArgumentParser:
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser_download.add_argument("CONFIG", help="the config file in json format.")
+    parser_download.add_argument(
+        "CONFIG", help="the config file in JSON or YAML format."
+    )
     parser_download.add_argument("ID", help="the ID of the existing workflow.")
     parser_download.add_argument(
         "-l",
@@ -211,7 +215,7 @@ def main_parser() -> argparse.ArgumentParser:
         help="Watch a DPGEN2 workflow",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_watch.add_argument("CONFIG", help="the config file in json format.")
+    parser_watch.add_argument("CONFIG", help="the config file in JSON or YAML format.")
     parser_watch.add_argument("ID", help="the ID of the existing workflow.")
     parser_watch.add_argument(
         "-k",
@@ -279,7 +283,9 @@ def main_parser() -> argparse.ArgumentParser:
         help="restart a DPGEN2 workflow (for debug mode only).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser_restart.add_argument("CONFIG", help="the config file in json format.")
+    parser_restart.add_argument(
+        "CONFIG", help="the config file in JSON or YAML format."
+    )
     parser_restart.add_argument("ID", help="the ID of the workflow.")
 
     # --version
@@ -320,14 +326,12 @@ def main():
     dict_args = vars(args)
 
     if args.command == "submit":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         submit_concurrent_learning(
             config,
         )
     elif args.command == "resubmit":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         resubmit_concurrent_learning(
             config,
@@ -338,24 +342,21 @@ def main():
             fold=args.fold,
         )
     elif args.command == "status":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         status(
             wfid,
             config,
         )
     elif args.command == "showkey":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         showkey(
             wfid,
             config,
         )
     elif args.command == "download":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         if args.list_supported is not None and args.list_supported:
             print(print_op_download_setting())
@@ -379,8 +380,7 @@ def main():
                 chk_pnt=args.no_check_point,
             )
     elif args.command == "watch":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         watch(
             wfid,
@@ -397,8 +397,7 @@ def main():
             bind_all=args.bind_all,
         )
     elif args.command == "restart":
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wf = submit_concurrent_learning(
             config,
             no_submission=True,
@@ -406,8 +405,7 @@ def main():
         wf.id = args.ID
         wf.submit()
     elif args.command in workflow_subcommands:
-        with open(args.CONFIG) as fp:
-            config = json.load(fp)
+        config = load_config(args.CONFIG)
         wfid = args.ID
         execute_workflow_subcommand(args.command, wfid, config)
     elif args.command is None:

@@ -26,6 +26,8 @@ dependencies = [
 	     'scipy',
 	     'lbg',
 	     'packaging',
+	     'pyyaml',
+
 	     'jsonpickle',
 	     'fpop',
 	     'dpgui',

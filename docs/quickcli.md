@@ -36,6 +36,8 @@ INFO:root:steps iter-000001--prep-run-train----------------------- finished
 INFO:root:steps iter-000001--prep-run-explore--------------------- finished
 ...
 ```
+Workflow configuration files may use JSON (`.json`) or YAML (`.yaml`/`.yml`). YAML is useful when comments and unquoted keys make a long configuration easier to maintain. PyYAML uses YAML 1.1 scalar rules: write scientific notation with a decimal point (`1.0e-8`, not `1e-8`), and quote strings such as `"yes"`, `"no"`, `"on"`, `"off"`, and the element symbol `"No"` so they are not interpreted as booleans.
+
 The artifacts can be downloaded on-the-fly with `-d` flag. Note that the existing files are automatically skipped if one sets `dflow_config["archive_mode"] = None`.
 
 
