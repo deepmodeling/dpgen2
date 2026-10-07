@@ -1,3 +1,4 @@
+import copy
 import itertools
 import os
 import textwrap
@@ -11,6 +12,9 @@ from typing import (
 )
 
 import numpy as np
+from dargs.dargs import (
+    ArgumentTypeError,
+)
 
 try:
     from exploration.context import (
@@ -57,12 +61,49 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
             self.numb_models, self.mass_map, self.config_npt
         )
         self.assertTrue(isinstance(tgroup, NPTTaskGroup))
+        self.assertNotIn("conf_idx", self.config_npt)
+        self.assertEqual(self.config_npt, {"type": "lmp-md", "Ts": [100]})
+
+    def test_npt_accepts_explicit_conf_idx_without_mutating_caller(self):
+        """Accept the explicit normalization key without changing the caller dict."""
+        config = {
+            "type": "lmp-md",
+            "Ts": [100],
+            "conf_idx": [2],
+        }
+
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, config
+        )
+
+        self.assertTrue(isinstance(tgroup, NPTTaskGroup))
+        self.assertEqual(config, {"type": "lmp-md", "Ts": [100], "conf_idx": [2]})
+        # This helper does not select configurations; set_conf is called later.
+        self.assertFalse(tgroup.conf_set)
+
+    def test_npt_accepts_sys_idx_alias_without_mutating_caller(self):
+        config = dict(self.config_npt, sys_idx=[2])
+        before = copy.deepcopy(config)
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, config
+        )
+        self.assertIsInstance(tgroup, NPTTaskGroup)
+        self.assertEqual(config, before)
+        self.assertFalse(tgroup.conf_set)
+
+    def test_invalid_conf_idx_does_not_mutate_caller(self):
+        config = dict(self.config_npt, conf_idx="invalid")
+        before = copy.deepcopy(config)
+        with self.assertRaises(ArgumentTypeError):
+            make_lmp_task_group_from_config(self.numb_models, self.mass_map, config)
+        self.assertEqual(config, before)
 
     def test_template(self):
         tgroup = make_lmp_task_group_from_config(
             self.numb_models, self.mass_map, self.config_template
         )
         self.assertTrue(isinstance(tgroup, LmpTemplateTaskGroup))
+        self.assertNotIn("conf_idx", self.config_template)
         self.assertFalse(tgroup.strict_revisions)
 
     def test_template_strict_revisions(self):
@@ -137,3 +178,12 @@ MaxNumAtom = 100
     def test_caly_task_group(self):
         tgroup = make_calypso_task_group_from_config(self.config)
         self.assertTrue(isinstance(tgroup, CalyTaskGroup))
+
+    def test_caly_does_not_mutate_caller(self):
+        config = dict(self.config, type="calypso")
+        before = copy.deepcopy(config)
+        tgroup = make_calypso_task_group_from_config(config)
+        self.assertIsInstance(tgroup, CalyTaskGroup)
+        self.assertEqual(config, before)
+        tgroup.name_of_atoms[0] = "Na"
+        self.assertEqual(config, before)
