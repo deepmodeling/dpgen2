@@ -382,7 +382,7 @@ def caly_task_grp_args():
             "atomic_number",
             list,
             optional=True,
-            doc="atomic number of each element.",
+            doc="Atomic number of each element. Inferred from name_of_atoms when omitted.",
         ),
         Argument(
             "numb_of_atoms",
@@ -394,7 +394,13 @@ def caly_task_grp_args():
             "distance_of_ions",
             [list, dict],
             optional=True,
-            doc="the distance matrix between different elements.",
+            doc=(
+                "Minimum interatomic distance matrix in angstrom. When omitted, "
+                "each entry is 0.7 times the sum of the two Cordero covalent radii, "
+                "rounded to two decimal places. A dict overrides radii by element "
+                "before computing the matrix. Elements without a known radius "
+                "require an explicit matrix or a radius override."
+            ),
         ),
         Argument(
             "pop_size",
