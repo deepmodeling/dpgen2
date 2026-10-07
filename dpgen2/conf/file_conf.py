@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 from pathlib import (
     Path,
@@ -28,6 +29,7 @@ class FileConfGenerator(ConfGenerator):
         fmt: str = "auto",
         prefix: Optional[str] = None,
         remove_pbc: Optional[bool] = False,
+        remove_spins: bool = False,
     ):
         if not isinstance(files, list):
             assert isinstance(files, str)
@@ -43,15 +45,25 @@ class FileConfGenerator(ConfGenerator):
             self.files += ff
         self.fmt = fmt
         self.remove_pbc = remove_pbc
+        self.remove_spins = remove_spins
 
     def generate(
         self,
         type_map,
     ) -> dpdata.MultiSystems:
         if self.fmt in ["deepmd/npy/mixed"]:
-            return self.generate_mixed(type_map)
+            ms = self.generate_mixed(type_map)
         else:
-            return self.generate_std(type_map)
+            ms = self.generate_std(type_map)
+        if self.remove_spins:
+            for system in ms:
+                if system.data.pop("spins", None) is not None:
+                    logging.warning(
+                        "Removing spin metadata from file configuration %s "
+                        "because remove_spins is enabled",
+                        system.formula,
+                    )
+        return ms
 
     def generate_std(
         self,
@@ -92,11 +104,22 @@ class FileConfGenerator(ConfGenerator):
         doc_fmt = "The format (dpdata accepted formats) of the files."
         doc_remove_pbc = "The remove the pbc of the data. shift the coords to the center of box so it can be used with lammps."
 
+        doc_remove_spins = (
+            "Remove spin metadata from loaded configurations. Enable this for "
+            "ABACUS STRU files containing magnetic moments when using LAMMPS "
+            "atom_style atomic. Leave disabled to preserve intentional spins, "
+            "for example with a custom atom_style spin template. This applies "
+            "to both generate() and all exported formats; source files are unchanged."
+        )
+
         return [
             Argument("files", [str, list], optional=False, doc=doc_files),
             Argument("prefix", str, optional=True, default=None, doc=doc_prefix),
             Argument("fmt", str, optional=True, default="auto", doc=doc_fmt),
             Argument(
                 "remove_pbc", bool, optional=True, default=False, doc=doc_remove_pbc
+            ),
+            Argument(
+                "remove_spins", bool, optional=True, default=False, doc=doc_remove_spins
             ),
         ]

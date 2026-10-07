@@ -11,6 +11,29 @@ One can contribute from three aspects:
 - [Configuration selector](#configuration-selector)
 
 
+## File configurations with magnetic moments
+
+File configurations preserve spin metadata by default. When loading an ABACUS
+STRU containing explicit `mag` values for the generated `atom_style atomic`
+LAMMPS input, opt in to discarding that metadata in the file configuration:
+
+```json
+{
+  "type": "file",
+  "files": ["STRU"],
+  "fmt": "abacus/stru",
+  "remove_spins": true
+}
+```
+
+`remove_spins` is applied while generating configurations, including every system
+loaded from `deepmd/npy/mixed`. It affects both the returned systems and exports
+in any format, and logs a warning when metadata is removed. The source files are
+not modified. Leave it disabled for intentional spin data, such as a custom
+LAMMPS template using `atom_style spin`; user templates are not restricted to
+`atom_style atomic`.
+
+
 ## Stage scheduler
 
 The stage scheduler takes an exploration report passed from the exploration scheduler as input, and tells the exploration scheduler if the exploration in the stage is converged, if not, returns a group of exploration tasks and a configuration selector that are used in the next DPGEN iteration.
