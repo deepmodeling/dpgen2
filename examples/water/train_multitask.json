@@ -1,0 +1,131 @@
+{
+  "model": {
+    "model_dict": {
+      "water_1": {
+        "descriptor": {
+          "type": "dpa2",
+          "repinit": {
+            "rcut": 6.0,
+            "rcut_smth": 0.5,
+            "nsel": 120,
+            "neuron": [
+              25,
+              50,
+              100
+            ],
+            "axis_neuron": 12,
+            "tebd_dim": 8
+          },
+          "repformer": {
+            "rcut": 4.0,
+            "rcut_smth": 3.5,
+            "nsel": 40,
+            "nlayers": 3,
+            "g1_dim": 128,
+            "g2_dim": 32
+          },
+          "seed": 1
+        },
+        "fitting_net": {
+          "neuron": [
+            240,
+            240,
+            240
+          ],
+          "resnet_dt": true,
+          "seed": 1
+        },
+        "type_map": [
+          "O",
+          "H"
+        ]
+      },
+      "water_2": {
+        "descriptor": {
+          "type": "dpa2",
+          "repinit": {
+            "rcut": 6.0,
+            "rcut_smth": 0.5,
+            "nsel": 120,
+            "neuron": [
+              25,
+              50,
+              100
+            ],
+            "axis_neuron": 12,
+            "tebd_dim": 8
+          },
+          "repformer": {
+            "rcut": 4.0,
+            "rcut_smth": 3.5,
+            "nsel": 40,
+            "nlayers": 3,
+            "g1_dim": 128,
+            "g2_dim": 32
+          },
+          "seed": 1
+        },
+        "fitting_net": {
+          "neuron": [
+            240,
+            240,
+            240
+          ],
+          "resnet_dt": true,
+          "seed": 1
+        },
+        "type_map": [
+          "O",
+          "H"
+        ]
+      }
+    }
+  },
+  "learning_rate": {
+    "type": "exp",
+    "decay_steps": 5000,
+    "start_lr": 0.0002,
+    "stop_lr": 3.51e-08
+  },
+  "training": {
+    "numb_steps": 1000,
+    "seed": 10,
+    "disp_file": "lcurve.out",
+    "disp_freq": 100,
+    "save_freq": 1000,
+    "data_dict": {
+      "water_1": {
+        "training_data": {
+          "systems": [],
+          "batch_size": "auto"
+        }
+      },
+      "water_2": {
+        "training_data": {
+          "systems": [],
+          "batch_size": "auto"
+        }
+      }
+    }
+  },
+  "loss_dict": {
+    "water_1": {
+      "type": "ener",
+      "start_pref_e": 0.02,
+      "limit_pref_e": 1,
+      "start_pref_f": 1000,
+      "limit_pref_f": 1,
+      "start_pref_v": 0,
+      "limit_pref_v": 0
+    },
+    "water_2": {
+      "type": "ener",
+      "start_pref_e": 0.02,
+      "limit_pref_e": 1,
+      "start_pref_f": 1000,
+      "limit_pref_f": 1,
+      "start_pref_v": 0,
+      "limit_pref_v": 0
+    }
+  }
+}

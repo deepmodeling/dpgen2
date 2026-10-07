@@ -1,0 +1,61 @@
+{
+  "model": {
+    "descriptor": {
+      "type": "se_e2_a",
+      "sel": [
+        16,
+        8
+      ],
+      "rcut": 6.0,
+      "rcut_smth": 0.5,
+      "neuron": [
+        10,
+        20,
+        40
+      ],
+      "axis_neuron": 4,
+      "seed": 1
+    },
+    "fitting_net": {
+      "neuron": [
+        64,
+        64,
+        64
+      ],
+      "resnet_dt": true,
+      "seed": 1
+    },
+    "type_map": [
+      "H",
+      "C"
+    ]
+  },
+  "learning_rate": {
+    "type": "exp",
+    "decay_steps": 5000,
+    "start_lr": 0.0002,
+    "stop_lr": 3.51e-08
+  },
+  "loss": {
+    "type": "ener",
+    "start_pref_e": 0.02,
+    "limit_pref_e": 1,
+    "start_pref_f": 1000,
+    "limit_pref_f": 1,
+    "start_pref_v": 0,
+    "limit_pref_v": 0
+  },
+  "training": {
+    "training_data": {
+      "systems": [
+        "CH4.POSCAR.01x01x01/02.md/sys-0004-0001/deepmd"
+      ],
+      "batch_size": "auto"
+    },
+    "numb_steps": 1000,
+    "seed": 10,
+    "disp_file": "lcurve.out",
+    "disp_freq": 100,
+    "save_freq": 1000
+  }
+}

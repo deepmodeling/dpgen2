@@ -59,7 +59,6 @@
   "seed": 922,
   "disp_file": "lcurve.out",
   "disp_freq": 2000,
-  "numb_test": 5,
   "save_freq": 10000,
   "save_ckpt": "model.ckpt",
   "disp_training": true,

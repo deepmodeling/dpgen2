@@ -58,6 +58,7 @@ docs = [
      "dargs>=0.4.1",
 ]
 test = [
+    'deepmd-kit>=3.0,<4',
      'fakegaussian>=0.0.3',
     'dpgui',
 ]

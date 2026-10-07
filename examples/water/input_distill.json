@@ -123,6 +123,7 @@
         "type": "dp",
         "numb_models": 4,
         "config": {
+            "impl": "tensorflow",
             "init_model_policy": "yes",
             "init_model_old_ratio": 0.90,
             "init_model_numb_steps": 500000,
@@ -131,7 +132,7 @@
             "init_model_start_pref_f": 100,
             "_comment": "all"
         },
-        "template_script": "train.json",
+        "template_script": "train_tensorflow.json",
         "_comment": "all"
     },
     "explore": {

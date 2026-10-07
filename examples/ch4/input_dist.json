@@ -121,6 +121,7 @@
         "student_model_path": "student_model.pb",
         "type": "dp-dist",
         "config": {
+            "impl": "tensorflow",
             "init_model_policy": "yes",
             "init_model_old_ratio": 0.5,
             "init_model_numb_steps": 200000,
@@ -129,7 +130,7 @@
             "init_model_start_pref_f": 100,
             "_comment": "all"
         },
-        "template_script": "train.json",
+        "template_script": "student_train.json",
         "_comment": "all"
     },
     "fp" : {
