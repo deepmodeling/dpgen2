@@ -43,7 +43,7 @@ uv pip install -e .
 
 ### Install Development Tools
 ```bash
-uv pip install mock coverage pytest fakegaussian ruff isort
+uv pip install -e ".[test]" ruff isort
 ```
 - Takes under 1 minute
 - Required for testing and linting
