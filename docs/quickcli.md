@@ -39,6 +39,38 @@ INFO:root:steps iter-000001--prep-run-explore--------------------- finished
 The artifacts can be downloaded on-the-fly with `-d` flag. Note that the existing files are automatically skipped if one sets `dflow_config["archive_mode"] = None`.
 
 
+## Download workflow results
+
+The `download` command retrieves training, exploration, and labeling artifacts without requiring direct access to the workflow storage backend. List the supported artifact names first:
+
+```bash
+dpgen2 download input.json WFID --list-supported
+```
+
+Running without filters downloads every supported artifact from every successful step, including succeeded steps in an otherwise failed iteration. Use iteration and artifact filters for a smaller result set:
+
+```bash
+dpgen2 download input.json WFID \
+  --iterations 0-2 \
+  --step-definitions \
+    prep-run-train/output/models \
+    prep-run-train/output/lcurves \
+    prep-run-train/output/logs \
+    prep-run-explore/output/trajs \
+    prep-run-explore/output/model_devis \
+    prep-run-fp/output/labeled_data \
+  --prefix results
+```
+
+The range `0-2` is half-open: it selects iterations 0 and 1, excluding 2. To include iteration 2, use `0-3`.
+
+Files are organized below `results/iter-000000/<step>/<input-or-output>/<artifact>`. Existing completed downloads are skipped by default; pass `--no-check-point` to request them again. This done-marker checkpoint is separate from dflow's `skip_exists` behavior mentioned above.
+
+With `-k/--keys`, downloads instead use `<prefix>/iter-000000/<step>/inputs` and `<prefix>/iter-000000/<step>/outputs`, merging each step's artifacts into those directories without per-artifact leaves.
+
+The supported step groups are `prep-run-train` (training), `prep-run-explore` (exploration), `prep-run-fp` (labeling), and `collect-data` (accumulated training data). Use `--list-supported` for the authoritative list of input and output artifacts available for each group in your installed version.
+
+
 ## Show the keys of steps
 
 Each dpgen2 step is assigned a unique key. The keys of the finished steps can be checked with `showkey` command

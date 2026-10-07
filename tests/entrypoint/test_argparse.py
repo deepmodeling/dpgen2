@@ -75,6 +75,60 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(parsed.keys, ["foo", "bar", "tar"])
         self.assertEqual(parsed.prefix, "myprefix")
 
+    def test_download_by_definition(self):
+        parsed = self.parser.parse_args(
+            [
+                "download",
+                "input.json",
+                "workflow-id",
+                "--iterations",
+                "0-2",
+                "4",
+                "--step-definitions",
+                "prep-run-train/output/models",
+                "prep-run-explore/output/trajs",
+                "prep-run-fp/output/labeled_data",
+                "--prefix",
+                "results",
+                "--no-check-point",
+            ]
+        )
+
+        self.assertEqual(parsed.iterations, ["0-2", "4"])
+        self.assertEqual(
+            parsed.step_definitions,
+            [
+                "prep-run-train/output/models",
+                "prep-run-explore/output/trajs",
+                "prep-run-fp/output/labeled_data",
+            ],
+        )
+        self.assertEqual(parsed.prefix, "results")
+        self.assertFalse(parsed.no_check_point)
+
+    def test_download_short_flags_and_defaults(self):
+        parsed = self.parser.parse_args(
+            [
+                "download",
+                "input.json",
+                "workflow-id",
+                "-i",
+                "0-2",
+                "-d",
+                "collect-data/output/iter_data",
+                "-n",
+            ]
+        )
+        self.assertEqual(parsed.iterations, ["0-2"])
+        self.assertEqual(parsed.step_definitions, ["collect-data/output/iter_data"])
+        self.assertIsNone(parsed.keys)
+        self.assertFalse(parsed.no_check_point)
+        defaults = self.parser.parse_args(["download", "input.json", "workflow-id"])
+        self.assertIsNone(defaults.keys)
+        self.assertTrue(defaults.no_check_point)
+        listed = self.parser.parse_args(["download", "input.json", "workflow-id", "-l"])
+        self.assertTrue(listed.list_supported)
+
     def test_resubmit(self):
         parsed = self.parser.parse_args(
             [
