@@ -52,12 +52,19 @@ This section defines how a model is trained.
 	"numb_models" : 4,
 	"config" : {},
 	"template_script" : "/path/to/the/template/input.json",
+	"init_models_paths" : [
+		"/path/to/model.000.pb",
+		"/path/to/model.001.pb",
+		"/path/to/model.002.pb",
+		"/path/to/model.003.pb"
+	],
 	"_comment" : "all"
 }
 ```
 The `"type" : "dp"` tell the traning method is {dargs:argument}`"dp" <train>`, i.e. calling [DeePMD-kit](https://github.com/deepmodeling/deepmd-kit) to train DP models.
 The `"config"` key defines the training configs, see {ref}`the full documentation<train[dp]/config>`.
 The {dargs:argument}`"template_script" <train[dp]/template_script>` provides the template training script in `json` format.
+When an initial model is supplied, DPGEN2 skips training if there is no iteration-generated data (normally iteration zero) or if all configured inputs expand to zero training systems, including in later iterations. Initial models can come from {dargs:argument}`"init_models_paths" <train[dp]/init_models_paths>` or the higher-priority {dargs:argument}`"init_models_uri" <train[dp]/init_models_uri>`; distillation student-model paths and URIs follow the same reuse rule. You must ensure the supplied models are suitable for the initial dataset; DPGEN2 checks the committee size but does not validate model provenance. A skipped step records the training script and the reason in its log, then passes the model directly to exploration. When training resumes, {dargs:argument}`"init_model_policy" <train[dp]/config/init_model_policy>` defaults to `"no"`, so training starts from scratch unless another policy is configured. Finetuning requested with {dargs:argument}`"do_finetune" <inputs/do_finetune>` set to `true` in the `inputs` section is never skipped.
 
 For DPA4, use the regular PyTorch training backend and deploy `.pt2` models in
 LAMMPS exploration:

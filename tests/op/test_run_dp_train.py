@@ -978,7 +978,10 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
         )
         self.assertDictEqual(odict, self.expected_odict_v2)
 
-    def test_exec_v2_empty_list(self):
+    @patch("dpgen2.op.run_dp_train.run_command")
+    def test_exec_v2_empty_list(self, mocked_run):
+        mocked_run.side_effect = [(0, "foo\n", ""), (0, "bar\n", "")]
+
         config = self.config.copy()
         config["init_model_policy"] = "no"
 
@@ -1005,6 +1008,7 @@ class TestRunDPTrainNullIterData(unittest.TestCase):
                 }
             )
         )
+        mocked_run.assert_not_called()
         self.assertEqual(out["script"], work_dir / train_script_name)
         self.assertEqual(out["model"], self.init_model)
         self.assertEqual(out["lcurve"], work_dir / "lcurve.out")
