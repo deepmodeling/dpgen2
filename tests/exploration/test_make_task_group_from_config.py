@@ -33,6 +33,10 @@ from dpgen2.exploration.task.calypso import (
 
 class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
     def setUp(self):
+        self.extra_dir = Path("extra_tables")
+        self.extra_dir.mkdir()
+        self.extra_file = self.extra_dir / "SiC_ZBL.txt"
+        self.extra_file.write_text("ZBL table content\n")
         self.config_npt = {
             "type": "lmp-md",
             "Ts": [100],
@@ -51,12 +55,31 @@ class TestMakeLmpTaskGroupFromConfig(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.config_template["lmp_template_fname"])
+        self.extra_file.unlink()
+        self.extra_dir.rmdir()
 
     def test_npt(self):
         tgroup = make_lmp_task_group_from_config(
             self.numb_models, self.mass_map, self.config_npt
         )
         self.assertTrue(isinstance(tgroup, NPTTaskGroup))
+
+    def test_npt_copies_input_extra_files_to_each_task(self):
+        config = {
+            **self.config_npt,
+            "input_extra_files": [str(self.extra_file)],
+            "Ts": [100, 200],
+        }
+        tgroup = make_lmp_task_group_from_config(
+            self.numb_models, self.mass_map, config
+        )
+        tgroup.set_conf(["LAMMPS configuration 1", "LAMMPS configuration 2"])
+        tgroup.make_task()
+
+        self.assertEqual(len(tgroup), 4)
+        for task in tgroup:
+            self.assertEqual(task.files()[self.extra_file.name], "ZBL table content\n")
+            self.assertNotIn(str(self.extra_file), task.files())
 
     def test_template(self):
         tgroup = make_lmp_task_group_from_config(
