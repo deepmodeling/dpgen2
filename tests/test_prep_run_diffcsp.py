@@ -28,6 +28,7 @@ from dpgen2.op import (
 from dpgen2.superop import (
     PrepRunDiffCSP,
 )
+from dpgen2.utils.step_config import normalize as normalize_step_dict
 
 
 class MockedDiffCSPGen(DiffCSPGen):
@@ -117,6 +118,48 @@ class TestPrepRunDiffCSP(unittest.TestCase):
         self.assertEqual(len(trajs), 4)
         model_devis = download_artifact(step.outputs.artifacts["model_devis"])
         self.assertEqual(len(model_devis), 4)
+
+    def test_step_configs(self):
+        prep_config = normalize_step_dict(
+            {
+                "continue_on_failed": True,
+                "continue_on_num_success": 1,
+                "continue_on_success_ratio": 0.5,
+                "parallelism": 3,
+            }
+        )
+        run_config = normalize_step_dict(
+            {
+                "continue_on_failed": True,
+                "continue_on_num_success": 2,
+                "continue_on_success_ratio": 0.8,
+                "parallelism": 7,
+            }
+        )
+        steps = PrepRunDiffCSP(
+            "prep-run-diffcsp",
+            MockedDiffCSPGen,
+            PrepRelax,
+            MockedRunRelax,
+            prep_config=prep_config,
+            run_config=run_config,
+        )
+        diffcsp_gen = next(step for step in steps.steps if step.name == "diffcsp-gen")
+        prep_relax = next(step for step in steps.steps if step.name == "prep-relax")
+        run_relax = next(step for step in steps.steps if step.name == "run-relax")
+
+        self.assertTrue(diffcsp_gen.continue_on_failed)
+        self.assertEqual(diffcsp_gen.continue_on_num_success, 1)
+        self.assertEqual(diffcsp_gen.continue_on_success_ratio, 0.5)
+        self.assertEqual(diffcsp_gen.parallelism, 3)
+        self.assertTrue(prep_relax.continue_on_failed)
+        self.assertIsNone(prep_relax.continue_on_num_success)
+        self.assertIsNone(prep_relax.continue_on_success_ratio)
+        self.assertEqual(prep_relax.parallelism, 3)
+        self.assertTrue(run_relax.continue_on_failed)
+        self.assertEqual(run_relax.continue_on_num_success, 2)
+        self.assertEqual(run_relax.continue_on_success_ratio, 0.8)
+        self.assertEqual(run_relax.parallelism, 7)
 
     def tearDown(self):
         for d in glob.glob("test-prep-run-diffcsp-*") + ["task.000000", "task.000001"]:

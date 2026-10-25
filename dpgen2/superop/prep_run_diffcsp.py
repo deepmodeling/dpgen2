@@ -134,6 +134,9 @@ def _prep_run_diffcsp(
     prep_executor = init_executor(prep_config.pop("executor"))
     run_executor = init_executor(run_config.pop("executor"))
     template_slice_config = run_config.pop("template_slice_config", {})
+    no_slice_prep_config = deepcopy(prep_config)
+    no_slice_prep_config.pop("continue_on_num_success", None)
+    no_slice_prep_config.pop("continue_on_success_ratio", None)
 
     block_id = prep_run_diffcsp_steps.inputs.parameters["block_id"]
     expl_task_grp = prep_run_diffcsp_steps.inputs.parameters["expl_task_grp"]
@@ -160,6 +163,7 @@ def _prep_run_diffcsp(
         key="%s--diffcsp-gen-{{item}}" % block_id,
         executor=prep_executor,
         with_sequence=argo_sequence(expl_config["gen_tasks"], format="%06d"),  # type: ignore
+        **prep_config,
     )
     prep_run_diffcsp_steps.add(diffcsp_gen)
 
@@ -178,6 +182,7 @@ def _prep_run_diffcsp(
         },
         key="%s--prep-relax" % block_id,
         executor=prep_executor,
+        **no_slice_prep_config,
     )
     prep_run_diffcsp_steps.add(prep_relax)
 
@@ -207,6 +212,7 @@ def _prep_run_diffcsp(
         with_sequence=argo_sequence(
             prep_relax.outputs.parameters["ntasks"], format="%06d"
         ),
+        **run_config,
     )
     prep_run_diffcsp_steps.add(run_relax)
 
